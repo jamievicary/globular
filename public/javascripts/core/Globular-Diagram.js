@@ -55,6 +55,23 @@ Diagram.prototype.getTargetBoundary = function() {
 }
 
 /*
+    Returns a specific kth slice of this diagram
+*/
+Diagram.prototype.getSlice = function(k) {
+    if (this.source === null) {
+        return null;
+    }
+
+    var slice = this.source.copy();
+    for(var i = 0; i < k; i++){
+        slice.rewrite(this.generators[i]);
+    }
+
+    return slice;
+}
+
+
+/*
     Returns true if this diagram and the matched diagram are identical, i.e. they have the same set of generators, composed
     in the same way. This is checked recursively by looking at the source boundary too. Otherwise, returns false.
 */
@@ -294,6 +311,7 @@ Diagram.prototype.enumerate = function(matched_diagram) {
     }
     return matches;
 };
+
 
 /*
     Attaches the attached diagram to this diagram. 

@@ -562,7 +562,14 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
-        this.render(div, this.diagram);
+        if(this.diagram.dimension === 3){
+            var slider = $('#slider').val();
+            var diagram = this.diagram.getSlice(slider);
+            this.render(div, diagram);
+        }
+        else{
+            this.render(div, this.diagram);
+        }
         /*
                 var tempColours = new Hashtable();
                 this.dataList.each(function(key, value) {
