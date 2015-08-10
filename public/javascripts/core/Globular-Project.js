@@ -570,13 +570,6 @@ Project.prototype.renderDiagram = function() {
         else{
             this.render(div, this.diagram);
         }
-        /*
-                var tempColours = new Hashtable();
-                this.dataList.each(function(key, value) {
-                    tempColours.put(key, value.colour)
-                });
-                this.mapDiagram.render(div, tempColours);
-        */
     }
 
 }
