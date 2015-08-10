@@ -26,6 +26,9 @@ $(document).ready(function() {
             gProject.applyStochasticProcess();
         }
     });
+    
+    // Create the slider
+    $("#slider").on("input change", function() { console.log("slider = " + $('#slider').val()); });
 
     // ADD STOCHASTIC PROCESSING BUTTON
 
