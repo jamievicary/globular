@@ -390,7 +390,7 @@ Project.prototype.selectGenerator = function(id) {
 
     var matched_diagram = cell.diagram.copy();
 
-    if (matched_diagram.getDimension() == 3) {
+    if (matched_diagram.getDimension() > this.diagram.getDimension() ){
         // Don't bother attaching, just rewrite
 
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());

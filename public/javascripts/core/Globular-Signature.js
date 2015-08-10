@@ -117,8 +117,21 @@ Signature.prototype.copy = function () {
     return tempSig;
 }
 
+
 /*
     Takes an integer and returns a list of lists of all the cells
+*/
+Signature.prototype.get_NCells = function (level) {
+    var varSig = this;
+    
+    while (varSig.n != level) {
+        varSig = varSig.sigma;
+    }
+    return varSig.nCells.keys();
+}
+
+/*
+    Returns a list of all the cells in this signature
 */
 Signature.prototype.getCells = function () {
     var tempArray = new Array();
