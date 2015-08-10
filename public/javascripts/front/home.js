@@ -26,6 +26,12 @@ $(document).ready(function() {
             gProject.applyStochasticProcess();
         }
     });
+    
+    // Create the slider
+    $("#slider").on("input change", function() {
+        // add a command here to redraw the 3-diagram at the new slice
+        console.log("slider = " + $('#slider').val()); }
+    );
 
     // ADD STOCHASTIC PROCESSING BUTTON
 
