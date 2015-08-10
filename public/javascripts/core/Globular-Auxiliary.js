@@ -4,9 +4,15 @@
     Some auxiliary functions
 */
 
+var counter = 0;
+
 // Quick way to return a random alphanumeric string of length ~10
 function globular_freshName(n) {
-    return n.toString() + '-' + Math.random().toString(36).slice(2);
+    var alphabet = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    
+    //alphabet[Math.floor(Math.random() * alpha.length)];
+
+    return n.toString() + '-' + Math.random().toString(36).slice(2); //alphabet[Math.floor(Math.random() * alpha.length)]; //Math.random().toStringd(36).slice(2);
 
     /*
     // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
