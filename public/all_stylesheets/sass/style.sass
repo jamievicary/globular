@@ -1,0 +1,360 @@
+@import 'compass'
+@import url(https://fonts.googleapis.com/css?family=Open+Sans)
+
+//pre-selected colours
+$blue: #00b8ff
+
+
+//pre-selected fonts
+$main_font: 'Open Sans', sans-serif 
+
+//styles
+body, html
+	height: 100%
+	width: 100%
+	margin: 0px
+	font-family: $main_font 
+	overflow: hidden
+
+#control-body
+	height: 100%
+	width: 300px
+	background-color: grey
+	float: left
+	display: block
+
+
+#diagram-body
+	height: 100%
+	width: calc(100% - 300px)
+	background-color: lightgrey
+	float: left
+	display: block
+	white-space: nowrap
+	
+#site-logo
+	padding: 10px
+	font-size: 40px
+	letter-spacing: 4px
+	text-align: center
+
+.button-style-1
+	padding: 5px
+	background-color: $blue
+	color: white
+	border-radius: 3px 3px 0px 0px
+	width: 110px
+	text-align: center
+	letter-spacing: 1px
+	float: left
+	margin: 1px
+	cursor: pointer
+	font-size: 110%
+	border-bottom: 2px solid #00b8ff
+	
+.button-style-2
+	padding: 5px
+	background-color: $blue
+	color: white
+	border-radius: 3px
+	width: 130px
+	text-align: center
+	letter-spacing: 1px
+	float: left
+	margin: 1px
+	cursor: pointer
+	font-size: 110%
+	
+.button-style-3
+	background-color: $blue
+	color: white
+	border-radius: 3px
+	width: 100px
+	text-align: center
+	height: 17px
+	letter-spacing: 1px
+	float: left
+	border: 1px solid grey
+	cursor: pointer
+	font-size: 60%
+	
+	
+#site-controller-body
+	border: 3px solid grey
+	height: 200px
+
+.site-options-form-body
+	background-color: $blue
+	display: none
+	padding: 10px
+	height: 100px
+	margin: 1px
+	width: 270px
+	margin-top: 37px
+
+.text-field-style-1
+	border: none
+	outline-width: 0px
+	border-radius: 3px
+	font-family: $main_font
+	width: 260px
+	padding: 4px
+
+.text-area-style-1
+	border: none
+	outline-width: 0px
+	resize: none
+	border-radius: 3px
+	font-family: $main_font
+	width: calc( 100% - 20px )
+	padding: 4px
+	height: 70px
+	
+.submit-field-style-1
+	width: 70px
+	border: none
+	margin-top: 7px
+	background-color: #d9d9d9
+	border-radius: 3px
+	font-family: $main_font
+
+.box
+	display: none
+	background-color: $blue
+	border-radius: 5px
+	padding: 10px
+	color: #ffffff
+	width: 265px
+	top: 200px
+	z-index: 10000
+	height: auto
+	text-align: center
+	position: absolute
+	box-shadow: 0px 0px 40px dimgrey
+	border: 1px dashed grey
+	left: calc( 50% - 125px )
+	
+input.color-picker
+	width: 100px
+
+.zindex-error
+	z-index: 100000000
+
+#change-pass-form
+	padding: 3px
+	border-radius: 2px	
+	margin: 0
+
+.cp-textfields
+	width: 80%
+	
+#site-cont-header-loggedin
+	padding-bottom: 20px
+	
+.msg-close-opt
+	font-size: 70%
+	color: salmon
+	cursor: pointer
+	float: right
+
+#add-project-opt
+	background-color: #4cd2bb
+	cursor: pointer
+	height: 20px
+	padding: 10px
+	overflow: hidden
+
+#add-project-opt1
+	background-color: #4cd2bb
+	cursor: pointer
+	height: 20px
+	padding: 10px
+	overflow: hidden
+
+#cell-body
+	background-color: dimgrey
+	width: 300px
+	height: calc( 100% - 300px )
+	position: absolute
+	overflow: scroll
+	overflow-x: hidden
+	
+.cell-group
+	color: black
+	height: auto
+	margin-bottom: 5px
+	width: 298px
+
+$cell_bg: #273c61
+
+.cell-opt
+	//height: 70px
+	background-color: $cell_bg
+	margin-top: 3px
+	color: #ffffff
+	border-radius: 3px
+	margin-left: 5px
+	position: relative
+	padding: 5px
+	width: 280px
+	overflow: hidden
+
+.cell-icon
+	height: 65px
+	border: 2px dashed black
+	width: 65px
+	background-color: lightgrey
+	float: left
+	
+.cell-b-sect
+	//border-top: 1px solid grey
+	//height: 65px
+	margin-top: 5px
+	//display: none
+	text-align: center
+	position:absolute
+	top: 70px
+
+.cell-detail
+	margin-left: 75px
+	height: 65px
+	
+.match-cell-icon
+	height: 65px
+	border: 2px dashed black
+	width: 65px
+	background-color: lightgrey
+	float: left
+	margin: 5px
+	
+.cell-icon1
+	height: 65px
+	border: 2px dashed black
+	width: 65px
+	margin-left: 100px
+	top: 5px
+	position: absolute
+	background-color: lightgrey
+
+.cell-label
+
+	width: 100px
+	border: none
+	outline-width: 0px
+	letter-spacing: 2px
+	position: absolute
+	margin-top: 5px
+	height: 20px
+	border-radius: 1px
+	margin-left: 20px
+
+
+.color-picker
+	margin-top: 35px
+	border-radius: 1px
+	letter-spacing: 2px
+	border: none
+	margin-left: 20px
+	height: 20px
+	
+.target-rule-arrow
+	position: absolute
+	margin-left: 72px
+	top: 30px
+	
+$top-menu-height: 20px 
+
+#project-menu
+	cursor: pointer
+	position: relative
+	top: 0
+	margin-left: 35px
+	margin: 0
+	height: $top-menu-height
+	list-style: none
+	float: right
+	white-space: nowrap
+
+#save-project-opt
+	background-color: #4cd2bb
+	
+#diagram-title
+	font-size: 95%
+	padding-left: 10px
+	color: black
+	margin-left: 10px
+	height: 18px
+	background-color: lightgrey
+	border: none
+	position: absolute
+	outline-width: 0px
+
+
+#diagram-canvas
+	background-color: #ededed
+	position: absolute
+	//margin-top: $top-menu-height
+	bottom: 0px
+	right: 0px
+	width: calc( 100% - 320px )
+	height: calc( 100% - 20px )
+	
+.select-project
+	cursor: pointer
+	
+#ajax-loading
+	background-image: url('../../images/loading-icon.gif')
+	background-size: 60%
+	height: 55px
+	width: 55px
+	margin-left: 250px
+	position: absolute
+	margin-top: -45px
+	z-index: 10000
+	background-repeat: no-repeat
+
+#no-projects-open-e
+	font-size: 200%
+	text-align: center
+	margin-top: 30%
+
+.mini-opt-links
+	color: #ffffff
+	font-size: 70%
+	text-decoration: underline
+	padding: 5px
+	float: right
+	cursor: pointer
+
+.del-project
+	float: right
+	color: #335566
+	cursor: pointer
+
+.del-confirm-field
+	border: none
+	border-radius: 2px
+	width: 1px
+	font-size: 115%
+	padding: 3px
+	color: salmon
+
+.cancel-del
+	cursor: pointer
+	color: salmon
+	margin-top: -5px
+	margin-left: 10px
+	position: absolute
+
+.cc-opt
+	cursor: pointer
+	position: absolute
+	top: 30px
+	color: salmon
+	left: 80px
+	
+#no-cell-m-f
+	color: dimgrey
+	width: 200px
+	margin-left: 40px
+	padding-top: 20px
