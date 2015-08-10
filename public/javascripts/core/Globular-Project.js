@@ -430,8 +430,8 @@ Project.prototype.selectGenerator = function(id) {
     var target_matched_size = extended_target_matched.getFullDimensions();
 */
 
-    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    var sourceMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 's');
+    var targetMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 't');
 
     /*
     for (var i = 0; i < sourceMatches.length; i++) {
@@ -459,20 +459,20 @@ Project.prototype.selectGenerator = function(id) {
     return enumerationData;
 }
 
-Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
+Project.prototype.prepareEnumerationData = function(diagram, matched_diagram, boundary_depth, boundary_boolean) {
     
     var pattern_diagram;
     var matched_diagram_boundary;
     
     if(boundary_boolean === 's') {
-        pattern_diagram = this.diagram.getSourceBoundary();
+        pattern_diagram = diagram.getSourceBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getSourceBoundary();
         }
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
     else{
-        pattern_diagram = this.diagram.getTargetBoundary();
+        pattern_diagram = diagram.getTargetBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getTargetBoundary();
         }
