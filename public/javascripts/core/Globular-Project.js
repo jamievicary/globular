@@ -415,7 +415,7 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-
+/*
     var extended_source = this.diagram.getSourceBoundary();
     var extended_target = this.diagram.getTargetBoundary();
 
@@ -428,23 +428,29 @@ Project.prototype.selectGenerator = function(id) {
     var extended_target_matched = matched_diagram.getTargetBoundary();
     var source_matched_size = extended_source_matched.getFullDimensions();
     var target_matched_size = extended_target_matched.getFullDimensions();
+*/
 
-    var sourceMatches = extended_source.enumerate(extended_target_matched);
+    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+
+    /*
     for (var i = 0; i < sourceMatches.length; i++) {
         sourceMatches[i] = {
             boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('s')),
             inclusion: sourceMatches[i],
             size: target_matched_size
         };
-    }
-    var targetMatches = extended_target.enumerate(extended_source_matched);
+    }*/
+    
+//    var targetMatches = extended_target.enumerate(extended_source_matched);
+    /* targetMatches = prepareEnumerationData(targetMatches, 't', boundary_depth);
     for (var i = 0; i < targetMatches.length; i++) {
         targetMatches[i] = {
             boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('t')),
             inclusion: targetMatches[i],
             size: source_matched_size
         };
-    }
+    }*/
     var enumerationData = {
         attachmentFlag: true,
         diagram: matched_diagram,
@@ -452,6 +458,41 @@ Project.prototype.selectGenerator = function(id) {
     };
     return enumerationData;
 }
+
+Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
+    
+    var pattern_diagram;
+    var matched_diagram_boundary;
+    
+    if(boundary_boolean === 's') {
+        pattern_diagram = this.diagram.getSourceBoundary();
+        for (var i = 0; i < boundary_depth; i++) {
+            pattern_diagram = pattern_diagram.getSourceBoundary();
+        }
+        matched_diagram_boundary = matched_diagram.getTargetBoundary();
+    }
+    else{
+        pattern_diagram = this.diagram.getTargetBoundary();
+        for (var i = 0; i < boundary_depth; i++) {
+            pattern_diagram = pattern_diagram.getTargetBoundary();
+        }
+        matched_diagram_boundary = matched_diagram.getSourceBoundary();
+    }
+    
+    
+    var matched_size = matched_diagram_boundary.getFullDimensions();
+    
+    var matches = pattern_diagram.enumerate(matched_diagram_boundary);
+    for (var i = 0; i < matches.length; i++) {
+        matches[i] = {
+            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join(boundary_boolean)),
+            inclusion: matches[i],
+            size: matched_size
+        };
+    }
+    return matches;
+};
+
 
 // Returns the current string 
 Project.prototype.currentString = function() {
