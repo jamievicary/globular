@@ -40,11 +40,12 @@ Project.prototype.applyStochasticProcess = function() {
     /*
         How will we assign rates to particular processes??; some array rates could have the same length as processes, processes associated
         to their specific rate via the same appropriate index; but how do we know which process is which in our processes array...
-        Does getNCells go in order from the vertical side panel?
+        Does getNCells go in order from the vertical side panel?  Currently it's random, but the processes are labelled--need html code to take
+        whatever the user names the process and get that data back to us.
     */
     var history = this.diagram; // history
     var current_state = this.diagram.getTargetBoundary(); 
-    var processes = this.signature.getNCells(2);
+    var processes = this.signature.get_NCells(2);
     var possible_events = [];
     for(var i = 0; i < processes.length; i++) {
         possible_events[i] = current_state.enumerate(processes[i].getSourceBoundary());
