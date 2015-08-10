@@ -27,8 +27,6 @@ $(document).ready(function() {
         }
     });
 
-    // ADD STOCHASTIC PROCESSING BUTTON
-
     var original_msg_html = $("#errors").html();
 	$(".box").draggable({ containment: "document", cursor: "crosshair" });
 	

@@ -37,11 +37,46 @@ Project.prototype.getType = function() {
 };
 
 Project.prototype.applyStochasticProcess = function() {
-    
+    /*
+        How will we assign rates to particular processes??; some array rates could have the same length as processes, processes associated
+        to their specific rate via the same appropriate index; but how do we know which process is which in our processes array...
+        Does getNCells go in order from the vertical side panel?
+    */
     var history = this.diagram; // history
     var current_state = this.diagram.getTargetBoundary(); 
     var processes = this.signature.getNCells(2);
-    
+    var possible_events = [];
+    for(var i = 0; i < processes.length; i++) {
+        possible_events[i] = current_state.enumerate(processes[i].getSourceBoundary());
+    }
+    var eventsWithTimes = [];
+    for(var i = 0; i < possible_events.length; i++) {
+        for(var j = 0; j < possible_events[i].length; j++){
+            possible_events[i][j] = [possible_events[i][j], Math.random()];   
+        }
+	}
+	//Now that the specific rates have been assigned, don't care to keep events and processes separate
+    for(var i = 0; i < possible_events.length; i++) {
+        for(var j = 0; j < possible_events[i].length; j++) {
+            eventsWithTimes.push(possible_events[i][j]);
+        }
+    }
+	var indexNextEvent = -1;
+	//first extract all the event times
+	var eventTimes = [];
+	for(var x = 0; x < eventsWithTimes.length; x++) {
+	        eventTimes.push(eventsWithTimes[x][1]);
+	}
+	var least = 2;
+	var index = -1;
+	for(var x = 0; x < eventsWithTimes.length; x++) {
+		if (eventTimes[x] < least) {
+		    least = eventTimes[x];
+		    index = x;
+		}
+	}
+    //so eventsWithTimes[index][0] is the event we want to execute
+    history.attach()
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core

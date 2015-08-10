@@ -36,7 +36,7 @@ function giveNextEvent(eventList) {
 
 //executes the event by updating the state list
 function execute(nextEvent) {
-
+    
 };
 
 
@@ -51,10 +51,7 @@ function Simulation() {
 
 	var eventList = assignTimes(stateList);
 	var nextEventIndex = giveNextEvent(eventList);
-	/*stuff happens...possible events from enumerate somehow*/		
-	var eventSchedule = assignTimes(possibleEvents);
-	var nextMove = giveNextEvent(eventSchedule);
-	var newState = execute(nextMove); /*does this have to act on an object? this??*/
+	var newState = execute(nextEventIndex); /*does this have to act on an object? this??*/
 	stateList = newState; //unless you want to make input global or something...maybe that's why all the this stuff?
 	
 };
