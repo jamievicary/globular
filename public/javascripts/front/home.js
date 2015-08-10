@@ -22,6 +22,9 @@ $(document).ready(function() {
         else if (key == 'c') {
             gProject.clearDiagram();
         }
+        else if (key == 'p') {
+            gProject.applyStochasticProcess();
+        }
     });
 
     // ADD STOCHASTIC PROCESSING BUTTON

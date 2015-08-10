@@ -36,6 +36,14 @@ Project.prototype.getType = function() {
     return 'Project';
 };
 
+Project.prototype.applyStochasticProcess = function() {
+    
+    var history = this.diagram; // history
+    var current_state = this.diagram.getTargetBoundary(); 
+    var processes = this.signature.getNCells(2);
+    
+}
+
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
 Project.prototype.getDiagram = function() {
     return this.diagram;
