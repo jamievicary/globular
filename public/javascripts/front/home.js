@@ -34,8 +34,6 @@ $(document).ready(function() {
         console.log("slider = " + $('#slider').val()); }
     );
 
-    // ADD STOCHASTIC PROCESSING BUTTON
-
     var original_msg_html = $("#errors").html();
 	$(".box").draggable({ containment: "document", cursor: "crosshair" });
 	
