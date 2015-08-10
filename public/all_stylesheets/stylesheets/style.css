@@ -245,6 +245,7 @@ input.color-picker {
 .cell-b-sect {
   margin-top: 5px;
   text-align: center;
+  position: absolute;
   top: 70px;
 }
 
@@ -422,4 +423,12 @@ input.color-picker {
   width: 200px;
   margin-left: 40px;
   padding-top: 20px;
+}
+
+/* line 362, ../sass/style.sass */
+#slider {
+  bottom: 5px;
+  right: 5px;
+  width: 100px;
+  position: absolute;
 }
