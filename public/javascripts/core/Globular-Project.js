@@ -44,19 +44,25 @@ Project.prototype.applyStochasticProcess = function() {
         whatever the user names the process and get that data back to us
     */
     var history = this.diagram; // history
+    history.boost(); //this takes the identity
     var current_state = history.getTargetBoundary(); 
+    var species = this.signature.get_NCells(1); 
     var processes = this.signature.get_NCells(2);
     var possible_events = [];
+    var rates = [];
+    
+    for(var i = 0; i < processes.length; i++) {
+        rates[i] = this.get_rate(processes[i]);  
+    }
     for(var i = 0; i < processes.length; i++) {
         possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
     }
     var eventsWithTimes = [];
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++){
-            possible_events[i][j] = [possible_events[i][j], Math.random(), processes[i]];   
+            possible_events[i][j] = [possible_events[i][j], ((-1/rates[i]).toPrecision(4))*Math.log((Math.random()), processes[i]];   
         }
 	}
-	//Now that the specific rates have been assigned, don't care to keep events and processes separate
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++) {
             eventsWithTimes.push(possible_events[i][j]);
@@ -81,6 +87,7 @@ Project.prototype.applyStochasticProcess = function() {
     var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
     history.attach(attached_event, 't', eventsWithTimes[index][0]);
     this.renderDiagram();    
+    //need to update species numbers...which means you'll need to know what your process does
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
