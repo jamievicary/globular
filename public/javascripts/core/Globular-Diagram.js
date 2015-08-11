@@ -425,6 +425,11 @@ Diagram.prototype.getFullDimensions = function() {
 Diagram.prototype.interchangerAllowed = function(input_h1, input_h2) {
     
     if (this.getDimension() != 2) return false;
+    if (input_h2 == input_h2) return false;
+    if (input_h1 < 0) return false;
+    if (input_h1 > this.generators.length) return false;
+    if (input_h2 < 0) return false;
+    if (input_h2 > this.generators.length) return false;
     
     var h1, h2;
     if (input_h1 < input_h2) {
