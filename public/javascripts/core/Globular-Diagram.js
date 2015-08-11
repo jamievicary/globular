@@ -132,7 +132,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     
     // Special code to deal with interchangers
     if(nCell.id === 'interchanger'){
-        
+        this.rewriteInterchanger(nCell.level[0], nCell.level[1]);
         return;
     }
 
