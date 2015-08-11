@@ -55,6 +55,28 @@ Diagram.prototype.getTargetBoundary = function() {
 }
 
 /*
+    Returns a specific kth slice of this diagram
+*/
+
+Diagram.prototype.getSlice = function(k) {
+    if (this.source === null) {
+        return null;
+    }
+    
+    if(k > this.generators.length){
+        return null;
+    }
+
+    var slice = this.source.copy();
+    for(var i = 0; i < k; i++){
+        slice.rewrite(this.generators[i]);
+    }
+
+    return slice;
+};
+
+
+/*
     Returns true if this diagram and the matched diagram are identical, i.e. they have the same set of generators, composed
     in the same way. This is checked recursively by looking at the source boundary too. Otherwise, returns false.
 */
@@ -295,6 +317,7 @@ Diagram.prototype.enumerate = function(matched_diagram) {
     return matches;
 };
 
+
 /*
     Attaches the attached diagram to this diagram. 
     
@@ -313,12 +336,12 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     // No generators to add on this level, so we recursively attach to the boundary
     if (boundary_path.length != 1) { // attached_diagram.generators.length = 0
         var temp_path = boundary_path.slice(1);
-        var temp_bounds = bounds.slice(1);
+        var temp_bounds = bounds;//.slice(1);
 
         // If attaching to the source, need to pad all other attachments
         if(temp_path[0] === 's'){
             for(var i = 0; i < this.generators.length; i++){
-                for(var j = 0; j < this.generators[i].coordinate.length; j++){
+                for(var j = 0; j < this.dimension - temp_path.length; j++) {//this.generators[i].coordinate.length; j++){
                     this.generators[i].coordinate[j]++;
                 }
             }

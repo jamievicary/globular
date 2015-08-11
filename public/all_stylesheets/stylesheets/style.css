@@ -148,34 +148,29 @@ body, html {
   left: calc( 50% - 125px );
 }
 
-/* line 137, ../sass/style.sass */
-input.color-picker {
-  width: 100px;
-}
-
-/* line 140, ../sass/style.sass */
+/* line 138, ../sass/style.sass */
 .zindex-error {
   z-index: 100000000;
 }
 
-/* line 143, ../sass/style.sass */
+/* line 141, ../sass/style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 148, ../sass/style.sass */
+/* line 146, ../sass/style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 151, ../sass/style.sass */
+/* line 149, ../sass/style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 154, ../sass/style.sass */
+/* line 152, ../sass/style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -183,7 +178,7 @@ input.color-picker {
   float: right;
 }
 
-/* line 160, ../sass/style.sass */
+/* line 158, ../sass/style.sass */
 #add-project-opt {
   background-color: #4cd2bb;
   cursor: pointer;
@@ -192,7 +187,7 @@ input.color-picker {
   overflow: hidden;
 }
 
-/* line 167, ../sass/style.sass */
+/* line 165, ../sass/style.sass */
 #add-project-opt1 {
   background-color: #4cd2bb;
   cursor: pointer;
@@ -201,7 +196,7 @@ input.color-picker {
   overflow: hidden;
 }
 
-/* line 174, ../sass/style.sass */
+/* line 172, ../sass/style.sass */
 #cell-body {
   background-color: dimgrey;
   width: 300px;
@@ -211,7 +206,7 @@ input.color-picker {
   overflow-x: hidden;
 }
 
-/* line 182, ../sass/style.sass */
+/* line 180, ../sass/style.sass */
 .cell-group {
   color: black;
   height: auto;
@@ -219,7 +214,7 @@ input.color-picker {
   width: 298px;
 }
 
-/* line 190, ../sass/style.sass */
+/* line 188, ../sass/style.sass */
 .cell-opt {
   background-color: #273c61;
   margin-top: 3px;
@@ -232,7 +227,7 @@ input.color-picker {
   overflow: hidden;
 }
 
-/* line 202, ../sass/style.sass */
+/* line 200, ../sass/style.sass */
 .cell-icon {
   height: 65px;
   border: 2px dashed black;
@@ -241,21 +236,20 @@ input.color-picker {
   float: left;
 }
 
-/* line 209, ../sass/style.sass */
+/* line 207, ../sass/style.sass */
 .cell-b-sect {
   margin-top: 5px;
   text-align: center;
-  position: absolute;
   top: 70px;
 }
 
-/* line 218, ../sass/style.sass */
+/* line 215, ../sass/style.sass */
 .cell-detail {
   margin-left: 75px;
   height: 65px;
 }
 
-/* line 222, ../sass/style.sass */
+/* line 219, ../sass/style.sass */
 .match-cell-icon {
   height: 65px;
   border: 2px dashed black;
@@ -265,7 +259,7 @@ input.color-picker {
   margin: 5px;
 }
 
-/* line 230, ../sass/style.sass */
+/* line 227, ../sass/style.sass */
 .cell-icon1 {
   height: 65px;
   border: 2px dashed black;
@@ -276,9 +270,9 @@ input.color-picker {
   background-color: lightgrey;
 }
 
-/* line 239, ../sass/style.sass */
+/* line 236, ../sass/style.sass */
 .cell-label {
-  width: 100px;
+  width: 60px;
   border: none;
   outline-width: 0px;
   letter-spacing: 2px;
@@ -289,24 +283,39 @@ input.color-picker {
   margin-left: 20px;
 }
 
-/* line 252, ../sass/style.sass */
+/* line 248, ../sass/style.sass */
+.stochastic-rate {
+  width: 33px;
+  border: none;
+  outline-width: 0px;
+  letter-spacing: 2px;
+  position: absolute;
+  margin-top: 5px;
+  margin-left: 5px;
+  display: none;
+  border-radius: 1px;
+  height: 20px;
+}
+
+/* line 260, ../sass/style.sass */
 .color-picker {
   margin-top: 35px;
   border-radius: 1px;
   letter-spacing: 2px;
   border: none;
+  width: 60px;
   margin-left: 20px;
   height: 20px;
 }
 
-/* line 260, ../sass/style.sass */
+/* line 269, ../sass/style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 72px;
   top: 30px;
 }
 
-/* line 267, ../sass/style.sass */
+/* line 276, ../sass/style.sass */
 #project-menu {
   cursor: pointer;
   position: relative;
@@ -319,12 +328,12 @@ input.color-picker {
   white-space: nowrap;
 }
 
-/* line 278, ../sass/style.sass */
+/* line 287, ../sass/style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 281, ../sass/style.sass */
+/* line 290, ../sass/style.sass */
 #diagram-title {
   font-size: 95%;
   padding-left: 10px;
@@ -337,7 +346,7 @@ input.color-picker {
   outline-width: 0px;
 }
 
-/* line 293, ../sass/style.sass */
+/* line 302, ../sass/style.sass */
 #diagram-canvas {
   background-color: #ededed;
   position: absolute;
@@ -347,12 +356,12 @@ input.color-picker {
   height: calc( 100% - 20px );
 }
 
-/* line 302, ../sass/style.sass */
+/* line 311, ../sass/style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 305, ../sass/style.sass */
+/* line 314, ../sass/style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -365,14 +374,14 @@ input.color-picker {
   background-repeat: no-repeat;
 }
 
-/* line 316, ../sass/style.sass */
+/* line 325, ../sass/style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 321, ../sass/style.sass */
+/* line 330, ../sass/style.sass */
 .mini-opt-links {
   color: #ffffff;
   font-size: 70%;
@@ -382,14 +391,14 @@ input.color-picker {
   cursor: pointer;
 }
 
-/* line 329, ../sass/style.sass */
+/* line 338, ../sass/style.sass */
 .del-project {
   float: right;
   color: #335566;
   cursor: pointer;
 }
 
-/* line 334, ../sass/style.sass */
+/* line 343, ../sass/style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -399,7 +408,7 @@ input.color-picker {
   color: salmon;
 }
 
-/* line 342, ../sass/style.sass */
+/* line 351, ../sass/style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -408,7 +417,7 @@ input.color-picker {
   position: absolute;
 }
 
-/* line 349, ../sass/style.sass */
+/* line 358, ../sass/style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -417,7 +426,7 @@ input.color-picker {
   left: 80px;
 }
 
-/* line 356, ../sass/style.sass */
+/* line 365, ../sass/style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -425,10 +434,30 @@ input.color-picker {
   padding-top: 20px;
 }
 
-/* line 362, ../sass/style.sass */
+/* line 371, ../sass/style.sass */
 #slider {
   bottom: 5px;
   right: 5px;
   width: 100px;
   position: absolute;
+}
+
+/* line 377, ../sass/style.sass */
+#sto-form {
+  position: absolute;
+  color: #008b8b;
+  font-size: 70%;
+  margin-left: -200px;
+}
+
+/* line 383, ../sass/style.sass */
+#run-process {
+  float: right;
+  background-color: #008b8b;
+}
+
+/* line 387, ../sass/style.sass */
+#process-form {
+  text-align: left;
+  padding: 10px;
 }

@@ -37,11 +37,74 @@ Project.prototype.getType = function() {
 };
 
 Project.prototype.applyStochasticProcess = function() {
+    /*
+        How will we assign rates to particular processes??; some array rates could have the same length as processes, processes associated
+        to their specific rate via the same appropriate index; but how do we know which process is which in our processes array...
+        Does getNCells go in order from the vertical side panel?  Currently it's random, but the processes are labelled--need html code to take
+        whatever the user names the process and get that data back to us
+    */
     
     var history = this.diagram; // history
-    var current_state = this.diagram.getTargetBoundary(); 
-    var processes = this.signature.getNCells(2);
+    history.boost(); //this takes the identity
+    var current_state = history.getTargetBoundary(); 
+    var species = this.signature.get_NCells(1); 
+    var processes = this.signature.get_NCells(2);
+    var possible_events = [];
+    var rates = [];
     
+    for(var i = 0; i < processes.length; i++) {
+        rates[i] = this.get_rate(processes[i]);  
+    }
+    for(var i = 0; i < processes.length; i++) {
+        possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+    }
+    var eventsWithTimes = [];
+    /*for(var i = 0; i < possible_events.length; i++) {
+        for(var j = 0; j < possible_events[i].length; j++){
+            var negRateInverse = new Fraction(-1, rates[i]);
+            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i]];  
+            //we'll go with 4 decimal places of precision for rate for now...we can deal with the minor fluctuations of 
+     
+        }
+	}*/
+    for(var i = 0; i < possible_events.length; i++) {
+        for(var j = 0; j < possible_events[i].length; j++) {
+            eventsWithTimes.push(possible_events[i][j]);
+        }
+    }
+	var indexNextEvent = -1;
+	//first extract all the event times
+	var eventTimes = [];
+	for(var x = 0; x < eventsWithTimes.length; x++) {
+	        eventTimes.push(eventsWithTimes[x][1]);
+	}
+	var least = 2;
+	var index = 0;
+	for(var x = 0; x < eventsWithTimes.length; x++) {
+		if (eventTimes[x] < least) {
+		    least = eventTimes[x];
+		    index = x;
+		
+		}
+	}
+    //so eventsWithTimes[index][0] is the event we want to execute
+   /* var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
+    history.attach(attached_event, 't', eventsWithTimes[index][0]);
+    this.renderDiagram();            
+    var processData; */
+    /*
+        for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
+        and the source and target of that process
+    */
+    /*
+    for (i = 0; i < processes.length(); i++) {
+        processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
+        this.dataList.get(processes[i]).diagram.getTargetBoundary()]
+    }
+    for (i = 0; i < species.length; i++) {
+        //update species at i
+    }
+    */
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
@@ -83,6 +146,19 @@ Project.prototype.setColour = function(id, colour) {
 // Gets the front-end colour to what the user wants
 Project.prototype.getColour = function(id) {
     return this.dataList.get(id).colour;
+};
+
+// Sets the front-end colour to what the user wants
+Project.prototype.set_rate = function(id, rate) {
+    var tempData = this.dataList.get(id);
+    tempData.rate = rate;
+    this.dataList.put(id, tempData);
+    this.saveState();
+};
+
+// Gets the front-end colour to what the user wants
+Project.prototype.get_rate = function(id) {
+    return this.dataList.get(id).rate;
 };
 
 
@@ -167,7 +243,7 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
 
         this.diagram.rewrite(rewriteCell);
 
-    }
+    } 
 };
 
 
@@ -430,8 +506,8 @@ Project.prototype.selectGenerator = function(id) {
     var target_matched_size = extended_target_matched.getFullDimensions();
 */
 
-    var sourceMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 's');
-    var targetMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 't');
+    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
 
     /*
     for (var i = 0; i < sourceMatches.length; i++) {
@@ -459,20 +535,20 @@ Project.prototype.selectGenerator = function(id) {
     return enumerationData;
 }
 
-Project.prototype.prepareEnumerationData = function(diagram, matched_diagram, boundary_depth, boundary_boolean) {
+Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
     
     var pattern_diagram;
     var matched_diagram_boundary;
     
     if(boundary_boolean === 's') {
-        pattern_diagram = diagram.getSourceBoundary();
+        pattern_diagram = this.diagram.getSourceBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getSourceBoundary();
         }
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
     else{
-        pattern_diagram = diagram.getTargetBoundary();
+        pattern_diagram = this.diagram.getTargetBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getTargetBoundary();
         }
@@ -555,6 +631,7 @@ Project.prototype.renderGenerator = function(div, id) {
 Project.prototype.renderDiagram = function() {
     var div = '#diagram-canvas';
     if (this.diagram == null) {
+        $('#slider').hide()
         var canvas = $(div).find('canvas');
         if (canvas.length != 0) {
             canvas = canvas[0];
@@ -562,17 +639,20 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
-        this.render(div, this.diagram);
-        /*
-                var tempColours = new Hashtable();
-                this.dataList.each(function(key, value) {
-                    tempColours.put(key, value.colour)
-                });
-                this.mapDiagram.render(div, tempColours);
-        */
+        if(this.diagram.dimension === 3){
+            $('#slider').attr('max', this.diagram.generators.length);
+            $('#slider').show()
+            var slider = $('#slider').val();
+            var diagram = this.diagram.getSlice(slider);
+            this.render(div, diagram);
+        }
+        else{
+            $('#slider').hide()
+            this.render(div, this.diagram);
+        }
     }
 
-}
+};
 
 // Need to write this code
 Project.prototype.renderHighlighted = function() {
@@ -607,7 +687,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         div_icon_2.className = 'cell-icon';
         div_icon_2.id = 'ci1-' + cell;
         div_main.appendChild(div_icon_2);
-        $(div_icon_2).css('margin-left', '22px')
+        $(div_icon_2).css('margin-left', '22px');
     }
 
     // Add detail container
@@ -616,7 +696,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
     div_detail.className = 'cell-detail';
     div_main.appendChild(div_detail);
     if (n == 3) {
-        $(div_detail).css('margin-left', '165px');
+        $(div_detail).css('margin-left', '155px');
     }
 
     // Add label
@@ -639,13 +719,41 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         project.setColour(cell, '#' + this.toString());
         project.renderAll();
     };
-
+    
+  
     /*$(input_color).blur(function() {
         project.setColour(cell, '#' + $(this).val().toString());
         project.renderAll();
     });*/
 
     div_detail.appendChild(input_color);
+
+    if(n!=0){
+        
+        var sto_rate_text = document.createElement('input');
+        sto_rate_text.className = 'stochastic-rate';
+        sto_rate_text.id = 'sr-' + cell;
+        sto_rate_text.type = 'text';
+        sto_rate_text.placeholder='Rate';
+        
+        div_detail.appendChild(sto_rate_text);
+        
+    }
+    
+    $("#stochastic-cb").change(function(){
+        if ($(this).is(':checked')) {
+            $(".stochastic-rate").slideDown();
+            
+        } else {
+            $(".stochastic-rate").slideUp();
+        }
+    });
+    
+    $(".stochastic-rate").blur(function(){
+        var cid = $(this).attr("id").substring(3); 
+        var rate = $(this).val();
+        project.set_rate(cid, rate);
+    });
 
     // Add extra section
     var div_extra = document.createElement('div');
