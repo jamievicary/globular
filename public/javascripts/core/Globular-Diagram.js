@@ -7,8 +7,8 @@
 function Diagram(source, generators) {
     if (source === undefined) return;
     
-    this.source = source; // Diagram
-    this.generators = generators; // Array
+    this.source = source;
+    this.generators = generators;
 
     if (source === null) {
         this.dimension = 0;
@@ -428,98 +428,62 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
-Diagram.prototype.interchangerAllowed = function(input_h1, input_h2) {
+Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
     
     if (this.getDimension() != 2) return false;
-    if (input_h2 == input_h2) return false;
-    if (input_h1 < 0) return false;
-    if (input_h1 > this.generators.length) return false;
-    if (input_h2 < 0) return false;
-    if (input_h2 > this.generators.length) return false;
+    if (height_right == height_left) return false;
+    if (height_left < 0) return false;
+    if (height_left > this.generators.length) return false;
+    if (height_right < 0) return false;
+    if (height_right > this.generators.length) return false;
     
-    var h1, h2;
-    if (input_h1 < input_h2) {
-        h1 = input_h1;
-        h2 = input_h2;
-    }
-    else {
-        h1 = input_h2;
-        h2 = input_h1;
-    }
-
     // Check that cells are adjacent
-    if (h1 + 1 != h2) {
+    if (Math.abs(height_left - height_right) != 1) {
         return false;
     }
 
     // Get data about rewrites
-    var g1 = this.generators[h1];
-    var r1 = gProject.signature.getGenerator(g1.id);
-    var g2 = this.generators[h2];
-    var r2 = gProject.signature.getGenerator(g2.id);
+    var g_left = this.generators[height_left];
+    var r_left = gProject.signature.getGenerator(g_left.id);
+    var g_right = this.generators[height_right];
+    var r_right = gProject.signature.getGenerator(g_right.id);
 
     // Check that cells are able to be interchanged
-    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
-    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
-    if (!(g1_left_possible || g1_right_possible)) {
-        return false;
+    if (height_left < height_right) {
+        return (g_left.coordinate[0] + r_left.target.generators.length <= g_right.coordinate[0]);
     }
-    
-    return true;
+    else {
+        return (g_left.coordinate[0] + r_left.source.generators.length <= g_right.coordinate[0]);
+    }
 }
 
-Diagram.prototype.rewriteInterchanger = function(input_h1, input_h2) {
+Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
     
-    if (!this.interchangerAllowed(input_h1, input_h2)) {
+    if (!this.interchangerAllowed(height_left, height_right)) {
         alert("Illegal input passed to rewriteInterchanger");
         return;
     }
     
-    var h1, h2;
-    if (input_h1 < input_h2) {
-        h1 = input_h1;
-        h2 = input_h2;
-    }
-    else {
-        h1 = input_h2;
-        h2 = input_h1;
-    }
-    
     // Get data about rewrites
-    var g1 = this.generators[h1];
-    var r1 = gProject.signature.getGenerator(g1.id);
-    var g2 = this.generators[h2];
-    var r2 = gProject.signature.getGenerator(g2.id);
+    var g_left = this.generators[height_left];
+    var r_left = gProject.signature.getGenerator(g_left.id);
+    var g_right = this.generators[height_right];
+    var r_right = gProject.signature.getGenerator(g_right.id);
 
-    // Check that cells are able to be interchanged
-    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
-    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
-
-    // If both are possible, take the order given by the clicks
-    var g1_on_left;
-    if (g1_left_possible && g1_right_possible) {
-        g1_on_left = (h1 == h1_input);
-    }
-    else {
-        g1_on_left = g1_left_possible;
-    }
-
-    // Choose the new positions for the 2-generators
-    var g1_new_position, g2_new_position;
-    if (g1_on_left) {
-        g1_new_position = g1.coordinate[0];
-        g2_new_position = g2.coordinate[0] + r1.source.generators.length - r1.target.generators.length;
-    }
-    else {
-        g2_new_position = g2.coordinate[0];
-        g1_new_position = g1.coordinate[0] + r2.target.generators.length - r2.source.generators.length;
+    var g_left_new_position, g_right_new_position;
+    if (height_left < height_right) {
+        g_left_new_position = g_left.coordinate[0];
+        g_right_new_position = g_right.coordinate[0] + r_left.source.generators.length - r_left.target.generators.length;
+    } else {
+        g_left_new_position = g_left.coordinate[0];
+        g_right_new_position = g_right.coordinate[0] - r_left.source.generators.length + r_left.target.generators.length;
     }
 
     // Rewrite the diagram
-    this.generators[h1].coordinate[0] = g1_new_position;
-    this.generators[h2].coordinate[0] = g2_new_position;
-    var temp = this.generators[h1];
-    this.generators[h1] = this.generators[h2];
-    this.generators[h2] = temp;
+    this.generators[height_left].coordinate[0] = g_left_new_position;
+    this.generators[height_right].coordinate[0] = g_right_new_position;
+    var temp = this.generators[height_left];
+    this.generators[height_left] = this.generators[height_right];
+    this.generators[height_right] = temp;
 
 }
