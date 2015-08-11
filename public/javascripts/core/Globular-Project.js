@@ -36,65 +36,89 @@ Project.prototype.getType = function() {
     return 'Project';
 };
 
-Project.prototype.applyStochasticProcess = function() {
-    var history = this.diagram; // history
-    history.boost(); //this takes the identity
-    var current_state = history.getTargetBoundary(); 
-    var species = this.signature.get_NCells(1); //not necessarily in the same order as processes...or in the same order each time it's called
-    var processes = this.signature.get_NCells(2);
-    var possible_events = [];
-    var rates = [];
-    
-    for(var i = 0; i < processes.length; i++) {
-        rates[i] = this.get_rate(processes[i]);  
-    }
-    for(var i = 0; i < processes.length; i++) {
-        possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
-    }
-    var eventsWithTimes = [];
-    for(var i = 0; i < possible_events.length; i++) {
-        for(var j = 0; j < possible_events[i].length; j++){
-            var negRateInverse = new Fraction(-1, rates[i]);
-            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i], i];  
-            //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
+Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, numIterations) {
+    for(var i = 0; i < numIterations; i++)
+    {
+        var species_dim = this.diagram.dimension;
+        var processes_dim = species_dim + 1;
+        var history = this.diagram; // history
+        var current_state =this.diagram.copy();
+        if(historyOn === true){
+            history.boost(); //this takes the identity   
         }
-	}
-    for(var i = 0; i < possible_events.length; i++) {
-        for(var j = 0; j < possible_events[i].length; j++) {
-            eventsWithTimes.push(possible_events[i][j]);
+        var species = this.signature.get_NCells(speciesDim); //not necessarily in the same order as processes...or in the same order each time it's called
+        var processes = this.signature.get_NCells(processes_dim);
+        var possible_events = [];
+        var rates = [];
+        
+        for(var i = 0; i < processes.length; i++) {
+            rates[i] = this.get_rate(processes[i]);  
         }
-    }
-	var indexNextEvent = -1;
-	//first extract all the event times
-	var eventTimes = [];
-	for(var x = 0; x < eventsWithTimes.length; x++) {
-	        eventTimes.push(eventsWithTimes[x][1]);
-	}
-	var least = 2;
-	var index = 0;
-	for(var x = 0; x < eventsWithTimes.length; x++) {
-		if (eventTimes[x] < least) {
-		    least = eventTimes[x];
-		    index = x;
-		
-		}
-	}
-    var processData; 
-    /*
-        for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
-        and the source and target of that process
-    */
-    for (i = 0; i < processes.length(); i++) {
-        processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
-        this.dataList.get(processes[i]).diagram.getTargetBoundary()]
-    }
-    var speciesData;  //this will store the species name and initial species counts
-    //so eventsWithTimes[index][0] is the event we want to execute
-    var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
-    history.attach(attached_event, 't', eventsWithTimes[index][0]);
-    this.renderDiagram();            
-    for (i = 0; i < speciesData.length; i++) {
-        speciesData
+        for(var i = 0; i < processes.length; i++) {
+            possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+        }
+        var eventsWithTimes = [];
+        for(var i = 0; i < possible_events.length; i++) {
+            for(var j = 0; j < possible_events[i].length; j++){
+                var negRateInverse = new Fraction(-1, rates[i]);
+                possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log(Math.random()), processes[i], i];  
+                //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
+            }
+    	}
+        for(var i = 0; i < possible_events.length; i++) {
+            for(var j = 0; j < possible_events[i].length; j++) {
+                eventsWithTimes.push(possible_events[i][j]);
+            }
+        }
+    	var indexNextEvent = -1;
+    	//first extract all the event times
+    	var eventTimes = [];
+    	for(var x = 0; x < eventsWithTimes.length; x++) {
+    	        eventTimes.push(eventsWithTimes[x][1]);
+    	}
+    	var least = 2;
+    	var index = 0;
+    	for(var x = 0; x < eventsWithTimes.length; x++) {
+    		if (eventTimes[x] < least) {
+    		    least = eventTimes[x];
+    		    index = x;
+    		}
+    	}
+    	/*
+    	    Stats Stuff
+        */	    
+        var processData; 
+        /*
+            for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
+            and the source and target of that process
+        */
+        for (var i = 0; i < processes.length(); i++) {
+            processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
+            this.dataList.get(processes[i]).diagram.getTargetBoundary()];
+        }
+        var speciesData;  //this will store the species name and initial species counts
+        for(i = 0; i < species.length; i++){
+            speciesData[i] = [this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary()];
+        }
+        for (var i = 0; i < speciesData.length; i++) {
+            speciesData
+        }
+        
+        //so eventsWithTimes[index][0] is the event we want to execute
+        var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
+        if (historyOn === true)
+        {
+            history.attach(attached_event, 't', eventsWithTimes[index][0]);
+            this.renderDiagram();
+        }
+        else{ //rewrite
+            var rewriteCell = {
+                id: eventsWithTimes[index][2],
+                coordinate: eventsWithTimes[index][0]
+            };
+            current_state.rewrite(rewriteCell, true);
+        }
+        
     }
 }
 
