@@ -80,7 +80,7 @@ Project.prototype.applyStochasticProcess = function() {
     //so eventsWithTimes[index][0] is the event we want to execute
     var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
     history.attach(attached_event, 't', eventsWithTimes[index][0]);
-this.renderDiagram();    
+    this.renderDiagram();    
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
@@ -469,8 +469,8 @@ Project.prototype.selectGenerator = function(id) {
     var target_matched_size = extended_target_matched.getFullDimensions();
 */
 
-    var sourceMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 's');
-    var targetMatches = this.prepareEnumerationData(this.diagram, matched_diagram, boundary_depth, 't');
+    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
 
     /*
     for (var i = 0; i < sourceMatches.length; i++) {
@@ -498,20 +498,20 @@ Project.prototype.selectGenerator = function(id) {
     return enumerationData;
 }
 
-Project.prototype.prepareEnumerationData = function(diagram, matched_diagram, boundary_depth, boundary_boolean) {
+Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
     
     var pattern_diagram;
     var matched_diagram_boundary;
     
     if(boundary_boolean === 's') {
-        pattern_diagram = diagram.getSourceBoundary();
+        pattern_diagram = this.diagram.getSourceBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getSourceBoundary();
         }
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
     else{
-        pattern_diagram = diagram.getTargetBoundary();
+        pattern_diagram = this.diagram.getTargetBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getTargetBoundary();
         }
@@ -601,6 +601,7 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
+
         if(this.diagram.dimension === 3){
             var slider = $('#slider').val();
             var diagram = this.diagram.getSlice(slider);
@@ -611,7 +612,7 @@ Project.prototype.renderDiagram = function() {
         }
     }
 
-}
+};
 
 // Need to write this code
 Project.prototype.renderHighlighted = function() {

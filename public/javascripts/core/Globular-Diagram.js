@@ -57,8 +57,13 @@ Diagram.prototype.getTargetBoundary = function() {
 /*
     Returns a specific kth slice of this diagram
 */
+
 Diagram.prototype.getSlice = function(k) {
     if (this.source === null) {
+        return null;
+    }
+    
+    if(k > this.generators.length){
         return null;
     }
 
@@ -68,7 +73,7 @@ Diagram.prototype.getSlice = function(k) {
     }
 
     return slice;
-}
+};
 
 
 /*
@@ -331,7 +336,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     // No generators to add on this level, so we recursively attach to the boundary
     if (boundary_path.length != 1) { // attached_diagram.generators.length = 0
         var temp_path = boundary_path.slice(1);
-        var temp_bounds = bounds.slice(1);
+        var temp_bounds = bounds;//.slice(1);
 
         // If attaching to the source, need to pad all other attachments
         if(temp_path[0] === 's'){
