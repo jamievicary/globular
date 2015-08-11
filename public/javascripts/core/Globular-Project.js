@@ -107,6 +107,17 @@ Project.prototype.applyStochasticProcess = function() {
     */
 }
 
+Project.prototype.displayInterchangers = function() {
+    
+    var interchangers = this.diagram.getInterchangers();
+    console.log(interchangers);
+    var i = Math.floor(Math.random()*1000);
+    i = i % interchangers.length;
+    this.diagram.rewrite(interchangers[i]);  
+    this.renderAll();
+};
+
+
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
 Project.prototype.getDiagram = function() {
     return this.diagram;
@@ -527,7 +538,7 @@ Project.prototype.addZeroCell = function() {
     this.dataList.put(generator.identifier, data);
 }
 
-Project.prototype.render = function(div, map_diagram, highlight) {
+Project.prototype.render = function(div, diagram, highlight) {
     /*
         if (highlight === undefined) {
             highlight = {
@@ -557,7 +568,7 @@ Project.prototype.render = function(div, map_diagram, highlight) {
         map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
     */
 
-    map_diagram.render(div, highlight);
+    diagram.render(div, highlight);
 
 }
 
@@ -724,9 +735,13 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-
-                project.render(div_match, project.diagram, match_array[i]);
-
+                
+                if(project.diagram.dimension === 3){
+                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);    
+                }
+                else{
+                    project.render(div_match, project.diagram, match_array[i]);
+                }
                 (function(match) {
                     $(div_match).click(function() {
                         project.attach(
@@ -744,7 +759,12 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     $(div_match).hover(
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
-                            project.render('#diagram-canvas', project.diagram, match);
+                            if(project.diagram.dimension === 3){
+                                project.render('#diagram-canvas', project.diagram.getSourceBoundary(), match);
+                            }
+                            else{
+                                project.render('#diagram-canvas', project.diagram, match);
+                            }
                         },
                         /* MOUSE OUT OF THE PREVIEW THUMBNAIL */
                         function() {

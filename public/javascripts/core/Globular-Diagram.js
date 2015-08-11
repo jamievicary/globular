@@ -428,6 +428,26 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
+Diagram.prototype.getInterchangers = function() {
+    
+    var interchangers = new Array();
+    for(var i = 0; i < this.generators.length -1; i++){
+        if(this.interchangerAllowed(i, i+1)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i, i+1]
+            });
+        }
+        else if(this.interchangerAllowed(i+1, i)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i+1, i]
+            });
+        }
+    }
+    return interchangers;
+}
+
 Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
     
     if (this.getDimension() != 2) return false;
