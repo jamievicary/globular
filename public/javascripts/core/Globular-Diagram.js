@@ -341,9 +341,12 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         // If attaching to the source, need to pad all other attachments
         if(temp_path[0] === 's'){
             for(var i = 0; i < this.generators.length; i++){
-                for(var j = 0; j < this.dimension - temp_path.length; j++) {//this.generators[i].coordinate.length; j++){
+                this.generators[i].coordinate[this.generators[i].coordinate.length-temp_path.length]++;
+                /*
+                for(var j = 0; j < this.generators[i].coordinate.length; j++){
                     this.generators[i].coordinate[j]++;
                 }
+                */
             }
         }
         
