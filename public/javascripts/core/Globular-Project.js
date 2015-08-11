@@ -131,6 +131,19 @@ Project.prototype.getColour = function(id) {
     return this.dataList.get(id).colour;
 };
 
+// Sets the front-end colour to what the user wants
+Project.prototype.set_rate = function(id, rate) {
+    var tempData = this.dataList.get(id);
+    tempData.rate = rate;
+    this.dataList.put(id, tempData);
+    this.saveState();
+};
+
+// Gets the front-end colour to what the user wants
+Project.prototype.get_rate = function(id) {
+    return this.dataList.get(id).rate;
+};
+
 
 /* 
 Takes a rule (generator) and a string describing how to get to an appropriate boundary of this diagram as arguments
