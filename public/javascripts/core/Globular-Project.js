@@ -60,7 +60,9 @@ Project.prototype.applyStochasticProcess = function() {
     var eventsWithTimes = [];
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++){
-            possible_events[i][j] = [possible_events[i][j], ((-1/rates[i]).toPrecision(4))*Math.log((Math.random()), processes[i]];   
+            var negRateInverse = new Fraction(-1, rates[i]);
+            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i]];  
+            //we'll go with 4 decimal places of precision for rate for now...we can deal with the minor fluctuations of 
         }
 	}
     for(var i = 0; i < possible_events.length; i++) {
@@ -86,8 +88,19 @@ Project.prototype.applyStochasticProcess = function() {
     //so eventsWithTimes[index][0] is the event we want to execute
     var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
     history.attach(attached_event, 't', eventsWithTimes[index][0]);
-    this.renderDiagram();    
-    //need to update species numbers...which means you'll need to know what your process does
+    this.renderDiagram();            
+    var processData; 
+    /*
+        for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
+        and the source and target of that process
+    */
+    for (i = 0; i < processes.length(); i++) {
+        processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
+        this.dataList.get(processes[i]).diagram.getTargetBoundary()]
+    }
+    for (i = 0; i < species.length; i++) {
+        //update species at i
+    }
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
