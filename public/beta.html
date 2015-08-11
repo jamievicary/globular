@@ -71,12 +71,14 @@
 		
 		<input type ="text" id = "diagram-title" style = "display: none">
 		<ul id = "project-menu" style = "display:none">
+			<div id = 'sto-form'>Stochastic<input type = "checkbox" id = "stochastic-cb"><li id = "run-process" class= "button-style-3">Run Process</li></div>
 			<li id = "save-project-opt" class= "button-style-3" p_id = "">Save</li>
 			<li id = "clear-project-opt" class= "button-style-3"><u>C</u>lear</li>
 			<li id = "get-str-opt" class= "button-style-3">Export</li>
 			<li id = "use-id-opt" class= "button-style-3"><u>I</u>dentity</li>
 			<li id = "use-s-opt" class= "button-style-3"><u>S</u>ource</li>
 			<li id = "use-t-opt" class= "button-style-3"><u>T</u>arget</li>
+			
 		</ul>
 		<div id = "diagram-canvas" style = "display: none">
 		</div>
@@ -116,7 +118,17 @@
 			Close
 		</div>
 	</div>
-	
+	<div class = "box" id = "run-proc-box">
+		<div id = 'process-form'>
+			History:<input type = 'checkbox' style = "margin-left: 37px;" id = "rp-hist"><br>
+			Statistics:<input type = 'checkbox' style = "margin-left: 25px;" id = "rp-stats"><br>
+			Iterations:<input type = 'text' class = "cell-label" style = "height: 15px" id = "rp-iters"><br>
+			<input type = 'button' id = 'run-process-go' value = "Run" style = "width: 70px" class = "submit-field-style-1">
+		</div>
+		<div id = "r-p-cc" class = "msg-close-opt">
+			Close
+		</div>
+	</div>
 	<input id="slider" type="range" value="0" min="0" max="10" step="1">
 
 </body>
