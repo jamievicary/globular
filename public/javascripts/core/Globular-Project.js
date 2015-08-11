@@ -37,16 +37,26 @@ Project.prototype.getType = function() {
 };
 
 Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, numIterations) {
-    for(var i = 0; i < numIterations; i++)
+    
+    var species_dim = this.diagram.dimension;
+    var processes_dim = species_dim + 1;
+    var history = this.diagram; // history
+    var current_state;
+        
+    if(historyOn === true){
+        history.boost(); //this takes the identity   
+    }
+    else{
+        current_state = this.diagram;
+    }
+        
+    for(var m = 0; m < numIterations; m++)
     {
-        var species_dim = this.diagram.dimension;
-        var processes_dim = species_dim + 1;
-        var history = this.diagram; // history
-        var current_state =this.diagram.copy();
-        if(historyOn === true){
-            history.boost(); //this takes the identity   
+        if(historyOn){
+            current_state = history.getTargetBoundary();
         }
-        var species = this.signature.get_NCells(speciesDim); //not necessarily in the same order as processes...or in the same order each time it's called
+        
+        var species = this.signature.get_NCells(species_dim); //not necessarily in the same order as processes...or in the same order each time it's called
         var processes = this.signature.get_NCells(processes_dim);
         var possible_events = [];
         var rates = [];
@@ -61,6 +71,8 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
         for(var i = 0; i < possible_events.length; i++) {
             for(var j = 0; j < possible_events[i].length; j++){
                 var negRateInverse = new Fraction(-1, rates[i]);
+                //need to change fraction into number first
+                negRateInverse = negRateInverse.n / negRateInverse.d;
                 possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log(Math.random()), processes[i], i];  
                 //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
@@ -87,14 +99,16 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
     	/*
     	    Stats Stuff
         */	    
-        var processData; 
+        var processData = []; 
         /*
             for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
             and the source and target of that process
         */
-        for (var i = 0; i < processes.length(); i++) {
-            processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
-            this.dataList.get(processes[i]).diagram.getTargetBoundary()];
+        for (var i = 0; i < processes.length; i++) {
+            var data = this.dataList;
+            var process_retrieve = data.get(processes[i]);
+            var process_diagram = process_retrieve.diagram;
+            processData[i] = [this.getName(processes[i]), process_diagram.getSourceBoundary(), process_diagram.getTargetBoundary()];
         }
         var species_numbers = new Hashtable();  //this will store the species name and initial species counts
         for(i = 0; i < species.length; i++){
@@ -104,12 +118,12 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
         //increment num; .put(name, num)
         var executedProcess = eventsWithTimes[index][2];
         var executedProcess_sources = this.dataList.get(executedProcess).diagram.getSourceBoundary();
-        var source_Names;
+        var source_Names = [];
         for (var i = 0; i < executedProcess_sources.length; i++) {
             source_Names.push(executedProcess_sources[i]);
         }
         var executedProcess_targets = this.dataList.get(executedProcess).diagram.getTargetBoundary();
-        var target_Names;
+        var target_Names = [];
         for (var i = 0; i < executedProcess_targets.length; i++) {
             target_Names.push(executedProcess_targets[i]);
         }
@@ -145,6 +159,7 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
             current_state.rewrite(rewriteCell, true);
         }
     }
+    return species_numbers;  //just the hashtable...someone will need to make it look nice to the user with species name and number
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
