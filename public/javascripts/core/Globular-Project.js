@@ -44,19 +44,27 @@ Project.prototype.applyStochasticProcess = function() {
         whatever the user names the process and get that data back to us
     */
     var history = this.diagram; // history
+    history.boost(); //this takes the identity
     var current_state = history.getTargetBoundary(); 
+    var species = this.signature.get_NCells(1); 
     var processes = this.signature.get_NCells(2);
     var possible_events = [];
+    var rates = [];
+    
+    for(var i = 0; i < processes.length; i++) {
+        rates[i] = this.get_rate(processes[i]);  
+    }
     for(var i = 0; i < processes.length; i++) {
         possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
     }
     var eventsWithTimes = [];
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++){
-            possible_events[i][j] = [possible_events[i][j], Math.random(), processes[i]];   
+            var negRateInverse = new Fraction(-1, rates[i]);
+            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i]];  
+            //we'll go with 4 decimal places of precision for rate for now...we can deal with the minor fluctuations of 
         }
 	}
-	//Now that the specific rates have been assigned, don't care to keep events and processes separate
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++) {
             eventsWithTimes.push(possible_events[i][j]);
@@ -80,7 +88,19 @@ Project.prototype.applyStochasticProcess = function() {
     //so eventsWithTimes[index][0] is the event we want to execute
     var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
     history.attach(attached_event, 't', eventsWithTimes[index][0]);
-    this.renderDiagram();    
+    this.renderDiagram();            
+    var processData; 
+    /*
+        for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
+        and the source and target of that process
+    */
+    for (i = 0; i < processes.length(); i++) {
+        processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
+        this.dataList.get(processes[i]).diagram.getTargetBoundary()]
+    }
+    for (i = 0; i < species.length; i++) {
+        //update species at i
+    }
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
@@ -122,6 +142,19 @@ Project.prototype.setColour = function(id, colour) {
 // Gets the front-end colour to what the user wants
 Project.prototype.getColour = function(id) {
     return this.dataList.get(id).colour;
+};
+
+// Sets the front-end colour to what the user wants
+Project.prototype.set_rate = function(id, rate) {
+    var tempData = this.dataList.get(id);
+    tempData.rate = rate;
+    this.dataList.put(id, tempData);
+    this.saveState();
+};
+
+// Gets the front-end colour to what the user wants
+Project.prototype.get_rate = function(id) {
+    return this.dataList.get(id).rate;
 };
 
 
