@@ -129,6 +129,12 @@ Diagram.prototype.render = function(div, highlight) {
 Diagram.prototype.rewrite = function(nCell, reverse) {
 
     if (reverse === undefined) reverse = false;
+    
+    // Special code to deal with interchangers
+    if(nCell.id === 'interchanger'){
+        
+        return;
+    }
 
     // Info on the source and the target of the rewrite is retrieved from the signature here
     var rewrite = gProject.signature.getGenerator(nCell.id);

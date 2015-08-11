@@ -491,42 +491,9 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-/*
-    var extended_source = this.diagram.getSourceBoundary();
-    var extended_target = this.diagram.getTargetBoundary();
-
-    for (var i = 0; i < boundary_depth; i++) {
-        extended_target = extended_source.getTargetBoundary();
-        extended_source = extended_source.getSourceBoundary();
-    }
-
-    var extended_source_matched = matched_diagram.getSourceBoundary();
-    var extended_target_matched = matched_diagram.getTargetBoundary();
-    var source_matched_size = extended_source_matched.getFullDimensions();
-    var target_matched_size = extended_target_matched.getFullDimensions();
-*/
-
     var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
     var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
 
-    /*
-    for (var i = 0; i < sourceMatches.length; i++) {
-        sourceMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('s')),
-            inclusion: sourceMatches[i],
-            size: target_matched_size
-        };
-    }*/
-    
-//    var targetMatches = extended_target.enumerate(extended_source_matched);
-    /* targetMatches = prepareEnumerationData(targetMatches, 't', boundary_depth);
-    for (var i = 0; i < targetMatches.length; i++) {
-        targetMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('t')),
-            inclusion: targetMatches[i],
-            size: source_matched_size
-        };
-    }*/
     var enumerationData = {
         attachmentFlag: true,
         diagram: matched_diagram,
