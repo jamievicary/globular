@@ -258,7 +258,7 @@ Project.prototype.clearDiagram = function() {
 // Take the identity on the main diagram
 Project.prototype.takeIdentity = function() {
     if (this.diagram == null) return;
-    if (this.diagram.getDimension() >= 2) {
+    if (this.diagram.getDimension() >= 3) {
         alert("Can't take the identity of a " + this.diagram.getDimension().toString() + "-dimensional diagram");
         return;
     }
@@ -366,7 +366,7 @@ Project.prototype.clickCell = function(height) {
     if (this.selected_cell == height) {
         return;
     }
-
+    
     // Try to perform the interchange
     var h1, h2;
     if (height < this.selected_cell) {
@@ -379,51 +379,14 @@ Project.prototype.clickCell = function(height) {
     }
     this.selected_cell = null;
 
-    // Check that cells are adjacent
-    if (h1 + 1 != h2) {
-        alert("Can't interchange non-adjacent 2-cells");
-        return;
-    }
-
-    // Get data about rewrites
-    var g1 = this.diagram.generators[h1];
-    var r1 = gProject.signature.getGenerator(g1.id);
-    var g2 = this.diagram.generators[h2];
-    var r2 = gProject.signature.getGenerator(g2.id);
-
-    // Check that cells are able to be interchanged
-    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
-    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
-    if (!(g1_left_possible || g1_right_possible)) {
-        alert ("Can't interchange these 2-cells");
-        return;
+    // Check if this is allowed
+    if (!this.diagram.interchangerAllowed(h1, h2)) {
+        alert("Cannot interchange these cells");
+        return
     }
     
-    // If both are possible, take the order given by the clicks
-    var g1_on_left;
-    if (g1_left_possible && g1_right_possible) {
-        g1_on_left = (h1 == height);
-    }
-    else {
-        g1_on_left = g1_left_possible;
-    }
-
-    var g1_new_position, g2_new_position;
-    if (g1_on_left) {
-        g1_new_position = g1.coordinate[0];
-        g2_new_position = g2.coordinate[0] + r1.source.generators.length - r1.target.generators.length;
-    }
-    else {
-        g2_new_position = g2.coordinate[0];
-        g1_new_position = g1.coordinate[0] + r2.target.generators.length - r2.source.generators.length;
-    }
-
-    // Everything's OK, so modify the diagram structure
-    this.diagram.generators[h1].coordinate[0] = g1_new_position;
-    this.diagram.generators[h2].coordinate[0] = g2_new_position;
-    var temp = this.diagram.generators[h1];
-    this.diagram.generators[h1] = this.diagram.generators[h2];
-    this.diagram.generators[h2] = temp;
+    // Perform the interchanger
+    this.diagram.rewriteInterchanger(h1, h2);
 
     // Finish up and render the result
     this.selected_cell = null;
