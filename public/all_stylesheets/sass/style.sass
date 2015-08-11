@@ -133,9 +133,7 @@ body, html
 	box-shadow: 0px 0px 40px dimgrey
 	border: 1px dashed grey
 	left: calc( 50% - 125px )
-	
-input.color-picker
-	width: 100px
+
 
 .zindex-error
 	z-index: 100000000
@@ -237,7 +235,7 @@ $cell_bg: #273c61
 
 .cell-label
 
-	width: 100px
+	width: 60px
 	border: none
 	outline-width: 0px
 	letter-spacing: 2px
@@ -247,12 +245,24 @@ $cell_bg: #273c61
 	border-radius: 1px
 	margin-left: 20px
 
-
+.stochastic-rate
+	width: 33px
+	border: none
+	outline-width: 0px
+	letter-spacing: 2px
+	position: absolute
+	margin-top: 5px
+	margin-left: 5px
+	display: none
+	border-radius: 1px
+	height: 20px
+	
 .color-picker
 	margin-top: 35px
 	border-radius: 1px
 	letter-spacing: 2px
 	border: none
+	width: 60px
 	margin-left: 20px
 	height: 20px
 	
@@ -363,3 +373,17 @@ $top-menu-height: 20px
 	right: 5px
 	width: 100px
 	position: absolute
+	
+#sto-form
+	position: absolute
+	color: #008b8b
+	font-size: 70%
+	margin-left: -200px
+	
+#run-process
+	float: right
+	background-color: #008b8b
+	
+#process-form
+	text-align: left
+	padding: 10px

@@ -317,7 +317,19 @@ $(document).ready(function() {
             var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
             show_msg(msg, false, 3);
         });
-
+        
+        $("#run-process").click(function(){
+            $("#run-proc-box").fadeIn();
+            $("#run-process-go").click(function(){
+                var hist = $("#rp-hist").is(':checked');
+                var stats = $("#rp-stats").is(':checked');
+                var iterations = $("#rp-iters").val();
+                
+                gProject.applyStochasticProcess(hist, stats, iterations);
+                gProject.renderAll();
+            });
+            
+        });
     }
 
     $("#use-t-opt").click(function() {
@@ -455,5 +467,8 @@ $(document).ready(function() {
     });
     $("#msg-close-opt-projects").click(function() {
         $("#my-projects-box").fadeOut();
+    });
+    $("#r-p-cc").click(function() {
+        $("#run-proc-box").fadeOut();
     });
 });
