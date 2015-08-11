@@ -647,7 +647,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         div_icon_2.className = 'cell-icon';
         div_icon_2.id = 'ci1-' + cell;
         div_main.appendChild(div_icon_2);
-        $(div_icon_2).css('margin-left', '22px')
+        $(div_icon_2).css('margin-left', '22px');
     }
 
     // Add detail container
@@ -656,7 +656,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
     div_detail.className = 'cell-detail';
     div_main.appendChild(div_detail);
     if (n == 3) {
-        $(div_detail).css('margin-left', '165px');
+        $(div_detail).css('margin-left', '155px');
     }
 
     // Add label
@@ -679,13 +679,41 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         project.setColour(cell, '#' + this.toString());
         project.renderAll();
     };
-
+    
+  
     /*$(input_color).blur(function() {
         project.setColour(cell, '#' + $(this).val().toString());
         project.renderAll();
     });*/
 
     div_detail.appendChild(input_color);
+
+    if(n!=0){
+        
+        var sto_rate_text = document.createElement('input');
+        sto_rate_text.className = 'stochastic-rate';
+        sto_rate_text.id = 'sr-' + cell;
+        sto_rate_text.type = 'text';
+        sto_rate_text.placeholder='Rate';
+        
+        div_detail.appendChild(sto_rate_text);
+        
+    }
+    
+    $("#stochastic-cb").change(function(){
+        if ($(this).is(':checked')) {
+            $(".stochastic-rate").slideDown();
+            
+        } else {
+            $(".stochastic-rate").slideUp();
+        }
+    });
+    
+    $(".stochastic-rate").blur(function(){
+        var cid = $(this).attr("id").substring(3); 
+        var rate = $(this).val();
+        project.set_rate(cid, rate);
+    });
 
     // Add extra section
     var div_extra = document.createElement('div');
