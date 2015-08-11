@@ -96,12 +96,39 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
             processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
             this.dataList.get(processes[i]).diagram.getTargetBoundary()];
         }
-        var speciesData;  //this will store the species name and initial species counts
+        var species_numbers = new Hashtable();  //this will store the species name and initial species counts
         for(i = 0; i < species.length; i++){
-            speciesData[i] = [this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary()];
+            species_numbers.put(this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary());   
         }
-        for (var i = 0; i < speciesData.length; i++) {
-            speciesData
+        //var num = species_numbers.get(this.getName(species[index]))
+        //increment num; .put(name, num)
+        var executedProcess = eventsWithTimes[index][2];
+        var executedProcess_sources = this.dataList.get(executedProcess).diagram.getSourceBoundary();
+        var source_Names;
+        for (var i = 0; i < executedProcess_sources.length; i++) {
+            source_Names.push(executedProcess_sources[i]);
+        }
+        var executedProcess_targets = this.dataList.get(executedProcess).diagram.getTargetBoundary();
+        var target_Names;
+        for (var i = 0; i < executedProcess_targets.length; i++) {
+            target_Names.push(executedProcess_targets[i]);
+        }
+
+        for (var i = 0; i < source_Names.length; i++) {
+            var num = species_numbers.get(this.getName(source_Names[i]));
+            num = num - 1;
+            species_numbers.put(this.getName(source_Names[i]), num);
+        }
+        for (var i = 0; i < target_Names.length; i++) {
+            var num = species_numbers.get(this.getName(target_Names[i]));
+            num = num++;
+            species_numbers.put(this.getName(target_Names[i]), num);
+        }
+        //To where do we send the stats data?
+        
+        //data updated below
+        for (var i = 0; i < species_numbers.length; i++) {
+            species_numbers
         }
         
         //so eventsWithTimes[index][0] is the event we want to execute
