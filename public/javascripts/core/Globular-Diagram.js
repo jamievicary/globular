@@ -7,8 +7,8 @@
 function Diagram(source, generators) {
     if (source === undefined) return;
     
-    this.source = source; // Diagram
-    this.generators = generators; // Array
+    this.source = source;
+    this.generators = generators;
 
     if (source === null) {
         this.dimension = 0;
