@@ -37,16 +37,10 @@ Project.prototype.getType = function() {
 };
 
 Project.prototype.applyStochasticProcess = function() {
-    /*
-        How will we assign rates to particular processes??; some array rates could have the same length as processes, processes associated
-        to their specific rate via the same appropriate index; but how do we know which process is which in our processes array...
-        Does getNCells go in order from the vertical side panel?  Currently it's random, but the processes are labelled--need html code to take
-        whatever the user names the process and get that data back to us
-    */
     var history = this.diagram; // history
     history.boost(); //this takes the identity
     var current_state = history.getTargetBoundary(); 
-    var species = this.signature.get_NCells(1); 
+    var species = this.signature.get_NCells(1); //not necessarily in the same order as processes...or in the same order each time it's called
     var processes = this.signature.get_NCells(2);
     var possible_events = [];
     var rates = [];
@@ -61,8 +55,8 @@ Project.prototype.applyStochasticProcess = function() {
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++){
             var negRateInverse = new Fraction(-1, rates[i]);
-            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i]];  
-            //we'll go with 4 decimal places of precision for rate for now...we can deal with the minor fluctuations of 
+            possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i], i];  
+            //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
         }
 	}
     for(var i = 0; i < possible_events.length; i++) {
@@ -85,10 +79,6 @@ Project.prototype.applyStochasticProcess = function() {
 		
 		}
 	}
-    //so eventsWithTimes[index][0] is the event we want to execute
-    var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
-    history.attach(attached_event, 't', eventsWithTimes[index][0]);
-    this.renderDiagram();            
     var processData; 
     /*
         for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
@@ -98,8 +88,13 @@ Project.prototype.applyStochasticProcess = function() {
         processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
         this.dataList.get(processes[i]).diagram.getTargetBoundary()]
     }
-    for (i = 0; i < species.length; i++) {
-        //update species at i
+    var speciesData;  //this will store the species name and initial species counts
+    //so eventsWithTimes[index][0] is the event we want to execute
+    var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
+    history.attach(attached_event, 't', eventsWithTimes[index][0]);
+    this.renderDiagram();            
+    for (i = 0; i < speciesData.length; i++) {
+        speciesData
     }
 }
 
