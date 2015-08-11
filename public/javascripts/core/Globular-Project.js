@@ -367,6 +367,9 @@ Project.prototype.clickCell = function(height) {
         return;
     }
     
+    var h1 = this.selected_cell;
+    var h2 = height;
+    /*
     // Try to perform the interchange
     var h1, h2;
     if (height < this.selected_cell) {
@@ -377,12 +380,18 @@ Project.prototype.clickCell = function(height) {
         h1 = this.selected_cell;
         h2 = height;
     }
-    this.selected_cell = null;
+    */
 
     // Check if this is allowed
     if (!this.diagram.interchangerAllowed(h1, h2)) {
+        var temp = h1;
+        h1 = h2;
+        h2 = temp;
+    }
+    
+    if (!this.diagram.interchangerAllowed(h1, h2)) {
         alert("Cannot interchange these cells");
-        return
+        return;
     }
     
     // Perform the interchanger
