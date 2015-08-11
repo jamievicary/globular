@@ -43,6 +43,7 @@ Project.prototype.applyStochasticProcess = function() {
         Does getNCells go in order from the vertical side panel?  Currently it's random, but the processes are labelled--need html code to take
         whatever the user names the process and get that data back to us
     */
+    
     var history = this.diagram; // history
     history.boost(); //this takes the identity
     var current_state = history.getTargetBoundary(); 
@@ -58,13 +59,14 @@ Project.prototype.applyStochasticProcess = function() {
         possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
     }
     var eventsWithTimes = [];
-    for(var i = 0; i < possible_events.length; i++) {
+    /*for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++){
             var negRateInverse = new Fraction(-1, rates[i]);
             possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log((Math.random()), processes[i]];  
             //we'll go with 4 decimal places of precision for rate for now...we can deal with the minor fluctuations of 
+     
         }
-	}
+	}*/
     for(var i = 0; i < possible_events.length; i++) {
         for(var j = 0; j < possible_events[i].length; j++) {
             eventsWithTimes.push(possible_events[i][j]);
@@ -86,14 +88,15 @@ Project.prototype.applyStochasticProcess = function() {
 		}
 	}
     //so eventsWithTimes[index][0] is the event we want to execute
-    var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
+   /* var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
     history.attach(attached_event, 't', eventsWithTimes[index][0]);
     this.renderDiagram();            
-    var processData; 
+    var processData; */
     /*
         for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
         and the source and target of that process
     */
+    /*
     for (i = 0; i < processes.length(); i++) {
         processData[i] = [this.getName(processes[i]), this.dataList.get(processes[i]).diagram.getSourceBoundary(),
         this.dataList.get(processes[i]).diagram.getTargetBoundary()]
@@ -101,6 +104,7 @@ Project.prototype.applyStochasticProcess = function() {
     for (i = 0; i < species.length; i++) {
         //update species at i
     }
+    */
 }
 
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
