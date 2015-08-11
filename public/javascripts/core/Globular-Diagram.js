@@ -421,3 +421,94 @@ Diagram.prototype.getFullDimensions = function() {
     //return [this.generators.length].concat(this.source.getFullDimensions());
     return full_dimensions;
 };
+
+Diagram.prototype.interchangerAllowed = function(input_h1, input_h2) {
+    
+    if (this.getDimension() != 2) return false;
+    
+    var h1, h2;
+    if (input_h1 < input_h2) {
+        h1 = input_h1;
+        h2 = input_h2;
+    }
+    else {
+        h1 = input_h2;
+        h2 = input_h1;
+    }
+
+    // Check that cells are adjacent
+    if (h1 + 1 != h2) {
+        return false;
+    }
+
+    // Get data about rewrites
+    var g1 = this.generators[h1];
+    var r1 = gProject.signature.getGenerator(g1.id);
+    var g2 = this.generators[h2];
+    var r2 = gProject.signature.getGenerator(g2.id);
+
+    // Check that cells are able to be interchanged
+    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
+    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
+    if (!(g1_left_possible || g1_right_possible)) {
+        return false;
+    }
+    
+    return true;
+}
+
+Diagram.prototype.rewriteInterchanger = function(input_h1, input_h2) {
+    
+    if (!this.interchangerAllowed(input_h1, input_h2)) {
+        alert("Illegal input passed to rewriteInterchanger");
+        return;
+    }
+    
+    var h1, h2;
+    if (input_h1 < input_h2) {
+        h1 = input_h1;
+        h2 = input_h2;
+    }
+    else {
+        h1 = input_h2;
+        h2 = input_h1;
+    }
+    
+    // Get data about rewrites
+    var g1 = this.generators[h1];
+    var r1 = gProject.signature.getGenerator(g1.id);
+    var g2 = this.generators[h2];
+    var r2 = gProject.signature.getGenerator(g2.id);
+
+    // Check that cells are able to be interchanged
+    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
+    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
+
+    // If both are possible, take the order given by the clicks
+    var g1_on_left;
+    if (g1_left_possible && g1_right_possible) {
+        g1_on_left = (h1 == h1_input);
+    }
+    else {
+        g1_on_left = g1_left_possible;
+    }
+
+    // Choose the new positions for the 2-generators
+    var g1_new_position, g2_new_position;
+    if (g1_on_left) {
+        g1_new_position = g1.coordinate[0];
+        g2_new_position = g2.coordinate[0] + r1.source.generators.length - r1.target.generators.length;
+    }
+    else {
+        g2_new_position = g2.coordinate[0];
+        g1_new_position = g1.coordinate[0] + r2.target.generators.length - r2.source.generators.length;
+    }
+
+    // Rewrite the diagram
+    this.generators[h1].coordinate[0] = g1_new_position;
+    this.generators[h2].coordinate[0] = g2_new_position;
+    var temp = this.generators[h1];
+    this.generators[h1] = this.generators[h2];
+    this.generators[h2] = temp;
+
+}
