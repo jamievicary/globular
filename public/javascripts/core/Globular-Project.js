@@ -113,7 +113,7 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
         for (var i = 0; i < executedProcess_targets.length; i++) {
             target_Names.push(executedProcess_targets[i]);
         }
-
+        //data updated below
         for (var i = 0; i < source_Names.length; i++) {
             var num = species_numbers.get(this.getName(source_Names[i]));
             num = num - 1;
@@ -126,7 +126,6 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
         }
         //To where do we send the stats data?
         
-        //data updated below
         for (var i = 0; i < species_numbers.length; i++) {
             species_numbers
         }
@@ -145,7 +144,6 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
             };
             current_state.rewrite(rewriteCell, true);
         }
-        
     }
 }
 
@@ -285,7 +283,7 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
 
         this.diagram.rewrite(rewriteCell);
 
-    }
+    } 
 };
 
 
@@ -673,6 +671,7 @@ Project.prototype.renderGenerator = function(div, id) {
 Project.prototype.renderDiagram = function() {
     var div = '#diagram-canvas';
     if (this.diagram == null) {
+        $('#slider').hide()
         var canvas = $(div).find('canvas');
         if (canvas.length != 0) {
             canvas = canvas[0];
@@ -680,13 +679,15 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
-
         if(this.diagram.dimension === 3){
+            $('#slider').attr('max', this.diagram.generators.length);
+            $('#slider').show()
             var slider = $('#slider').val();
             var diagram = this.diagram.getSlice(slider);
             this.render(div, diagram);
         }
         else{
+            $('#slider').hide()
             this.render(div, this.diagram);
         }
     }
