@@ -364,15 +364,19 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         var boundary_boolean = boundary_path[0];
     }
 
-    if (this.dimension != attached_diagram.dimension) {
+    // The attached cell is prepared according to the match that has been found and inserted into the generators array
+    
+    var attached_nCell = attached_diagram.generators[0];
+    
+    if (this.dimension != attached_diagram.dimension && attached_nCell.id != "interchanger") {
         console.log("Cannot attach - dimensions do not match");
         return;
     }
 
-    // The attached cell is prepared according to the match that has been found and inserted into the generators array
-
-    var attached_nCell = attached_diagram.generators[0];
-    attached_nCell.coordinate = bounds;
+    
+    if(attached_nCell.id != "interchanger"){
+        attached_nCell.coordinate = bounds;
+    }
 
     var k = 0;
     if (boundary_boolean === 't') {
@@ -386,11 +390,16 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         The rewrite of the boundary is specified exactly by the attachment bounds
     */
     if (boundary_boolean === 's') {
-        var rewriteCell = {
-            id: attached_diagram.generators[0].id,
-            coordinate: bounds
-        };
-        this.source.rewrite(rewriteCell, true);
+        if(attached_nCell.id === "interchanger"){
+            this.source.rewriteInterchanger(attached_nCell.level[1], attached_nCell.level[0]);   
+        }
+        else{
+            var rewriteCell = {
+                id: attached_diagram.generators[0].id,
+                coordinate: bounds
+            };
+            this.source.rewrite(rewriteCell, true);
+        }
     }
     // No need to rewrite the target, as this will implicitly be done when the target is explicitly calculated
 };
