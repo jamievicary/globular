@@ -7,63 +7,71 @@
   <title>Globular</title>
   	<link rel = "stylesheet" type = "text/css" href="/all_stylesheets/stylesheets/style.css">
   	<script src="/javascripts/libs/jquery.js"></script>
+  	<script src="/javascripts/libs/Fraction.js"></script>
   	<script src="/javascripts/libs/jscolor/jscolor.js"></script>
   	<script src="/javascripts/front/home.js"></script>
-  	<script src="/javascripts/classic/Globular-Project.js"></script>
-  	<script src="/javascripts/classic/Globular-Diagram.js"></script>
-  	<script src="/javascripts/classic/Globular-Data.js"></script>
-  	<script src="/javascripts/classic/Globular-Generator.js"></script>
-  	<script src="/javascripts/classic/Globular-Graph.js"></script>
-  	<script src="/javascripts/classic/Globular-Hashtable.js"></script>
-  	<script src="/javascripts/classic/Globular-MapDiagram.js"></script>
-  	<script src="/javascripts/classic/Globular-Rewrite.js"></script>
-  	<script src="/javascripts/classic/Globular-PartialOrder.js"></script>
-  	<script src="/javascripts/classic/Globular-Queue.js"></script>
-  	<script src="/javascripts/classic/Globular-Signature.js"></script>
-  	<script src="/javascripts/classic/Globular-Stringify.js"></script>
-  	<script src="/javascripts/classic/Globular-Render.js"></script>
-  	<script src="/javascripts/classic/Globular-Auxiliary.js"></script>
+  	<script src="/javascripts/libs/three.min.js"></script>
+	<script src="/javascripts/core/Globular-Project.js"></script>
+  	<script src="/javascripts/core/Globular-Diagram.js"></script>
+  	<script src="/javascripts/core/Globular-Data.js"></script>
+  	<script src="/javascripts/core/Globular-Generator.js"></script>
+  	<script src="/javascripts/core/Globular-Hashtable.js"></script>
+  	<script src="/javascripts/core/Globular-Signature.js"></script>
+  	<script src="/javascripts/core/Globular-Stringify.js"></script>
+  	<script src="/javascripts/core/Globular-Render.js"></script>
+  	<script src="/javascripts/core/Globular-Auxiliary.js"></script>
+  	<script src="/javascripts/core/Globular-Complex.js"></script>
   	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="/javascripts/libs/three.min.js"></script>
 	<script src="/javascripts/libs/OrbitControls-Ortho.js"></script>
 	
 </head>
 
 <body>
-	
-	<div id = "control-body">
+	<div style = "height: 70px;width: 100%;background-color: lightgrey;margin: 0;">
 		<div id = "site-logo">
-			GLOBULAR
+			<img src = '/images/logo.png' style="height:60px;width:100px;position: absolute;margin-left: -45px;">&ensp;&ensp;LOBULAR
 		</div>
-		<hr size = "1">
-		<div id = "site-controller-body">
-				<div class = "button-style-1 enable_if-out" id = "opt-1">Login</div>
-				<div class = "button-style-1 enable_if-out" id = "opt-2" style = "float:left;">Sign Up</div>	
-				<form id = "opt-section-1" class = "site-options-form-body enable_if-out" method = "POST">
-					<input type = "text" id = "login_email" name = "login_email" class = "text-field-style-1" style = "margin-top:20px" placeholder = "Email" value ="testuser1@test.com"><br>
-					<input type = "password" id = "login_pass" name = "login_password" class = "text-field-style-1" placeholder = "Password" value = "test">
-					<input type = "button" class = "submit-field-style-1" id = "login-button" value = "Login">
-				</form>
-				<form id = "opt-section-2" class = "site-options-form-body" style = "height:130px">
-					<input type = "text" class = "text-field-style-1" id = "reg_email" placeholder = "Email" style = "margin-top:20px"><br>
-					<input type = "password" class = "text-field-style-1" id = "reg_pass" placeholder = "Password"><br>
-					<input type = "password" class = "text-field-style-1" id = "reg_vpass" placeholder = "Verify Password"><br>
-					<input type = "button" value = "Sign Up" class = "submit-field-style-1" id = "reg_submit">
-				</form>
-				
-				<div class = "enable_if-in" id = "site-cont-header-loggedin"><i id = "value-email"></i> <a href = "/logout">Log out</a></div>
-				<div id = "ajax-loading" style = ""></div>
-				<div class = "button-style-2 enable_if-in" id = "view-profile-opt">Profile</div>
-				<div class = "button-style-2 enable_if-in" style = "float:left;" id = "my-projects-opt">Projects</div>
-				
-				<hr size = "1" style = "margin-top: 40px;">
-		</div>
-		<div id = "cell-body-container">
-			<div id = "cell-body">
-				
+		<div id = "ajax-loading" style = ""></div>
+		<ul id = "main-menu">
+			<li id = 'mm-1' class = "enable_if-out">LOGIN</li>
+			<li id = 'mm-2' class = "enable_if-out">SIGN UP</li>
+			<li id = 'mm-3'>HELP</li>
+			<li id = 'mm-4'>ABOUT</li>
+			<li id = 'view-profile-opt' class = "enable_if-in">PROFILE</li>
+			<li id = 'my-projects-opt' class = "enable_if-in">PROJECTS</li>
+			<li id = "mm-5" class = "enable_if-in"><a href = "/logout">LOG OUT</a></li>
+		</ul>
+	</div>
+	<div style = "height: calc(100% - 70px);width:100%;background-color: grey;">
+		<div id = "control-body">
+			<div id = "cell-body-container">
+				<div id = "cell-body">
+					
+				</div>
 			</div>
 		</div>
+		
+		<div id = "diagram-body">
+			
+			<input type ="text" id = "diagram-title" style = "display: none">
+			<ul id = "project-menu" style = "display:none">
+				<li id = "save-project-opt" class= "button-style-3" p_id = "">Save</li>
+				<li id = "clear-project-opt" class= "button-style-3"><u>C</u>lear</li>
+				<li id = "get-str-opt" class= "button-style-3">Export</li>
+				<li id = "use-id-opt" class= "button-style-3"><u>I</u>dentity</li>
+				<li id = "use-s-opt" class= "button-style-3"><u>S</u>ource</li>
+				<li id = "use-t-opt" class= "button-style-3"><u>T</u>arget</li>
+				<li id = "run-process" class= "button-style-3">Run Process</li>
+				<li id = 'sto-form' class = "button-style-3">Stochastic<input type = "checkbox" id = "stochastic-cb"></li>
+				
+			
+			</ul>
+			<div id = "diagram-canvas" style = "display: none;">
+			</div>
+			<div id ="no-projects-open-e" class = "enable_if-in">No project currently selected</div>
+		</div>
 	</div>
+
 	<div id = "errors" class = "box zindex-error">
 		<br>
 		<div id = "msg-close-opt-err" class = "msg-close-opt">
@@ -71,20 +79,30 @@
 		</div>
 		
 	</div>
-	<div id = "diagram-body">
-		
-		<input type ="text" id = "diagram-title" style = "display: none">
-		<ul id = "project-menu" style = "display:none">
-			<li id = "save-project-opt" class= "button-style-3" p_id = "">Save</li>
-			<li id = "clear-project-opt" class= "button-style-3"><u>C</u>lear</li>
-			<li id = "get-str-opt" class= "button-style-3">Export</li>
-			<li id = "use-id-opt" class= "button-style-3"><u>I</u>dentity</li>
-			<li id = "use-s-opt" class= "button-style-3"><u>S</u>ource</li>
-			<li id = "use-t-opt" class= "button-style-3"><u>T</u>arget</li>
-		</ul>
-		<div id = "diagram-canvas" style = "display: none">
+	
+	<div class = "box" id = "login-box">
+		LOGIN
+		<form  class = "site-options-form-body enable_if-out" method = "POST">
+			<input type = "text" id = "login_email" name = "login_email" class = "text-field-style-1" style = "margin-top:20px" placeholder = "Email" value ="testuser1@test.com"><br>
+			<input type = "password" id = "login_pass" name = "login_password" class = "text-field-style-1" placeholder = "Password" value = "test">
+			<input type = "button" class = "submit-field-style-1" id = "login-button" value = "Login">
+		</form>
+		<div id = "msg-close-opt-log" class = "msg-close-opt">
+			Close
 		</div>
-		<div id ="no-projects-open-e" class = "enable_if-in">No project currently selected</div>
+	</div>
+	
+	<div class = "box" id = "signup-box">
+		SIGN UP
+		<form>
+			<input type = "text" class = "text-field-style-1" id = "reg_email" placeholder = "Email" style = "margin-top:20px"><br>
+			<input type = "password" class = "text-field-style-1" id = "reg_pass" placeholder = "Password"><br>
+			<input type = "password" class = "text-field-style-1" id = "reg_vpass" placeholder = "Verify Password"><br>
+			<input type = "button" value = "Sign Up" class = "submit-field-style-1" id = "reg_submit">
+		</form>
+		<div id = "msg-close-opt-su" class = "msg-close-opt">
+			Close
+		</div>
 	</div>
 	
 	<div class = "box" id = "profile-box">
@@ -120,5 +138,18 @@
 			Close
 		</div>
 	</div>
+	<div class = "box" id = "run-proc-box">
+		<div id = 'process-form'>
+			History:<input type = 'checkbox' style = "margin-left: 37px;" id = "rp-hist"><br>
+			Statistics:<input type = 'checkbox' style = "margin-left: 25px;" id = "rp-stats"><br>
+			Iterations:<input type = 'text' class = "cell-label" style = "height: 15px" id = "rp-iters"><br>
+			<input type = 'button' id = 'run-process-go' value = "Run" style = "width: 70px" class = "submit-field-style-1">
+		</div>
+		<div id = "r-p-cc" class = "msg-close-opt">
+			Close
+		</div>
+	</div>
+	<input id="slider" type="range" value="0" min="0" max="10" step="1">
+
 </body>
 </html>

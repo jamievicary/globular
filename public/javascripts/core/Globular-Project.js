@@ -174,13 +174,12 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
 }
 
 Project.prototype.displayInterchangers = function() {
-    
+
     var interchangers = this.diagram.getInterchangers();
     console.log(interchangers);
-    var i = Math.floor(Math.random()*1000);
-    i = i % interchangers.length;
-    this.diagram.rewrite(interchangers[i]);  
-    this.renderAll();
+    var i = Math.floor(Math.random() * interchangers.length);
+    this.diagram.rewrite(interchangers[i]);
+    this.renderDiagram();
 };
 
 
@@ -320,7 +319,7 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
 
         this.diagram.rewrite(rewriteCell);
 
-    } 
+    }
 };
 
 
@@ -431,7 +430,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 // Handle a click on a 2-cell to implement interchangers
 Project.prototype.clickCell = function(height) {
 
-    if (this.diagram.getDimension() != 2) return;
+    if (this.diagram.getDimension() != 2 && this.diagram.getDimension() != 3) return;
 
     // If this is the first click, just store it and exit
     if (this.selected_cell == null) {
@@ -443,7 +442,7 @@ Project.prototype.clickCell = function(height) {
     if (this.selected_cell == height) {
         return;
     }
-    
+
     var h1 = this.selected_cell;
     var h2 = height;
     /*
@@ -458,21 +457,62 @@ Project.prototype.clickCell = function(height) {
         h2 = height;
     }
     */
-
-    // Check if this is allowed
-    if (!this.diagram.interchangerAllowed(h1, h2)) {
-        var temp = h1;
-        h1 = h2;
-        h2 = temp;
+    if (this.diagram.getDimension() === 3){
+        var slider = Number($('#slider').val());
+        if(slider === 0 && this.diagram.generators.length != 0){
+        
+            // Check if this is allowed
+            if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
+                var temp = h1;
+                h1 = h2;
+                h2 = temp;
+            }
+            
+            if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
+                alert("Cannot interchange these cells");
+                return;
+            }
+            var interchanger = {id: "interchanger", level: [h2, h1]};
+            var int_diagram = {generators: [interchanger]};
+            this.diagram.attach(int_diagram, 's');
+        }
+        else if(slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)){
+                        // Check if this is allowed
+            if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
+                var temp = h1;
+                h1 = h2;
+                h2 = temp;
+            }
+            
+            if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
+                alert("Cannot interchange these cells");
+                return;
+            }
+            var interchanger = {id: "interchanger", level: [h1, h2]};
+            var int_diagram = {generators: [interchanger]};
+            this.diagram.attach(int_diagram, 't');
+        }
+        else{
+            return;
+        }
+        
     }
-    
-    if (!this.diagram.interchangerAllowed(h1, h2)) {
-        alert("Cannot interchange these cells");
-        return;
+    else{
+        // Check if this is allowed
+        if (!this.diagram.interchangerAllowed(h1, h2)) {
+            var temp = h1;
+            h1 = h2;
+            h2 = temp;
+        }
+        
+        if (!this.diagram.interchangerAllowed(h1, h2)) {
+            alert("Cannot interchange these cells");
+            return;
+        }
+        
+        // Perform the interchanger
+        this.diagram.rewriteInterchanger(h1, h2);
     }
-    
-    // Perform the interchanger
-    this.diagram.rewriteInterchanger(h1, h2);
 
     // Finish up and render the result
     this.selected_cell = null;
@@ -515,7 +555,7 @@ Project.prototype.selectGenerator = function(id) {
 
     var matched_diagram = cell.diagram.copy();
 
-    if (matched_diagram.getDimension() > this.diagram.getDimension() ){
+    if (matched_diagram.getDimension() > this.diagram.getDimension()) {
         // Don't bother attaching, just rewrite
 
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());
@@ -552,28 +592,28 @@ Project.prototype.selectGenerator = function(id) {
 }
 
 Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
-    
+
     var pattern_diagram;
     var matched_diagram_boundary;
-    
-    if(boundary_boolean === 's') {
+
+    if (boundary_boolean === 's') {
         pattern_diagram = this.diagram.getSourceBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getSourceBoundary();
         }
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
-    else{
+    else {
         pattern_diagram = this.diagram.getTargetBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getTargetBoundary();
         }
         matched_diagram_boundary = matched_diagram.getSourceBoundary();
     }
-    
-    
+
+
     var matched_size = matched_diagram_boundary.getFullDimensions();
-    
+
     var matches = pattern_diagram.enumerate(matched_diagram_boundary);
     for (var i = 0; i < matches.length; i++) {
         matches[i] = {
@@ -655,14 +695,14 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
-        if(this.diagram.dimension === 3){
+        if (this.diagram.dimension === 3) {
             $('#slider').attr('max', this.diagram.generators.length);
             $('#slider').show()
             var slider = $('#slider').val();
             var diagram = this.diagram.getSlice(slider);
             this.render(div, diagram);
         }
-        else{
+        else {
             $('#slider').hide()
             this.render(div, this.diagram);
         }
@@ -735,8 +775,8 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         project.setColour(cell, '#' + this.toString());
         project.renderAll();
     };
-    
-  
+
+
     /*$(input_color).blur(function() {
         project.setColour(cell, '#' + $(this).val().toString());
         project.renderAll();
@@ -744,23 +784,24 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
 
     div_detail.appendChild(input_color);
 
-    if(n!=0){
-        
+    if (n != 0) {
+
         var sto_rate_text = document.createElement('input');
         sto_rate_text.className = 'stochastic-rate';
         sto_rate_text.id = 'sr-' + cell;
         sto_rate_text.type = 'text';
-        sto_rate_text.placeholder='Rate';
-        
+        sto_rate_text.placeholder = 'Rate';
+
         div_detail.appendChild(sto_rate_text);
-        
+
     }
-    
-     $("#stochastic-cb").change(function(){
+
+    $("#stochastic-cb").change(function() {
         if ($(this).is(':checked')) {
             $(".stochastic-rate").slideDown();
-            
-        } else {
+
+        }
+        else {
             $(".stochastic-rate").slideUp();
         }
     });
@@ -801,11 +842,24 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-                
                 if(project.diagram.dimension === 3){
-                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);    
+                    var temp_match = {
+                        boundaryPath: match_array[i].boundaryPath,
+                        inclusion: match_array[i].inclusion,
+                        size: match_array[i].size
+                    }; 
+                    var temp_diagram;
+                    
+                    if(match_array[i].boundaryPath[0] === 's'){
+                        temp_diagram = project.diagram.getSourceBoundary();
+                    }
+                    else{
+                        temp_diagram = project.diagram.getTargetBoundary();
+                    }
+                    temp_match.boundaryPath = temp_match.boundaryPath.slice(1);
+                    project.render(div_match, temp_diagram, temp_match);
                 }
-                else{
+                else {
                     project.render(div_match, project.diagram, match_array[i]);
                 }
                 (function(match) {
@@ -826,9 +880,22 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
                             if(project.diagram.dimension === 3){
-                                project.render('#diagram-canvas', project.diagram.getSourceBoundary(), match);
+                                var temp_match = {
+                                    boundaryPath: match.boundaryPath,
+                                    inclusion: match.inclusion,
+                                    size: match.size
+                                };
+                                var temp_diagram;
+                                if(match.boundaryPath[0] === 's'){
+                                    temp_diagram = project.diagram.getSourceBoundary();
+                                }
+                                else{
+                                    temp_diagram = project.diagram.getTargetBoundary();
+                                }
+                                temp_match.boundaryPath = temp_match.boundaryPath.slice(1);
+                                project.render('#diagram-canvas', temp_diagram, temp_match);
                             }
-                            else{
+                            else {
                                 project.render('#diagram-canvas', project.diagram, match);
                             }
                         },
