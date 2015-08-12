@@ -593,6 +593,9 @@ Project.prototype.selectGenerator = function(id) {
         var slider = Number($('#slider').val());
         if(slider === 0){
             sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+            if(this.diagram.generators.length === 0){
+                targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+            }
         }
         else if(slider === this.diagram.generators.length){
             targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
