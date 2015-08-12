@@ -63,6 +63,8 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
     {
         if(historyOn){
             current_state = history.getTargetBoundary();
+            species = this.signature.get_NCells(species_dim)-1;
+            processes = this.signature.get_NCells(processes_dim)-1;
         }
         
         var species = this.signature.get_NCells(species_dim); //not necessarily in the same order as processes...or in the same order each time it's called
