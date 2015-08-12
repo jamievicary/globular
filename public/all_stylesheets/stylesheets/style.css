@@ -466,8 +466,8 @@ body, html {
 
 /* line 394, ../sass/style.sass */
 #slider {
-  bottom: 5px;
-  right: 5px;
+  top: 80px;
+  right: 10px;
   width: 100px;
   position: absolute;
 }

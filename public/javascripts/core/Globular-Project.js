@@ -482,6 +482,9 @@ Project.prototype.clickCell = function(height) {
                 generators: [interchanger]
             };
             this.diagram.attach(int_diagram, 's');
+            var maxVal = $('#slider').val() + 1;
+            $('#slider').attr('max', maxVal)
+
         }
         else if (slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)) {
             // Check if this is allowed
@@ -503,11 +506,14 @@ Project.prototype.clickCell = function(height) {
                 generators: [interchanger]
             };
             this.diagram.attach(int_diagram, 't');
+            var maxVal = $('#slider').val() + 1;
+            $('#slider').attr('max', maxVal)
+            $('#slider').val(this.diagram.generators.length);
+
         }
         else {
             return;
         }
-
     }
     else {
         // Check if this is allowed
@@ -592,8 +598,29 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    var sourceMatches = [];
+    var targetMatches = [];
+    
+    if(this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3){
+        var slider = Number($('#slider').val());
+        if(slider === 0){
+            sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+            if(this.diagram.generators.length === 0){
+                targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+            }
+        }
+        else if(slider === this.diagram.generators.length){
+            targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+        }
+        else{
+            alert("Slide to the source or the target of the 3-cell to attach");
+            return [];
+        }
+    }
+    else{
+        sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+        targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    }
 
     var enumerationData = {
         attachmentFlag: true,
@@ -888,12 +915,19 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             match.inclusion, // the inclusion data for the boundary
                             match.boundaryPath);
                         $('div.cell-b-sect').empty();
-                        if (project.diagram.dimension === 3) {
-                            if (match.boundaryPath[0] === 's') {
-                                $('#slider').val(0);
-                            }
-                            else {
-                                $('#slider').val(project.diagram.generators.length);
+
+                        if(project.diagram.dimension === 3){
+                            $('#slider').show();
+                            if(match.boundaryPath.length === 1){
+                                var maxVal = $('#slider').val() + 1;
+                                $('#slider').attr('max', maxVal)
+                                if(match.boundaryPath[0] === 's'){
+                                    $('#slider').val(0);
+                                }
+                                else{
+                                    $('#slider').val(project.diagram.generators.length);
+                                }
+
                             }
                         }
                         project.renderAll();
