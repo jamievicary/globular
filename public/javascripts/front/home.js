@@ -4,7 +4,7 @@
 var gProject = {};
 
 $(document).ready(function() {
-	
+
     globular_prepare_renderer();
 
     // Handle key presses
@@ -30,33 +30,35 @@ $(document).ready(function() {
             gProject.displayInterchangers();
         }
     });
-    
-    $("#mm-1").click(function(){
+
+    $("div.enable_if-in").hide();
+    //$("div.enable_if-out").show();
+
+    $("#mm-login").click(function() {
         $("#login-box").fadeIn();
     });
-    $("#msg-close-opt-log").click(function(){
+    $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
     });
-    
-    $("#mm-2").click(function(){
+
+    $("#mm-signup").click(function() {
         $("#signup-box").fadeIn();
     });
-    $("#msg-close-opt-su").click(function(){
+    $("#msg-close-opt-su").click(function() {
         $("#signup-box").fadeOut();
     });
-    
-    
-    
+
     // Create the slider
     $("#slider").on("input change", function() {
-        // add a command here to redraw the 3-diagram at the new slice
         gProject.renderDiagram();
-        console.log("slider = " + $('#slider').val()); }
-    );
+    });
 
     var original_msg_html = $("#errors").html();
-	$(".box").draggable({ containment: "document", cursor: "crosshair" });
-	
+    $(".box").draggable({
+        containment: "document",
+        cursor: "crosshair"
+    });
+
     // Click handler on main diagram
     var c = $('#diagram-canvas').click(function(event) {
         if ($(this).width() == 0) return;
@@ -67,7 +69,7 @@ $(document).ready(function() {
         var rectangles = $('#diagram-canvas')[0].rectangles;
         //console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
 
-    if(rectangles === undefined) return;
+        if (rectangles === undefined) return;
 
         for (var i = 0; i < rectangles.length; i++) {
             var r = rectangles[i];
@@ -80,7 +82,6 @@ $(document).ready(function() {
             gProject.clickCell(r.height);
             return;
         }
-
     });
 
     // Handle navigation by forward and back buttons
@@ -135,14 +136,14 @@ $(document).ready(function() {
 
     function render_frontend(state) {
         if (state === "out") {
-            $(".enable_if-out").show();
-            render_project_front("", "New Project", "null", state);
-            $(".enable_if-in").hide();
+            $("div.enable_if-in").hide();
+            $("div.enable_if-out").show();
         }
         else {
-            $(".enable_if-out").hide();
-            $(".enable_if-in").show();
+            $("div.enable_if-in").show();
+            $("div.enable_if-out").hide();
         }
+        render_project_front("", "New Project", "null", state);
     }
 
     function render_page() {
@@ -186,11 +187,9 @@ $(document).ready(function() {
             valid: true
         }, function(result, status) {
             $("#errors").css("text-align", "left");
-
             $("#profile-email").html(result.email);
             $("#profile-box").fadeIn();
             $("#c-p-submit").click(function() {
-
                 var npass = $("#c-p-verify_pass").val();
                 var vpass = $("#c-p-new_pass").val();
                 $.post("/change-pass", {
@@ -204,7 +203,6 @@ $(document).ready(function() {
                     else {
                         type = 1;
                     }
-
                     show_msg(result.error, 3000, type);
                 });
             });
@@ -212,7 +210,6 @@ $(document).ready(function() {
     });
 
     $("#reg_submit").click(function() {
-
         var email = $("#reg_email").val();
         var pass = $("#reg_pass").val();
         var vpass = $("#reg_vpass").val();
@@ -234,7 +231,6 @@ $(document).ready(function() {
         });
     });
 
-
     function render_project_front(s, name, p_id) {
         $("#cell-body").html("");
         $("#my-projects-box").fadeOut();
@@ -252,10 +248,12 @@ $(document).ready(function() {
         // Bind resizing to the correct rendering function		
         $(window).unbind('resize');
         $(window).bind('resize', function() {
-            $('#diagram-canvas').css('width', window.innerWidth - 300);
-            $('#diagram-canvas').css('height', window.innerHeight - 20);
+            $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
+            $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
             gProject.renderDiagram();
         })
+        $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
+        $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
 
         // Render the list of n-cells
         gProject.renderCells();
@@ -267,9 +265,9 @@ $(document).ready(function() {
 
         });
 
-        $("#project-menu").fadeIn(1000);
-        $("#diagram-canvas").fadeIn(1000);
-        $("#diagram-title").val(name).fadeIn(3000);
+        $("#project-menu").show();
+        $("#diagram-canvas").show();
+        $("#diagram-title").val(name).show();
 
         function close_project() {
             $("#diagram-canvas").fadeOut(1000);
@@ -318,19 +316,19 @@ $(document).ready(function() {
             var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
             show_msg(msg, false, 3);
         });
-        
-        $("#run-process").click(function(){
+
+        $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
-            $("#run-process-go").click(function(){
+            $("#run-process-go").click(function() {
                 var hist = $("#rp-hist").is(':checked');
                 var stats = $("#rp-stats").is(':checked');
                 var iterations = $("#rp-iters").val();
                 iterations = Number(iterations);
-                
+
                 gProject.stochasticPreprocessing(hist, stats, iterations);
                 gProject.renderAll();
             });
-            
+
         });
     }
 
@@ -473,6 +471,6 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
-    
-    
+
+
 });

@@ -1,12 +1,22 @@
 @import 'compass'
 @import url(https://fonts.googleapis.com/css?family=Open+Sans)
 
-//pre-selected colours
+//$cell_background: #273c61
 $blue: #00b8ff
-
-
-//pre-selected fonts
+$lightgrey: #ccc
+$midgrey: #aaa
+$darkgrey: #888
 $main_font: 'Open Sans', sans-serif 
+$top-menu-height: 20px 
+$border_radius: 2px
+$spacing: 7px
+$icon_size: 60px
+$control_width: 222px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
+$header_height: 70px
+
+// SET COLOURS OF DIFFERENT STRUCTURES
+$cell_group_background: $midgrey
+$cell_background: $darkgrey
 
 //styles
 body, html
@@ -15,39 +25,96 @@ body, html
 	margin: 0px
 	font-family: $main_font 
 	overflow: hidden
-
-#control-body
-	height: 100%
-	width: 300px
-	background-color: grey
-	float: left
-	display: block
-
-
-#diagram-body
-	height: 100%
-	width: calc(100% - 300px)
-	background-color: lightgrey
-	float: left
-	display: block
-	white-space: nowrap
 	
+#header
+	height: $header_height
+	width: 100%
+	background-color: $lightgrey
+
+#main-body
+	position: absolute
+	top: 70px
+	left: 0px
+	height: calc(100% - 70px)
+	width: 100%
+	background-color: $lightgrey
+
 #site-logo
 	padding: 10px
-	font-size: 40px
 	letter-spacing: 4px
 	width: 300px
 	text-align: center
 	display: inline-block
 
+#logo-image
+	height: 60px
+	width: 100px
+	position: absolute
+	float: left
+	top: 5px
+	left: 10px
+	margin-left: -20px
+	margin-right: -20px
+	
+#logo-text
+	font-size: 40px
+	margin-left: 65px
+	position: absolute
+	top: 5px
+
 #main-menu
+	cursor: pointer
 	float: right
 	display: inline-block
-	width: 550px
+	width: auto
+
+#main-menu>div
+	float: right
 	text-align: center
-	margin: 0px
-	top: 0
-	padding-right: 10px
+	display: inline-block
+	height: 20px
+	padding-top: calc((#{$header_height} - 20px) / 2)
+	padding-bottom: calc((#{$header_height} - 20px) / 2)
+	padding-left: 20px
+	padding-right: 20px
+	vertical-align: middle
+
+#main-menu>div a
+	text-decoration: none
+	color: black
+	
+#main-menu>div:hover
+	background-color: lightblue
+	
+#control-body
+	height: 100%
+	width: $control_width
+	float: left
+	display: block
+	padding: $spacing
+	padding-top: 0px
+
+#diagram-body
+	height: calc(100% - #{$header_height})
+	//width: calc(100% - #{$control_width})
+	width: calc(100% - 258px)
+	background-color: $lightgrey
+	float: left
+	display: block
+	white-space: nowrap
+	
+#project-menu
+	cursor: pointer
+	position: absolute
+	bottom: 0px
+	padding-left: 0px
+	height: $top-menu-height
+	list-style: none
+	background-color: lightgrey
+	height: 30px
+	width: 100%
+	z-index: 1000000
+	white-space: nowrap
 	
 #main-menu li 
 	float: left
@@ -55,18 +122,128 @@ body, html
 	width: 70px
 	cursor: pointer
 	padding: 10px
-	margin-top: 12px
-	margin-left: 20px
+//	margin-top: 5px
+	margin-left: 5px
 	
-#main-menu li a
-	text-decoration: none
+div.cell-group
 	color: black
+	background-color: $midgrey
+	border-radius: $border_radius
+	//width: calc(#{$control_width} - (8 * #{$spacing}))
+	height: auto
+	padding: $spacing
+	margin-bottom: $spacing
+
+div.cell-opt
+	background-color: $cell_background
+	color: #ffffff
+	border-radius: $border_radius
+	position: relative
+	padding: $spacing
+	width: calc(#{$control_width} - (3 * #{$spacing}))
+	overflow: hidden
+	//height: #{$icon_size}
+	height: auto
+	margin-top: $spacing
+	padding-right: 0px
+	//height: 70px
 	
-#main-menu li:hover
-	background-color: lightblue
+div.cell-icon>canvas
+	border-radius: $border_radius
+
+div.cell-icon
+	height: $icon_size
+	width: $icon_size
+	margin-top: 0px
+	//border-radius: $border_radius
+	border-radius: 10px
+	background-color: lightgrey
+	float: left
 	
+// MAKE THIS THE MAIN ICON CLASS
+div.preview-icon
+	height: $icon_size
+	width: $icon_size
+	float: left
+	margin-top: $spacing
+	margin-right: $spacing
+
+div.preview-icon>canvas
+	border-radius: $border_radius
+	
+.cell-b-sect
+	//border-top: 1px solid grey
+	//height: 65px
+	//margin-top: 5px
+	//display: none
+	text-align: center
+	top: 70px
+
+.cell-detail
+	margin-left: 75px
+	height: $icon_size
+	
+.match-cell-icon
+	height: $icon_size
+	width: $icon_size
+	border: 2px dashed black
+	background-color: lightgrey
+	float: left
+	//margin: 5px
+	
+.cell-icon1
+	height: $icon_size
+	border: 2px dashed black
+	width: $icon_size
+	margin-left: 100px
+	//top: 5px
+	position: absolute
+	background-color: lightgrey
+
+.cell-label
+	width: 128px
+	border: none
+	outline-width: 0px
+	letter-spacing: 1px
+	position: absolute
+	left: $icon_size + $spacing
+	//margin-top: 5px
+	margin-left: $spacing
+	height: 15px
+	border-radius: $border_radius
+
+.stochastic-rate
+	width: 50px
+	outline-width: 0px
+	letter-spacing: 1px
+	position: absolute
+	display: none
+	border: none
+	left: $icon_size + $spacing
+	margin-left: $spacing
+	bottom: $spacing
+	height: 16px
+	border-radius: $border_radius
+	height: 15px
+	
+.color-picker
+	width: 128px
+	letter-spacing: 1px
+	margin-top: 21px
+	left: $icon_size + $spacing
+	position: absolute
+	//margin-top: 5px
+	margin-left: $spacing
+	border-radius: $border_radius
+	height: 15px
+	border: none
+	
+.target-rule-arrow
+	position: absolute
+	margin-left: 72px
+	top: 30px
+
 .button-style-1
-	padding: 5px
 	background-color: $blue
 	color: white
 	border-radius: 3px 3px 0px 0px
@@ -78,6 +255,7 @@ body, html
 	cursor: pointer
 	font-size: 110%
 	border-bottom: 2px solid #00b8ff
+//	padding: 5px
 	
 .button-style-2
 	padding: 5px
@@ -125,7 +303,7 @@ body, html
 	border-radius: 3px
 	font-family: $main_font
 	width: calc( 100% - 20px )
-	padding: 4px
+//	padding: 4px
 	height: 70px
 	
 .submit-field-style-1
@@ -187,123 +365,8 @@ body, html
 	padding: 10px
 	overflow: hidden
 
-#cell-body
-	background-color: dimgrey
-	width: 300px
-	height: calc( 100% - 70px )
-	position: absolute
-	overflow: scroll
-	overflow-x: hidden
-	
-.cell-group
-	color: black
-	height: auto
-	margin-bottom: 5px
-	width: 298px
 
-$cell_bg: #273c61
 
-.cell-opt
-	//height: 70px
-	background-color: $cell_bg
-	margin-top: 3px
-	color: #ffffff
-	border-radius: 3px
-	margin-left: 5px
-	position: relative
-	padding: 5px
-	width: 280px
-	overflow: hidden
-
-.cell-icon
-	height: 65px
-	margin-top: 3px
-	border-radius: 5px
-	width: 65px
-	background-color: lightgrey
-	float: left
-	
-.cell-b-sect
-	//border-top: 1px solid grey
-	//height: 65px
-	margin-top: 5px
-	//display: none
-	text-align: center
-	top: 70px
-
-.cell-detail
-	margin-left: 75px
-	height: 65px
-	
-.match-cell-icon
-	height: 65px
-	border: 2px dashed black
-	width: 65px
-	background-color: lightgrey
-	float: left
-	margin: 5px
-	
-.cell-icon1
-	height: 65px
-	border: 2px dashed black
-	width: 65px
-	margin-left: 100px
-	top: 5px
-	position: absolute
-	background-color: lightgrey
-
-.cell-label
-
-	width: 60px
-	border: none
-	outline-width: 0px
-	letter-spacing: 2px
-	position: absolute
-	margin-top: 5px
-	height: 20px
-	border-radius: 1px
-	margin-left: 20px
-
-.stochastic-rate
-	width: 33px
-	border: none
-	outline-width: 0px
-	letter-spacing: 2px
-	position: absolute
-	margin-top: 5px
-	margin-left: 5px
-	display: none
-	border-radius: 1px
-	height: 20px
-	
-.color-picker
-	margin-top: 35px
-	border-radius: 1px
-	letter-spacing: 2px
-	border: none
-	width: 60px
-	margin-left: 20px
-	height: 20px
-	
-.target-rule-arrow
-	position: absolute
-	margin-left: 72px
-	top: 30px
-	
-$top-menu-height: 20px 
-
-#project-menu
-	cursor: pointer
-	position: absolute
-	bottom: -15px
-	padding-left: 0px
-	height: $top-menu-height
-	list-style: none
-	background-color: lightgrey
-	height: 30px
-	width: 100%
-	z-index: 1000000
-	white-space: nowrap
 	
 #project-menu li
 	margin-left: 3px
@@ -352,7 +415,7 @@ $top-menu-height: 20px
 
 .mini-opt-links
 	color: #ffffff
-	font-size: 70%
+	//font-size: 70%
 	text-decoration: underline
 	padding: 5px
 	float: right
@@ -392,7 +455,7 @@ $top-menu-height: 20px
 	padding-top: 20px
 
 #slider
-	top: 80px
+	top: $header_height + 10px
 	right: 10px
 	width: 100px
 	position: absolute

@@ -184,25 +184,18 @@ Complex.prototype.complex_2 = function(diagram) {
 
         // Deal with an identity on an identity specially
         if (diagram.source.generators.length == 0) {
-            var anchor = [0, 0];
-            var l = [-0.5, 0];
-            var r = [0.5, 0];
-            var t = [0, 0.5];
-            var b = [0, -0.5];
+            var tl = [-0.5, 0.5];
+            var tr = [0.5, 0.5];
+            var bl = [-0.5, -0.5];
+            var br = [0.5, -0.5];
             var id = diagram.source.source.generators[0].id;
 
             this.triangles = [{
                 type: id,
-                points: [anchor, l, t]
+                points: [tl, tr, bl]
             }, {
                 type: id,
-                points: [anchor, t, r]
-            }, {
-                type: id,
-                points: [anchor, r, b]
-            }, {
-                type: id,
-                points: [anchor, b, l]
+                points: [tr, bl, br]
             }];
             this.min_x = -0.5;
             this.max_x = 0.5;

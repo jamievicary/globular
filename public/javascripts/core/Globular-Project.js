@@ -591,13 +591,16 @@ Project.prototype.selectGenerator = function(id) {
     
     if(this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3){
         var slider = Number($('#slider').val());
-        if(slider === 0){
+        var ok = false;
+        if (slider === 0){
             sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+            ok = true;
         }
-        else if(slider === this.diagram.generators.length){
+        if (slider === this.diagram.generators.length){
             targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+            ok = true;
         }
-        else{
+        if (!ok) {
             alert("Slide to the source or the target of the 3-cell to attach");
             return [];
         }
@@ -860,11 +863,8 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
             $('div.cell-b-sect').empty();
             for (var i = 0; i < match_array.length; i++) {
                 var div_match = document.createElement('div');
-                $(div_match)
-                    .css('width', 65)
-                    .css('height', 65)
-                    .css('float', 'left')
-                    .css('margin', 3);
+                $(div_match).addClass('preview-icon');
+                $(div_extra).append(div_match);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
                 if(project.diagram.dimension === 3){
                     var temp_match = {
@@ -954,7 +954,6 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                         }
                     )
                 })(match_array[i]);
-                $(div_extra).append(div_match);
             }
         });
     })(this);

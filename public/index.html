@@ -1,162 +1,172 @@
 <!doctype html>
 
 <html lang="en">
-<head>
-  <meta charset="utf-8">
 
-  <title>Globular</title>
-  	<link rel = "stylesheet" type = "text/css" href="/all_stylesheets/stylesheets/style.css">
-  	<script src="/javascripts/libs/jquery.js"></script>
-  	<script src="/javascripts/libs/Fraction.js"></script>
-  	<script src="/javascripts/libs/jscolor/jscolor.js"></script>
-  	<script src="/javascripts/front/home.js"></script>
-  	<script src="/javascripts/libs/three.min.js"></script>
+<head>
+	<meta charset="utf-8">
+
+	<title>Globular</title>
+	<link rel="stylesheet" type="text/css" href="/all_stylesheets/stylesheets/style.css">
+	<script src="/javascripts/libs/jquery.js"></script>
+	<script src="/javascripts/libs/Fraction.js"></script>
+	<script src="/javascripts/libs/jscolor/jscolor.js"></script>
+	<script src="/javascripts/front/home.js"></script>
+	<script src="/javascripts/libs/three.min.js"></script>
 	<script src="/javascripts/core/Globular-Project.js"></script>
-  	<script src="/javascripts/core/Globular-Diagram.js"></script>
-  	<script src="/javascripts/core/Globular-Data.js"></script>
-  	<script src="/javascripts/core/Globular-Generator.js"></script>
-  	<script src="/javascripts/core/Globular-Hashtable.js"></script>
-  	<script src="/javascripts/core/Globular-Signature.js"></script>
-  	<script src="/javascripts/core/Globular-Stringify.js"></script>
-  	<script src="/javascripts/core/Globular-Stochastic.js"></script>
-  	<script src="/javascripts/core/Globular-Render.js"></script>
-  	<script src="/javascripts/core/Globular-Auxiliary.js"></script>
-  	<script src="/javascripts/core/Globular-Complex.js"></script>
-  	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script src="/javascripts/core/Globular-Diagram.js"></script>
+	<script src="/javascripts/core/Globular-Data.js"></script>
+	<script src="/javascripts/core/Globular-Generator.js"></script>
+	<script src="/javascripts/core/Globular-Hashtable.js"></script>
+	<script src="/javascripts/core/Globular-Signature.js"></script>
+	<script src="/javascripts/core/Globular-Stringify.js"></script>
+	<script src="/javascripts/core/Globular-Stochastic.js"></script>
+	<script src="/javascripts/core/Globular-Render.js"></script>
+	<script src="/javascripts/core/Globular-Auxiliary.js"></script>
+	<script src="/javascripts/core/Globular-Complex.js"></script>
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 	<script src="/javascripts/libs/OrbitControls-Ortho.js"></script>
-	
+
 </head>
 
 <body>
-	<div style = "height: 70px;width: 100%;background-color: lightgrey;margin: 0;">
-		<div id = "site-logo">
-			<img src = '/images/logo.png' style="height:60px;width:100px;position: absolute;margin-left: -45px;">&ensp;&ensp;LOBULAR
+	<div id="header">
+		<div id="site-logo">
+			<img src='/images/logo.png' id='logo-image'>
+			<div id='logo-text'>LOBULAR</div>
 		</div>
-		<div id = "ajax-loading" style = ""></div>
-		<ul id = "main-menu">
-			<li id = 'mm-1' class = "enable_if-out">LOGIN</li>
-			<li id = 'mm-2' class = "enable_if-out">SIGN UP</li>
-			<li id = 'mm-3'>HELP</li>
-			<li id = 'mm-4'>ABOUT</li>
-			<li id = 'view-profile-opt' class = "enable_if-in">PROFILE</li>
-			<li id = 'my-projects-opt' class = "enable_if-in">PROJECTS</li>
-			<li id = "mm-5" class = "enable_if-in"><a href = "/logout">LOG OUT</a></li>
-		</ul>
+		<div id="ajax-loading" style=""></div>
+		<div id="main-menu">
+			<div id='mm-help'>HELP</div>
+			<div id='mm-about'>ABOUT</div>
+			<div id='mm-profile' class='enable_if-in'>PROFILE</div>
+			<div id='mm-projects' class='enable_if-in'>PROJECTS</div>
+			<div id='mm-signup' class='enable_if-out'>SIGN UP</div>
+			<div id='mm-logout' class='enable_if-in'>LOG OUT</div>
+			<div id='mm-login' class='enable_if-out'>LOG IN</div>
+		</div>
 	</div>
-	<div style = "height: calc(100% - 70px);width:100%;background-color: grey;">
-		<div id = "control-body">
-			<div id = "cell-body-container">
-				<div id = "cell-body">
-					
-				</div>
-			</div>
+	<div id="main-body">
+		<div id="control-body">
+			<div id="cell-body"></div>
 		</div>
-		
-		<div id = "diagram-body">
+
+		<div id="diagram-body">
 			
-			<input type ="text" id = "diagram-title" style = "display: none">
-			<ul id = "project-menu" style = "display:none">
-				<li id = "save-project-opt" class= "button-style-3" p_id = "">Save</li>
-				<li id = "clear-project-opt" class= "button-style-3"><u>C</u>lear</li>
-				<li id = "get-str-opt" class= "button-style-3">Export</li>
-				<li id = "use-id-opt" class= "button-style-3"><u>I</u>dentity</li>
-				<li id = "use-s-opt" class= "button-style-3"><u>S</u>ource</li>
-				<li id = "use-t-opt" class= "button-style-3"><u>T</u>arget</li>
-				<li id = "run-process" class= "button-style-3">Run Process</li>
-				<li id = 'sto-form' class = "button-style-3">Stochastic<input type = "checkbox" id = "stochastic-cb"></li>
-				
-			
+			<input type="text" id="diagram-title" style="display: none">
+			<ul id="project-menu" style="display:none">
+				<li id="save-project-opt" class="button-style-3" p_id="">Save</li>
+				<li id="clear-project-opt" class="button-style-3"><u>C</u>lear</li>
+				<li id="get-str-opt" class="button-style-3">Export</li>
+				<li id="use-id-opt" class="button-style-3"><u>I</u>dentity</li>
+				<li id="use-s-opt" class="button-style-3"><u>S</u>ource</li>
+				<li id="use-t-opt" class="button-style-3"><u>T</u>arget</li>
+				<li id="run-process" class="button-style-3">Run Process</li>
+				<li id='sto-form' class="button-style-3">Stochastic
+					<input type="checkbox" id="stochastic-cb">
+				</li>
+
+
 			</ul>
-			<div id = "diagram-canvas" style = "display: none;">
+			<div id="diagram-canvas" style="display: none;">
 			</div>
-			<div id ="no-projects-open-e" class = "enable_if-in">No project currently selected</div>
+			<div id="no-projects-open-e" class="enable_if-out">No project currently selected</div>
 		</div>
 	</div>
 
-	<div id = "errors" class = "box zindex-error">
+	<div id="errors" class="box zindex-error">
 		<br>
-		<div id = "msg-close-opt-err" class = "msg-close-opt">
+		<div id="msg-close-opt-err" class="msg-close-opt">
 			Close
 		</div>
-		
+
 	</div>
-	
-	<div class = "box" id = "login-box">
-		LOGIN
-		<form  class = "site-options-form-body enable_if-out" method = "POST">
-			<input type = "text" id = "login_email" name = "login_email" class = "text-field-style-1" style = "margin-top:20px" placeholder = "Email" value ="testuser1@test.com"><br>
-			<input type = "password" id = "login_pass" name = "login_password" class = "text-field-style-1" placeholder = "Password" value = "test">
-			<input type = "button" class = "submit-field-style-1" id = "login-button" value = "Login">
+
+	<div class="box" id="login-box">
+		LOG IN
+		<form class="site-options-form-body enable_if-out" method="POST">
+			<input type="text" id="login_email" name="login_email" class="text-field-style-1" style="margin-top:20px" placeholder="Email" value="testuser1@test.com">
+			<br>
+			<input type="password" id="login_pass" name="login_password" class="text-field-style-1" placeholder="Password" value="test">
+			<input type="button" class="submit-field-style-1" id="login-button" value="Login">
 		</form>
-		<div id = "msg-close-opt-log" class = "msg-close-opt">
+		<div id="msg-close-opt-log" class="msg-close-opt">
 			Close
 		</div>
 	</div>
-	
-	<div class = "box" id = "signup-box">
+
+	<div class="box" id="signup-box">
 		SIGN UP
 		<form>
-			<input type = "text" class = "text-field-style-1" id = "reg_email" placeholder = "Email" style = "margin-top:20px"><br>
-			<input type = "password" class = "text-field-style-1" id = "reg_pass" placeholder = "Password"><br>
-			<input type = "password" class = "text-field-style-1" id = "reg_vpass" placeholder = "Verify Password"><br>
-			<input type = "button" value = "Sign Up" class = "submit-field-style-1" id = "reg_submit">
-		</form>
-		<div id = "msg-close-opt-su" class = "msg-close-opt">
-			Close
-		</div>
-	</div>
-	
-	<div class = "box" id = "profile-box">
-		Email: <span id = "profile-email"></span><br><hr size = '1'>(change password)<br>
-		<form id = "change-pass-form">
-			<input type = "password" placeholder = "New Password" id = "c-p-new_pass" class = "text-field-style-1 cp-textfields"><br>
-			<input type = "password" placeholder = "Verify Password" id = "c-p-verify_pass" class = "text-field-style-1 cp-textfields"><br>
-			<input type = "button" id = "c-p-submit" value = "Change" class= "submit-field-style-1">
-		</form>
-		<div id = "msg-close-opt-profile" class = "msg-close-opt">
-			Close
-		</div>
-	</div>
-	
-	<div class = "box" id = "my-projects-box">
-		<div id = "my-projects-container">
-			<div id = "add-project-opt">
-				Add New +
-				<input type = "text" placeholder = "Project Name..." id = "ap-name" class = "text-field-style-1" style = "width: 90%;margin-top:10px;">
-				<textarea id = "ap-string" class = "text-area-style-1" placeholder = "Default String...(optional)"></textarea>
-				<input type = "button" id = "add-project-submit" class = "submit-field-style-1" value ="Add">
-			</div>
-			<hr size = '1'>
-		</div>
-		<div id = "project-list"></div>
-		<div id = "msg-close-opt-projects" class = "msg-close-opt">
-			Close
-		</div>
-	</div>
-	<div class = "box" id = "cc-box">
-		<input class = 'color' id = 'color-picker-field'>
-		<div id = "msg-close-opt-cc" class = "msg-close-opt">
-			Close
-		</div>
-	</div>
-	<div class = "box" id = "run-proc-box">
-		<div id = 'process-form'>
-			<div style="width: 80px; float:left">Dimension:</div>
-			<input type = 'text' class="cell-label" style = "height: 15px" id = "rp-dimension">
+			<input type="text" class="text-field-style-1" id="reg_email" placeholder="Email" style="margin-top:20px">
 			<br>
-			<div style="width: 80px; float:left">Iterations:</div>
-			<input type = 'text' class = "cell-label" style = "height: 15px" id = "rp-iters">
+			<input type="password" class="text-field-style-1" id="reg_pass" placeholder="Password">
+			<br>
+			<input type="password" class="text-field-style-1" id="reg_vpass" placeholder="Verify Password">
+			<br>
+			<input type="button" value="Sign Up" class="submit-field-style-1" id="reg_submit">
+		</form>
+		<div id="msg-close-opt-su" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+
+	<div class="box" id="profile-box">
+		Email: <span id="profile-email"></span>
+		<br>
+		<hr size='1'>(change password)
+		<br>
+		<form id="change-pass-form">
+			<input type="password" placeholder="New Password" id="c-p-new_pass" class="text-field-style-1 cp-textfields">
+			<br>
+			<input type="password" placeholder="Verify Password" id="c-p-verify_pass" class="text-field-style-1 cp-textfields">
+			<br>
+			<input type="button" id="c-p-submit" value="Change" class="submit-field-style-1">
+		</form>
+		<div id="msg-close-opt-profile" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+
+	<div class="box" id="my-projects-box">
+		<div id="my-projects-container">
+			<div id="add-project-opt">
+				Add New +
+				<input type="text" placeholder="Project Name..." id="ap-name" class="text-field-style-1" style="width: 90%;margin-top:10px;">
+				<textarea id="ap-string" class="text-area-style-1" placeholder="Default String...(optional)"></textarea>
+				<input type="button" id="add-project-submit" class="submit-field-style-1" value="Add">
+			</div>
+			<hr size='1'>
+		</div>
+		<div id="project-list"></div>
+		<div id="msg-close-opt-projects" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+	<div class="box" id="cc-box">
+		<input class='color' id='color-picker-field'>
+		<div id="msg-close-opt-cc" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+	<div class="box" id="run-proc-box">
+		<div id='process-form'>
+			<div style="width: 150px; float:left">Process dimension:</div>
+			<input type='text' class="cell-label" style="height: 15px" id="rp-dimension" value="2">
+			<br>
+			<div style="width: 150px; float:left">Iterations:</div>
+			<input type='text' class="cell-label" style="height: 15px" id="rp-iters" value="10">
 			<br>
 			<div style="width: 80px; float:left">Statistics:</div>
-			<input type = 'checkbox' id = "rp-stats" class = "cell-label">
+			<input type='checkbox' id="rp-stats" class="cell-label">
 			<br>
-			<input type = 'button' id = 'run-process-go' value = "Run" style = "width: 70px" class = "submit-field-style-1">
+			<input type='button' id='run-process-go' value="Run" style="width: 70px" class="submit-field-style-1">
 		</div>
-		<div id = "r-p-cc" class = "msg-close-opt">
+		<div id="r-p-cc" class="msg-close-opt">
 			Close
 		</div>
 	</div>
 	<input id="slider" type="range" value="0" min="0" max="10" step="1">
 
 </body>
+
 </html>
