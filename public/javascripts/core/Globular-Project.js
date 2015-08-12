@@ -475,6 +475,9 @@ Project.prototype.clickCell = function(height) {
             var interchanger = {id: "interchanger", level: [h2, h1]};
             var int_diagram = {generators: [interchanger]};
             this.diagram.attach(int_diagram, 's');
+            var maxVal = $('#slider').val() + 1;
+            $('#slider').attr('max', maxVal)
+
         }
         else if(slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)){
                         // Check if this is allowed
@@ -491,11 +494,14 @@ Project.prototype.clickCell = function(height) {
             var interchanger = {id: "interchanger", level: [h1, h2]};
             var int_diagram = {generators: [interchanger]};
             this.diagram.attach(int_diagram, 't');
+            var maxVal = $('#slider').val() + 1;
+            $('#slider').attr('max', maxVal)
+            $('#slider').val(this.diagram.generators.length);
+
         }
         else{
             return;
         }
-        
     }
     else{
         // Check if this is allowed
@@ -897,11 +903,13 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                         if(project.diagram.dimension === 3){
                             $('#slider').show();
                             if(match.boundaryPath.length === 1){
+                                var maxVal = $('#slider').val() + 1;
+                                $('#slider').attr('max', maxVal)
                                 if(match.boundaryPath[0] === 's'){
-                                    $('#slider')[0].value = 0;
+                                    $('#slider').val(0);
                                 }
                                 else{
-                                    $('#slider')[0].value = project.diagram.generators.length;
+                                    $('#slider').val(project.diagram.generators.length);
                                 }
                             }
                         }
