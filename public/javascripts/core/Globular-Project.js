@@ -580,8 +580,26 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-    var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-    var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    var sourceMatches = [];
+    var targetMatches = [];
+    
+    if(this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3){
+        var slider = Number($('#slider').val());
+        if(slider === 0){
+            sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+        }
+        else if(slider === this.diagram.generators.length){
+            targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+        }
+        else{
+            alert("Slide to the source or the target of the 3-cell to attach");
+            return [];
+        }
+    }
+    else{
+        sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
+        targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    }
 
     var enumerationData = {
         attachmentFlag: true,
@@ -877,11 +895,14 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             match.boundaryPath);
                         $('div.cell-b-sect').empty();
                         if(project.diagram.dimension === 3){
-                            if(match.boundaryPath[0] === 's'){
-                                $('#slider').val(0);
-                            }
-                            else{
-                                $('#slider').val(project.diagram.generators.length);
+                            $('#slider').show();
+                            if(match.boundaryPath.length === 1){
+                                if(match.boundaryPath[0] === 's'){
+                                    $('#slider')[0].value = 0;
+                                }
+                                else{
+                                    $('#slider')[0].value = project.diagram.generators.length;
+                                }
                             }
                         }
                         project.renderAll();
