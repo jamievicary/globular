@@ -37,7 +37,11 @@ Project.prototype.getType = function() {
 };
 
 Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, numIterations) {
-    
+    if (historyOn === undefined){
+        historyOn = true;
+        statisticsOn = false;
+        numIterations =1;
+    }
     var species_dim = this.diagram.dimension;
     var processes_dim = species_dim + 1;
     var history = this.diagram; // history
@@ -70,10 +74,12 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
         var eventsWithTimes = [];
         for(var i = 0; i < possible_events.length; i++) {
             for(var j = 0; j < possible_events[i].length; j++){
-                var negRateInverse = new Fraction(-1, rates[i]);
+                //var negRateInverse = new Fraction(-1, rates[i]);
                 //need to change fraction into number first
-                negRateInverse = negRateInverse.n / negRateInverse.d;
-                possible_events[i][j] = [possible_events[i][j], (negRateInverse.toPrecision(4))*Math.log(Math.random()), processes[i], i];  
+                //negRateInverse = negRateInverse.n / negRateInverse.d;
+                //var negRatePrecise = negRateInverse.toPrecision(4);
+                //var posRatePrecise = -1*negRatePrecise;
+                possible_events[i][j] = [possible_events[i][j], timeSampler(rates[i]), processes[i], i];  
                 //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
     	}
@@ -756,7 +762,6 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
     
     $(sto_rate_text).blur(function(){
         var cid = $(this).attr("id").substring(3); 
-        alert(cid);
         var rate = $(this).val();
         project.set_rate(cell, rate);
     });
