@@ -30,6 +30,21 @@ $(document).ready(function() {
         }
     });
     
+    $("#mm-1").click(function(){
+        $("#login-box").fadeIn();
+    });
+    $("#msg-close-opt-log").click(function(){
+        $("#login-box").fadeOut();
+    });
+    
+    $("#mm-2").click(function(){
+        $("#signup-box").fadeIn();
+    });
+    $("#msg-close-opt-su").click(function(){
+        $("#signup-box").fadeOut();
+    });
+    
+    
     
     // Create the slider
     $("#slider").on("input change", function() {
@@ -124,28 +139,7 @@ $(document).ready(function() {
         else {
             $(".enable_if-out").hide();
             $(".enable_if-in").show();
-            $("#cell-body").css("margin-top", "-120px");
-            $("#cell-body").css("height", "calc( 100% - 180px )");
         }
-        var pair1 = "1";
-        var pair2 = "2";
-
-        $("#opt-section-" + pair2).hide();
-        $("#opt-" + pair2).css("border-bottom", "2px solid black");
-        $("#opt-" + pair1).click(function() {
-            $(this).css("border-bottom", "2px solid #00b8ff");
-            $("#opt-" + pair2).css("border-bottom", "2px solid black");
-            $("#opt-section-" + pair1).show();
-            $("#opt-section-" + pair2).hide();
-        });
-        $("#opt-" + pair2).click(function() {
-            $(this).css("border-bottom", "2px solid #00b8ff");
-            $("#opt-" + pair1).css("border-bottom", "2px solid black");
-            $("#opt-section-" + pair2).show();
-            $("#opt-section-" + pair1).hide();
-        });
-
-
     }
 
     function render_page() {
@@ -170,6 +164,7 @@ $(document).ready(function() {
         }, function(result, status) {
             if (status == "success") {
                 if (result.success) {
+                    $("#login-box").fadeOut();
                     render_page();
                 }
                 else {
@@ -474,4 +469,6 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
+    
+    
 });
