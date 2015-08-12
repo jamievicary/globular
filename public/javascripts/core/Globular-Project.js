@@ -43,19 +43,19 @@ Project.prototype.applyStochasticProcess = function() {
         Does getNCells go in order from the vertical side panel?  Currently it's random, but the processes are labelled--need html code to take
         whatever the user names the process and get that data back to us
     */
-    
+
     var history = this.diagram; // history
     history.boost(); //this takes the identity
-    var current_state = history.getTargetBoundary(); 
-    var species = this.signature.get_NCells(1); 
+    var current_state = history.getTargetBoundary();
+    var species = this.signature.get_NCells(1);
     var processes = this.signature.get_NCells(2);
     var possible_events = [];
     var rates = [];
-    
-    for(var i = 0; i < processes.length; i++) {
-        rates[i] = this.get_rate(processes[i]);  
+
+    for (var i = 0; i < processes.length; i++) {
+        rates[i] = this.get_rate(processes[i]);
     }
-    for(var i = 0; i < processes.length; i++) {
+    for (var i = 0; i < processes.length; i++) {
         possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
     }
     var eventsWithTimes = [];
@@ -67,31 +67,31 @@ Project.prototype.applyStochasticProcess = function() {
      
         }
 	}*/
-    for(var i = 0; i < possible_events.length; i++) {
-        for(var j = 0; j < possible_events[i].length; j++) {
+    for (var i = 0; i < possible_events.length; i++) {
+        for (var j = 0; j < possible_events[i].length; j++) {
             eventsWithTimes.push(possible_events[i][j]);
         }
     }
-	var indexNextEvent = -1;
-	//first extract all the event times
-	var eventTimes = [];
-	for(var x = 0; x < eventsWithTimes.length; x++) {
-	        eventTimes.push(eventsWithTimes[x][1]);
-	}
-	var least = 2;
-	var index = 0;
-	for(var x = 0; x < eventsWithTimes.length; x++) {
-		if (eventTimes[x] < least) {
-		    least = eventTimes[x];
-		    index = x;
-		
-		}
-	}
+    var indexNextEvent = -1;
+    //first extract all the event times
+    var eventTimes = [];
+    for (var x = 0; x < eventsWithTimes.length; x++) {
+        eventTimes.push(eventsWithTimes[x][1]);
+    }
+    var least = 2;
+    var index = 0;
+    for (var x = 0; x < eventsWithTimes.length; x++) {
+        if (eventTimes[x] < least) {
+            least = eventTimes[x];
+            index = x;
+
+        }
+    }
     //so eventsWithTimes[index][0] is the event we want to execute
-   /* var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
-    history.attach(attached_event, 't', eventsWithTimes[index][0]);
-    this.renderDiagram();            
-    var processData; */
+    /* var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
+     history.attach(attached_event, 't', eventsWithTimes[index][0]);
+     this.renderDiagram();            
+     var processData; */
     /*
         for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
         and the source and target of that process
@@ -108,13 +108,12 @@ Project.prototype.applyStochasticProcess = function() {
 }
 
 Project.prototype.displayInterchangers = function() {
-    
+
     var interchangers = this.diagram.getInterchangers();
     console.log(interchangers);
-    var i = Math.floor(Math.random()*1000);
-    i = i % interchangers.length;
-    this.diagram.rewrite(interchangers[i]);  
-    this.renderAll();
+    var i = Math.floor(Math.random() * interchangers.length);
+    this.diagram.rewrite(interchangers[i]);
+    this.renderDiagram();
 };
 
 
@@ -254,7 +253,7 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
 
         this.diagram.rewrite(rewriteCell);
 
-    } 
+    }
 };
 
 
@@ -377,7 +376,7 @@ Project.prototype.clickCell = function(height) {
     if (this.selected_cell == height) {
         return;
     }
-    
+
     var h1 = this.selected_cell;
     var h2 = height;
     /*
@@ -399,12 +398,12 @@ Project.prototype.clickCell = function(height) {
         h1 = h2;
         h2 = temp;
     }
-    
+
     if (!this.diagram.interchangerAllowed(h1, h2)) {
         alert("Cannot interchange these cells");
         return;
     }
-    
+
     // Perform the interchanger
     this.diagram.rewriteInterchanger(h1, h2);
 
@@ -449,7 +448,7 @@ Project.prototype.selectGenerator = function(id) {
 
     var matched_diagram = cell.diagram.copy();
 
-    if (matched_diagram.getDimension() > this.diagram.getDimension() ){
+    if (matched_diagram.getDimension() > this.diagram.getDimension()) {
         // Don't bother attaching, just rewrite
 
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());
@@ -486,28 +485,28 @@ Project.prototype.selectGenerator = function(id) {
 }
 
 Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
-    
+
     var pattern_diagram;
     var matched_diagram_boundary;
-    
-    if(boundary_boolean === 's') {
+
+    if (boundary_boolean === 's') {
         pattern_diagram = this.diagram.getSourceBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getSourceBoundary();
         }
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
-    else{
+    else {
         pattern_diagram = this.diagram.getTargetBoundary();
         for (var i = 0; i < boundary_depth; i++) {
             pattern_diagram = pattern_diagram.getTargetBoundary();
         }
         matched_diagram_boundary = matched_diagram.getSourceBoundary();
     }
-    
-    
+
+
     var matched_size = matched_diagram_boundary.getFullDimensions();
-    
+
     var matches = pattern_diagram.enumerate(matched_diagram_boundary);
     for (var i = 0; i < matches.length; i++) {
         matches[i] = {
@@ -589,14 +588,14 @@ Project.prototype.renderDiagram = function() {
         }
     }
     else {
-        if(this.diagram.dimension === 3){
+        if (this.diagram.dimension === 3) {
             $('#slider').attr('max', this.diagram.generators.length);
             $('#slider').show()
             var slider = $('#slider').val();
             var diagram = this.diagram.getSlice(slider);
             this.render(div, diagram);
         }
-        else{
+        else {
             $('#slider').hide()
             this.render(div, this.diagram);
         }
@@ -669,8 +668,8 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         project.setColour(cell, '#' + this.toString());
         project.renderAll();
     };
-    
-  
+
+
     /*$(input_color).blur(function() {
         project.setColour(cell, '#' + $(this).val().toString());
         project.renderAll();
@@ -678,29 +677,30 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
 
     div_detail.appendChild(input_color);
 
-    if(n!=0){
-        
+    if (n != 0) {
+
         var sto_rate_text = document.createElement('input');
         sto_rate_text.className = 'stochastic-rate';
         sto_rate_text.id = 'sr-' + cell;
         sto_rate_text.type = 'text';
-        sto_rate_text.placeholder='Rate';
-        
+        sto_rate_text.placeholder = 'Rate';
+
         div_detail.appendChild(sto_rate_text);
-        
+
     }
-    
-     $("#stochastic-cb").change(function(){
+
+    $("#stochastic-cb").change(function() {
         if ($(this).is(':checked')) {
             $(".stochastic-rate").slideDown();
-            
-        } else {
+
+        }
+        else {
             $(".stochastic-rate").slideUp();
         }
     });
-    
-    $(sto_rate_text).blur(function(){
-        var cid = $(this).attr("id").substring(3); 
+
+    $(sto_rate_text).blur(function() {
+        var cid = $(this).attr("id").substring(3);
         alert(cid);
         var rate = $(this).val();
         project.set_rate(cell, rate);
@@ -736,11 +736,11 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-                
-                if(project.diagram.dimension === 3){
-                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);    
+
+                if (project.diagram.dimension === 3) {
+                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);
                 }
-                else{
+                else {
                     project.render(div_match, project.diagram, match_array[i]);
                 }
                 (function(match) {
@@ -760,10 +760,10 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     $(div_match).hover(
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
-                            if(project.diagram.dimension === 3){
+                            if (project.diagram.dimension === 3) {
                                 project.render('#diagram-canvas', project.diagram.getSourceBoundary(), match);
                             }
-                            else{
+                            else {
                                 project.render('#diagram-canvas', project.diagram, match);
                             }
                         },
