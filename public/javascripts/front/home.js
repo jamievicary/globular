@@ -24,6 +24,7 @@ $(document).ready(function() {
         }
         else if (key == 'p') {
             gProject.applyStochasticProcess();
+            gProject.renderAll();
         }
         else if (key == 'z') {
             gProject.displayInterchangers();
@@ -322,8 +323,9 @@ $(document).ready(function() {
                 var hist = $("#rp-hist").is(':checked');
                 var stats = $("#rp-stats").is(':checked');
                 var iterations = $("#rp-iters").val();
+                iterations = Number(iterations);
                 
-                gProject.applyStochasticProcess(hist, stats, iterations);
+                gProject.stochasticPreprocessing(hist, stats, iterations);
                 gProject.renderAll();
             });
             
