@@ -167,7 +167,7 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
                 id: eventsWithTimes[index][2],
                 coordinate: eventsWithTimes[index][0]
             };
-            current_state.rewrite(rewriteCell, true);
+            current_state.rewrite(rewriteCell, false);
         }
     }
     return species_numbers;  //just the hashtable...someone will need to make it look nice to the user with species name and number
