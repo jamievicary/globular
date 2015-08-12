@@ -740,7 +740,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         
     }
     
-    $("#stochastic-cb").change(function(){
+     $("#stochastic-cb").change(function(){
         if ($(this).is(':checked')) {
             $(".stochastic-rate").slideDown();
             
@@ -749,10 +749,11 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         }
     });
     
-    $(".stochastic-rate").blur(function(){
+    $(sto_rate_text).blur(function(){
         var cid = $(this).attr("id").substring(3); 
+        alert(cid);
         var rate = $(this).val();
-        project.set_rate(cid, rate);
+        project.set_rate(cell, rate);
     });
 
     // Add extra section

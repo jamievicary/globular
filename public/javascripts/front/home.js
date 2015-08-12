@@ -471,4 +471,5 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
+    
 });

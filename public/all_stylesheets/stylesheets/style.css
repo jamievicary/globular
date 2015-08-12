@@ -319,21 +319,20 @@ body, html {
 #project-menu {
   cursor: pointer;
   position: relative;
-  top: 0;
-  margin-left: 35px;
   margin: 0;
   height: 20px;
   list-style: none;
   float: right;
+  z-index: 1000;
   white-space: nowrap;
 }
 
-/* line 287, ../sass/style.sass */
+/* line 286, ../sass/style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 290, ../sass/style.sass */
+/* line 289, ../sass/style.sass */
 #diagram-title {
   font-size: 95%;
   padding-left: 10px;
@@ -346,22 +345,23 @@ body, html {
   outline-width: 0px;
 }
 
-/* line 302, ../sass/style.sass */
+/* line 301, ../sass/style.sass */
 #diagram-canvas {
   background-color: #ededed;
   position: absolute;
+  margin-top: 20px;
   bottom: 0px;
   right: 0px;
   width: calc( 100% - 320px );
   height: calc( 100% - 20px );
 }
 
-/* line 311, ../sass/style.sass */
+/* line 310, ../sass/style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 314, ../sass/style.sass */
+/* line 313, ../sass/style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -374,14 +374,14 @@ body, html {
   background-repeat: no-repeat;
 }
 
-/* line 325, ../sass/style.sass */
+/* line 324, ../sass/style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 330, ../sass/style.sass */
+/* line 329, ../sass/style.sass */
 .mini-opt-links {
   color: #ffffff;
   font-size: 70%;
@@ -391,14 +391,14 @@ body, html {
   cursor: pointer;
 }
 
-/* line 338, ../sass/style.sass */
+/* line 337, ../sass/style.sass */
 .del-project {
   float: right;
   color: #335566;
   cursor: pointer;
 }
 
-/* line 343, ../sass/style.sass */
+/* line 342, ../sass/style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -408,7 +408,7 @@ body, html {
   color: salmon;
 }
 
-/* line 351, ../sass/style.sass */
+/* line 350, ../sass/style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -417,7 +417,7 @@ body, html {
   position: absolute;
 }
 
-/* line 358, ../sass/style.sass */
+/* line 357, ../sass/style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -426,7 +426,7 @@ body, html {
   left: 80px;
 }
 
-/* line 365, ../sass/style.sass */
+/* line 364, ../sass/style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -434,7 +434,7 @@ body, html {
   padding-top: 20px;
 }
 
-/* line 371, ../sass/style.sass */
+/* line 370, ../sass/style.sass */
 #slider {
   bottom: 5px;
   right: 5px;
@@ -442,7 +442,7 @@ body, html {
   position: absolute;
 }
 
-/* line 377, ../sass/style.sass */
+/* line 376, ../sass/style.sass */
 #sto-form {
   position: absolute;
   color: #008b8b;
@@ -450,13 +450,13 @@ body, html {
   margin-left: -200px;
 }
 
-/* line 383, ../sass/style.sass */
+/* line 382, ../sass/style.sass */
 #run-process {
   float: right;
   background-color: #008b8b;
 }
 
-/* line 387, ../sass/style.sass */
+/* line 386, ../sass/style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
