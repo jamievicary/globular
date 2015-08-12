@@ -36,96 +36,80 @@ Project.prototype.getType = function() {
     return 'Project';
 };
 
-Project.prototype.stochasticPreprocessing = function(historyOn, statisticsOn, numIterations){
-        
-    if(historyOn === true){
-        this.diagram.boost(); //this takes the identity   
-    }
-    this.applyStochasticProcess(historyOn, statisticsOn, numIterations);
-}
+Project.prototype.applyStochasticProcess = function(numIterations) {
 
-Project.prototype.applyStochasticProcess = function(dim_Process, statisticsOn, numIterations) {
-    if (historyOn === undefined){
-        historyOn = false;
-        statisticsOn = false;
-        numIterations =1;
+    var diagram_dimension = this.diagram.getDimension();
+    var process_dimension = Number($("#rp-dimension").val());
+    var history_mode;
+    if (diagram_dimension == process_dimension) {
+        history_mode = true;
     }
-    dimensionHelper(dim_Process, this.diagram.getDimension());
-    var species_dim = this.diagram.dimension;
-    var processes_dim = species_dim + 1;
-    if(historyOn === true){
-        species_dim = species_dim -1;
-        processes_dim = processes_dim -1;
+    else if (diagram_dimension + 1 == process_dimension) {
+        history_mode = false;
     }
-    
-    var history = this.diagram; 
-    var current_state;
-        
-    if(!historyOn){
-        current_state = this.diagram;
+    else {
+        alert("Process dimension must equal diagram dimension, or diagram dimension plus 1");
+        return;
     }
-        
-    for(var m = 0; m < numIterations; m++)
-    {
-        if(historyOn){
-            current_state = history.getTargetBoundary();
-        }
-        
-        var species = this.signature.get_NCells(species_dim); //not necessarily in the same order as processes...or in the same order each time it's called
-        var processes = this.signature.get_NCells(processes_dim);
+
+    // Collect the rates
+    var processes = this.signature.get_NCells(process_dimension);
+    var rates = [];
+    for (var i = 0; i < processes.length; i++) {
+        rates[i] = this.get_rate(processes[i]);
+    }
+    //rates.push(sarargsar)
+
+    for (var m = 0; m < numIterations; m++) {
+
+        //var species = this.signature.get_NCells(species_dim); //not necessarily in the same order as processes...or in the same order each time it's called
         var regularProcessesLength = processes.length;
-        var interchanges = this.diagram.getInterchangers();
-        for(var j = 0; j < interchanges.length; j++){
-            processes.push(interchanges[i]);
-        }
+        //var interchanges = this.diagram.getInterchangers();
+        //for(var j = 0; j < interchanges.length; j++){
+        //  processes.push(interchanges[i]);
+        //}
         var possible_events = [];
-        var rates = [];
-        
-        for(var i = 0; i < regularProcessesLength; i++) {
-            rates[i] = this.get_rate(processes[i]);  
-        }
-        var interchange_rate = 2; //to be put in by user later
-        for(var k = regularProcessesLength; k < processes.length; k++){
-            rates[k] = interchange_rate;
-        }
-        for(var i = 0; i < processes.length; i++) {
-            possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
-        }
+        //var interchange_rate = 2; //to be put in by user later
+        //for(var k = regularProcessesLength; k < processes.length; k++){
+        //  rates[k] = interchange_rate;
+        //}
+        var current_state = (history_mode ? this.diagram.getTargetBoundary() : this.diagram);
         var eventsWithTimes = [];
-        for(var i = 0; i < possible_events.length; i++) {
-            for(var j = 0; j < possible_events[i].length; j++){
+        for (var i = 0; i < processes.length; i++) {
+            possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+            for (var j = 0; j < possible_events[i].length; j++) {
                 //var negRateInverse = new Fraction(-1, rates[i]);
                 //need to change fraction into number first
                 //negRateInverse = negRateInverse.n / negRateInverse.d;
                 //var negRatePrecise = negRateInverse.toPrecision(4);
                 //var posRatePrecise = -1*negRatePrecise;
-                possible_events[i][j] = [possible_events[i][j], timeSampler(rates[i]), processes[i], i];  
+                eventsWithTimes.push({
+                    event: possible_events[i][j],
+                    time: timeSampler(rates[i]),
+                    id: processes[i],
+                    process_index: i
+                });
                 //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
-    	}
-        for(var i = 0; i < possible_events.length; i++) {
-            for(var j = 0; j < possible_events[i].length; j++) {
-                eventsWithTimes.push(possible_events[i][j]);
+        }
+        var indexNextEvent = -1;
+        //first extract all the event times
+        var eventTimes = [];
+        for (var x = 0; x < eventsWithTimes.length; x++) {
+            eventTimes.push(eventsWithTimes[x].time);
+        }
+        var least = Number.MAX_VALUE;
+        var index = 0;
+        for (var x = 0; x < eventsWithTimes.length; x++) {
+            if (eventTimes[x] < least) {
+                least = eventTimes[x];
+                index = x;
             }
         }
-    	var indexNextEvent = -1;
-    	//first extract all the event times
-    	var eventTimes = [];
-    	for(var x = 0; x < eventsWithTimes.length; x++) {
-    	        eventTimes.push(eventsWithTimes[x][1]);
-    	}
-    	var least = 2;
-    	var index = 0;
-    	for(var x = 0; x < eventsWithTimes.length; x++) {
-    		if (eventTimes[x] < least) {
-    		    least = eventTimes[x];
-    		    index = x;
-    		}
-    	}
-    	/*
+        /*
     	    Stats Stuff
-        */	    
-        var processData = []; 
+        */
+        var processData = [];
         /*
             for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
             and the source and target of that process
@@ -136,13 +120,15 @@ Project.prototype.applyStochasticProcess = function(dim_Process, statisticsOn, n
             var process_diagram = process_retrieve.diagram;
             processData[i] = [this.getName(processes[i]), process_diagram.getSourceBoundary(), process_diagram.getTargetBoundary()];
         }
-        var species_numbers = new Hashtable();  //this will store the species name and initial species counts
-        for(i = 0; i < species.length; i++){
-            species_numbers.put(this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary());   
+        //var species_numbers = new Hashtable(); //this will store the species name and initial species counts
+        /*
+        for (i = 0; i < species.length; i++) {
+            species_numbers.put(this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary());
         }
+        */
         //var num = species_numbers.get(this.getName(species[index]))
         //increment num; .put(name, num)
-        var executedProcess = eventsWithTimes[index][2];
+        var executedProcess = eventsWithTimes[index].id;
         var executedProcess_sources = this.dataList.get(executedProcess).diagram.getSourceBoundary();
         var source_Names = [];
         for (var i = 0; i < executedProcess_sources.length; i++) {
@@ -154,6 +140,7 @@ Project.prototype.applyStochasticProcess = function(dim_Process, statisticsOn, n
             target_Names.push(executedProcess_targets[i]);
         }
         //data updated below
+        /*
         for (var i = 0; i < source_Names.length; i++) {
             var num = species_numbers.get(this.getName(source_Names[i]));
             num = num - 1;
@@ -165,27 +152,27 @@ Project.prototype.applyStochasticProcess = function(dim_Process, statisticsOn, n
             species_numbers.put(this.getName(target_Names[i]), num);
         }
         //To where do we send the stats data?
-        
+
         for (var i = 0; i < species_numbers.length; i++) {
             species_numbers
         }
-        
+        */
+
         //so eventsWithTimes[index][0] is the event we want to execute
-        var attached_event = this.signature.createDiagram(eventsWithTimes[index][2]);
-        if (historyOn === true)
-        {
-            history.attach(attached_event, 't', eventsWithTimes[index][0]);
-            this.renderDiagram();
+        var attached_event = this.signature.createDiagram(eventsWithTimes[index].id);
+        if (history_mode) {
+            this.diagram.attach(attached_event, 't', eventsWithTimes[index].event);
+            //this.renderDiagram();
         }
-        else{ //rewrite
+        else { //rewrite
             var rewriteCell = {
-                id: eventsWithTimes[index][2],
-                coordinate: eventsWithTimes[index][0]
+                id: eventsWithTimes[index].id,
+                coordinate: eventsWithTimes[index].event
             };
-            current_state.rewrite(rewriteCell, false);
+            this.diagram.rewrite(rewriteCell, false);
         }
     }
-    return species_numbers;  //just the hashtable...someone will need to make it look nice to the user with species name and number
+    //return species_numbers; //just the hashtable...someone will need to make it look nice to the user with species name and number
 }
 
 Project.prototype.displayInterchangers = function() {
@@ -472,59 +459,69 @@ Project.prototype.clickCell = function(height) {
         h2 = height;
     }
     */
-    if (this.diagram.getDimension() === 3){
+    if (this.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
-        if(slider === 0 && this.diagram.generators.length != 0){
-        
+        if (slider === 0 && this.diagram.generators.length != 0) {
+
             // Check if this is allowed
             if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
                 var temp = h1;
                 h1 = h2;
                 h2 = temp;
             }
-            
+
             if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
                 alert("Cannot interchange these cells");
                 return;
             }
-            var interchanger = {id: "interchanger", level: [h2, h1]};
-            var int_diagram = {generators: [interchanger]};
+            var interchanger = {
+                id: "interchanger",
+                level: [h2, h1]
+            };
+            var int_diagram = {
+                generators: [interchanger]
+            };
             this.diagram.attach(int_diagram, 's');
         }
-        else if(slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)){
-                        // Check if this is allowed
+        else if (slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)) {
+            // Check if this is allowed
             if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
                 var temp = h1;
                 h1 = h2;
                 h2 = temp;
             }
-            
+
             if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
                 alert("Cannot interchange these cells");
                 return;
             }
-            var interchanger = {id: "interchanger", level: [h1, h2]};
-            var int_diagram = {generators: [interchanger]};
+            var interchanger = {
+                id: "interchanger",
+                level: [h1, h2]
+            };
+            var int_diagram = {
+                generators: [interchanger]
+            };
             this.diagram.attach(int_diagram, 't');
         }
-        else{
+        else {
             return;
         }
-        
+
     }
-    else{
+    else {
         // Check if this is allowed
         if (!this.diagram.interchangerAllowed(h1, h2)) {
             var temp = h1;
             h1 = h2;
             h2 = temp;
         }
-        
+
         if (!this.diagram.interchangerAllowed(h1, h2)) {
             alert("Cannot interchange these cells");
             return;
         }
-        
+
         // Perform the interchanger
         this.diagram.rewriteInterchanger(h1, h2);
     }
@@ -857,23 +854,23 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-                if(project.diagram.dimension === 3){
+                if (project.diagram.dimension === 3) {
                     var temp_match = {
                         boundaryPath: match_array[i].boundaryPath,
                         inclusion: match_array[i].inclusion,
                         size: match_array[i].size
-                    }; 
+                    };
                     var temp_diagram;
-                    
-                    if(match_array[i].boundaryPath.length === 1){
-                        if(match_array[i].boundaryPath[0] === 's'){
+
+                    if (match_array[i].boundaryPath.length === 1) {
+                        if (match_array[i].boundaryPath[0] === 's') {
                             temp_diagram = project.diagram.getSourceBoundary();
                         }
-                        else{
+                        else {
                             temp_diagram = project.diagram.getTargetBoundary();
                         }
                     }
-                    else{
+                    else {
                         var slider = Number($('#slider').val());
                         temp_diagram = project.diagram.getSlice(slider);
                     }
@@ -891,11 +888,11 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             match.inclusion, // the inclusion data for the boundary
                             match.boundaryPath);
                         $('div.cell-b-sect').empty();
-                        if(project.diagram.dimension === 3){
-                            if(match.boundaryPath[0] === 's'){
+                        if (project.diagram.dimension === 3) {
+                            if (match.boundaryPath[0] === 's') {
                                 $('#slider').val(0);
                             }
-                            else{
+                            else {
                                 $('#slider').val(project.diagram.generators.length);
                             }
                         }
@@ -908,22 +905,22 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     $(div_match).hover(
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
-                            if(project.diagram.dimension === 3){
+                            if (project.diagram.dimension === 3) {
                                 var temp_match = {
                                     boundaryPath: match.boundaryPath,
                                     inclusion: match.inclusion,
                                     size: match.size
                                 };
                                 var temp_diagram;
-                                if(match.boundaryPath.length === 1){
-                                    if(match.boundaryPath[0] === 's'){
+                                if (match.boundaryPath.length === 1) {
+                                    if (match.boundaryPath[0] === 's') {
                                         temp_diagram = project.diagram.getSourceBoundary();
                                     }
-                                    else{
+                                    else {
                                         temp_diagram = project.diagram.getTargetBoundary();
                                     }
                                 }
-                                else{
+                                else {
                                     var slider = Number($('#slider').val());
                                     temp_diagram = project.diagram.getSlice(slider);
                                 }

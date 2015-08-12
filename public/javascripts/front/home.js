@@ -23,8 +23,8 @@ $(document).ready(function() {
             gProject.clearDiagram();
         }
         else if (key == 'p') {
-            gProject.applyStochasticProcess();
-            gProject.renderAll();
+            gProject.applyStochasticProcess(1);
+            gProject.renderDiagram();
         }
         else if (key == 'z') {
             gProject.displayInterchangers();
@@ -322,13 +322,11 @@ $(document).ready(function() {
         $("#run-process").click(function(){
             $("#run-proc-box").fadeIn();
             $("#run-process-go").click(function(){
-                var hist = $("#rp-hist").is(':checked');
-                var stats = $("#rp-stats").is(':checked');
                 var iterations = $("#rp-iters").val();
                 iterations = Number(iterations);
                 
-                gProject.stochasticPreprocessing(hist, stats, iterations);
-                gProject.renderAll();
+                gProject.applyStochasticProcess(iterations);
+                gProject.renderDiagram();
             });
             
         });
