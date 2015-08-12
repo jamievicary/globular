@@ -141,9 +141,15 @@
 	</div>
 	<div class = "box" id = "run-proc-box">
 		<div id = 'process-form'>
-			History:<input type = 'checkbox' style = "margin-left: 37px;" id = "rp-hist"><br>
-			Statistics:<input type = 'checkbox' style = "margin-left: 25px;" id = "rp-stats"><br>
-			Iterations:<input type = 'text' class = "cell-label" style = "height: 15px" id = "rp-iters"><br>
+			<div style="width: 80px; float:left">Dimension:</div>
+			<input type = 'text' class="cell-label" style = "height: 15px" id = "rp-dimension">
+			<br>
+			<div style="width: 80px; float:left">Iterations:</div>
+			<input type = 'text' class = "cell-label" style = "height: 15px" id = "rp-iters">
+			<br>
+			<div style="width: 80px; float:left">Statistics:</div>
+			<input type = 'checkbox' id = "rp-stats" class = "cell-label">
+			<br>
 			<input type = 'button' id = 'run-process-go' value = "Run" style = "width: 70px" class = "submit-field-style-1">
 		</div>
 		<div id = "r-p-cc" class = "msg-close-opt">
