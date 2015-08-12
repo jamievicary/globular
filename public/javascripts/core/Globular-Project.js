@@ -107,6 +107,17 @@ Project.prototype.applyStochasticProcess = function() {
     */
 }
 
+Project.prototype.displayInterchangers = function() {
+    
+    var interchangers = this.diagram.getInterchangers();
+    console.log(interchangers);
+    var i = Math.floor(Math.random()*1000);
+    i = i % interchangers.length;
+    this.diagram.rewrite(interchangers[i]);  
+    this.renderAll();
+};
+
+
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
 Project.prototype.getDiagram = function() {
     return this.diagram;
@@ -258,7 +269,7 @@ Project.prototype.clearDiagram = function() {
 // Take the identity on the main diagram
 Project.prototype.takeIdentity = function() {
     if (this.diagram == null) return;
-    if (this.diagram.getDimension() >= 2) {
+    if (this.diagram.getDimension() >= 3) {
         alert("Can't take the identity of a " + this.diagram.getDimension().toString() + "-dimensional diagram");
         return;
     }
@@ -366,7 +377,10 @@ Project.prototype.clickCell = function(height) {
     if (this.selected_cell == height) {
         return;
     }
-
+    
+    var h1 = this.selected_cell;
+    var h2 = height;
+    /*
     // Try to perform the interchange
     var h1, h2;
     if (height < this.selected_cell) {
@@ -377,53 +391,22 @@ Project.prototype.clickCell = function(height) {
         h1 = this.selected_cell;
         h2 = height;
     }
-    this.selected_cell = null;
+    */
 
-    // Check that cells are adjacent
-    if (h1 + 1 != h2) {
-        alert("Can't interchange non-adjacent 2-cells");
-        return;
+    // Check if this is allowed
+    if (!this.diagram.interchangerAllowed(h1, h2)) {
+        var temp = h1;
+        h1 = h2;
+        h2 = temp;
     }
-
-    // Get data about rewrites
-    var g1 = this.diagram.generators[h1];
-    var r1 = gProject.signature.getGenerator(g1.id);
-    var g2 = this.diagram.generators[h2];
-    var r2 = gProject.signature.getGenerator(g2.id);
-
-    // Check that cells are able to be interchanged
-    var g1_left_possible = (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
-    var g1_right_possible = (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
-    if (!(g1_left_possible || g1_right_possible)) {
-        alert ("Can't interchange these 2-cells");
+    
+    if (!this.diagram.interchangerAllowed(h1, h2)) {
+        alert("Cannot interchange these cells");
         return;
     }
     
-    // If both are possible, take the order given by the clicks
-    var g1_on_left;
-    if (g1_left_possible && g1_right_possible) {
-        g1_on_left = (h1 == height);
-    }
-    else {
-        g1_on_left = g1_left_possible;
-    }
-
-    var g1_new_position, g2_new_position;
-    if (g1_on_left) {
-        g1_new_position = g1.coordinate[0];
-        g2_new_position = g2.coordinate[0] + r1.source.generators.length - r1.target.generators.length;
-    }
-    else {
-        g2_new_position = g2.coordinate[0];
-        g1_new_position = g1.coordinate[0] + r2.target.generators.length - r2.source.generators.length;
-    }
-
-    // Everything's OK, so modify the diagram structure
-    this.diagram.generators[h1].coordinate[0] = g1_new_position;
-    this.diagram.generators[h2].coordinate[0] = g2_new_position;
-    var temp = this.diagram.generators[h1];
-    this.diagram.generators[h1] = this.diagram.generators[h2];
-    this.diagram.generators[h2] = temp;
+    // Perform the interchanger
+    this.diagram.rewriteInterchanger(h1, h2);
 
     // Finish up and render the result
     this.selected_cell = null;
@@ -491,42 +474,9 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-/*
-    var extended_source = this.diagram.getSourceBoundary();
-    var extended_target = this.diagram.getTargetBoundary();
-
-    for (var i = 0; i < boundary_depth; i++) {
-        extended_target = extended_source.getTargetBoundary();
-        extended_source = extended_source.getSourceBoundary();
-    }
-
-    var extended_source_matched = matched_diagram.getSourceBoundary();
-    var extended_target_matched = matched_diagram.getTargetBoundary();
-    var source_matched_size = extended_source_matched.getFullDimensions();
-    var target_matched_size = extended_target_matched.getFullDimensions();
-*/
-
     var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
     var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
 
-    /*
-    for (var i = 0; i < sourceMatches.length; i++) {
-        sourceMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('s')),
-            inclusion: sourceMatches[i],
-            size: target_matched_size
-        };
-    }*/
-    
-//    var targetMatches = extended_target.enumerate(extended_source_matched);
-    /* targetMatches = prepareEnumerationData(targetMatches, 't', boundary_depth);
-    for (var i = 0; i < targetMatches.length; i++) {
-        targetMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('t')),
-            inclusion: targetMatches[i],
-            size: source_matched_size
-        };
-    }*/
     var enumerationData = {
         attachmentFlag: true,
         diagram: matched_diagram,
@@ -588,7 +538,7 @@ Project.prototype.addZeroCell = function() {
     this.dataList.put(generator.identifier, data);
 }
 
-Project.prototype.render = function(div, map_diagram, highlight) {
+Project.prototype.render = function(div, diagram, highlight) {
     /*
         if (highlight === undefined) {
             highlight = {
@@ -618,7 +568,7 @@ Project.prototype.render = function(div, map_diagram, highlight) {
         map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
     */
 
-    map_diagram.render(div, highlight);
+    diagram.render(div, highlight);
 
 }
 
@@ -786,9 +736,13 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-
-                project.render(div_match, project.diagram, match_array[i]);
-
+                
+                if(project.diagram.dimension === 3){
+                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);    
+                }
+                else{
+                    project.render(div_match, project.diagram, match_array[i]);
+                }
                 (function(match) {
                     $(div_match).click(function() {
                         project.attach(
@@ -806,7 +760,12 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     $(div_match).hover(
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
-                            project.render('#diagram-canvas', project.diagram, match);
+                            if(project.diagram.dimension === 3){
+                                project.render('#diagram-canvas', project.diagram.getSourceBoundary(), match);
+                            }
+                            else{
+                                project.render('#diagram-canvas', project.diagram, match);
+                            }
                         },
                         /* MOUSE OUT OF THE PREVIEW THUMBNAIL */
                         function() {

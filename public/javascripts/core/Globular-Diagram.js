@@ -7,8 +7,8 @@
 function Diagram(source, generators) {
     if (source === undefined) return;
     
-    this.source = source; // Diagram
-    this.generators = generators; // Array
+    this.source = source;
+    this.generators = generators;
 
     if (source === null) {
         this.dimension = 0;
@@ -129,6 +129,12 @@ Diagram.prototype.render = function(div, highlight) {
 Diagram.prototype.rewrite = function(nCell, reverse) {
 
     if (reverse === undefined) reverse = false;
+    
+    // Special code to deal with interchangers
+    if(nCell.id === 'interchanger'){
+        this.rewriteInterchanger(nCell.level[0], nCell.level[1]);
+        return;
+    }
 
     // Info on the source and the target of the rewrite is retrieved from the signature here
     var rewrite = gProject.signature.getGenerator(nCell.id);
@@ -341,9 +347,12 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         // If attaching to the source, need to pad all other attachments
         if(temp_path[0] === 's'){
             for(var i = 0; i < this.generators.length; i++){
-                for(var j = 0; j < this.dimension - temp_path.length; j++) {//this.generators[i].coordinate.length; j++){
+                this.generators[i].coordinate[this.generators[i].coordinate.length-temp_path.length]++;
+                /*
+                for(var j = 0; j < this.generators[i].coordinate.length; j++){
                     this.generators[i].coordinate[j]++;
                 }
+                */
             }
         }
         
@@ -418,3 +427,83 @@ Diagram.prototype.getFullDimensions = function() {
     //return [this.generators.length].concat(this.source.getFullDimensions());
     return full_dimensions;
 };
+
+Diagram.prototype.getInterchangers = function() {
+    
+    var interchangers = new Array();
+    for(var i = 0; i < this.generators.length -1; i++){
+        if(this.interchangerAllowed(i, i+1)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i, i+1]
+            });
+        }
+        if(this.interchangerAllowed(i+1, i)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i+1, i]
+            });
+        }
+    }
+    return interchangers;
+}
+
+Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
+    
+    if (this.getDimension() != 2) return false;
+    if (height_right == height_left) return false;
+    if (height_left < 0) return false;
+    if (height_left > this.generators.length) return false;
+    if (height_right < 0) return false;
+    if (height_right > this.generators.length) return false;
+    
+    // Check that cells are adjacent
+    if (Math.abs(height_left - height_right) != 1) {
+        return false;
+    }
+
+    // Get data about rewrites
+    var g_left = this.generators[height_left];
+    var r_left = gProject.signature.getGenerator(g_left.id);
+    var g_right = this.generators[height_right];
+    var r_right = gProject.signature.getGenerator(g_right.id);
+
+    // Check that cells are able to be interchanged
+    if (height_left < height_right) {
+        return (g_left.coordinate[0] + r_left.target.generators.length <= g_right.coordinate[0]);
+    }
+    else {
+        return (g_left.coordinate[0] + r_left.source.generators.length <= g_right.coordinate[0]);
+    }
+}
+
+Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
+    
+    if (!this.interchangerAllowed(height_left, height_right)) {
+        alert("Illegal input passed to rewriteInterchanger");
+        return;
+    }
+    
+    // Get data about rewrites
+    var g_left = this.generators[height_left];
+    var r_left = gProject.signature.getGenerator(g_left.id);
+    var g_right = this.generators[height_right];
+    var r_right = gProject.signature.getGenerator(g_right.id);
+
+    var g_left_new_position, g_right_new_position;
+    if (height_left < height_right) {
+        g_left_new_position = g_left.coordinate[0];
+        g_right_new_position = g_right.coordinate[0] + r_left.source.generators.length - r_left.target.generators.length;
+    } else {
+        g_left_new_position = g_left.coordinate[0];
+        g_right_new_position = g_right.coordinate[0] - r_left.source.generators.length + r_left.target.generators.length;
+    }
+
+    // Rewrite the diagram
+    this.generators[height_left].coordinate[0] = g_left_new_position;
+    this.generators[height_right].coordinate[0] = g_right_new_position;
+    var temp = this.generators[height_left];
+    this.generators[height_left] = this.generators[height_right];
+    this.generators[height_right] = temp;
+
+}

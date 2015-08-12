@@ -25,6 +25,9 @@ $(document).ready(function() {
         else if (key == 'p') {
             gProject.applyStochasticProcess();
         }
+        else if (key == 'z') {
+            gProject.displayInterchangers();
+        }
     });
     
     

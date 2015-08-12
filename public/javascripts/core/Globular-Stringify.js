@@ -165,5 +165,6 @@ function globular_library_contains(library, object) {
 }
 
 function globular_is_array(object) {
-    return object.constructor.toString().indexOf("Array") > -1;
+    return (Object.prototype.toString.call(object) === '[object Array]');
+    //return object.constructor.toString().indexOf("Array") > -1;
 }
