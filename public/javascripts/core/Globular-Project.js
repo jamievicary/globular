@@ -162,6 +162,17 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
     return species_numbers;  //just the hashtable...someone will need to make it look nice to the user with species name and number
 }
 
+Project.prototype.displayInterchangers = function() {
+    
+    var interchangers = this.diagram.getInterchangers();
+    console.log(interchangers);
+    var i = Math.floor(Math.random()*1000);
+    i = i % interchangers.length;
+    this.diagram.rewrite(interchangers[i]);  
+    this.renderAll();
+};
+
+
 // This method returns the diagram currently associated with this project, this is used to maintain a complete separation between the front end and the core
 Project.prototype.getDiagram = function() {
     return this.diagram;
@@ -518,42 +529,9 @@ Project.prototype.selectGenerator = function(id) {
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
-/*
-    var extended_source = this.diagram.getSourceBoundary();
-    var extended_target = this.diagram.getTargetBoundary();
-
-    for (var i = 0; i < boundary_depth; i++) {
-        extended_target = extended_source.getTargetBoundary();
-        extended_source = extended_source.getSourceBoundary();
-    }
-
-    var extended_source_matched = matched_diagram.getSourceBoundary();
-    var extended_target_matched = matched_diagram.getTargetBoundary();
-    var source_matched_size = extended_source_matched.getFullDimensions();
-    var target_matched_size = extended_target_matched.getFullDimensions();
-*/
-
     var sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
     var targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
 
-    /*
-    for (var i = 0; i < sourceMatches.length; i++) {
-        sourceMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('s')),
-            inclusion: sourceMatches[i],
-            size: target_matched_size
-        };
-    }*/
-    
-//    var targetMatches = extended_target.enumerate(extended_source_matched);
-    /* targetMatches = prepareEnumerationData(targetMatches, 't', boundary_depth);
-    for (var i = 0; i < targetMatches.length; i++) {
-        targetMatches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join('t')),
-            inclusion: targetMatches[i],
-            size: source_matched_size
-        };
-    }*/
     var enumerationData = {
         attachmentFlag: true,
         diagram: matched_diagram,
@@ -615,7 +593,7 @@ Project.prototype.addZeroCell = function() {
     this.dataList.put(generator.identifier, data);
 }
 
-Project.prototype.render = function(div, map_diagram, highlight) {
+Project.prototype.render = function(div, diagram, highlight) {
     /*
         if (highlight === undefined) {
             highlight = {
@@ -645,7 +623,7 @@ Project.prototype.render = function(div, map_diagram, highlight) {
         map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
     */
 
-    map_diagram.render(div, highlight);
+    diagram.render(div, highlight);
 
 }
 
@@ -767,7 +745,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         
     }
     
-    $("#stochastic-cb").change(function(){
+     $("#stochastic-cb").change(function(){
         if ($(this).is(':checked')) {
             $(".stochastic-rate").slideDown();
             
@@ -776,10 +754,11 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
         }
     });
     
-    $(".stochastic-rate").blur(function(){
+    $(sto_rate_text).blur(function(){
         var cid = $(this).attr("id").substring(3); 
+        alert(cid);
         var rate = $(this).val();
-        project.set_rate(cid, rate);
+        project.set_rate(cell, rate);
     });
 
     // Add extra section
@@ -812,9 +791,13 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     .css('float', 'left')
                     .css('margin', 3);
                 //div_match.appendChild(document.createTextNode(" " + i.toString() + " "));
-
-                project.render(div_match, project.diagram, match_array[i]);
-
+                
+                if(project.diagram.dimension === 3){
+                    project.render(div_match, project.diagram.getSourceBoundary(), match_array[i]);    
+                }
+                else{
+                    project.render(div_match, project.diagram, match_array[i]);
+                }
                 (function(match) {
                     $(div_match).click(function() {
                         project.attach(
@@ -832,7 +815,12 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     $(div_match).hover(
                         /* HOVER OVER THE PREVIEW THUMBNAIL */
                         function() {
-                            project.render('#diagram-canvas', project.diagram, match);
+                            if(project.diagram.dimension === 3){
+                                project.render('#diagram-canvas', project.diagram.getSourceBoundary(), match);
+                            }
+                            else{
+                                project.render('#diagram-canvas', project.diagram, match);
+                            }
                         },
                         /* MOUSE OUT OF THE PREVIEW THUMBNAIL */
                         function() {

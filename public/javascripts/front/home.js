@@ -25,6 +25,9 @@ $(document).ready(function() {
         else if (key == 'p') {
             gProject.applyStochasticProcess();
         }
+        else if (key == 'z') {
+            gProject.displayInterchangers();
+        }
     });
     
     
@@ -32,8 +35,8 @@ $(document).ready(function() {
     $("#slider").on("input change", function() {
         // add a command here to redraw the 3-diagram at the new slice
         gProject.renderDiagram();
-        console.log("slider = " + $('#slider').val());
-    });
+        console.log("slider = " + $('#slider').val()); }
+    );
 
     var original_msg_html = $("#errors").html();
 	$(".box").draggable({ containment: "document", cursor: "crosshair" });
@@ -472,4 +475,5 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
+    
 });

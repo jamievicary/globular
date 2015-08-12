@@ -129,6 +129,12 @@ Diagram.prototype.render = function(div, highlight) {
 Diagram.prototype.rewrite = function(nCell, reverse) {
 
     if (reverse === undefined) reverse = false;
+    
+    // Special code to deal with interchangers
+    if(nCell.id === 'interchanger'){
+        this.rewriteInterchanger(nCell.level[0], nCell.level[1]);
+        return;
+    }
 
     // Info on the source and the target of the rewrite is retrieved from the signature here
     var rewrite = gProject.signature.getGenerator(nCell.id);
@@ -421,6 +427,26 @@ Diagram.prototype.getFullDimensions = function() {
     //return [this.generators.length].concat(this.source.getFullDimensions());
     return full_dimensions;
 };
+
+Diagram.prototype.getInterchangers = function() {
+    
+    var interchangers = new Array();
+    for(var i = 0; i < this.generators.length -1; i++){
+        if(this.interchangerAllowed(i, i+1)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i, i+1]
+            });
+        }
+        if(this.interchangerAllowed(i+1, i)){
+            interchangers.push({
+                id: "interchanger",
+                level: [i+1, i]
+            });
+        }
+    }
+    return interchangers;
+}
 
 Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
     

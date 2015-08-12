@@ -276,12 +276,11 @@ $top-menu-height: 20px
 #project-menu
 	cursor: pointer
 	position: relative
-	top: 0
-	margin-left: 35px
 	margin: 0
 	height: $top-menu-height
 	list-style: none
 	float: right
+	z-index: 1000
 	white-space: nowrap
 
 #save-project-opt
@@ -302,7 +301,7 @@ $top-menu-height: 20px
 #diagram-canvas
 	background-color: #ededed
 	position: absolute
-	//margin-top: $top-menu-height
+	margin-top: $top-menu-height
 	bottom: 0px
 	right: 0px
 	width: calc( 100% - 320px )
