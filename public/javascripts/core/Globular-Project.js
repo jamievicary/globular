@@ -176,7 +176,7 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
 Project.prototype.displayInterchangers = function() {
 
     var interchangers = this.diagram.getInterchangers();
-    console.log(interchangers);
+    //console.log(interchangers);
     var i = Math.floor(Math.random() * interchangers.length);
     this.diagram.rewrite(interchangers[i]);
     this.renderDiagram();
