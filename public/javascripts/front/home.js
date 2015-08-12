@@ -67,6 +67,8 @@ $(document).ready(function() {
         var rectangles = $('#diagram-canvas')[0].rectangles;
         //console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
 
+    if(rectangles === undefined) return;
+
         for (var i = 0; i < rectangles.length; i++) {
             var r = rectangles[i];
             if (x < r.x_min) continue;

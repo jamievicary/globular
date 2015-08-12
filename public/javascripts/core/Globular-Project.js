@@ -169,7 +169,7 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
                 id: eventsWithTimes[index][2],
                 coordinate: eventsWithTimes[index][0]
             };
-            current_state.rewrite(rewriteCell, true);
+            current_state.rewrite(rewriteCell, false);
         }
     }
     return species_numbers;  //just the hashtable...someone will need to make it look nice to the user with species name and number
@@ -807,9 +807,9 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
             $(".stochastic-rate").slideUp();
         }
     });
-    
-    $(sto_rate_text).blur(function(){
-        var cid = $(this).attr("id").substring(3); 
+
+    $(sto_rate_text).blur(function() {
+        var cid = $(this).attr("id").substring(3);
         var rate = $(this).val();
         project.set_rate(cell, rate);
     });
@@ -852,11 +852,17 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                     }; 
                     var temp_diagram;
                     
-                    if(match_array[i].boundaryPath[0] === 's'){
-                        temp_diagram = project.diagram.getSourceBoundary();
+                    if(match_array[i].boundaryPath.length === 1){
+                        if(match_array[i].boundaryPath[0] === 's'){
+                            temp_diagram = project.diagram.getSourceBoundary();
+                        }
+                        else{
+                            temp_diagram = project.diagram.getTargetBoundary();
+                        }
                     }
                     else{
-                        temp_diagram = project.diagram.getTargetBoundary();
+                        var slider = Number($('#slider').val());
+                        temp_diagram = project.diagram.getSlice(slider);
                     }
                     temp_match.boundaryPath = temp_match.boundaryPath.slice(1);
                     project.render(div_match, temp_diagram, temp_match);
@@ -872,6 +878,14 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             match.inclusion, // the inclusion data for the boundary
                             match.boundaryPath);
                         $('div.cell-b-sect').empty();
+                        if(project.diagram.dimension === 3){
+                            if(match.boundaryPath[0] === 's'){
+                                $('#slider').val(0);
+                            }
+                            else{
+                                $('#slider').val(project.diagram.generators.length);
+                            }
+                        }
                         project.renderAll();
                         project.saveState();
                     });
@@ -888,11 +902,17 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                                     size: match.size
                                 };
                                 var temp_diagram;
-                                if(match.boundaryPath[0] === 's'){
-                                    temp_diagram = project.diagram.getSourceBoundary();
+                                if(match.boundaryPath.length === 1){
+                                    if(match.boundaryPath[0] === 's'){
+                                        temp_diagram = project.diagram.getSourceBoundary();
+                                    }
+                                    else{
+                                        temp_diagram = project.diagram.getTargetBoundary();
+                                    }
                                 }
                                 else{
-                                    temp_diagram = project.diagram.getTargetBoundary();
+                                    var slider = Number($('#slider').val());
+                                    temp_diagram = project.diagram.getSlice(slider);
                                 }
                                 temp_match.boundaryPath = temp_match.boundaryPath.slice(1);
                                 project.render('#diagram-canvas', temp_diagram, temp_match);
