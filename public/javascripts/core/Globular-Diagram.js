@@ -438,7 +438,7 @@ Diagram.prototype.getInterchangers = function() {
                 level: [i, i+1]
             });
         }
-        else if(this.interchangerAllowed(i+1, i)){
+        if(this.interchangerAllowed(i+1, i)){
             interchangers.push({
                 id: "interchanger",
                 level: [i+1, i]
