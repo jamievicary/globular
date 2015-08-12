@@ -36,21 +36,26 @@ Project.prototype.getType = function() {
     return 'Project';
 };
 
+Project.prototype.stochasticPreprocessing = function(historyOn, statisticsOn, numIterations){
+        
+    if(historyOn === true){
+        this.diagram.boost(); //this takes the identity   
+    }
+    this.applyStochasticProcess(historyOn, statisticsOn, numIterations);
+}
+
 Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, numIterations) {
     if (historyOn === undefined){
-        historyOn = true;
+        historyOn = false;
         statisticsOn = false;
         numIterations =1;
     }
     var species_dim = this.diagram.dimension;
     var processes_dim = species_dim + 1;
-    var history = this.diagram; // history
+    var history = this.diagram; 
     var current_state;
         
-    if(historyOn === true){
-        history.boost(); //this takes the identity   
-    }
-    else{
+    if(!historyOn){
         current_state = this.diagram;
     }
         
