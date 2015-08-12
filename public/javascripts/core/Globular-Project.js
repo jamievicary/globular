@@ -44,14 +44,20 @@ Project.prototype.stochasticPreprocessing = function(historyOn, statisticsOn, nu
     this.applyStochasticProcess(historyOn, statisticsOn, numIterations);
 }
 
-Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, numIterations) {
+Project.prototype.applyStochasticProcess = function(dim_Process, statisticsOn, numIterations) {
     if (historyOn === undefined){
         historyOn = false;
         statisticsOn = false;
         numIterations =1;
     }
+    dimensionHelper(dim_Process, this.diagram.getDimension());
     var species_dim = this.diagram.dimension;
     var processes_dim = species_dim + 1;
+    if(historyOn === true){
+        species_dim = species_dim -1;
+        processes_dim = processes_dim -1;
+    }
+    
     var history = this.diagram; 
     var current_state;
         
@@ -63,17 +69,24 @@ Project.prototype.applyStochasticProcess = function(historyOn, statisticsOn, num
     {
         if(historyOn){
             current_state = history.getTargetBoundary();
-            species = this.signature.get_NCells(species_dim)-1;
-            processes = this.signature.get_NCells(processes_dim)-1;
         }
         
         var species = this.signature.get_NCells(species_dim); //not necessarily in the same order as processes...or in the same order each time it's called
         var processes = this.signature.get_NCells(processes_dim);
+        var regularProcessesLength = processes.length;
+        var interchanges = this.diagram.getInterchangers();
+        for(var j = 0; j < interchanges.length; j++){
+            processes.push(interchanges[i]);
+        }
         var possible_events = [];
         var rates = [];
         
-        for(var i = 0; i < processes.length; i++) {
+        for(var i = 0; i < regularProcessesLength; i++) {
             rates[i] = this.get_rate(processes[i]);  
+        }
+        var interchange_rate = 2; //to be put in by user later
+        for(var k = regularProcessesLength; k < processes.length; k++){
+            rates[k] = interchange_rate;
         }
         for(var i = 0; i < processes.length; i++) {
             possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
