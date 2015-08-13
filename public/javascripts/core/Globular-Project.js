@@ -405,6 +405,19 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
     }
 
     var generator = new Generator(source, target);
+    this.addNCell(generator);
+   
+    // Re-render and save the new state
+
+    this.renderNCells(source.getDimension() + 1);
+    this.clearDiagram();
+
+    this.cacheSourceTarget = null;
+    this.saveState();
+};
+
+Project.prototype.addNCell = function(generator) {
+
     var d = generator.getDimension();
     while (this.signature.n < d) {
         this.signature = new Signature(this.signature);
@@ -414,7 +427,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
     // Make the diagram for the generator
     var temp_diagram = this.signature.createDiagram(generator.identifier);
     var colour;
-    var d = source.getDimension() + 1;
+    var d = generator.source.getDimension() + 1;
     if (d == 1) {
         colour = '#000000';
     }
@@ -423,14 +436,37 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
     }
     var data = new Data(generator.identifier, colour, temp_diagram, temp_diagram.getDimension());
     this.dataList.put(generator.identifier, data);
+    
+};
 
-    // Re-render and save the new state
+Project.prototype.storeTheorem = function() {
+    
 
-    this.renderNCells(d);
+    var theorem = new Generator(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
+    
+    var d = theorem.getDimension();
+    while (this.signature.n < d) {
+        this.signature = new theorem(this.signature);
+    }
+    this.signature.addGenerator(theorem);
+    
+    var temp_diagram = this.signature.createDiagram(theorem.identifier);
+    var colour = '#FFFFFF';
+    
+    var data = new Data(theorem.identifier, colour, temp_diagram, temp_diagram.getDimension());
+    this.dataList.put(theorem.identifier, data);
+    
+    var expand_theorem = new Generator(temp_diagram, this.diagram);
+    this.addNCell(expand_theorem);
+    
+    var collapse_theorem = new Generator(this.diagram, temp_diagram);
+    this.addNCell(collapse_theorem);
+ 
+    
     this.clearDiagram();
-
-    this.cacheSourceTarget = null;
+    this.renderAll();
     this.saveState();
+    
 };
 
 // Handle a click on a 2-cell to implement interchangers

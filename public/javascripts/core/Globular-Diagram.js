@@ -94,17 +94,25 @@ Diagram.prototype.diagramBijection = function(matched_diagram) {
         if (this.generators[i].id != matched_diagram.generators[i].id) {
             return false;
         }
-        for(var k = 0; k < this.generators[i].coordinate.length; k++){
-            if(this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]){
-                if (this.generators[i].coordinate.length != matched_diagram.generators[i].coordinate.length) {
+        if(this.generators[i].id === 'interchanger'){
+            if(this.generators[i].level[0] != matched_diagram.generators[i].level[0] ||
+                this.generators[i].level[1] != matched_diagram.generators[i].level[1]){
                     return false;
                 }
-                    
-            }
         }
-        for (var k = 0; k < this.generators[i].coordinate.length; k++) {
-            if (this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]) {
-                return false;
+        else{
+            for(var k = 0; k < this.generators[i].coordinate.length; k++){
+                if(this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]){
+                    if (this.generators[i].coordinate.length != matched_diagram.generators[i].coordinate.length) {
+                        return false;
+                    }
+                        
+                }
+            }
+            for (var k = 0; k < this.generators[i].coordinate.length; k++) {
+                if (this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]) {
+                    return false;
+                }
             }
         }
 
@@ -160,8 +168,14 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         In the process of inserting n-cells in the target of the rewrite into the list of generators, we need to shift
         the inclusion information by the location of the rewrite in the overall diagram
         */
-        for (var j = 0; j < target.generators[i].coordinate.length; j++) {
-            target.generators[i].coordinate[j] += nCell.coordinate[j];
+        if(target.generators[i].id === 'interchanger'){
+            target.generators[i].level[0] += nCell.coordinate[nCell.coordinate.length-1];
+            target.generators[i].level[1] += nCell.coordinate[nCell.coordinate.length-1];
+        }
+        else{
+            for (var j = 0; j < target.generators[i].coordinate.length; j++) {
+                target.generators[i].coordinate[j] += nCell.coordinate[j];
+            }
         }
         this.generators.splice( insert_position + i, 0, target.generators[i]);
     }
@@ -187,10 +201,18 @@ Diagram.prototype.copy = function() {
 
     var generators = new Array();
     for (var i = 0; i < this.generators.length; i++) {
-        generators.push({
-            id: this.generators[i].id,
-            coordinate: this.generators[i].coordinate.slice(0)
-        });
+        if(this.generators[i].id === 'interchanger'){
+            generators.push({
+                id: this.generators[i].id,
+                level: this.generators[i].level
+            });
+        }
+        else{
+            generators.push({
+                id: this.generators[i].id,
+                coordinate: this.generators[i].coordinate.slice(0)
+            });
+        }
     }
 
     var diagram = new Diagram(source_boundary, generators);
@@ -254,16 +276,27 @@ Diagram.prototype.enumerate = function(matched_diagram) {
             */
             var j;
             for (var j = 0; j < boundary_matches.length; j++) {
-                var k;
-                for (k = 0; k < boundary_matches[j].length; k++) {
-                    
-                    // Generator attachment data shifted by the offset created by the newly added generator
-                    var offset = 0; 
-                    if(matched_diagram.generators.length != 0){
-                        offset = matched_diagram.generators[0].coordinate[k]
-                    }
-                    if (this.generators[i].coordinate[k] != boundary_matches[j][k] + offset) {
-                        break;
+                var k = 0;
+                
+                if(this.generators[i].id === 'interchanger'){
+                        var offset = 0; 
+                        if(matched_diagram.generators.length != 0){
+                            offset = matched_diagram.generators[0].level[0]
+                        }
+                    if(this.generators[i].level[0] === boundary_matches[j][boundary_matches[j].length-1] + offset)
+                        current_match = boundary_matches[j].slice(0);
+                }
+                else{
+                    for (k = 0; k < boundary_matches[j].length; k++) {
+                        
+                        // Generator attachment data shifted by the offset created by the newly added generator
+                        var offset = 0; 
+                        if(matched_diagram.generators.length != 0){
+                            offset = matched_diagram.generators[0].coordinate[k]
+                        }
+                        if (this.generators[i].coordinate[k] != boundary_matches[j][k] + offset) {
+                            break;
+                        }
                     }
                 }
                 if (k === boundary_matches[j].length) {
@@ -292,18 +325,35 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                     current_match = null;
                     break;
                 }
-    
-                if (matched_diagram.generators[j].coordinate.length != this.generators[i + j].coordinate.length) {
-                    current_match = null;
-                }
-                else {
-                    for (var k = 0; k < matched_diagram.generators[j].coordinate.length; k++) {
-                        if (matched_diagram.generators[j].coordinate[k] != this.generators[i + j].coordinate[k] - current_match[k]) {
+                
+                /*
+                    This section of code deals with the possibility that we encounter an interchanger
+                    while enumerating
+                */
+                
+                if(matched_diagram.generators[j].id === 'interchanger' || this.generators[i + j].id === 'interchanger'){
+                    if(matched_diagram.generators[j].id === this.generators[i + j].id){        
+                        if(matched_diagram.generators[j].level[0] != this.generators[i + j].level[0]){
+                            // sufficient to check the first entry ('height') where the interchanger is applied
                             current_match = null;
                         }
                     }
+                    else{
+                        current_match = null;
+                    }
                 }
-    
+                else{
+                    if (matched_diagram.generators[j].coordinate.length != this.generators[i + j].coordinate.length) {
+                        current_match = null;
+                    }
+                    else {
+                        for (var k = 0; k < matched_diagram.generators[j].coordinate.length; k++) {
+                            if (matched_diagram.generators[j].coordinate[k] != this.generators[i + j].coordinate[k] - current_match[k]) {
+                                current_match = null;
+                            }
+                        }
+                    }
+                }
             }
     
             // If the current match passed all the checks, it is added to the list of matches
@@ -516,3 +566,31 @@ Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
     this.generators[height_right] = temp;
 
 }
+
+/*
+    Given a generator, returns its list of coordinates
+*/
+Diagram.prototype.getCoordinates = function(nCell) {
+
+    if(nCell.id === 'interchanger'){
+        for(var i = 0; i < this.generators.length; i++){
+            if(this.generators[i].id === 'interchanger'){
+                if(nCell.level[0] === this.generators[i].level[0] && nCell.level[1] === this.generators[i].level[1]){
+                    
+                    var platform = this.source.copy();
+                    var platform_counter = 0;
+                    while(platform_counter < i){
+                        platform.rewrite(this.generators[platform_counter]);
+                    }
+                    
+                    
+                }
+            }
+        }
+    }
+    else{
+        return nCell.coordinate;
+    }
+    
+};
+
