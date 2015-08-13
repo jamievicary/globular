@@ -181,10 +181,30 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
 
 Project.prototype.displayInterchangers = function() {
 
+    var T = 0.5;
+
     var interchangers = this.diagram.getInterchangers();
     //console.log(interchangers);
-    var i = Math.floor(Math.random() * interchangers.length);
-    this.diagram.rewrite(interchangers[i]);
+    //var i = Math.floor(Math.random() * interchangers.length);
+    //we want the interchanger with neg change in tension (minimizing length) to be more likely
+    var rates = [];
+    for(var i = 0; i < interchangers.length; i++){
+        rates[i] = Math.exp(-1*interchangers[i].tension_change/T);
+    }
+    var eventTimes = [];
+    for(var i = 0; i < rates.length; i++){
+        eventTimes[i] = timeSampler(rates[i]);
+    }
+    //want to find the index of the event with the smallest time
+    var least = Number.MAX_VALUE;
+    var index = 0;
+    for (var x = 0; x < eventTimes.length; x++) {
+        if (eventTimes[x] < least) {
+           least = eventTimes[x];  
+           index = x;
+        }
+    }
+    this.diagram.rewrite(interchangers[index]);
     this.renderDiagram();
 };
 
