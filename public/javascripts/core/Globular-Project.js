@@ -92,6 +92,10 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                 //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
         }
+        
+        // ADD INTERCHANGERS TO THIS LIST
+        
+        
         var indexNextEvent = -1;
         //first extract all the event times
         var eventTimes = [];

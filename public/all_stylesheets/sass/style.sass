@@ -11,7 +11,7 @@ $top-menu-height: 20px
 $border_radius: 2px
 $spacing: 7px
 $icon_size: 60px
-$control_width: 222px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
+$control_width: 240px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
 $header_height: 70px
 
 // SET COLOURS OF DIFFERENT STRUCTURES
@@ -93,7 +93,9 @@ body, html
 	display: block
 	padding: $spacing
 	padding-top: 0px
-
+	overflow-y: auto
+	overflow-x: none
+	
 #diagram-body
 	height: calc(100% - #{$header_height})
 	//width: calc(100% - #{$control_width})
@@ -140,7 +142,8 @@ div.cell-opt
 	border-radius: $border_radius
 	position: relative
 	padding: $spacing
-	width: calc(#{$control_width} - (3 * #{$spacing}))
+	//width: calc(#{$control_width} - (3 * #{$spacing}))
+	width: auto
 	overflow: hidden
 	//height: #{$icon_size}
 	height: auto
@@ -201,7 +204,8 @@ div.preview-icon>canvas
 	background-color: lightgrey
 
 .cell-label
-	width: 128px
+	width: auto
+	width: 50px
 	border: none
 	outline-width: 0px
 	letter-spacing: 1px
@@ -227,7 +231,7 @@ div.preview-icon>canvas
 	height: 15px
 	
 .color-picker
-	width: 128px
+	width: 50px
 	letter-spacing: 1px
 	margin-top: 21px
 	left: $icon_size + $spacing
