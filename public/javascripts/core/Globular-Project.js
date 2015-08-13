@@ -176,11 +176,15 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             this.diagram.rewrite(rewriteCell, false);
         }
     }
+    
+    gProject.renderDiagram();
+    this.saveState();
     //return species_numbers; //just the hashtable...someone will need to make it look nice to the user with species name and number
 }
 
 Project.prototype.displayInterchangers = function() {
 
+    var t0 = performance.now();
     var T = 0.5;
 
     var interchangers = this.diagram.getInterchangers();
@@ -188,24 +192,18 @@ Project.prototype.displayInterchangers = function() {
     //var i = Math.floor(Math.random() * interchangers.length);
     //we want the interchanger with neg change in tension (minimizing length) to be more likely
     var rates = [];
+    var smallest_time = Number.MAX_VALUE;
+    var chosen_index = 0;
     for(var i = 0; i < interchangers.length; i++){
-        rates[i] = Math.exp(-1*interchangers[i].tension_change/T);
-    }
-    var eventTimes = [];
-    for(var i = 0; i < rates.length; i++){
-        eventTimes[i] = timeSampler(rates[i]);
-    }
-    //want to find the index of the event with the smallest time
-    var least = Number.MAX_VALUE;
-    var index = 0;
-    for (var x = 0; x < eventTimes.length; x++) {
-        if (eventTimes[x] < least) {
-           least = eventTimes[x];  
-           index = x;
+        var time = timeSampler(Math.exp(-1*interchangers[i].tension_change/T));
+        if (time < smallest_time) {
+            chosen_index = i;
         }
     }
-    this.diagram.rewrite(interchangers[index]);
+    this.diagram.rewrite(interchangers[chosen_index]);
     this.renderDiagram();
+    this.saveState();
+    console.log("Projet.displayInterchangers: " + (parseInt(performance.now() - t0)) + "ms");
 };
 
 
@@ -565,9 +563,11 @@ Project.prototype.clickCell = function(height) {
 
 Project.prototype.saveState = function() {
     //return;
+    var t0 = performance.now();
     history.pushState({
         string: this.currentString()
     }, "", "");
+    console.log("Project.saveState: " + parseInt(performance.now() - t0) + "ms");
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -748,6 +748,8 @@ Project.prototype.renderGenerator = function(div, id) {
 
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
+    var t0 = performance.now();
+    
     var div = '#diagram-canvas';
     if (this.diagram == null) {
         $('#slider').hide()
@@ -770,6 +772,8 @@ Project.prototype.renderDiagram = function() {
             this.render(div, this.diagram);
         }
     }
+
+    console.log("Project.renderDiagram(): " + parseInt(performance.now() - t0) + "ms");
 
 };
 

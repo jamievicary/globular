@@ -439,6 +439,7 @@ Diagram.prototype.getFullDimensions = function() {
 
 Diagram.prototype.getInterchangers = function() {
 
+    var t0 = performance.now();
     var interchangers = new Array();
     for (var i = 0; i < this.generators.length - 1; i++) {
         if (this.interchangerAllowed(i, i + 1)) {
@@ -456,6 +457,7 @@ Diagram.prototype.getInterchangers = function() {
             });
         }
     }
+    console.log("Diagram.getInterchangers: " + parseInt(performance.now() - t0) + "ms");
     return interchangers;
 }
 
