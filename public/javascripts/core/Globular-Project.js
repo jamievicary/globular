@@ -40,6 +40,10 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
 
     var diagram_dimension = this.diagram.getDimension();
     var process_dimension = Number($("#rp-dimension").val());
+    var interchangesOn = false;
+    if (process_dimension >= 3) {
+        interchangesOn = true;
+    }
     var history_mode;
     if (diagram_dimension == process_dimension) {
         history_mode = true;
@@ -54,11 +58,23 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
 
     // Collect the rates
     var processes = this.signature.get_NCells(process_dimension);
+    var num_stdProcess = processes.length;
     var rates = [];
     for (var i = 0; i < processes.length; i++) {
         rates[i] = this.get_rate(processes[i]);
     }
-    //rates.push(sarargsar)
+    var T = 0.5;
+    if (interchangesOn) {
+        var interchangers = this.diagram.getInterchangers();
+        for (var i = 0; i < interchangers.length; i++) {
+            processes.push(interchangers[i]);
+        }
+        for (var j = processes.length; j < interchangers.length + processes.length; j++) {
+            rates[j] = Math.exp(-1 * interchangers[j-processes.length].tension_change / T);
+        }
+    }
+
+
 
     for (var m = 0; m < numIterations; m++) {
 
@@ -76,13 +92,13 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         var current_state = (history_mode ? this.diagram.getTargetBoundary() : this.diagram);
         var eventsWithTimes = [];
         for (var i = 0; i < processes.length; i++) {
-            possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+            if (i < num_stdProcess) {
+                possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+            }
+            if (i >= num_stdProcess && interchangesOn){
+                possible_events[i] = 1; //each interchanger IS just one event, right?
+            }
             for (var j = 0; j < possible_events[i].length; j++) {
-                //var negRateInverse = new Fraction(-1, rates[i]);
-                //need to change fraction into number first
-                //negRateInverse = negRateInverse.n / negRateInverse.d;
-                //var negRatePrecise = negRateInverse.toPrecision(4);
-                //var posRatePrecise = -1*negRatePrecise;
                 eventsWithTimes.push({
                     event: possible_events[i][j],
                     time: timeSampler(rates[i]),
@@ -92,19 +108,22 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                 //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
         }
-        
+
         // ADD INTERCHANGERS TO THIS LIST
-        
-        
+
+
         var indexNextEvent = -1;
         //first extract all the event times
         var eventTimes = [];
         for (var x = 0; x < eventsWithTimes.length; x++) {
             eventTimes.push(eventsWithTimes[x].time);
         }
+        for (var x = eventsWithTimes.length; eventsWithTimes < rates.length; x++) {
+            eventTimes.push(timeSampler(rates[x]));
+        }
         var least = Number.MAX_VALUE;
         var index = 0;
-        for (var x = 0; x < eventsWithTimes.length; x++) {
+        for (var x = 0; x < eventTimes.length; x++) {
             if (eventTimes[x] < least) {
                 least = eventTimes[x];
                 index = x;
@@ -118,7 +137,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
             and the source and target of that process
         */
-        for (var i = 0; i < processes.length; i++) {
+        for (var i = 0; i < num_stdProcess; i++) {
             var data = this.dataList;
             var process_retrieve = data.get(processes[i]);
             var process_diagram = process_retrieve.diagram;
@@ -191,13 +210,13 @@ Project.prototype.displayInterchangers = function() {
     //console.log(interchangers);
     //var i = Math.floor(Math.random() * interchangers.length);
     //we want the interchanger with neg change in tension (minimizing length) to be more likely
-    var rates = [];
     var smallest_time = Number.MAX_VALUE;
     var chosen_index = 0;
     for(var i = 0; i < interchangers.length; i++){
         var time = timeSampler(Math.exp(-1*interchangers[i].tension_change/T));
         if (time < smallest_time) {
             chosen_index = i;
+            smallest_time = time;
         }
     }
     this.diagram.rewrite(interchangers[chosen_index]);
@@ -624,15 +643,15 @@ Project.prototype.selectGenerator = function(id) {
 
     var sourceMatches = [];
     var targetMatches = [];
-    
-    if(this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3){
+
+    if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
         var ok = false;
-        if (slider === 0){
+        if (slider === 0) {
             sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
             ok = true;
         }
-        if (slider === this.diagram.generators.length){
+        if (slider === this.diagram.generators.length) {
             targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
             ok = true;
         }
@@ -641,7 +660,7 @@ Project.prototype.selectGenerator = function(id) {
             return [];
         }
     }
-    else{
+    else {
         sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
         targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
     }
@@ -941,15 +960,15 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             match.boundaryPath);
                         $('div.cell-b-sect').empty();
 
-                        if(project.diagram.dimension === 3){
+                        if (project.diagram.dimension === 3) {
                             $('#slider').show();
-                            if(match.boundaryPath.length === 1){
+                            if (match.boundaryPath.length === 1) {
                                 var maxVal = $('#slider').val() + 1;
                                 $('#slider').attr('max', maxVal)
-                                if(match.boundaryPath[0] === 's'){
+                                if (match.boundaryPath[0] === 's') {
                                     $('#slider').val(0);
                                 }
-                                else{
+                                else {
                                     $('#slider').val(project.diagram.generators.length);
                                 }
 
