@@ -1010,7 +1010,8 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
 
                             }
                         }
-                        project.renderAll();
+                        //project.renderAll();
+                        project.renderDiagram();
                         project.saveState();
                     });
                 })(match_array[i]);
