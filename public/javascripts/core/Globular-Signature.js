@@ -80,7 +80,7 @@ Signature.prototype.createDiagram = function (generatorId) {
         source_boundary = generator.source.copy();
     }
     
-    var generators = new Array();
+    var nCells = new Array();
     var coordinates = new Array();
 
     // The generator is not a 0-cell, n-1 zeros are added as its attachment information
@@ -92,12 +92,12 @@ Signature.prototype.createDiagram = function (generatorId) {
         }
     }
 
-    generators.push({
+    nCells.push({
         id: generatorId,
         coordinate: coordinates
     });
     
-    var diagram = new Diagram(source_boundary, generators);
+    var diagram = new Diagram(source_boundary, nCells);
     return diagram;
 }
 

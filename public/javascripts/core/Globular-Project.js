@@ -353,10 +353,10 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
         this.diagram.attach(attached_diagram, boundary_path, bounds);
     }
     else {
-        var rewrite_source_size = attached_diagram.getSourceBoundary().generators.length;
+        var rewrite_source_size = attached_diagram.getSourceBoundary().nCells.length;
 
         var rewriteCell = {
-            id: attached_diagram.generators[0].id,
+            id: attached_diagram.nCells[0].id,
             coordinate: bounds
         }
 
@@ -389,7 +389,7 @@ Project.prototype.takeIdentity = function() {
 /* 
     Depending on whether a source or a target have been already stored in memory, this procedure completes the rule with the diagram currently in workspace.
     If the dimensions match, an appropriate generator is added an an appropriate level (the second part handled internally by the Signature class).
-    If none have been saved, it adds a 0-generator. For all these possible generators the internal name will be automatically added when the generator is created.
+    If none have been saved, it adds a 0-generator. For all these possible nCells the internal name will be automatically added when the generator is created.
     Return true to indicate n-cells should be re-rendered.
 */
 
@@ -522,70 +522,69 @@ Project.prototype.clickCell = function(height) {
         return;
     }
 
-    var h1 = this.selected_cell;
-    var h2 = height;
-    /*
-    // Try to perform the interchange
-    var h1, h2;
-    if (height < this.selected_cell) {
-        h1 = height;
-        h2 = this.selected_cell;
-    }
-    else {
-        h1 = this.selected_cell;
-        h2 = height;
-    }
-    */
+    var first_click = this.selected_cell;
+    var second_click = height;
+
     if (this.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
-        if (slider === 0 && this.diagram.generators.length != 0) {
+        if (slider === 0 && this.diagram.nCells.length != 0) {
 
             // Check if this is allowed
-            if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
-                var temp = h1;
-                h1 = h2;
-                h2 = temp;
+            if (!this.diagram.getSourceBoundary().interchangerAllowed(first_click, second_click)) {
+                if (!this.diagram.getSourceBoundary().interchangerAllowed(second_click, first_click)) {
+                    alert("Cannot interchange these cells");
+                    this.selected_cell = null;
+                    return;
+                }
             }
-
-            if (!this.diagram.getSourceBoundary().interchangerAllowed(h1, h2)) {
-                alert("Cannot interchange these cells");
-                return;
+            
+            var temp_id = "interchanger-left";
+            var temp_coordinate = this.diagram.getTargetBoundary().nCells[first_click].coordinate;
+            temp_coordinate.push(first_click);
+            
+            if(first_click < second_click){
+                temp_id = "interchanger-right"  
+                temp_coordinate = this.diagram.getTargetBoundary().nCells[second_click].coordinate;
+                temp_coordinate.push(second_click);
             }
-            var interchanger = {
-                id: "interchanger",
-                level: [h2, h1]
+            var interchanger = new NCell(temp_id, temp_coordinate);
+            
+            var interchanger_wrapper = {
+                nCells: [interchanger]
             };
-            var int_diagram = {
-                generators: [interchanger]
-            };
-            this.diagram.attach(int_diagram, 's');
+            this.diagram.attach(interchanger_wrapper, 's');
             var maxVal = $('#slider').val() + 1;
             $('#slider').attr('max', maxVal)
 
         }
-        else if (slider === this.diagram.generators.length || (slider === 0 && this.diagram.generators.length === 0)) {
+        else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
             // Check if this is allowed
-            if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
-                var temp = h1;
-                h1 = h2;
-                h2 = temp;
+            if (!this.diagram.getTargetBoundary().interchangerAllowed(first_click, second_click)) {
+                if (!this.diagram.getTargetBoundary().interchangerAllowed(second_click, first_click)) {
+                    alert("Cannot interchange these cells");
+                    this.selected_cell = null;
+                    return;
+                }
             }
-
-            if (!this.diagram.getTargetBoundary().interchangerAllowed(h1, h2)) {
-                alert("Cannot interchange these cells");
-                return;
+            
+            var temp_id = "interchanger-left";
+            var temp_coordinate = this.diagram.getTargetBoundary().nCells[first_click].coordinate;
+            temp_coordinate.push(first_click);
+            
+            if(first_click > second_click){
+                temp_id = "interchanger-right"  
+                temp_coordinate = this.diagram.getTargetBoundary().nCells[second_click].coordinate;
+                temp_coordinate.push(second_click);
             }
-            var interchanger = {
-                id: "interchanger",
-                level: [h1, h2]
+            var interchanger = new NCell(temp_id, temp_coordinate);
+            
+            var interchanger_wrapper = {
+                nCells: [interchanger]
             };
-            var int_diagram = {
-                generators: [interchanger]
-            };
-            this.diagram.attach(int_diagram, 't');
+            this.diagram.attach(interchanger_wrapper, 't');
             var maxVal = $('#slider').val() + 1;
             $('#slider').attr('max', maxVal)
-            $('#slider').val(this.diagram.generators.length);
+            $('#slider').val(this.diagram.nCells.length);
 
         }
         else {
@@ -594,19 +593,32 @@ Project.prototype.clickCell = function(height) {
     }
     else {
         // Check if this is allowed
-        if (!this.diagram.interchangerAllowed(h1, h2)) {
-            var temp = h1;
-            h1 = h2;
-            h2 = temp;
+        if (!this.diagram.interchangerAllowed(first_click, second_click)) {
+            var temp = first_click;
+            first_click = second_click;
+            second_click = temp;
         }
 
-        if (!this.diagram.interchangerAllowed(h1, h2)) {
+        if (!this.diagram.interchangerAllowed(first_click, second_click)) {
             alert("Cannot interchange these cells");
+            this.selected_cell = null;
             return;
         }
+        
+        var temp_id = "interchanger-left";
+        var temp_coordinate = this.diagram.getTargetBoundary().nCells[first_click].coordinate;
+        temp_coordinate.push(first_click);
+            
+        if(first_click > second_click){
+            temp_id = "interchanger-right"  
+            temp_coordinate = this.diagram.getTargetBoundary().nCells[second_click].coordinate;
+            temp_coordinate.push(second_click);
+        }
+        var interchanger = new NCell(temp_id, temp_coordinate);
 
         // Perform the interchanger
-        this.diagram.rewriteInterchanger(h1, h2);
+        this.diagram.rewrite(interchanger, false);
+        //this.diagram.rewriteInterchanger(first_click, second_click);
     }
 
     // Finish up and render the result
@@ -687,7 +699,7 @@ Project.prototype.selectGenerator = function(id) {
             sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
             ok = true;
         }
-        if (slider === this.diagram.generators.length) {
+        if (slider === this.diagram.nCells.length) {
             targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
             ok = true;
         }
@@ -816,7 +828,7 @@ Project.prototype.renderDiagram = function() {
     }
     else {
         if (this.diagram.dimension === 3) {
-            $('#slider').attr('max', this.diagram.generators.length);
+            $('#slider').attr('max', this.diagram.nCells.length);
             $('#slider').show()
             var slider = $('#slider').val();
             var diagram = this.diagram.getSlice(slider);
@@ -1005,7 +1017,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                                     $('#slider').val(0);
                                 }
                                 else {
-                                    $('#slider').val(project.diagram.generators.length);
+                                    $('#slider').val(project.diagram.nCells.length);
                                 }
 
                             }
