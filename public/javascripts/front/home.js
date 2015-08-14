@@ -28,6 +28,9 @@ $(document).ready(function() {
         else if (key == 'z') {
             gProject.displayInterchangers();
         }
+        else if (key == 'q') {
+            gProject.storeTheorem();
+        }
     });
 
     $("div.enable_if-in").hide();
