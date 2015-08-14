@@ -101,16 +101,16 @@ Diagram.prototype.diagramBijection = function(matched_diagram) {
                 }
         }
         else{
-            for(var k = 0; k < this.generators[i].coordinate.length; k++){
-                if(this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]){
-                    if (this.generators[i].coordinate.length != matched_diagram.generators[i].coordinate.length) {
+            for(var k = 0; k < this.getCoordinates(this.generators[i]).length; k++){
+                if(this.getCoordinates(this.generators[i])[k] != matched_diagram.getCoordinates(matched_diagram.generators[i])[k]){
+                    if (this.getCoordinates(this.generators[i]).length != matched_diagram.getCoordinates(matched_diagram.generators[i]).length) {
                         return false;
                     }
                         
                 }
             }
-            for (var k = 0; k < this.generators[i].coordinate.length; k++) {
-                if (this.generators[i].coordinate[k] != matched_diagram.generators[i].coordinate[k]) {
+            for (var k = 0; k < this.getCoordinates(this.generators[i]).length; k++) {
+                if (this.getCoordinates(this.generators[i])[k] != matched_diagram.getCoordinates(matched_diagram.generators[i])[k]) {
                     return false;
                 }
             }
@@ -169,8 +169,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         the inclusion information by the location of the rewrite in the overall diagram
         */
         if(target.generators[i].id === 'interchanger'){
-            target.generators[i].level[0] += nCell.coordinate[nCell.coordinate.length-1];
-            target.generators[i].level[1] += nCell.coordinate[nCell.coordinate.length-1];
+            //target.generators[i].level[0] += nCell.coordinate[nCell.coordinate.length-1];
+           // target.generators[i].level[1] += nCell.coordinate[nCell.coordinate.length-1];
         }
         else{
             for (var j = 0; j < target.generators[i].coordinate.length; j++) {
@@ -277,7 +277,7 @@ Diagram.prototype.enumerate = function(matched_diagram) {
             var j;
             for (var j = 0; j < boundary_matches.length; j++) {
                 var k = 0;
-                
+                /*
                 if(this.generators[i].id === 'interchanger'){
                         var offset = 0; 
                         if(matched_diagram.generators.length != 0){
@@ -286,19 +286,19 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                     if(this.generators[i].level[0] === boundary_matches[j][boundary_matches[j].length-1] + offset)
                         current_match = boundary_matches[j].slice(0);
                 }
-                else{
+                else{*/
                     for (k = 0; k < boundary_matches[j].length; k++) {
                         
                         // Generator attachment data shifted by the offset created by the newly added generator
                         var offset = 0; 
                         if(matched_diagram.generators.length != 0){
-                            offset = matched_diagram.generators[0].coordinate[k]
+                            offset = matched_diagram.getCoordinates(matched_diagram.generators[0])[k];
                         }
-                        if (this.generators[i].coordinate[k] != boundary_matches[j][k] + offset) {
+                        if (this.getCoordinates(this.generators[i])[k] != boundary_matches[j][k] + offset) {
                             break;
                         }
                     }
-                }
+               // }
                 if (k === boundary_matches[j].length) {
                     current_match = boundary_matches[j].slice(0);
                     break;
@@ -330,29 +330,38 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                     This section of code deals with the possibility that we encounter an interchanger
                     while enumerating
                 */
-                
+                /*
                 if(matched_diagram.generators[j].id === 'interchanger' || this.generators[i + j].id === 'interchanger'){
                     if(matched_diagram.generators[j].id === this.generators[i + j].id){        
                         if(matched_diagram.generators[j].level[0] != this.generators[i + j].level[0]){
                             // sufficient to check the first entry ('height') where the interchanger is applied
                             current_match = null;
+                            break;
                         }
                     }
                     else{
                         current_match = null;
+                        break;
                     }
                 }
-                else{
-                    if (matched_diagram.generators[j].coordinate.length != this.generators[i + j].coordinate.length) {
+                else{*/
+                    if ((matched_diagram.getCoordinates(matched_diagram.generators[j])).length != 
+                    this.getCoordinates(this.generators[i + j]).length) {
                         current_match = null;
+                        break;
                     }
                     else {
-                        for (var k = 0; k < matched_diagram.generators[j].coordinate.length; k++) {
-                            if (matched_diagram.generators[j].coordinate[k] != this.generators[i + j].coordinate[k] - current_match[k]) {
+                        for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.generators[j]).length; k++) {
+                            if (matched_diagram.getCoordinates(matched_diagram.generators[j])[k] != 
+                            this.getCoordinates(this.generators[i + j])[k] - current_match[k]) {
                                 current_match = null;
+                                break;
                             }
                         }
                     }
+                //}
+                if(current_match === null){
+                    break;
                 }
             }
     
@@ -568,7 +577,7 @@ Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
 }
 
 /*
-    Given a generator, returns its list of coordinates
+    Given a generator, returns its list of coordinates in the form of an array
 */
 Diagram.prototype.getCoordinates = function(nCell) {
 
@@ -581,12 +590,33 @@ Diagram.prototype.getCoordinates = function(nCell) {
                     var platform_counter = 0;
                     while(platform_counter < i){
                         platform.rewrite(this.generators[platform_counter]);
+                        platform_counter++;
                     }
                     
+                    var interchanged_cell_one = platform.generators[nCell.level[0]];
+                    var interchanged_cell_two = platform.generators[nCell.level[1]];
                     
+                    var interchanger_coordinate = new Array();
+                    
+                    for(var j = 0; j < interchanged_cell_one.coordinate.length; j++){
+                        var min = interchanged_cell_one.coordinate[j];
+                        if(interchanged_cell_two.coordinate[j] < min){
+                            min = interchanged_cell_two.coordinate[j];
+                        }
+                        interchanger_coordinate.push(min);
+                    }
+                    
+                    min = nCell.level[0];
+                    if(nCell.level[1] < min){
+                        min = nCell.level[1];
+                    }
+                    interchanger_coordinate.push(min);
+                
+                    break;    
                 }
             }
         }
+        return interchanger_coordinate;
     }
     else{
         return nCell.coordinate;
