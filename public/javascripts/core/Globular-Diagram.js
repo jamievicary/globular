@@ -131,8 +131,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     if (reverse === undefined) reverse = false;
 
     // Special code to deal with interchangers
-    if (nCell.id === 'interchanger') {
-        this.rewriteInterchanger(nCell.level[0], nCell.level[1]);
+    if ((nCell.id === 'interchanger-L') || (nCell.id === 'interchanger-R')) {
+        this.rewriteInterchanger(nCell);
         return;
     }
 
@@ -368,13 +368,13 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
 
     var attached_nCell = attached_diagram.generators[0];
 
-    if (this.dimension != attached_diagram.dimension && attached_nCell.id != "interchanger") {
+    if ((this.dimension != attached_diagram.dimension) && (attached_nCell.id != "interchanger-R") && (attached_nCell.id != 'interchanger-L')) {
         console.log("Cannot attach - dimensions do not match");
         return;
     }
 
 
-    if (attached_nCell.id != "interchanger") {
+    if (attached_nCell.id.substr(0, 12) != "interchanger") {
         attached_nCell.coordinate = bounds;
     }
 
@@ -390,7 +390,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         The rewrite of the boundary is specified exactly by the attachment bounds
     */
     if (boundary_boolean === 's') {
-        if (attached_nCell.id === "interchanger") {
+        if (attached_nCell.id.substr(0, 12) === "interchanger") {
             this.source.rewriteInterchanger(attached_nCell.level[1], attached_nCell.level[0]);
         }
         else {
@@ -437,7 +437,7 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
-Diagram.prototype.getInterchangers = function() {
+Diagram.prototype.getInterchangersOLD = function() {
 
     var t0 = performance.now();
     var interchangers = new Array();
@@ -461,6 +461,30 @@ Diagram.prototype.getInterchangers = function() {
     return interchangers;
 }
 
+Diagram.prototype.getInterchangers = function() {
+
+    var t0 = performance.now();
+    var interchangers = new Array();
+    for (var i = 0; i < this.generators.length - 1; i++) {
+        if (this.interchangerAllowed({id: 'interchanger-L', coordinate: [i]})) {
+            interchangers.push({
+                id: "interchanger-L",
+                coordinate: [i],
+                tension_change: 0 //this.computeTensionChange(i, i + 1)
+            });
+        }
+        if (this.interchangerAllowed({id: 'interchanger-R', coordinate: [i]})) {
+            interchangers.push({
+                id: "interchanger-R",
+                coordinate: [i],
+                tension_change: 0 //this.computeTensionChange(i + 1, i)
+            });
+        }
+    }
+    //console.log("Diagram.getInterchangers: " + parseInt(performance.now() - t0) + "ms");
+    return interchangers;
+}
+
 Diagram.prototype.computeTensionChange = function(h1, h2) {
     var gen1 = this.generators[h1]; //index of array is the height; array generators doesn't actually contain generator
     var gen2 = this.generators[h2];
@@ -479,7 +503,7 @@ Diagram.prototype.computeTensionChange = function(h1, h2) {
     return gen1_input + gen2_input + gen1_output + gen2_output;
 }
 
-Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
+Diagram.prototype.interchangerAllowedOLD = function(height_left, height_right) {
 
     if (this.getDimension() != 2) return false;
     if (height_right == height_left) return false;
@@ -508,7 +532,35 @@ Diagram.prototype.interchangerAllowed = function(height_left, height_right) {
     }
 }
 
-Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
+// NEW SCHEME - check if interchanger is allowed for this diagram
+Diagram.prototype.interchangerAllowed = function(cell) {
+    
+    var height = cell.coordinate[0];
+    var type = cell.id;
+
+    if (this.getDimension() != 2) return false;
+    if (height < 0) return false;
+    if (height >= this.generators.length - 1) return false;
+
+    // Get data about rewrites
+    var g1 = this.generators[height];
+    var r1 = gProject.signature.getGenerator(g1.id);
+    var g2 = this.generators[height + 1];
+    var r2 = gProject.signature.getGenerator(g2.id);
+
+    // Check that cells are able to be interchanged
+    if (type == 'interchanger-L') {
+        return (g1.coordinate[0] + r1.target.generators.length <= g2.coordinate[0]);
+    }
+    else if (type == 'interchanger-R') {
+        return (g1.coordinate[0] >= g2.coordinate[0] + r2.source.generators.length);
+    } else {
+        alert ("Illegal type passed to interchangerAllowed");
+        return false;
+    }
+}
+
+Diagram.prototype.rewriteInterchangerOLD = function(height_left, height_right) {
 
     if (!this.interchangerAllowed(height_left, height_right)) {
         alert("Illegal input passed to rewriteInterchanger");
@@ -537,5 +589,42 @@ Diagram.prototype.rewriteInterchanger = function(height_left, height_right) {
     var temp = this.generators[height_left];
     this.generators[height_left] = this.generators[height_right];
     this.generators[height_right] = temp;
+
+}
+
+// NEW SYSTEM - Apply an interchanger at a given height
+Diagram.prototype.rewriteInterchanger = function(cell) {
+
+    if (!this.interchangerAllowed(cell)) {
+        alert("Illegal data passed to rewriteInterchanger");
+        return;
+    }
+
+    // Get data about rewrites
+    var height = cell.coordinate[0];
+    var type = cell.id;
+    var g1 = this.generators[height];
+    var r1 = gProject.signature.getGenerator(g1.id);
+    var g2 = this.generators[height + 1];
+    var r2 = gProject.signature.getGenerator(g2.id);
+
+    var g1_new_position, g2_new_position;
+    if (type == 'interchanger-L') {
+        g1_new_position = g1.coordinate[0];
+        g2_new_position = g2.coordinate[0] + r1.source.generators.length - r1.target.generators.length;
+    }
+    else if (type == 'interchanger-R') {
+        g1_new_position = g1.coordinate[0] - r2.source.generators.length + r2.target.generators.length;
+        g2_new_position = g2.coordinate[0];
+    } else {
+        alert ("Illegal type passed to rewriteInterchanger")
+    }
+
+    // Rewrite the diagram
+    this.generators[height].coordinate[0] = g1_new_position;
+    this.generators[height + 1].coordinate[0] = g2_new_position;
+    var temp = this.generators[height];
+    this.generators[height] = this.generators[height + 1];
+    this.generators[height + 1] = temp;
 
 }

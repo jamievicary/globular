@@ -1,5 +1,7 @@
 "use strict";
 
+var T = 1;
+
 /*
     Project class
 */
@@ -70,7 +72,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             processes.push(interchangers[i]);
         }
         for (var j = processes.length; j < interchangers.length + processes.length; j++) {
-            rates[j] = Math.exp(-1 * interchangers[j-processes.length].tension_change / T);
+            rates[j] = Math.exp(-1 * interchangers[j - processes.length].tension_change / T);
         }
     }
 
@@ -95,7 +97,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             if (i < num_stdProcess) {
                 possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
             }
-            if (i >= num_stdProcess && interchangesOn){
+            if (i >= num_stdProcess && interchangesOn) {
                 possible_events[i] = 1; //each interchanger IS just one event, right?
             }
             for (var j = 0; j < possible_events[i].length; j++) {
@@ -195,7 +197,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             this.diagram.rewrite(rewriteCell, false);
         }
     }
-    
+
     gProject.renderDiagram();
     this.saveState();
     //return species_numbers; //just the hashtable...someone will need to make it look nice to the user with species name and number
@@ -204,16 +206,20 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
 Project.prototype.displayInterchangers = function() {
 
     var t0 = performance.now();
-    var T = 0.5;
 
     var interchangers = this.diagram.getInterchangers();
+    if (interchangers.length == 0) {
+        alert("No interchangers available");
+        return;
+    }
+
     //console.log(interchangers);
     //var i = Math.floor(Math.random() * interchangers.length);
     //we want the interchanger with neg change in tension (minimizing length) to be more likely
     var smallest_time = Number.MAX_VALUE;
     var chosen_index = 0;
-    for(var i = 0; i < interchangers.length; i++){
-        var time = timeSampler(Math.exp(-1*interchangers[i].tension_change/T));
+    for (var i = 0; i < interchangers.length; i++) {
+        var time = timeSampler(Math.exp(-1 * interchangers[i].tension_change / T));
         if (time < smallest_time) {
             chosen_index = i;
             smallest_time = time;
@@ -768,7 +774,7 @@ Project.prototype.renderGenerator = function(div, id) {
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
     var t0 = performance.now();
-    
+
     var div = '#diagram-canvas';
     if (this.diagram == null) {
         $('#slider').hide()
