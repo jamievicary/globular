@@ -483,7 +483,7 @@ Project.prototype.storeTheorem = function() {
     
     var d = theorem.getDimension();
     while (this.signature.n < d) {
-        this.signature = new theorem(this.signature);
+        this.signature = new Signature(this.signature);
     }
     this.signature.addGenerator(theorem);
     
