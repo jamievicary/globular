@@ -24,7 +24,6 @@ $(document).ready(function() {
         }
         else if (key == 'p') {
             gProject.applyStochasticProcess(1);
-            gProject.renderDiagram();
         }
         else if (key == 'z') {
             gProject.displayInterchangers();
@@ -350,7 +349,8 @@ $(document).ready(function() {
         gProject.clearDiagram();
     });
 
-    $("#my-projects-opt").click(function() {
+    //$("#my-projects-opt").click(function() {
+    $("#mm-projects").click(function() {
         $.post("/get_projects", {}, function(result, status) {
             if (result.success == false) {
                 $("#project-list").html(result.msg);
