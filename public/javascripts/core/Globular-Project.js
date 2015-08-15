@@ -566,19 +566,19 @@ Project.prototype.clickCell = function(height) {
             interchanger.coordinates = temp_interchanged_source.nCells[Math.min(first_click, second_click)].coordinates.slice(0);
             interchanger.coordinates.push(Math.min(first_click, second_click));
             
-            /*
+            
             if(interchanger.id === "interchanger-right"){
                 interchanger.id = "interchanger-left"   
             }
             else{
                 interchanger.id = "interchanger-right"   
             }
-            */
+
             
-            var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-            this.diagram.attach(interchanger_wrapper, 's');
+            //Manual attachment
+            this.diagram.nCells.splice(0, 0, interchanger);
+            this.diagram.source = temp_interchanged_source;
+            
             var maxVal = $('#slider').val() + 1;
             $('#slider').attr('max', maxVal)
 

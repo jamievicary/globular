@@ -94,29 +94,19 @@ Diagram.prototype.diagramBijection = function(matched_diagram) {
         if (this.nCells[i].id != matched_diagram.nCells[i].id) {
             return false;
         }
-        /*
-        if(this.nCells[i].id === 'interchanger'){
-            if(this.nCells[i].level[0] != matched_diagram.nCells[i].level[0] ||
-                this.nCells[i].level[1] != matched_diagram.nCells[i].level[1]){
+        for(var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++){
+            if(this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]){
+                if (this.getCoordinates(this.nCells[i]).length != matched_diagram.getCoordinates(matched_diagram.nCells[i]).length) {
                     return false;
                 }
-                
+                    
+            }
         }
-        else{*/
-            for(var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++){
-                if(this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]){
-                    if (this.getCoordinates(this.nCells[i]).length != matched_diagram.getCoordinates(matched_diagram.nCells[i]).length) {
-                        return false;
-                    }
-                        
-                }
+        for (var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++) {
+            if (this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]) {
+                return false;
             }
-            for (var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++) {
-                if (this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]) {
-                    return false;
-                }
-            }
-        //}
+        }
 
     }
     if (this.source != null) {
@@ -142,6 +132,14 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id === 'interchanger-left' || nCell.id === 'interchanger-right') {
+        if(reverse){
+            if(nCell.id === 'interchanger-left'){
+                nCell.id === 'interchanger-right';
+            }
+            else{
+                nCell.id === 'interchanger-left';
+            }
+        }
         this.rewriteInterchanger(nCell);
         return;
     }
@@ -170,17 +168,11 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         In the process of inserting n-cells in the target of the rewrite into the list of nCells, we need to shift
         the inclusion information by the location of the rewrite in the overall diagram
         */
-        /*
-        if(target.nCells[i].id === 'interchanger'){
-            target.nCells[i].level[0] += nCell.coordinates[nCell.coordinates.length-2];
-            target.nCells[i].level[1] += nCell.coordinates[nCell.coordinates.length-2];
+
+        for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
+            target.nCells[i].coordinates[j] += nCell.coordinates[j];
         }
-        else{
-        */
-            for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
-                target.nCells[i].coordinates[j] += nCell.coordinates[j];
-            }
-        //}
+        
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
@@ -205,27 +197,11 @@ Diagram.prototype.copy = function() {
 
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
-        /*
-        var new_NCell = this.nCells[i].copy();
-        nCells.push(new_NCell);
-        */
-        /*
-        if(this.nCells[i].id === 'interchanger'){
-            var new_level_one = this.nCells[i].level[0];
-            var new_level_two = this.nCells[i].level[1];
-           
-            nCells.push({
-                id: this.nCells[i].id,
-                level: [new_level_one, new_level_two]
-            });
-        }
-        else{*/
-            nCells.push({
-                id: this.nCells[i].id,
-                coordinates: this.nCells[i].coordinates.slice(0)
-            });
-        //}
-        
+        nCells.push({
+            id: this.nCells[i].id,
+            coordinates: this.nCells[i].coordinates.slice(0)
+        });
+
     }
 
     var diagram = new Diagram(source_boundary, nCells);
@@ -261,18 +237,6 @@ Diagram.prototype.enumerate = function(matched_diagram) {
 
         // We anchor matches by recursively matching the boundary of the matched diagram and this diagram
         var boundary_matches = intermediate_boundary.enumerate(matched_diagram.source);
-
-        // If there are no boundary matches, no point in performing any more operations - immediately returns false
-        /* This causes us to forget about some matches in the 'matches' array
-        if(boundary_matches.length === 0){
-            return [];
-        }
-        */
-        /*
-        if(boundary_matches.length === 1 && boundary_matches[0].length === 0){
-            current_match.push(i)
-        }
-        */
 
         if (matched_diagram.nCells.length === 0) {
             for (var j = 0; j < boundary_matches.length; j++) {
@@ -334,36 +298,21 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                     while enumerating
                 */
                 
-                /*
-                if(matched_diagram.nCells[j].id === 'interchanger' || this.nCells[i + j].id === 'interchanger'){
-                    if(matched_diagram.nCells[j].id === this.nCells[i + j].id){        
-                        if(matched_diagram.nCells[j].level[0] != this.nCells[i + j].level[0] - current_match[current_match.length-2]){
-                            // sufficient to check the first entry ('height') where the interchanger is applied
+
+                if (matched_diagram.getCoordinates(matched_diagram.nCells[j]).length != 
+                this.getCoordinates(this.nCells[i + j]).length) {
+                    current_match = null;
+                    break;
+                }
+                else {
+                    for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.nCells[j]).length; k++) {
+                        if (matched_diagram.getCoordinates(matched_diagram.nCells[j])[k] != 
+                        this.getCoordinates(this.nCells[i + j])[k] - current_match[k]) {
                             current_match = null;
                             break;
                         }
                     }
-                    else{
-                        current_match = null;
-                        break;
-                    }
                 }
-                else{*/
-                    if (matched_diagram.getCoordinates(matched_diagram.nCells[j]).length != 
-                    this.getCoordinates(this.nCells[i + j]).length) {
-                        current_match = null;
-                        break;
-                    }
-                    else {
-                        for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.nCells[j]).length; k++) {
-                            if (matched_diagram.getCoordinates(matched_diagram.nCells[j])[k] != 
-                            this.getCoordinates(this.nCells[i + j])[k] - current_match[k]) {
-                                current_match = null;
-                                break;
-                            }
-                        }
-                    }
-                //}
                 if(current_match === null){
                     break;
                 }
@@ -449,19 +398,6 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     */
     if (boundary_boolean === 's') {
         this.source.rewrite(attached_nCell, true);
-
-        /*
-        if (attached_nCell.id.substr(0, 12) === "interchanger") {
-            this.source.rewriteInterchanger(attached_nCell.level[1], attached_nCell.level[0]);
-        }
-        else {
-            var rewriteCell = {
-                id: attached_diagram.nCells[0].id,
-                coordinates: bounds
-            };
-            this.source.rewrite(rewriteCell, true);
-        }*/
-        
     }
     // No need to rewrite the target, as this will implicitly be done when the target is explicitly calculated
 };
@@ -528,8 +464,8 @@ Diagram.prototype.getInterchangers = function() {
     var t0 = performance.now();
     var interchangers = new Array();
     for (var i = 0; i < this.nCells.length - 1; i++) {
-        var temp_coordinates = this.nCells[i].coordinates;
-        temp_coordinates.push[i];
+        var temp_coordinates = this.nCells[i].coordinates.slice(0);
+        temp_coordinates.push(i);
         if (this.interchangerAllowed({id: 'interchanger-left', coordinates: temp_coordinates})) {
             interchangers.push({
                 id: "interchanger-left",
