@@ -81,13 +81,13 @@ Complex.prototype.complex_0 = function(diagram) {
     this.lines = [];
     this.points = [];
     this.dimension = 0;
-    this.min_x = -diagram.generators.length / 2;
-    this.max_x = diagram.generators.length / 2;
+    this.min_x = -diagram.nCells.length / 2;
+    this.max_x = diagram.nCells.length / 2;
     this.min_y = -0.5;
     this.max_y = 0.5;
     this.size = diagram.getFullDimensions();
     this.points = [{
-        type: diagram.generators[0].id,
+        type: diagram.nCells[0].id,
         point: [0, 0],
         logical: []
     }];
@@ -101,21 +101,21 @@ Complex.prototype.complex_1 = function(diagram) {
     this.lines = [];
     this.points = [];
     this.dimension = 1;
-    this.min_x = -diagram.generators.length / 2;
-    this.max_x = diagram.generators.length / 2;
+    this.min_x = -diagram.nCells.length / 2;
+    this.max_x = diagram.nCells.length / 2;
     this.min_y = -0.5;
     this.max_y = 0.5;
     this.size = diagram.getFullDimensions();
 
     var pos = this.min_x;
 
-    if (diagram.generators.length == 0) {
+    if (diagram.nCells.length == 0) {
         this.min_x = -0.5;
         this.max_x = 0.5;
         this.min_y = -0.5;
         this.max_y = 0.5;
         this.lines = [{
-            type: diagram.source.generators[0].id,
+            type: diagram.source.nCells[0].id,
             points: [
                 [-0.5, 0],
                 [0.5, 0]
@@ -128,9 +128,9 @@ Complex.prototype.complex_1 = function(diagram) {
     // Add each generator
     var first = true;
     var last = false;
-    for (var level = 0; level < diagram.generators.length; level++) {
+    for (var level = 0; level < diagram.nCells.length; level++) {
 
-        var generator = diagram.generators[level];
+        var generator = diagram.nCells[level];
         var rewrite = gProject.signature.getGenerator(generator.id);
         this.points.push({
             type: generator.id,
@@ -138,7 +138,7 @@ Complex.prototype.complex_1 = function(diagram) {
             logical: [level + 0.5]
         });
         this.lines.push({
-            type: rewrite.source.generators[0].id,
+            type: rewrite.source.nCells[0].id,
             points: [
                 [pos, 0],
                 [pos + 0.5, 0]
@@ -147,9 +147,9 @@ Complex.prototype.complex_1 = function(diagram) {
             origin: "generator source"
         });
         first = false;
-        if (level == diagram.generators.length - 1) last = true;
+        if (level == diagram.nCells.length - 1) last = true;
         this.lines.push({
-            type: rewrite.target.generators[0].id,
+            type: rewrite.target.nCells[0].id,
             points: [
                 [pos + 0.5, 0],
                 [pos + 1, 0]
@@ -169,26 +169,26 @@ Complex.prototype.complex_2 = function(diagram) {
     this.triangles = [];
     this.lines = [];
     this.points = [];
-    this.height = diagram.generators.length;
+    this.height = diagram.nCells.length;
     this.dimension = 2;
     this.min_x = Number.MAX_VALUE;
     this.max_x = -Number.MAX_VALUE;
     this.min_y = 0;
-    this.max_y = Math.max(1, diagram.generators.length);
+    this.max_y = Math.max(1, diagram.nCells.length);
     this.size = diagram.getFullDimensions();
     var current_platform = diagram.getSourceBoundary().copy();
     this.rectangles = [];
 
     // Build up the diagram
-    if (diagram.generators.length == 0) {
+    if (diagram.nCells.length == 0) {
 
         // Deal with an identity on an identity specially
-        if (diagram.source.generators.length == 0) {
+        if (diagram.source.nCells.length == 0) {
             var tl = [-0.5, 0.5];
             var tr = [0.5, 0.5];
             var bl = [-0.5, -0.5];
             var br = [0.5, -0.5];
-            var id = diagram.source.source.generators[0].id;
+            var id = diagram.source.source.nCells[0].id;
 
             this.triangles = [{
                 type: id,
@@ -204,17 +204,17 @@ Complex.prototype.complex_2 = function(diagram) {
             return this;
         }
 
-        this.build_layer(current_platform, null, 0, diagram.source.generators.length);
+        this.build_layer(current_platform, null, 0, diagram.source.nCells.length);
         return this;
     }
 
     // Find width of the widest timeslice
     var max_width = 1;
-    for (height = 0; height <= diagram.generators.length; height++) {
+    for (height = 0; height <= diagram.nCells.length; height++) {
         var layer_max_width = this.size[height];
-        if (height < diagram.generators.length) {
-            var rewrite = gProject.signature.getGenerator(diagram.generators[height].id);
-            if ((rewrite.source.generators.length == 0) && (rewrite.target.generators.length == 0)) {
+        if (height < diagram.nCells.length) {
+            var rewrite = gProject.signature.getGenerator(diagram.nCells[height].id);
+            if ((rewrite.source.nCells.length == 0) && (rewrite.target.nCells.length == 0)) {
                 layer_max_width += 1
             }
         }
@@ -222,7 +222,7 @@ Complex.prototype.complex_2 = function(diagram) {
     }
 
     // Build layers and construct active rectangles
-    for (var height = 0; height < diagram.generators.length; height++) {
+    for (var height = 0; height < diagram.nCells.length; height++) {
 
         // Active rectangle to recognize interchanger clicks
         this.rectangles.push({
@@ -233,7 +233,7 @@ Complex.prototype.complex_2 = function(diagram) {
             y_max: height + 1
         });
 
-        var generator = diagram.generators[height];
+        var generator = diagram.nCells[height];
         this.build_layer(current_platform, generator, height, max_width);
         current_platform.rewrite(generator);
 
@@ -245,23 +245,23 @@ Complex.prototype.complex_2 = function(diagram) {
 Complex.prototype.build_layer = function(current_platform, generator, height, max_width) {
 
     var rewrite = (generator == null ? null : gProject.signature.getGenerator(generator.id));
-    var num_blocks = (generator == null ? current_platform.generators.length : current_platform.generators.length - rewrite.source.generators.length + 1);
-    var base_width = current_platform.generators.length;
+    var num_blocks = (generator == null ? current_platform.nCells.length : current_platform.nCells.length - rewrite.source.nCells.length + 1);
+    var base_width = current_platform.nCells.length;
     var generator_mid_width;
     if (rewrite == null) {
         generator_mid_width = 1;
     }
     else {
-        generator_mid_width = Math.max(0.5, (rewrite.source.generators.length + rewrite.target.generators.length) / 2);
+        generator_mid_width = Math.max(0.5, (rewrite.source.nCells.length + rewrite.target.nCells.length) / 2);
     }
     var mid_width = num_blocks - 1 + generator_mid_width;
-    var top_width = (generator == null ? base_width : current_platform.generators.length - rewrite.source.generators.length + rewrite.target.generators.length);
+    var top_width = (generator == null ? base_width : current_platform.nCells.length - rewrite.source.nCells.length + rewrite.target.nCells.length);
     var base_position = -base_width / 2;
     var mid_position = -mid_width / 2;
     var top_position = -top_width / 2;
     this.min_x = Math.min(this.min_x, base_position, mid_position, top_position);
     this.max_x = Math.max(this.max_x, -base_position, -mid_position, -top_position);
-    var attach = (generator == null ? -1 : generator.coordinate[0]);
+    var attach = (generator == null ? -1 : generator.coordinates[0]);
 
     /*    
     var top_extra = max_width - top_width;
@@ -291,19 +291,19 @@ Complex.prototype.build_layer = function(current_platform, generator, height, ma
             });
 
             // Source triangles
-            for (var i = 0; i < rewrite.source.generators.length; i++) {
-                var source_generator = rewrite.source.generators[i];
+            for (var i = 0; i < rewrite.source.nCells.length; i++) {
+                var source_generator = rewrite.source.nCells[i];
                 var b1 = [base_position + i, height];
                 var b2 = [base_position + i + 0.5, height];
                 var b3 = [base_position + i + 1, height];
                 this.triangles.push({
-                    type: gProject.signature.getGenerator(source_generator.id).source.generators[0].id,
+                    type: gProject.signature.getGenerator(source_generator.id).source.nCells[0].id,
                     points: [anchor, b1, b2],
                     logical: [height + 0.25, source_index + i + 0.25],
                     origin: "generator source left triangle " + i
                 });
                 this.triangles.push({
-                    type: gProject.signature.getGenerator(source_generator.id).target.generators[0].id,
+                    type: gProject.signature.getGenerator(source_generator.id).target.nCells[0].id,
                     points: [anchor, b2, b3],
                     logical: [height + 0.25, source_index + i + 0.75],
                     origin: "generator source right triangle " + i
@@ -317,19 +317,19 @@ Complex.prototype.build_layer = function(current_platform, generator, height, ma
             }
 
             // Target triangles
-            for (var i = 0; i < rewrite.target.generators.length; i++) {
-                var target_generator = rewrite.target.generators[i];
+            for (var i = 0; i < rewrite.target.nCells.length; i++) {
+                var target_generator = rewrite.target.nCells[i];
                 var b1 = [top_position + i, height + 1];
                 var b2 = [top_position + i + 0.5, height + 1];
                 var b3 = [top_position + i + 1, height + 1];
                 this.triangles.push({
-                    type: gProject.signature.getGenerator(target_generator.id).source.generators[0].id,
+                    type: gProject.signature.getGenerator(target_generator.id).source.nCells[0].id,
                     points: [anchor, b1, b2],
                     logical: [height + 0.75, source_index + i + 0.25],
                     origin: "generator target left triangle " + i
                 });
                 this.triangles.push({
-                    type: gProject.signature.getGenerator(target_generator.id).target.generators[0].id,
+                    type: gProject.signature.getGenerator(target_generator.id).target.nCells[0].id,
                     points: [anchor, b2, b3],
                     logical: [height + 0.75, source_index + i + 0.75],
                     origin: "generator target right triangle " + i
@@ -346,9 +346,9 @@ Complex.prototype.build_layer = function(current_platform, generator, height, ma
             var bl = [base_position, height];
             var ml = [mid_position, height + 0.5];
             var tl = [top_position, height + 1];
-            var left_type = rewrite.source.getSourceBoundary().generators[0].id;
-            var top_logical = [height + 0.75, source_index + (rewrite.target.generators.length == 0 ? -0.1 : 0.25)];
-            var bottom_logical = [height + 0.25, source_index + (rewrite.source.generators.length == 0 ? -0.1 : 0.25)];
+            var left_type = rewrite.source.getSourceBoundary().nCells[0].id;
+            var top_logical = [height + 0.75, source_index + (rewrite.target.nCells.length == 0 ? -0.1 : 0.25)];
+            var bottom_logical = [height + 0.25, source_index + (rewrite.source.nCells.length == 0 ? -0.1 : 0.25)];
             this.triangles.push({
                 type: left_type,
                 points: [anchor, ml, tl],
@@ -393,12 +393,12 @@ Complex.prototype.build_layer = function(current_platform, generator, height, ma
             }
 
             // Right side triangles
-            br = [base_position + rewrite.source.generators.length, height];
+            br = [base_position + rewrite.source.nCells.length, height];
             mr = [mid_position + generator_mid_width, height + 0.5];
-            tr = [top_position + rewrite.target.generators.length, height + 1];
-            var right_type = rewrite.source.getTargetBoundary().generators[0].id;
-            top_logical = [height + 0.75, source_index + rewrite.target.generators.length + (rewrite.target.generators.length == 0 ? 0.1 : -0.25)];
-            bottom_logical = [height + 0.25, source_index + rewrite.source.generators.length + (rewrite.source.generators.length == 0 ? 0.1 : -0.25)];
+            tr = [top_position + rewrite.target.nCells.length, height + 1];
+            var right_type = rewrite.source.getTargetBoundary().nCells[0].id;
+            top_logical = [height + 0.75, source_index + rewrite.target.nCells.length + (rewrite.target.nCells.length == 0 ? 0.1 : -0.25)];
+            bottom_logical = [height + 0.25, source_index + rewrite.source.nCells.length + (rewrite.source.nCells.length == 0 ? 0.1 : -0.25)];
             this.triangles.push({
                 type: right_type,
                 points: [anchor, mr, tr],
@@ -443,19 +443,19 @@ Complex.prototype.build_layer = function(current_platform, generator, height, ma
             }
 
             // Adjust positions for next block
-            source_index += rewrite.source.generators.length;
-            target_index += rewrite.target.generators.length;
-            base_position += rewrite.source.generators.length;
+            source_index += rewrite.source.nCells.length;
+            target_index += rewrite.target.nCells.length;
+            base_position += rewrite.source.nCells.length;
             mid_position += generator_mid_width;
-            top_position += rewrite.target.generators.length;
+            top_position += rewrite.target.nCells.length;
         }
         else {
 
             // Construct identity block from 8 triangles and 2 lines
-            var wire_type = current_platform.generators[source_index].id;
+            var wire_type = current_platform.nCells[source_index].id;
             var wire_rewrite = gProject.signature.getGenerator(wire_type);
-            var left_type = wire_rewrite.source.generators[0].id;
-            var right_type = wire_rewrite.target.generators[0].id;
+            var left_type = wire_rewrite.source.nCells[0].id;
+            var right_type = wire_rewrite.target.nCells[0].id;
 
             var bl = [base_position, height];
             var bm = [base_position + 0.5, height];
