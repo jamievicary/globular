@@ -368,6 +368,18 @@ function globular_render_2d(container, diagram, subdiagram) {
         var x1, x2;
         if (first_edge_index == last_edge_index) {
             if (first_edge_index == 0) {
+                x1 = -0.4;
+            } else {
+                x1 = data.edges[edges[first_edge_index - 1]].x + 0.1;
+            }
+            if (first_edge_index == edges.length) {
+                x2 = data.max_x + 0.4;
+            }
+            else {
+                x2 = data.edges[edges[first_edge_index]].x - 0.1;
+            }
+            /*
+            if (first_edge_index == 0) {
                 x1 = 0.15;
                 x2 = 0.35;
             }
@@ -379,6 +391,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                 x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
                 x2 = data.edges[edges[first_edge_index]].x - 0.15;
             }
+            */
         }
         else {
             var x1 = data.edges[edges[first_edge_index]].x - 0.25;
