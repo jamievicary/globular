@@ -252,7 +252,8 @@ $(document).ready(function() {
         $(window).bind('resize', function() {
             $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
             $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
-            gProject.renderDiagram();
+            globular_set_viewbox();
+            //gProject.renderDiagram();
         })
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
