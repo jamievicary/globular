@@ -91,24 +91,25 @@ body, html {
   height: 100%;
   width: 240px;
   float: left;
-  display: block;
   padding: 7px;
   padding-top: 0px;
   overflow-y: auto;
   overflow-x: none;
 }
 
-/* line 99, ../sass/style.sass */
+/* line 98, ../sass/style.sass */
 #diagram-body {
-  height: calc(100% - 70px);
-  width: calc(100% - 258px);
-  background-color: #ccc;
-  float: left;
-  display: block;
   white-space: nowrap;
+  background-color: #ccc;
 }
 
-/* line 108, ../sass/style.sass */
+/* line 103, ../sass/style.sass */
+#diagram-body > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* line 107, ../sass/style.sass */
 #project-menu {
   cursor: pointer;
   position: absolute;
@@ -116,14 +117,14 @@ body, html {
   padding-left: 0px;
   height: 20px;
   list-style: none;
-  background-color: lightgrey;
+  background-color: #ccc;
   height: 30px;
   width: 100%;
   z-index: 1000000;
   white-space: nowrap;
 }
 
-/* line 121, ../sass/style.sass */
+/* line 120, ../sass/style.sass */
 #main-menu li {
   float: left;
   list-style: none;
@@ -132,7 +133,7 @@ body, html {
   padding: 10px;
 }
 
-/* line 130, ../sass/style.sass */
+/* line 129, ../sass/style.sass */
 div.cell-group {
   color: black;
   background-color: #aaa;
@@ -142,7 +143,7 @@ div.cell-group {
   margin-bottom: 7px;
 }
 
-/* line 139, ../sass/style.sass */
+/* line 138, ../sass/style.sass */
 div.cell-opt {
   background-color: #888;
   color: #ffffff;
@@ -156,22 +157,22 @@ div.cell-opt {
   padding-right: 0px;
 }
 
-/* line 154, ../sass/style.sass */
+/* line 153, ../sass/style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 157, ../sass/style.sass */
+/* line 156, ../sass/style.sass */
 div.cell-icon {
   height: 60px;
   width: 60px;
   margin-top: 0px;
-  border-radius: 10px;
-  background-color: lightgrey;
+  border-radius: 2px;
+  background-color: #ccc;
   float: left;
 }
 
-/* line 167, ../sass/style.sass */
+/* line 166, ../sass/style.sass */
 div.preview-icon {
   height: 60px;
   width: 60px;
@@ -180,24 +181,29 @@ div.preview-icon {
   margin-right: 7px;
 }
 
-/* line 174, ../sass/style.sass */
+/* line 173, ../sass/style.sass */
 div.preview-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 177, ../sass/style.sass */
+/* line 176, ../sass/style.sass */
+div.preview-icon > svg {
+  border-radius: 2px;
+}
+
+/* line 179, ../sass/style.sass */
 .cell-b-sect {
   text-align: center;
   top: 70px;
 }
 
-/* line 185, ../sass/style.sass */
+/* line 187, ../sass/style.sass */
 .cell-detail {
   margin-left: 75px;
   height: 60px;
 }
 
-/* line 189, ../sass/style.sass */
+/* line 191, ../sass/style.sass */
 .match-cell-icon {
   height: 60px;
   width: 60px;
@@ -206,7 +212,7 @@ div.preview-icon > canvas {
   float: left;
 }
 
-/* line 197, ../sass/style.sass */
+/* line 199, ../sass/style.sass */
 .cell-icon1 {
   height: 60px;
   border: 2px dashed black;
@@ -216,7 +222,7 @@ div.preview-icon > canvas {
   background-color: lightgrey;
 }
 
-/* line 206, ../sass/style.sass */
+/* line 208, ../sass/style.sass */
 .cell-label {
   width: auto;
   width: 50px;
@@ -230,7 +236,7 @@ div.preview-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 219, ../sass/style.sass */
+/* line 221, ../sass/style.sass */
 .stochastic-rate {
   width: 50px;
   outline-width: 0px;
@@ -246,7 +252,7 @@ div.preview-icon > canvas {
   height: 15px;
 }
 
-/* line 233, ../sass/style.sass */
+/* line 235, ../sass/style.sass */
 .color-picker {
   width: 50px;
   letter-spacing: 1px;
@@ -259,14 +265,14 @@ div.preview-icon > canvas {
   border: none;
 }
 
-/* line 245, ../sass/style.sass */
+/* line 247, ../sass/style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 72px;
   top: 30px;
 }
 
-/* line 250, ../sass/style.sass */
+/* line 252, ../sass/style.sass */
 .button-style-1 {
   background-color: #00b8ff;
   color: white;
@@ -281,7 +287,7 @@ div.preview-icon > canvas {
   border-bottom: 2px solid #00b8ff;
 }
 
-/* line 264, ../sass/style.sass */
+/* line 266, ../sass/style.sass */
 .button-style-2 {
   padding: 5px;
   background-color: #00b8ff;
@@ -296,7 +302,7 @@ div.preview-icon > canvas {
   font-size: 110%;
 }
 
-/* line 277, ../sass/style.sass */
+/* line 279, ../sass/style.sass */
 .button-style-3 {
   background-color: #00b8ff;
   color: white;
@@ -311,13 +317,13 @@ div.preview-icon > canvas {
   font-size: 60%;
 }
 
-/* line 291, ../sass/style.sass */
+/* line 292, ../sass/style.sass */
 #site-controller-body {
   border: 3px solid grey;
   height: 200px;
 }
 
-/* line 295, ../sass/style.sass */
+/* line 296, ../sass/style.sass */
 .text-field-style-1 {
   border: none;
   outline-width: 0px;
@@ -327,7 +333,7 @@ div.preview-icon > canvas {
   padding: 4px;
 }
 
-/* line 303, ../sass/style.sass */
+/* line 304, ../sass/style.sass */
 .text-area-style-1 {
   border: none;
   outline-width: 0px;
@@ -337,7 +343,7 @@ div.preview-icon > canvas {
   width: calc( 100% - 20px );
 }
 
-/* line 313, ../sass/style.sass */
+/* line 314, ../sass/style.sass */
 .submit-field-style-1 {
   width: 70px;
   border: none;
@@ -347,7 +353,7 @@ div.preview-icon > canvas {
   font-family: "Open Sans", sans-serif;
 }
 
-/* line 321, ../sass/style.sass */
+/* line 322, ../sass/style.sass */
 .box {
   display: none;
   background-color: #00b8ff;
@@ -364,29 +370,29 @@ div.preview-icon > canvas {
   left: calc( 50% - 125px );
 }
 
-/* line 338, ../sass/style.sass */
+/* line 339, ../sass/style.sass */
 .zindex-error {
   z-index: 100000000;
 }
 
-/* line 341, ../sass/style.sass */
+/* line 342, ../sass/style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 346, ../sass/style.sass */
+/* line 347, ../sass/style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 349, ../sass/style.sass */
+/* line 350, ../sass/style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 352, ../sass/style.sass */
+/* line 353, ../sass/style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -394,7 +400,7 @@ div.preview-icon > canvas {
   float: right;
 }
 
-/* line 358, ../sass/style.sass */
+/* line 359, ../sass/style.sass */
 #add-project-opt {
   background-color: #4cd2bb;
   cursor: pointer;
@@ -403,7 +409,7 @@ div.preview-icon > canvas {
   overflow: hidden;
 }
 
-/* line 365, ../sass/style.sass */
+/* line 366, ../sass/style.sass */
 #add-project-opt1 {
   background-color: #4cd2bb;
   cursor: pointer;
@@ -412,17 +418,17 @@ div.preview-icon > canvas {
   overflow: hidden;
 }
 
-/* line 375, ../sass/style.sass */
+/* line 376, ../sass/style.sass */
 #project-menu li {
   margin-left: 3px;
 }
 
-/* line 378, ../sass/style.sass */
+/* line 379, ../sass/style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 381, ../sass/style.sass */
+/* line 382, ../sass/style.sass */
 #diagram-title {
   font-size: 115%;
   color: black;
@@ -435,21 +441,12 @@ div.preview-icon > canvas {
   margin-left: 0px;
 }
 
-/* line 394, ../sass/style.sass */
-#diagram-canvas {
-  background-color: #ededed;
-  bottom: 0px;
-  right: 0px;
-  width: calc( 100% - 320px );
-  height: calc( 100% - 30px );
-}
-
-/* line 401, ../sass/style.sass */
+/* line 395, ../sass/style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 404, ../sass/style.sass */
+/* line 398, ../sass/style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -462,14 +459,14 @@ div.preview-icon > canvas {
   background-repeat: no-repeat;
 }
 
-/* line 415, ../sass/style.sass */
+/* line 409, ../sass/style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 420, ../sass/style.sass */
+/* line 414, ../sass/style.sass */
 .mini-opt-links {
   color: #ffffff;
   text-decoration: underline;
@@ -478,14 +475,14 @@ div.preview-icon > canvas {
   cursor: pointer;
 }
 
-/* line 428, ../sass/style.sass */
+/* line 422, ../sass/style.sass */
 .del-project {
   float: right;
   color: #335566;
   cursor: pointer;
 }
 
-/* line 433, ../sass/style.sass */
+/* line 427, ../sass/style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -495,7 +492,7 @@ div.preview-icon > canvas {
   color: salmon;
 }
 
-/* line 441, ../sass/style.sass */
+/* line 435, ../sass/style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -504,7 +501,7 @@ div.preview-icon > canvas {
   position: absolute;
 }
 
-/* line 448, ../sass/style.sass */
+/* line 442, ../sass/style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -513,7 +510,7 @@ div.preview-icon > canvas {
   left: 80px;
 }
 
-/* line 455, ../sass/style.sass */
+/* line 449, ../sass/style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -521,7 +518,7 @@ div.preview-icon > canvas {
   padding-top: 20px;
 }
 
-/* line 461, ../sass/style.sass */
+/* line 455, ../sass/style.sass */
 #slider {
   top: 80px;
   right: 10px;
@@ -529,18 +526,18 @@ div.preview-icon > canvas {
   position: absolute;
 }
 
-/* line 467, ../sass/style.sass */
+/* line 461, ../sass/style.sass */
 #sto-form {
   background-color: #008b8b;
   margin-left: 5px;
 }
 
-/* line 471, ../sass/style.sass */
+/* line 465, ../sass/style.sass */
 #run-process {
   background-color: #008b8b;
 }
 
-/* line 474, ../sass/style.sass */
+/* line 468, ../sass/style.sass */
 #process-form {
   text-align: left;
   padding: 10px;

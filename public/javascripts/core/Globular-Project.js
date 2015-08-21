@@ -656,7 +656,7 @@ Project.prototype.saveState = function() {
     history.pushState({
         string: this.currentString()
     }, "", "");
-    console.log("Project.saveState: " + parseInt(performance.now() - t0) + "ms");
+    //console.log("Project.saveState: " + parseInt(performance.now() - t0) + "ms");
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -842,11 +842,14 @@ Project.prototype.renderDiagram = function() {
     var div = '#diagram-canvas';
     if (this.diagram == null) {
         $('#slider').hide()
+        $('#diagram-canvas').empty();
+        /*
         var canvas = $(div).find('canvas');
         if (canvas.length != 0) {
             canvas = canvas[0];
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         }
+        */
     }
     else {
         if (this.diagram.dimension === 3) {
@@ -862,7 +865,7 @@ Project.prototype.renderDiagram = function() {
         }
     }
 
-    console.log("Project.renderDiagram(): " + parseInt(performance.now() - t0) + "ms");
+    //console.log("Project.renderDiagram(): " + parseInt(performance.now() - t0) + "ms");
 
 };
 
