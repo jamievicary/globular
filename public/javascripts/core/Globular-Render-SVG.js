@@ -829,7 +829,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
     var path = "";
     if (h_start < h_end) {
         // Draw bottom-to-top
-        var bottom_section = (edge.start_vertex == null ? h_start == 0 : h_start == edge.start_height);
+        var bottom_section = (edge.start_vertex == null ? (h_start == 0) && (edge.finish_height > 0.5)  : h_start == edge.start_height);
         var middle_section = ((h_start < edge.finish_height - 0.5) && (h_end > edge.start_height + 0.5));
         var top_section = (edge.finish_vertex == null ? h_end == diagram_height : h_end == edge.finish_height);
         if (bottom_section) {
