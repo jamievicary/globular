@@ -322,14 +322,12 @@ $(document).ready(function() {
 
         $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
-            $("#run-process-go").click(function(){
-                var iterations = $("#rp-iters").val();
-                iterations = Number(iterations);
-                
-                gProject.applyStochasticProcess(iterations);
-                gProject.renderDiagram();
-            });
-
+        });
+        $("#run-process-go").click(function(){
+            var iterations = $("#rp-iters").val();
+            iterations = Number(iterations);
+            gProject.applyStochasticProcess(iterations);
+            gProject.renderDiagram();
         });
     }
 
