@@ -449,7 +449,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     var generator = new Generator(source, target);
     this.addNCell(generator);
-   
+
     // Re-render and save the new state
 
     this.renderNCells(source.getDimension() + 1);
@@ -479,37 +479,37 @@ Project.prototype.addNCell = function(generator) {
     }
     var data = new Data(generator.identifier, colour, temp_diagram, temp_diagram.getDimension());
     this.dataList.put(generator.identifier, data);
-    
+
 };
 
 Project.prototype.storeTheorem = function() {
-    
+
 
     var theorem = new Generator(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
-    
+
     var d = theorem.getDimension();
     while (this.signature.n < d) {
         this.signature = new Signature(this.signature);
     }
     this.signature.addGenerator(theorem);
-    
+
     var temp_diagram = this.signature.createDiagram(theorem.identifier);
     var colour = '#FFFFFF';
-    
+
     var data = new Data(theorem.identifier, colour, temp_diagram, temp_diagram.getDimension());
     this.dataList.put(theorem.identifier, data);
-    
+
     var expand_theorem = new Generator(temp_diagram, this.diagram);
     this.addNCell(expand_theorem);
-    
+
     var collapse_theorem = new Generator(this.diagram, temp_diagram);
     this.addNCell(collapse_theorem);
- 
-    
+
+
     this.clearDiagram();
     this.renderAll();
     this.saveState();
-    
+
 };
 
 // Handle a click on a 2-cell to implement interchangers
@@ -530,23 +530,23 @@ Project.prototype.clickCell = function(height) {
 
     var first_click = this.selected_cell;
     var second_click = height;
-    
+
 
     if (this.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
         if (slider === 0 && this.diagram.nCells.length != 0) {
 
-            
+
             var temp_coordinates = this.diagram.getSourceBoundary().nCells[first_click].coordinates.slice(0);
             temp_coordinates.push(first_click);
-            if(first_click > second_click){
+            if (first_click > second_click) {
                 temp_coordinates = this.diagram.getSourceBoundary().nCells[second_click].coordinates.slice(0);
                 temp_coordinates.push(second_click);
             }
-            
+
             var temp_id = "interchanger-left";
             var interchanger = new NCell(temp_id, temp_coordinates);
-    
+
             if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
                 interchanger.id = "interchanger-right";
                 if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
@@ -555,46 +555,46 @@ Project.prototype.clickCell = function(height) {
                     return;
                 }
             }
-            
+
             /*
                 We need to figure out what is the inverse of the interchanger that we want to apply
             */
-            
+
             var temp_interchanged_source = this.diagram.getSourceBoundary().copy();
             temp_interchanged_source.rewrite(interchanger, false);
-            
+
             interchanger.coordinates = temp_interchanged_source.nCells[Math.min(first_click, second_click)].coordinates.slice(0);
             interchanger.coordinates.push(Math.min(first_click, second_click));
-            
-            
-            if(interchanger.id === "interchanger-right"){
-                interchanger.id = "interchanger-left"   
+
+
+            if (interchanger.id === "interchanger-right") {
+                interchanger.id = "interchanger-left"
             }
-            else{
-                interchanger.id = "interchanger-right"   
+            else {
+                interchanger.id = "interchanger-right"
             }
 
-            
+
             //Manual attachment
             this.diagram.nCells.splice(0, 0, interchanger);
             this.diagram.source = temp_interchanged_source;
-            
+
             var maxVal = $('#slider').val() + 1;
             $('#slider').attr('max', maxVal)
 
         }
         else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
-            
+
             var temp_coordinates = this.diagram.getTargetBoundary().nCells[first_click].coordinates.slice(0);
             temp_coordinates.push(first_click);
-            if(first_click > second_click){
+            if (first_click > second_click) {
                 temp_coordinates = this.diagram.getTargetBoundary().nCells[second_click].coordinates.slice(0);
                 temp_coordinates.push(second_click);
             }
             
             var temp_id = "interchanger-left";
             var interchanger = new NCell(temp_id, temp_coordinates);
-    
+
             if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
                 interchanger.id = "interchanger-right";
                 if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
@@ -603,7 +603,7 @@ Project.prototype.clickCell = function(height) {
                     return;
                 }
             }
-            
+
             var interchanger_wrapper = {
                 nCells: [interchanger]
             };
@@ -621,18 +621,25 @@ Project.prototype.clickCell = function(height) {
 
         var temp_coordinates = this.diagram.nCells[first_click].coordinates.slice(0);
         temp_coordinates.push(first_click);
-        if(first_click > second_click){
+        if (first_click > second_click) {
             temp_coordinates = this.diagram.nCells[second_click].coordinates.slice(0);
             temp_coordinates.push(second_click);
         }
-        
-        var temp_id = "interchanger-left";
-        var interchanger = new NCell(temp_id, temp_coordinates);
 
+        var id1, id2;
+        if (first_click > second_click) {
+            id1 = 'interchanger-left';
+            id2 = 'interchanger-right';
+        } else {
+            id1 = 'interchanger-right';
+            id2 = 'interchanger-left';
+        }
+        
+        var interchanger = new NCell(id1, temp_coordinates);
         if (!this.diagram.interchangerAllowed(interchanger)) {
-            interchanger.id = "interchanger-right";
+            interchanger.id = id2;
             if (!this.diagram.interchangerAllowed(interchanger)) {
-                alert("Cannot interchange these cells");
+                alert ("Cannot interchange these cells");
                 this.selected_cell = null;
                 return;
             }
@@ -640,7 +647,6 @@ Project.prototype.clickCell = function(height) {
 
         // Perform the interchanger
         this.diagram.rewrite(interchanger, false);
-        //this.diagram.rewriteInterchanger(first_click, second_click);
     }
 
     // Finish up and render the result

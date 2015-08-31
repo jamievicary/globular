@@ -66,6 +66,7 @@ $(document).ready(function() {
         if ($(this).width() == 0) return;
         if ($(this).height() == 0) return;
         var b = this.bounds;
+        if (b === undefined) return;
         var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
         var y = b.top + ((b.bottom - b.top) * event.offsetY / $(this).height());
         var rectangles = $('#diagram-canvas')[0].rectangles;

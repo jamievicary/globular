@@ -16,6 +16,9 @@ function globular_set_viewbox() {
 }
 
 function globular_render(container, diagram, subdiagram) {
+    var container_dom = $(container)[0];
+    container_dom.rectangles = [];
+
     if (diagram.getDimension() == 0) {
         globular_render_0d(container, diagram, subdiagram);
     }
@@ -28,6 +31,8 @@ function globular_render(container, diagram, subdiagram) {
     else {
         return;
     }
+
+
 }
 
 function prepare_SVG_container(container, min_x, max_x, min_y, max_y) {
@@ -187,6 +192,13 @@ function globular_render_2d(container, diagram, subdiagram) {
         string: path_string,
         fill: gProject.getColour(diagram.source.source.nCells[0].id)
     }));
+    $(container)[0].bounds = {
+        left: 0,
+        right: data.max_x,
+        top: data.vertices.length,
+        bottom: 0
+    };
+
 
     // Check to see if there's a level with no edges
     var empty_level = false;
@@ -335,6 +347,15 @@ function globular_render_2d(container, diagram, subdiagram) {
         circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
         circle.setAttributeNS(null, "stroke", "none");
         g.appendChild(circle);
+        
+        $(container)[0].rectangles.push({
+            height: i,
+            x_min: 0,
+            x_max: data.max_x,
+            y_min: i,
+            y_max: i+1
+        });
+
     }
 
     // Render the highlight
