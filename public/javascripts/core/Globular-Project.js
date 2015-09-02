@@ -101,9 +101,11 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                 possible_events[i] = 1; //each interchanger IS just one event, right?
             }
             for (var j = 0; j < possible_events[i].length; j++) {
+                var event = possible_events[i][j];
+                if (event.equivalence_class_size === undefined) event.equivalence_class_size = 1;
                 eventsWithTimes.push({
-                    event: possible_events[i][j],
-                    time: timeSampler(rates[i]),
+                    event: event,
+                    time: timeSampler(rates[i] / event.equivalence_class_size),
                     id: processes[i],
                     process_index: i
                 });
@@ -228,7 +230,7 @@ Project.prototype.displayInterchangers = function() {
     this.diagram.rewrite(interchangers[chosen_index]);
     this.renderDiagram();
     this.saveState();
-    console.log("Projet.displayInterchangers: " + (parseInt(performance.now() - t0)) + "ms");
+    //console.log("Project.displayInterchangers: " + (parseInt(performance.now() - t0)) + "ms");
 };
 
 

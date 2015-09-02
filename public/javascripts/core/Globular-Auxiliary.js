@@ -52,3 +52,7 @@ function getMean(arr) {
     }
     return total;
 }
+
+Array.prototype.last = function() {
+    return this[this.length - 1];
+};
