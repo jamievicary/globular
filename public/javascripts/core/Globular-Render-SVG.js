@@ -193,9 +193,9 @@ function globular_render_2d(container, diagram, subdiagram) {
         fill: gProject.getColour(diagram.source.source.nCells[0].id)
     }));
     $(container)[0].bounds = {
-        left: 0,
-        right: data.max_x,
-        top: data.vertices.length,
+        left: -0.5,
+        right: data.max_x + 0.5,
+        top: Math.max(1, data.vertices.length),
         bottom: 0
     };
 
@@ -351,7 +351,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         $(container)[0].rectangles.push({
             height: i,
             x_min: 0,
-            x_max: data.max_x,
+            x_max: data.max_x + 1,
             y_min: i,
             y_max: i+1
         });
