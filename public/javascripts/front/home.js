@@ -63,13 +63,35 @@ $(document).ready(function() {
 
     // Click handler on main diagram
     var c = $('#diagram-canvas').click(function(event) {
-        if ($(this).width() == 0) return;
-        if ($(this).height() == 0) return;
+        var this_width = $(this).width();
+        var this_height = $(this).height();
+        if (this_width == 0) return;
+        if (this_height == 0) return;
         var b = this.bounds;
-        var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
-        var y = b.top + ((b.bottom - b.top) * event.offsetY / $(this).height());
+        if (b === undefined) return;
+        b.top_left = {};
+        b.height = b.top - b.bottom;
+        b.width = b.right - b.left;
+        if (this_width / this_height < b.width / b.height) {
+            // Picture is short and fat, touching the sides of the viewing area
+            b.top_left.pix_x = 0;
+            b.top_left.pix_y = (this_height - (b.height * this_width / b.width)) / 2;
+            b.pix_width = this_width;
+            b.pix_height = b.height * this_width / b.width;
+        }
+        else {
+            // Picture is tall and thin, touching the top and bottom of the viewing area
+            b.top_left.pix_x = (this_width - (b.width * this_height / b.height)) / 2;
+            b.top_left.pix_y = 0;
+            b.pix_width = b.width * this_height / b.height;
+            b.pix_height = this_height;
+        }
+        var x = 0.5 + b.left + (event.offsetX - b.top_left.pix_x) * b.width / b.pix_width;
+        var y = b.top - (event.offsetY - b.top_left.pix_y) * b.height / b.pix_height;
+        //var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
+        //var y = b.bottom + ((b.bottom - b.top) * event.offsetY / $(this).height());
         var rectangles = $('#diagram-canvas')[0].rectangles;
-        //console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
+        console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
 
         if (rectangles === undefined) return;
 
@@ -81,6 +103,7 @@ $(document).ready(function() {
             if (y > r.y_max) continue;
 
             // Tell the project object that we've clicked on a rectangle
+            console.log("Clicked in rectangle " + i);
             gProject.clickCell(r.height);
             return;
         }
@@ -322,14 +345,12 @@ $(document).ready(function() {
 
         $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
-            $("#run-process-go").click(function(){
-                var iterations = $("#rp-iters").val();
-                iterations = Number(iterations);
-                
-                gProject.applyStochasticProcess(iterations);
-                gProject.renderDiagram();
-            });
-
+        });
+        $("#run-process-go").click(function() {
+            var iterations = $("#rp-iters").val();
+            iterations = Number(iterations);
+            gProject.applyStochasticProcess(iterations);
+            gProject.renderDiagram();
         });
     }
 

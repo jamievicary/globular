@@ -94,12 +94,12 @@ Diagram.prototype.diagramBijection = function(matched_diagram) {
         if (this.nCells[i].id != matched_diagram.nCells[i].id) {
             return false;
         }
-        for(var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++){
-            if(this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]){
+        for (var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++) {
+            if (this.getCoordinates(this.nCells[i])[k] != matched_diagram.getCoordinates(matched_diagram.nCells[i])[k]) {
                 if (this.getCoordinates(this.nCells[i]).length != matched_diagram.getCoordinates(matched_diagram.nCells[i]).length) {
                     return false;
                 }
-                    
+
             }
         }
         for (var k = 0; k < this.getCoordinates(this.nCells[i]).length; k++) {
@@ -132,11 +132,11 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id === 'interchanger-left' || nCell.id === 'interchanger-right') {
-        if(reverse){
-            if(nCell.id === 'interchanger-left'){
+        if (reverse) {
+            if (nCell.id === 'interchanger-left') {
                 nCell.id === 'interchanger-right';
             }
-            else{
+            else {
                 nCell.id === 'interchanger-left';
             }
         }
@@ -172,7 +172,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
             target.nCells[i].coordinates[j] += nCell.coordinates[j];
         }
-        
+
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
@@ -209,10 +209,19 @@ Diagram.prototype.copy = function() {
 };
 
 /*
-    Returns the list of all the ways in which the matched_diagram fits into this diagram. If there are no matches - returns false
+    Returns the list of all the ways in which the matched_diagram fits into this diagram. If there are no matches - returns false.
+    Setting the boolean 'loose' activates a more permissive matching strategy for 2-diagrams.
 */
-Diagram.prototype.enumerate = function(matched_diagram) {
+Diagram.prototype.enumerate = function(matched_diagram, loose) {
     var matches = new Array();
+
+    // Set loose flag correctly
+    if (loose === undefined) loose = false;
+    if (matched_diagram.getDimension() != 2) {
+        loose = false;
+    }
+
+    var matched_diagram_shape = matched_diagram.getFullDimensions();
 
     // For a match of 0-diagrams, returns an empty match, as there are no boundaries to be passed
     if (this.dimension === 0) {
@@ -252,21 +261,21 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                 which is consistent with the only possible match on n-cells. 
             */
             var j;
-            for (var j = 0; j < boundary_matches.length; j++) {
+            for (j = 0; j < boundary_matches.length; j++) {
                 var k = 0;
 
-                    for (k = 0; k < boundary_matches[j].length; k++) {
-                        
-                        // Generator attachment data shifted by the offset created by the newly added generator
-                        var offset = 0; 
-                        if(matched_diagram.nCells.length != 0){
-                            offset = matched_diagram.getCoordinates(matched_diagram.nCells[0])[k];
-                        }
-                        if (this.getCoordinates(this.nCells[i])[k] != boundary_matches[j][k] + offset) {
-                            break;
-                        }
+                for (k = 0; k < boundary_matches[j].length; k++) {
+
+                    // Generator attachment data shifted by the offset created by the newly added generator
+                    var offset = 0;
+                    if (matched_diagram.nCells.length != 0) {
+                        offset = matched_diagram.getCoordinates(matched_diagram.nCells[0])[k];
                     }
-               // }
+                    if (this.getCoordinates(this.nCells[i])[k] != boundary_matches[j][k] + offset) {
+                        break;
+                    }
+                }
+                // }
                 if (k === boundary_matches[j].length) {
                     current_match = boundary_matches[j].slice(0);
                     break;
@@ -288,36 +297,114 @@ Diagram.prototype.enumerate = function(matched_diagram) {
                 Performs checks on whether in the current match, corresponding n-cells have the same types and the same information
                 on how they fit together.
             */
+            current_match.adjustments = [];
+            var adjustments = current_match.adjustments;
+            var matches_needed = matched_diagram.nCells.length;
+            var matches_found = 0;
+            var x_offset = 0;
+            while (matches_found < matches_needed) {
+                //for (var j = 0; j < matched_diagram.nCells.length; j++) {
+
+                // If we've gone past the end of the diagram, then we've failed to find a match
+                if (i + matches_found + adjustments.length == this.nCells.length) {
+                    current_match = null;
+                    break;
+                }
+
+                var cell = this.nCells[i + matches_found + adjustments.length];
+
+                var adjustment_needed = false;
+
+                if (matched_diagram.nCells[matches_found].id != cell.id) {
+                    // It's not the right cell, so to have a hope we'll have to interchange it out of the way
+                    adjustment_needed = true;
+                }
+                else {
+                    var coordinates = matched_diagram.getCoordinates(matched_diagram.nCells[matches_found]);
+                    for (var k = 0; k < coordinates.length; k++) {
+                        if (coordinates[k] + (loose ? x_offset : 0) != this.getCoordinates(cell)[k] - current_match[k]) {
+                            adjustment_needed = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (adjustment_needed) {
+                    if (matches_found == 0 && adjustments.length == 0) {
+                        // Never adjust on the first rung
+                        current_match = null;
+                        break;
+                    }
+                    if (loose) {
+                        // Can we interchange the cell out of the way?
+                        var rewrite = gProject.signature.getGenerator(cell.id);
+                        var last_source = cell.coordinates[0] + rewrite.source.nCells.length;
+                        var on_left = (last_source <= current_match[0] + x_offset);
+                        var first_source = cell.coordinates[0];
+                        var on_right = (first_source >= current_match[0] + x_offset + matched_diagram_shape[matches_found]);
+                        if (on_left) {
+                            adjustments.push({
+                                height: matches_found + adjustments.length,
+                                side: 'left',
+                                id: cell.id
+                            });
+                            x_offset += rewrite.target.nCells.length - rewrite.source.nCells.length;
+                        }
+                        else
+                        if (on_right) {
+                            adjustments.push({
+                                height: matches_found + adjustments.length,
+                                side: 'right',
+                                id: cell.id
+                            });
+                        }
+                        else {
+                            // Loose matching has failed
+                            current_match = null;
+                            break;
+                        }
+                    }
+                    else {
+                        // Not allowed to do loose matching, so fail.
+                        current_match = null;
+                        break;
+                    }
+                }
+                else {
+                    // We found a bona-fide match
+                    matches_found++;
+                }
+            }
+            if (loose && (current_match != null)) {
+                console.log('Found ' + adjustments.length + ' loose matches');
+            }
+
+            /*
             for (var j = 0; j < matched_diagram.nCells.length; j++) {
                 if (matched_diagram.nCells[j].id != this.nCells[i + j].id) {
                     current_match = null;
                     break;
                 }
-                /*
-                    This section of code deals with the possibility that we encounter an interchanger
-                    while enumerating
-                */
-                
-
-                if (matched_diagram.getCoordinates(matched_diagram.nCells[j]).length != 
-                this.getCoordinates(this.nCells[i + j]).length) {
+                if (matched_diagram.getCoordinates(matched_diagram.nCells[j]).length !=
+                    this.getCoordinates(this.nCells[i + j]).length) {
+                    console.log("enumerate - strange condition triggered");
                     current_match = null;
                     break;
                 }
                 else {
                     for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.nCells[j]).length; k++) {
-                        if (matched_diagram.getCoordinates(matched_diagram.nCells[j])[k] != 
-                        this.getCoordinates(this.nCells[i + j])[k] - current_match[k]) {
+                        if (matched_diagram.getCoordinates(matched_diagram.nCells[j])[k] !=
+                            this.getCoordinates(this.nCells[i + j])[k] - current_match[k]) {
                             current_match = null;
                             break;
                         }
                     }
                 }
-                if(current_match === null){
+                if (current_match === null) {
                     break;
                 }
             }
-
+            */
             // If the current match passed all the checks, it is added to the list of matches
             if (current_match != null) {
                 matches.push(current_match);
@@ -332,6 +419,79 @@ Diagram.prototype.enumerate = function(matched_diagram) {
         // Rewrites the intermediate boundary to allow to search for matches at the next platform
         intermediate_boundary.rewrite(this.nCells[i]);
     }
+
+    // For a 2-diagram, record data about match locations to enable suppression of equivalent rewrites.
+    // Only applies for 2-diagrams, when the matched diagram is an identity.
+    if ((this.getDimension() == 2) && (matched_diagram.nCells.length == 0)) {
+        var length = matched_diagram.source.nCells.length;
+        var matches_by_coordinate = {};
+        var match_equivalence_classes = [];
+        for (var i = 0; i < matches.length; i++) {
+            var match = matches[i];
+            matches_by_coordinate[match.toString()] = i;
+            if (match.last() == 0) {
+                match_equivalence_classes.push([i]);
+                continue;
+            }
+
+            var height = match[1];
+            var previous_vertex = this.nCells[height - 1].id;
+            var previous_generator = gProject.signature.getGenerator(previous_vertex);
+            var previous_vertex_first_target = this.nCells[height - 1].coordinates[0];
+            var previous_vertex_last_target = previous_vertex_first_target + previous_generator.target.nCells.length;
+
+            // Is this match blocked by the preceding vertex?
+            var equivalent_matches = [];
+            if (previous_vertex_last_target <= match[0]) {
+                // Not blocked, previous vertex is to the left
+                equivalent_matches.push([
+                    match[0] - previous_generator.target.nCells.length + previous_generator.source.nCells.length,
+                    match[1] - 1
+                ]);
+            }
+            if (previous_vertex_first_target >= match[0] + length) {
+                // Not blocked, previous vertex is to the right
+                equivalent_matches.push([match[0], match[1] - 1]);
+            }
+
+            if (equivalent_matches.length == 0) {
+                // It's a new equivalence class
+                match_equivalence_classes.push([i]);
+            }
+            else {
+                var new_class = [(i)];
+                for (var em = 0; em < equivalent_matches.length; em++) {
+                    var equivalent_match = equivalent_matches[em];
+                    // Take out all equivalence classes containing equivalent_match, and
+                    // concatenate them onto new_class
+                    var equiv_string = equivalent_match.toString();
+                    var match_index = matches_by_coordinate[equiv_string];
+                    var matching_classes = [];
+                    for (var c = 0; c < match_equivalence_classes.length; c++) {
+                        var equivalence_class = match_equivalence_classes[c];
+                        var index = equivalence_class.indexOf(match_index);
+                        if (index >= 0) {
+                            new_class = new_class.concat(match_equivalence_classes[c]);
+                            match_equivalence_classes.splice(c, 1);
+                        }
+                    }
+                }
+                // Add this new equivalence class
+                match_equivalence_classes.push(new_class);
+            }
+        }
+
+        // Every match should appear exactly once in the list of equivalence classes.
+        // Provide it with data on the size of its equivalence class.
+        for (var i = 0; i < match_equivalence_classes.length; i++) {
+            for (var j = 0; j < match_equivalence_classes[i].length; j++) {
+                var index = match_equivalence_classes[i][j];
+                matches[index].equivalence_class_size = match_equivalence_classes[i].length;
+            }
+        }
+
+    }
+
     return matches;
 };
 
@@ -396,10 +556,12 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         To specify a rewrite of an n-diagram, we need n bounds, to specify attachment we just need n-1. 
         The rewrite of the boundary is specified exactly by the attachment bounds
     */
+
     if (boundary_boolean === 's') {
         this.source.rewrite(attached_nCell, true);
     }
-    // No need to rewrite the target, as this will implicitly be done when the target is explicitly calculated
+
+    // No need to rewrite the target, as this is not stored
 };
 
 /*
@@ -435,29 +597,25 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
-Diagram.prototype.getInterchangersOLD = function() {
-
-    var t0 = performance.now();
-    var interchangers = new Array();
-    for (var i = 0; i < this.nCells.length - 1; i++) {
-        if (this.interchangerAllowed(i, i + 1)) {
-            interchangers.push({
-                id: "interchanger",
-                level: [i, i + 1],
-                tension_change: this.computeTensionChange(i, i + 1)
-            });
-        }
-        if (this.interchangerAllowed(i + 1, i)) {
-            interchangers.push({
-                id: "interchanger",
-                level: [i + 1, i],
-                tension_change: this.computeTensionChange(i + 1, i)
-            });
-        }
+Diagram.prototype.constructInterchangerAtHeight = function(id, height) {
+    if (this.getDimension() != 2) return null;
+    if (this.nCells.length <= height + 1) return null;
+    var c1 = this.nCells[height];
+    var c2 = this.nCells[height + 1];
+    var r1 = gProject.signature.getGenerator(c1.id);
+    var r2 = gProject.signature.getGenerator(c2.id);
+    var coords;
+    if (c1.coordinates[0] < c2.coordinates[0]) {
+        coords = [c1.coordinates[0], height];
     }
-    console.log("Diagram.getInterchangers: " + parseInt(performance.now() - t0) + "ms");
-    return interchangers;
-}
+    else {
+        coords = [c2.coordinates[0], height];
+    }
+    return {
+        id: id,
+        coordinates: coords
+    };
+};
 
 Diagram.prototype.getInterchangers = function() {
 
@@ -466,14 +624,20 @@ Diagram.prototype.getInterchangers = function() {
     for (var i = 0; i < this.nCells.length - 1; i++) {
         var temp_coordinates = this.nCells[i].coordinates.slice(0);
         temp_coordinates.push(i);
-        if (this.interchangerAllowed({id: 'interchanger-left', coordinates: temp_coordinates})) {
+        if (this.interchangerAllowed({
+                id: 'interchanger-left',
+                coordinates: temp_coordinates
+            })) {
             interchangers.push({
                 id: "interchanger-left",
                 coordinates: temp_coordinates,
                 tension_change: 0 //this.computeTensionChange(i, i + 1)
             });
         }
-        if (this.interchangerAllowed({id: 'interchanger-right', coordinates: temp_coordinates})) {
+        if (this.interchangerAllowed({
+                id: 'interchanger-right',
+                coordinates: temp_coordinates
+            })) {
             interchangers.push({
                 id: "interchanger-right",
                 coordinates: temp_coordinates,
@@ -503,38 +667,9 @@ Diagram.prototype.computeTensionChange = function(h1, h2) {
     return gen1_input + gen2_input + gen1_output + gen2_output;
 }
 
-Diagram.prototype.interchangerAllowedOLD = function(height_left, height_right) {
-
-    if (this.getDimension() != 2) return false;
-    if (height_right == height_left) return false;
-    if (height_left < 0) return false;
-    if (height_left > this.nCells.length) return false;
-    if (height_right < 0) return false;
-    if (height_right > this.nCells.length) return false;
-
-    // Check that cells are adjacent
-    if (Math.abs(height_left - height_right) != 1) {
-        return false;
-    }
-
-    // Get data about rewrites
-    var g_left = this.nCells[height_left];
-    var r_left = gProject.signature.getGenerator(g_left.id);
-    var g_right = this.nCells[height_right];
-    var r_right = gProject.signature.getGenerator(g_right.id);
-
-    // Check that cells are able to be interchanged
-    if (height_left < height_right) {
-        return (g_left.coordinates[0] + r_left.target.nCells.length <= g_right.coordinates[0]);
-    }
-    else {
-        return (g_left.coordinates[0] + r_left.source.nCells.length <= g_right.coordinates[0]);
-    }
-}
-
 // NEW SCHEME - check if interchanger is allowed for this diagram
 Diagram.prototype.interchangerAllowed = function(cell) {
-    
+
     var height = cell.coordinates[cell.coordinates.length - 1];
     var type = cell.id;
 
@@ -554,42 +689,11 @@ Diagram.prototype.interchangerAllowed = function(cell) {
     }
     else if (type == 'interchanger-right') {
         return (g1.coordinates[g1.coordinates.length - 1] >= g2.coordinates[g2.coordinates.length - 1] + r2.source.nCells.length);
-    } else {
-        alert ("Illegal type passed to interchangerAllowed");
-        return false;
-    }
-}
-
-Diagram.prototype.rewriteInterchangerOLD = function(height_left, height_right) {
-
-    if (!this.interchangerAllowed(height_left, height_right)) {
-        alert("Illegal input passed to rewriteInterchanger");
-        return;
-    }
-
-    // Get data about rewrites
-    var g_left = this.nCells[height_left];
-    var r_left = gProject.signature.getGenerator(g_left.id);
-    var g_right = this.nCells[height_right];
-    var r_right = gProject.signature.getGenerator(g_right.id);
-
-    var g_left_new_position, g_right_new_position;
-    if (height_left < height_right) {
-        g_left_new_position = g_left.coordinates[0];
-        g_right_new_position = g_right.coordinates[0] + r_left.source.nCells.length - r_left.target.nCells.length;
     }
     else {
-        g_left_new_position = g_left.coordinates[0];
-        g_right_new_position = g_right.coordinates[0] - r_left.source.nCells.length + r_left.target.nCells.length;
+        alert("Illegal type passed to interchangerAllowed");
+        return false;
     }
-
-    // Rewrite the diagram
-    this.nCells[height_left].coordinates[0] = g_left_new_position;
-    this.nCells[height_right].coordinates[0] = g_right_new_position;
-    var temp = this.nCells[height_left];
-    this.nCells[height_left] = this.nCells[height_right];
-    this.nCells[height_right] = temp;
-
 }
 
 // NEW SYSTEM - Apply an interchanger at a given height
@@ -616,8 +720,9 @@ Diagram.prototype.rewriteInterchanger = function(cell) {
     else if (type == 'interchanger-right') {
         g1_new_position = g1.coordinates[g1.coordinates.length - 1] - r2.source.nCells.length + r2.target.nCells.length;
         g2_new_position = g2.coordinates[g2.coordinates.length - 1];
-    } else {
-        alert ("Illegal type passed to rewriteInterchanger")
+    }
+    else {
+        alert("Illegal type passed to rewriteInterchanger")
     }
 
     // Rewrite the diagram
@@ -638,54 +743,5 @@ Diagram.prototype.setCoordinates = function(nCell, position, new_coordinates) {
     Given a generator, returns its list of coordinates in the form of an array
 */
 Diagram.prototype.getCoordinates = function(nCell) {
-        return nCell.coordinates;
-
-/*
-    if(nCell.id === 'interchanger-left' || nCell.id === 'interchanger-right'){
-        for(var i = 0; i < this.nCells.length; i++){
-            if(this.nCells[i].id === 'interchanger-left'){
-                if(nCell.level[0] === this.nCells[i].level[0] && nCell.level[1] === this.nCells[i].level[1]){
-                    
-                    var platform = this.source.copy();
-                    var platform_counter = 0;
-                    while(platform_counter < i){
-                        platform.rewrite(this.nCells[platform_counter]);
-                        platform_counter++;
-                    }
-                    
-                    var interchanged_cell_one = platform.nCells[nCell.level[0]];
-                    var interchanged_cell_two = platform.nCells[nCell.level[1]];
-                    
-                    if(nCell.level[0] > nCell.level[1]){
-                        var temp = interchanged_cell_two;
-                        interchanged_cell_two = interchanged_cell_one;
-                        interchanged_cell_one = interchanged_cell_two;
-                    }
-                    
-                    var interchanger_coordinates = new Array();
-                    
-                    for(var j = 0; j < interchanged_cell_one.coordinates.length; j++){
-                        interchanger_coordinates.push(interchanged_cell_one.coordinates[j]);
-                    }
-                    
-                    var min = nCell.level[0];
-                    if(nCell.level[1] < min){
-                        min = nCell.level[1];
-                    }
-                    interchanger_coordinates.push(min);
-                
-                    break;    
-                }
-                else{
-                    
-                }
-            }
-        }
-        return interchanger_coordinates;
-    }
-    else{
-        return nCell.coordinates;
-    }
-    */
-    
+    return nCell.coordinates;
 };

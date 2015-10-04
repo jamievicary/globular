@@ -63,7 +63,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
     var num_stdProcess = processes.length;
     var rates = [];
     for (var i = 0; i < processes.length; i++) {
-        rates[i] = this.get_rate(processes[i]);
+        rates[i] = this.get_rate(processes[i]) || 1;
     }
     var T = 0.5;
     if (interchangesOn) {
@@ -95,19 +95,21 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         var eventsWithTimes = [];
         for (var i = 0; i < processes.length; i++) {
             if (i < num_stdProcess) {
-                possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary());
+                // Enumerate possible events, allowing loose matching
+                possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary(), true);
             }
             if (i >= num_stdProcess && interchangesOn) {
                 possible_events[i] = 1; //each interchanger IS just one event, right?
             }
             for (var j = 0; j < possible_events[i].length; j++) {
+                var event = possible_events[i][j];
+                if (event.equivalence_class_size === undefined) event.equivalence_class_size = 1;
                 eventsWithTimes.push({
-                    event: possible_events[i][j],
-                    time: timeSampler(rates[i]),
+                    event: event,
+                    time: timeSampler(rates[i] / event.equivalence_class_size),
                     id: processes[i],
                     process_index: i
                 });
-                //we'll go with 4 decimal places of precision for rate for now...fraction should be the mathematical version not sketchy JS output
             }
         }
 
@@ -120,9 +122,11 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         for (var x = 0; x < eventsWithTimes.length; x++) {
             eventTimes.push(eventsWithTimes[x].time);
         }
+        /*
         for (var x = eventsWithTimes.length; eventsWithTimes < rates.length; x++) {
             eventTimes.push(timeSampler(rates[x]));
         }
+        */
         var least = Number.MAX_VALUE;
         var index = 0;
         for (var x = 0; x < eventTimes.length; x++) {
@@ -190,17 +194,55 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             //this.renderDiagram();
         }
         else { //rewrite
-            var rewriteCell = {
-                id: eventsWithTimes[index].id,
-                coordinates: eventsWithTimes[index].event
-            };
-            this.diagram.rewrite(rewriteCell, false);
+            var event = eventsWithTimes[index].event;
+            var adjustments = event.adjustments;
+            if (adjustments == undefined) adjustments = [];
+            if (adjustments.length == 0) {
+                var rewriteCell = {
+                    id: eventsWithTimes[index].id,
+                    coordinates: eventsWithTimes[index].event
+                };
+                this.diagram.rewrite(rewriteCell, false);
+            }
+            else {
+                // Perform the adjustments
+                var x_offset = 0;
+                for (var a = 0; a < adjustments.length; a++) {
+                    var adjustment = adjustments[a];
+                    // properties: adjustment.height, adjustment.side = 'left' or 'right'
+                    var id = (adjustment.side == 'left' ? 'interchanger-right' : 'interchanger-left');
+                    for (var h = event[1] + adjustment.height - 1; h >= event[1] + a; h--) {
+                        var cell = this.diagram.constructInterchangerAtHeight(id, h);
+                        console.log(JSON.stringify(cell));
+                        this.diagram.rewrite(cell, false);
+                    }
+                    /*
+                    for (var h = event[1] + a; h < adjustment.height; h++) {
+                        var cell = this.diagram.constructInterchangerAtHeight(id, h);
+                        console.log(JSON.stringify(cell));
+                        this.diagram.rewrite(cell, false);
+                    }
+                    */
+                    if (adjustment.side == 'left') {
+                        var rewrite = gProject.signature.getGenerator(adjustment.id);
+                        x_offset += rewrite.target.nCells.length - rewrite.source.nCells.length;
+                    }
+                }
+
+                // Perform the actual rewrite
+                var adj_coords = [event[0] + x_offset, event[1] + adjustments.length];
+                var rewriteCell = {
+                    id: eventsWithTimes[index].id,
+                    coordinates: adj_coords 
+                };
+                console.log(JSON.stringify(rewriteCell));
+                this.diagram.rewrite(rewriteCell, false);
+            }
         }
     }
 
     gProject.renderDiagram();
     this.saveState();
-    //return species_numbers; //just the hashtable...someone will need to make it look nice to the user with species name and number
 }
 
 Project.prototype.displayInterchangers = function() {
@@ -228,7 +270,7 @@ Project.prototype.displayInterchangers = function() {
     this.diagram.rewrite(interchangers[chosen_index]);
     this.renderDiagram();
     this.saveState();
-    console.log("Projet.displayInterchangers: " + (parseInt(performance.now() - t0)) + "ms");
+    //console.log("Project.displayInterchangers: " + (parseInt(performance.now() - t0)) + "ms");
 };
 
 
@@ -449,7 +491,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     var generator = new Generator(source, target);
     this.addNCell(generator);
-   
+
     // Re-render and save the new state
 
     this.renderNCells(source.getDimension() + 1);
@@ -479,37 +521,37 @@ Project.prototype.addNCell = function(generator) {
     }
     var data = new Data(generator.identifier, colour, temp_diagram, temp_diagram.getDimension());
     this.dataList.put(generator.identifier, data);
-    
+
 };
 
 Project.prototype.storeTheorem = function() {
-    
+
 
     var theorem = new Generator(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
-    
+
     var d = theorem.getDimension();
     while (this.signature.n < d) {
         this.signature = new Signature(this.signature);
     }
     this.signature.addGenerator(theorem);
-    
+
     var temp_diagram = this.signature.createDiagram(theorem.identifier);
     var colour = '#FFFFFF';
-    
+
     var data = new Data(theorem.identifier, colour, temp_diagram, temp_diagram.getDimension());
     this.dataList.put(theorem.identifier, data);
-    
+
     var expand_theorem = new Generator(temp_diagram, this.diagram);
     this.addNCell(expand_theorem);
-    
+
     var collapse_theorem = new Generator(this.diagram, temp_diagram);
     this.addNCell(collapse_theorem);
- 
-    
+
+
     this.clearDiagram();
     this.renderAll();
     this.saveState();
-    
+
 };
 
 // Handle a click on a 2-cell to implement interchangers
@@ -530,23 +572,24 @@ Project.prototype.clickCell = function(height) {
 
     var first_click = this.selected_cell;
     var second_click = height;
-    
+    this.selected_cell = null;
+
 
     if (this.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
         if (slider === 0 && this.diagram.nCells.length != 0) {
 
-            
+
             var temp_coordinates = this.diagram.getSourceBoundary().nCells[first_click].coordinates.slice(0);
             temp_coordinates.push(first_click);
-            if(first_click > second_click){
+            if (first_click > second_click) {
                 temp_coordinates = this.diagram.getSourceBoundary().nCells[second_click].coordinates.slice(0);
                 temp_coordinates.push(second_click);
             }
-            
+
             var temp_id = "interchanger-left";
             var interchanger = new NCell(temp_id, temp_coordinates);
-    
+
             if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
                 interchanger.id = "interchanger-right";
                 if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
@@ -555,46 +598,46 @@ Project.prototype.clickCell = function(height) {
                     return;
                 }
             }
-            
+
             /*
                 We need to figure out what is the inverse of the interchanger that we want to apply
             */
-            
+
             var temp_interchanged_source = this.diagram.getSourceBoundary().copy();
             temp_interchanged_source.rewrite(interchanger, false);
-            
+
             interchanger.coordinates = temp_interchanged_source.nCells[Math.min(first_click, second_click)].coordinates.slice(0);
             interchanger.coordinates.push(Math.min(first_click, second_click));
-            
-            
-            if(interchanger.id === "interchanger-right"){
-                interchanger.id = "interchanger-left"   
+
+
+            if (interchanger.id === "interchanger-right") {
+                interchanger.id = "interchanger-left"
             }
-            else{
-                interchanger.id = "interchanger-right"   
+            else {
+                interchanger.id = "interchanger-right"
             }
 
-            
+
             //Manual attachment
             this.diagram.nCells.splice(0, 0, interchanger);
             this.diagram.source = temp_interchanged_source;
-            
+
             var maxVal = $('#slider').val() + 1;
             $('#slider').attr('max', maxVal)
 
         }
         else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
-            
+
             var temp_coordinates = this.diagram.getTargetBoundary().nCells[first_click].coordinates.slice(0);
             temp_coordinates.push(first_click);
-            if(first_click > second_click){
+            if (first_click > second_click) {
                 temp_coordinates = this.diagram.getTargetBoundary().nCells[second_click].coordinates.slice(0);
                 temp_coordinates.push(second_click);
             }
-            
+
             var temp_id = "interchanger-left";
             var interchanger = new NCell(temp_id, temp_coordinates);
-    
+
             if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
                 interchanger.id = "interchanger-right";
                 if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
@@ -603,7 +646,7 @@ Project.prototype.clickCell = function(height) {
                     return;
                 }
             }
-            
+
             var interchanger_wrapper = {
                 nCells: [interchanger]
             };
@@ -621,16 +664,24 @@ Project.prototype.clickCell = function(height) {
 
         var temp_coordinates = this.diagram.nCells[first_click].coordinates.slice(0);
         temp_coordinates.push(first_click);
-        if(first_click > second_click){
+        if (first_click > second_click) {
             temp_coordinates = this.diagram.nCells[second_click].coordinates.slice(0);
             temp_coordinates.push(second_click);
         }
-        
-        var temp_id = "interchanger-left";
-        var interchanger = new NCell(temp_id, temp_coordinates);
 
+        var id1, id2;
+        if (first_click > second_click) {
+            id1 = 'interchanger-left';
+            id2 = 'interchanger-right';
+        }
+        else {
+            id1 = 'interchanger-right';
+            id2 = 'interchanger-left';
+        }
+
+        var interchanger = new NCell(id1, temp_coordinates);
         if (!this.diagram.interchangerAllowed(interchanger)) {
-            interchanger.id = "interchanger-right";
+            interchanger.id = id2;
             if (!this.diagram.interchangerAllowed(interchanger)) {
                 alert("Cannot interchange these cells");
                 this.selected_cell = null;
@@ -640,7 +691,6 @@ Project.prototype.clickCell = function(height) {
 
         // Perform the interchanger
         this.diagram.rewrite(interchanger, false);
-        //this.diagram.rewriteInterchanger(first_click, second_click);
     }
 
     // Finish up and render the result
