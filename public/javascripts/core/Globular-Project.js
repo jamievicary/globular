@@ -671,12 +671,12 @@ Project.prototype.clickCell = function(height) {
 
         var id1, id2;
         if (first_click > second_click) {
-            id1 = 'Int-I';
+            id1 = 'IntI';
             id2 = 'Int';
         }
         else {
             id1 = 'Int';
-            id2 = 'Int-I';
+            id2 = 'IntI';
         }
 
         var interchanger = new NCell(id1, temp_coordinates);
