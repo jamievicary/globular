@@ -11,7 +11,7 @@ $top-menu-height: 20px
 $border_radius: 2px
 $spacing: 7px
 $icon_size: 60px
-$control_width: 240px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
+$control_width: 270px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
 $header_height: 70px
 
 // SET COLOURS OF DIFFERENT STRUCTURES
@@ -87,16 +87,18 @@ body, html
 	background-color: lightblue
 	
 #control-body
-	height: 100%
+	height: calc(100% - 35px)
 	width: $control_width
 	float: left
 	padding: $spacing
-	padding-top: 0px
 	overflow-y: auto
 	overflow-x: none
 	
+#cell-body
+	margin-top: 30px
+	
 #diagram-body
-	overflow:hidden
+	overflow: hidden
 	white-space: nowrap
 	background-color: $lightgrey
 	
@@ -212,10 +214,11 @@ div.preview-icon>svg
 	outline-width: 0px
 	letter-spacing: 1px
 	position: absolute
-	left: $icon_size + $spacing
+	//left: $icon_size + $spacing
 	//margin-top: 5px
-	margin-left: $spacing
+//	margin-left: $spacing
 	height: 15px
+	padding: 10px
 	border-radius: $border_radius
 
 .stochastic-rate
@@ -225,8 +228,8 @@ div.preview-icon>svg
 	position: absolute
 	display: none
 	border: none
-	left: $icon_size + $spacing
-	margin-left: $spacing
+	//left: $icon_size + $spacing
+//	margin-left: $spacing
 	bottom: $spacing
 	height: 16px
 	border-radius: $border_radius
@@ -236,17 +239,17 @@ div.preview-icon>svg
 	width: 50px
 	letter-spacing: 1px
 	margin-top: 21px
-	left: $icon_size + $spacing
+//	left: $icon_size + $spacing
 	position: absolute
 	//margin-top: 5px
-	margin-left: $spacing
+//	margin-left: $spacing
 	border-radius: $border_radius
 	height: 15px
 	border: none
 	
 .target-rule-arrow
 	position: absolute
-	margin-left: 72px
+	margin-left: 65px
 	top: 30px
 
 .button-style-1
@@ -288,6 +291,53 @@ div.preview-icon>svg
 	float: left
 	cursor: pointer
 	font-size: 60%
+
+
+#view-p-desc
+	background-color: $blue
+	color: white
+	left: -10px
+	border-radius: 1px
+	width: 100px
+	transform: rotate(270deg)
+	margin-top: -130px
+	transform-origin: left top 0
+	text-align: center
+	height: 30px
+	letter-spacing: 1px
+	padding: 7px
+	cursor: pointer
+	font-size: 70%
+
+#view-desc-plate
+	margin-left: 50px
+	background-color: $blue
+	height: 300px
+	width: 300px
+	padding: 10px
+	
+#view-desc-body
+	width: 300px
+	float: right
+
+#text-p-desc
+	height: 200px
+	resize: none
+	width: 80%
+	margin-top: 5px
+	margin-left: 10px
+	color: #44bbbb
+	border: none
+	border-radius: 3px
+	font-size: 90%
+	letter-spacing: 1px
+
+#view-desc-container
+	position: absolute
+	overflow: hidden
+	width: 600px
+	top: calc(50% - 200px)
+	right: calc(0% - 250px)
 	
 #site-controller-body
 	border: 3px solid grey
@@ -335,7 +385,13 @@ div.preview-icon>svg
 	//border: 1px dashed grey
 	left: calc( 50% - 125px )
 
-
+.grand-box
+	width: 800px
+	height: 500px 
+	left: calc( 50% - 400px )
+	top: 100px
+	box-shadow: 0px 0px 20px dimgrey
+	
 .zindex-error
 	z-index: 100000000
 
@@ -372,6 +428,8 @@ div.preview-icon>svg
 
 
 
+#project-menu
+	bottom: calc(0% - 15px)
 	
 #project-menu li
 	margin-left: 3px
@@ -385,11 +443,11 @@ div.preview-icon>svg
 	height: 30px
 	background-color: #9BDCC4
 	border: none
+	width: $control_width - 2px
 	position: absolute
-	margin-top: -32px
-	
 	outline-width: 0px
-	margin-left: 0px
+	left: $spacing
+	margin-bottom: $spacing
 
 
 .select-project
@@ -400,9 +458,9 @@ div.preview-icon>svg
 	background-size: 60%
 	height: 55px
 	width: 55px
-	margin-left: 250px
+	left: 97%
 	position: absolute
-	margin-top: -45px
+	bottom: calc(0% - 15px)
 	z-index: 10000
 	background-repeat: no-repeat
 
