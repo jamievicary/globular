@@ -45,15 +45,15 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
         list = this.nCells.slice(x - gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, x);
     }
 
-    if (type.tail(2) === '1I') {
+    if (type.tail('1I')) {
         return [];
     }
 
     var new_type = type.slice(0, type.length - 2);
 
-    if (type.tail(1) === '1') {
+    if (type.tail('1')) {
         list.push(new_type, heights[heights.length - 2]);
-        if (new_type.tail(1) === 'I') {
+        if (new_type.tail('I')) {
             list.push(new_type.substr(0, new_type.length - 1), heights[heights.length - 2]);
         }
         else {
@@ -71,14 +71,14 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     var list = new Array();
     var entry;
 
-    if (type === 'Int') {
+    if (type.tail('Int')) {
         var g = gProject.signature.getGenerator(this.nCells[x + 1].id);
         this.nCells[x].coordinates.increment_last(g.target.nCells.length - g.source.nCells.length);
         list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
         list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
     }
 
-    if (type === 'IntI') {
+    if (type.tail('IntI')) {
         var g = gProject.signature.getGenerator(this.nCells[x].id);
         this.nCells[x + 1].coordinates.increment_last(g.source.nCells.length - g.target.nCells.length);
 
@@ -89,7 +89,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     var new_type = type.slice(0, type.length - 2);
 
-    if (type.tail(1) === 'L') {
+    if (type.tail('L')) {
         list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last(),
             gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, 1);
 
@@ -100,7 +100,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     //var x = 2 + (type == 'int' ? 1 : 0);
 
-    if (type.tail(1) === 'R') {
+    if (type.tail('R')) {
 
         list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
             1, gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length);
@@ -113,7 +113,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     var new_type = type.slice(0, type.length - 3);
 
 
-    if (type.tail(2) === 'LI') {
+    if (type.tail('LI')) {
 
         this.nCells[x].coordinates.increment_last(-1);
         list.push(this.nCells[x].id, this.nCells[x].coordinates);
@@ -126,7 +126,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     }
 
-    if (type.tail(2) === 'RI') {
+    if (type.tail('RI')) {
 
         this.nCells[x].coordinates.increment_last(1);
         list.push(this.nCells[x].id, this.nCells[x].coordinates);
@@ -139,7 +139,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     }
 
-    if (type.tail(2) === '1I') {
+    if (type.tail('1I')) {
         list.push(new_type, heights[heights - 2]);
         list.push(new_type + 'I', heights[heights - 2]);
     }
@@ -147,7 +147,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     var new_type = type.slice(0, type.length - 2);
 
 
-    if (type.tail(1) === '1') {
+    if (type.tail('1')) {
         return [];
     }
 
@@ -165,18 +165,18 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     var g1 = gProject.signature.getGenerator(this.nCells[x].id);
     var g2 = gProject.signature.getGenerator(this.nCells[x + 1].id);
 
-    if (nCell.id === 'Int') {
+    if (nCell.id.tail('Int')) {
         return (c1.coordinates[c1.coordinates.length - 1] >= c2.coordinates[c2.coordinates.length - 1] + g2.source.nCells.length);
     }
 
-    if (nCell.id === 'IntI') {
+    if (nCell.id.tail('IntI')) {
         return (c1.coordinates[c1.coordinates.length - 1] + g1.target.nCells.length <= c2.coordinates[c2.coordinates.length - 1]);
     }
 
     var new_type = type.slice(0, type.length - 2);
 
 
-    if (nCell.id.tail(1) === 'L') {
+    if (nCell.id.tail('L')) {
 
         var crossings = g1.target.nCells.length;
         var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1],
@@ -185,7 +185,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
-    if (nCell.id.tail(1) === 'R') {
+    if (nCell.id.tail('R')) {
 
         var crossings = g1.target.nCells.length;
         var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
@@ -197,7 +197,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     var new_type = type.slice(0, type.length - 3);
 
 
-    if (nCell.id.tail(2) === 'LI') {
+    if (nCell.id.tail('LI')) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
@@ -207,7 +207,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
 
-    if (nCell.id.tail(2) === 'RI') {
+    if (nCell.id.tail('RI')) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
@@ -218,7 +218,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     }
 
 
-    if (nCell.id.tail(2) === '1I') {
+    if (nCell.id.tail('1I')) {
         if (this.nCells[x].id === new_type) {
             if (this.nCells[x + 1] === new_type + 'I' || this.nCells[x + 1] === new_type.substr(0, new_type.length - 1))
                 return true;
@@ -228,7 +228,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
     var new_type = type.slice(0, type.length - 2);
 
-    if (nCell.id.tail(1) === '1') {
+    if (nCell.id.tail('1')) {
         return true;
     }
 
@@ -236,7 +236,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
 Diagram.prototype.instructionsEquiv = function(list1, list2) {
 
-    for (var i = 0; i < crossings; i++) {
+    for (var i = 0; i < list1.length; i++) {
         if (!this.nCellEquiv(list1[i], list2[i]))
             return false;
     }
