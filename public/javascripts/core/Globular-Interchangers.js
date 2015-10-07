@@ -71,7 +71,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
         var g = gProject.signature.getGenerator(this.nCells[x+1].id);
         this.nCells[x].coordinates.increment_last(g.target.nCells.length - g.source.nCells.length);
         list.push(new NCell(this.nCells[x+1].id, this.nCells[x+1].coordinates));
-        list.push(new NCell(this.nCells[x].id, temp_coordinates));
+        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
     }
     
     if(type === 'IntI'){
