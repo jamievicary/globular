@@ -604,3 +604,10 @@ div.preview-icon > svg {
   text-align: left;
   padding: 10px;
 }
+
+/* line 536, ../sass/style.sass */
+div.control.inline {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}

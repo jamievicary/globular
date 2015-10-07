@@ -2,11 +2,13 @@
 
 // Global project object
 var gProject = {};
+var MainDisplay = null;
 var timeout = null;
 
 $(document).ready(function() {
 
     globular_prepare_renderer();
+    MainDisplay = new Display($('#diagram-canvas'));
 
     // Handle key presses
     $(document).keypress(function(event) {

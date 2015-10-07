@@ -25,7 +25,7 @@ function globular_render(container, diagram, subdiagram) {
     else if (diagram.getDimension() == 1) {
         globular_render_1d(container, diagram, subdiagram);
     }
-    else if (diagram.getDimension() == 2) {
+    else if (diagram.getDimension() >= 2) {
         globular_render_2d(container, diagram, subdiagram);
     }
     else {
