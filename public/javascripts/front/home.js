@@ -2,6 +2,7 @@
 
 // Global project object
 var gProject = {};
+var timeout = null;
 
 $(document).ready(function() {
 
@@ -30,6 +31,14 @@ $(document).ready(function() {
         }
         else if (key == 'q') {
             gProject.storeTheorem();
+        }
+        else if (key == ' ') {
+            if (timeout == null) {
+                timeout = setInterval(function(){gProject.applyStochasticProcess(1);}, 1000);
+            } else {
+                clearInterval(timeout);
+                timeout = null;
+            }
         }
     });
 

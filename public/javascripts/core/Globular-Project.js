@@ -114,35 +114,33 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         }
 
         // ADD INTERCHANGERS TO THIS LIST
-
-
-        var indexNextEvent = -1;
-        //first extract all the event times
-        var eventTimes = [];
-        for (var x = 0; x < eventsWithTimes.length; x++) {
-            eventTimes.push(eventsWithTimes[x].time);
+        var interchanger_rate = 2;
+        var interchangers = this.diagram.getInterchangers();
+        for (var i = 0; i < interchangers.length; i++) {
+            var interchanger = interchangers[i];
+            eventsWithTimes.push({
+                event: interchanger.coordinates,
+                id: interchanger.id,
+                time: timeSampler(interchanger_rate /*/ interchangers.length*/)
+            });
         }
-        /*
-        for (var x = eventsWithTimes.length; eventsWithTimes < rates.length; x++) {
-            eventTimes.push(timeSampler(rates[x]));
-        }
-        */
+
+        // Choose the next event to occur
         var least = Number.MAX_VALUE;
         var index = 0;
-        for (var x = 0; x < eventTimes.length; x++) {
-            if (eventTimes[x] < least) {
-                least = eventTimes[x];
+        for (var x = 0; x < eventsWithTimes.length; x++) {
+            var event = eventsWithTimes[x];
+            if (event.time < least) {
+                least = event.time;
                 index = x;
             }
         }
+
         /*
-    	    Stats Stuff
-        */
+    	// Stats Stuff
         var processData = [];
-        /*
-            for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
-            and the source and target of that process
-        */
+        // for each process (where processData[i] = the processData for processes[i]) list the user's name for the process,
+        // and the source and target of that process
         for (var i = 0; i < num_stdProcess; i++) {
             var data = this.dataList;
             var process_retrieve = data.get(processes[i]);
@@ -150,11 +148,10 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             processData[i] = [this.getName(processes[i]), process_diagram.getSourceBoundary(), process_diagram.getTargetBoundary()];
         }
         //var species_numbers = new Hashtable(); //this will store the species name and initial species counts
-        /*
-        for (i = 0; i < species.length; i++) {
-            species_numbers.put(this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary());
-        }
-        */
+        
+        //for (i = 0; i < species.length; i++) {
+        //   species_numbers.put(this.getName(species[i]), this.dataList.get(species[i]).diagram.getTargetBoundary());
+        //}
         //var num = species_numbers.get(this.getName(species[index]))
         //increment num; .put(name, num)
         var executedProcess = eventsWithTimes[index].id;
@@ -169,7 +166,6 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             target_Names.push(executedProcess_targets[i]);
         }
         //data updated below
-        /*
         for (var i = 0; i < source_Names.length; i++) {
             var num = species_numbers.get(this.getName(source_Names[i]));
             num = num - 1;
@@ -188,8 +184,8 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         */
 
         //so eventsWithTimes[index][0] is the event we want to execute
-        var attached_event = this.signature.createDiagram(eventsWithTimes[index].id);
         if (history_mode) {
+            var attached_event = this.signature.createDiagram(eventsWithTimes[index].id);
             this.diagram.attach(attached_event, 't', eventsWithTimes[index].event);
             //this.renderDiagram();
         }
@@ -202,6 +198,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                     id: eventsWithTimes[index].id,
                     coordinates: eventsWithTimes[index].event
                 };
+                console.log(JSON.stringify(rewriteCell));
                 this.diagram.rewrite(rewriteCell, false);
             }
             else {
@@ -213,7 +210,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                     var id = (adjustment.side == 'left' ? 'interchanger-right' : 'interchanger-left');
                     for (var h = event[1] + adjustment.height - 1; h >= event[1] + a; h--) {
                         var cell = this.diagram.constructInterchangerAtHeight(id, h);
-                        console.log(JSON.stringify(cell));
+                        console.log('adjustment: ' + JSON.stringify(cell));
                         this.diagram.rewrite(cell, false);
                     }
                     /*
@@ -233,7 +230,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                 var adj_coords = [event[0] + x_offset, event[1] + adjustments.length];
                 var rewriteCell = {
                     id: eventsWithTimes[index].id,
-                    coordinates: adj_coords 
+                    coordinates: adj_coords
                 };
                 console.log(JSON.stringify(rewriteCell));
                 this.diagram.rewrite(rewriteCell, false);
@@ -591,7 +588,7 @@ Project.prototype.clickCell = function(height) {
             var interchanger = new NCell(temp_id, temp_coordinates);
 
             if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
                 if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
                     alert("Cannot interchange these cells");
                     this.selected_cell = null;
@@ -610,11 +607,11 @@ Project.prototype.clickCell = function(height) {
             interchanger.coordinates.push(Math.min(first_click, second_click));
 
 
-            if (interchanger.id === 'Int-I') {
+            if (interchanger.id === 'IntI') {
                 interchanger.id = 'Int';
             }
             else {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
             }
 
 
@@ -639,7 +636,7 @@ Project.prototype.clickCell = function(height) {
             var interchanger = new NCell(temp_id, temp_coordinates);
 
             if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
                 if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
                     alert("Cannot interchange these cells");
                     this.selected_cell = null;
@@ -655,7 +652,7 @@ Project.prototype.clickCell = function(height) {
             $('#slider').attr('max', maxVal)
             $('#slider').val(this.diagram.nCells.length);
 
-        }
+        }   
         else {
             return;
         }
@@ -671,12 +668,12 @@ Project.prototype.clickCell = function(height) {
 
         var id1, id2;
         if (first_click > second_click) {
-            id1 = 'Int-I';
+            id1 = 'IntI';
             id2 = 'Int';
         }
         else {
             id1 = 'Int';
-            id2 = 'Int-I';
+            id2 = 'IntI';
         }
 
         var interchanger = new NCell(id1, temp_coordinates);
@@ -972,11 +969,11 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
 
     // Add detail container
     var div_detail = document.createElement('div');
-    $(div_detail).css('width', '100px');
+    //$(div_detail).css('width', '100px');
     div_detail.className = 'cell-detail';
     div_main.appendChild(div_detail);
     if (n == 3) {
-        $(div_detail).css('margin-left', '155px');
+        //$(div_detail).css('margin-left', '155px');
     }
 
     // Add label
@@ -1037,6 +1034,9 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
     });
 
     // Add extra section
+    //div_main.appendChild(document.createElement('br'));
+    //div_main.appendChild(document.createElement('br'));
+    //div_main.appendChild(document.createElement('br'));
     var div_extra = document.createElement('div');
     div_extra.className = 'cell-b-sect';
     //div_extra.id = 'cell-b-sect-' + cell;
