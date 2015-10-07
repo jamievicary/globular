@@ -652,7 +652,7 @@ Project.prototype.clickCell = function(height) {
             $('#slider').attr('max', maxVal)
             $('#slider').val(this.diagram.nCells.length);
 
-        }
+        }   
         else {
             return;
         }

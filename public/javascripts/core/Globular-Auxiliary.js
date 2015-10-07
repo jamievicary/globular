@@ -64,7 +64,7 @@ Array.prototype.increment_last = function(value) {
 String.prototype.tail = function() {
     for (var i=0; i<arguments.length; i++) {
         var t = arguments[i];
-        if (this.substr(this.length - t.length, t.length) == t) return true;
+        if (this.substr(this.length - t.length, t.length) === t) return true;
     }
     return false;
     //return this.substr(this.length - elements, this.length);
