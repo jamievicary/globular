@@ -48,6 +48,9 @@ $(document).ready(function() {
     $("#mm-login").click(function() {
         $("#login-box").fadeIn();
     });
+    $("#mm-logout").click(function() {
+       window.location = "/logout";
+    });
     $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
     });
@@ -68,6 +71,19 @@ $(document).ready(function() {
     $(".box").draggable({
         containment: "document",
         cursor: "crosshair"
+    });
+    
+    $("#view-desc-body").draggable({ containment: "parent" });
+    
+    var dbltoggle = 0;
+    $("#view-p-desc").dblclick(function() {
+       
+        if(dbltoggle %2 == 0){
+            $("#view-desc-body").animate({left:"-300px"}, 1500);
+        }else{
+            $("#view-desc-body").animate({left:"0px"}, 1500);
+        }
+        dbltoggle = dbltoggle + 1;
     });
 
     // Click handler on main diagram
@@ -178,6 +194,7 @@ $(document).ready(function() {
             $("div.enable_if-out").hide();
         }
         render_project_front("", "New Project", "null", state);
+        show_msg("Loading New Project...", 500, 2);
     }
 
     function render_page() {
@@ -216,12 +233,12 @@ $(document).ready(function() {
         });
     });
 
-    $("#view-profile-opt").click(function() {
+    $("#mm-profile").click(function() {
         $.post("/profile", {
             valid: true
         }, function(result, status) {
             $("#errors").css("text-align", "left");
-            $("#profile-email").html(result.email);
+            $("#profile-email").html(result);
             $("#profile-box").fadeIn();
             $("#c-p-submit").click(function() {
                 var npass = $("#c-p-verify_pass").val();
@@ -256,9 +273,9 @@ $(document).ready(function() {
         }, function(result, status) {
             var type;
             if (result.success == true) {
+                $("#signup-box").fadeOut();
                 type = 2;
-            }
-            else {
+            }else {
                 type = 1;
             }
             show_msg(result.msg, 4000, type);
@@ -317,36 +334,6 @@ $(document).ready(function() {
             }, 1000);
         }
 
-        $("#save-project-opt").click(function() {
-            var currentString = gProject.currentString();
-            var p_id = $(this).attr("p_id");
-            $.post("/c-loggedin", {
-                    valid: true
-                },
-                function(result, status) {
-                    if (result.status === "in" && p_id == "null") {
-                        p_id = "hold";
-                    }
-                    if (p_id == "null") {
-                        show_msg("Please login in order to save this project. If you do not have an account then sign up now!", 7000, 3);
-
-                    }
-                    else {
-                        var name = $("#diagram-title").val();
-                        $.post("/save_project_changes", {
-                            string: currentString,
-                            p_id: p_id,
-                            p_name: name
-                        }, function(result, status) {
-
-                            show_msg("Successfully saved changes.", 2000, 2);
-
-                        });
-                    }
-
-                });
-
-        });
         $("#get-str-opt").click(function() {
             var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
             show_msg(msg, false, 3);
@@ -355,13 +342,45 @@ $(document).ready(function() {
         $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
         });
-        $("#run-process-go").click(function() {
+        $("#run-process-go").click(function(){
             var iterations = $("#rp-iters").val();
             iterations = Number(iterations);
             gProject.applyStochasticProcess(iterations);
             gProject.renderDiagram();
         });
+       
     }
+
+    
+    $("#save-project-opt").click(function() {
+        var currentString = gProject.currentString();
+        var p_id = $(this).attr("p_id");
+        $.post("/c-loggedin", {
+                valid: true
+            },
+            function(result, status) {
+                if (result.status === "in" && p_id == "null") {
+                    p_id = "hold";
+                }
+                if(p_id == "null") {
+                    show_msg("Please login in order to save this project. If you do not have an account then sign up now!", 7000, 3);
+                }else {
+                    var name = $("#diagram-title").val();
+                    $.post("/save_project_changes", {
+                        string: currentString,
+                        p_id: p_id,
+                        p_name: name,
+                        p_desc:$("#text-p-desc").val()
+                    }, function(result, status) {
+
+                        show_msg("Successfully saved changes.", 2000, 2);
+
+                    });
+                }
+
+            });
+
+    });
 
     $("#use-t-opt").click(function() {
         gProject.saveSourceTarget('target');
@@ -390,7 +409,7 @@ $(document).ready(function() {
             else {
                 var projects = result.projects;
                 var p_ids = result.project_ids;
-                var strings = result.project_strings;
+               
                 var projects_str = "";
                 for (var i = 0; i < projects.length; i++) {
                     projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span><span id = '2-p-row-" + p_ids[i] + "'><span class = 'select-project' id = 'id-" + p_ids[i] + "'>" + projects[i] + "</span><span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span></span><hr size = '1'>";
@@ -410,6 +429,10 @@ $(document).ready(function() {
                         var s = result.string;
                         render_project_front(s, result.name, p_id);
                         gProject.saveState();
+                    });
+                    
+                    $.post('/get-project-meta', {pid:  p_id}, function(result){
+                        $("#text-p-desc").val(result.project_desc);
                     });
 
                 });
@@ -466,15 +489,17 @@ $(document).ready(function() {
 
     $("#add-project-opt").click(function() {
         $("#add-project-opt").animate({
-            height: "170px"
+            height: "230px"
         }, 500);
     });
     $("#add-project-submit").click(function() {
         var p_name = $("#ap-name").val();
+        var p_desc = $("#proj_desc").val();
+        var main_string = $("#ap-string").val();
         $.post("/add_new_project", {
             p_name: p_name,
-            //string: main_string
-            string: ""
+            p_desc:p_desc,
+            string: main_string
         }, function(result, status) {
             var colour = 2;
             if (result.success == true) {
@@ -503,6 +528,23 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
-
-
+    
+    $("#msg-close-opt-help").click(function(){
+        $("#help-box").fadeOut();
+    });
+    $("#msg-close-opt-about").click(function(){
+        $("#about-box").fadeOut();
+    });
+    $("#msg-close-opt-gallery").click(function(){
+        $("#gallery-box").fadeOut();
+    });
+    $("#mm-help").click(function(){
+        $("#help-box").fadeIn();
+    });
+    $("#mm-gallery").click(function(){
+        $("#gallery-box").fadeIn();
+    });
+    $("#mm-about").click(function(){
+        $("#about-box").fadeIn();
+    });
 });

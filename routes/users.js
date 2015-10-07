@@ -1,46 +1,47 @@
 var crypto = require('crypto');
+var fs = require('fs');
 
-encrypt_hash= function (string){
+encrypt_hash = function (string){
 	var hash_sha512 = crypto.createHash("sha512");
 	var value = hash_sha512.update(string+ "hvtItvv5854b").digest("hex");
 	console.log(value);
 	return value;
 }
 
-exports.login_user = function(req, res, db){
+exports.login_user = function(req, res){
 	var login_email = req.body.login_email;
 	var login_pass = req.body.login_pass;
-	var user_col = db.collection('users');
-	var cursor = user_col.findOne({email:login_email, password:encrypt_hash(login_pass)}, function(err,doc){
-		if(doc!=null){
-			req.session.user_id  = doc.id;
-			req.session.cookie.secure = false;
- 			res.send({
- 				user_id: req.session.user_id,
- 				email:   login_email,
- 				success: true
- 			});
-		}else{
-			res.send({
- 				success: false
- 			});
-		}
-	});
+	if(fs.existsSync('database/users/'+login_email)){
+  		fs.readFile('database/users/'+login_email+"/data.json",'utf-8', function(err,data){
+  			data = JSON.parse(data);
+  			if(data.user_password == encrypt_hash(login_pass)){
+  				req.session.user_id  = login_email;
+				req.session.cookie.secure = false;
+ 				res.send({
+ 					user_id: req.session.user_id,
+ 					email:   login_email,
+ 					success: true
+ 				});
+  			}else{
+  				res.send({
+ 					success: false
+ 				});
+  			}
+  		});
+  	}
 }
 
-exports.get_profile = function(req, res, db){
-	var user_col = db.collection('users');
+exports.get_profile = function(req, res){
 	var valid = req.body.valid;
 	if(valid){
 		var user_id = req.session.user_id;
-		var cursor = user_col.findOne({id:user_id}, function(err, docs){
-			res.send(docs);
-		});
+	
+			res.send(user_id);
+
 	}
 }
 
-exports.change_pass = function(req, res, db){
-	var user_col = db.collection('users');
+exports.change_pass = function(req, res){
 	var user_id = req.session.user_id;
 	var npass = req.body.new_pass;
 	var vpass = req.body.verify_pass;
@@ -53,14 +54,15 @@ exports.change_pass = function(req, res, db){
 	}
 	if(errormsg==""){
 		errormsg = "Successfully updated password.";
-		user_col.update(
-			{id:user_id},
-			{$set:{password:encrypt_hash(npass)}},
-			 function(){
+		fs.readFile('database/users/'+user_id+"/data.json",'utf-8', function(err,data){
+			data = JSON.parse(data);
+			data.user_password = encrypt_hash(npass);
+			fs.writeFile('database/users/'+user_id+"/data.json", JSON.stringify(data), function(){
 				res.send({
 					success: true,
 					error: errormsg
-				});
+				})
+			});
 		});
 	}else{
 		res.send({
@@ -70,11 +72,11 @@ exports.change_pass = function(req, res, db){
 	}
 }
 
-exports.register_user = function(req,res,db){
-	var user_col = db.collection('users');
+exports.register_user = function(req,res){
 	var email = req.body.reg_email;
 	var pass = req.body.reg_pass;
 	var vpass = req.body.reg_vpass;
+	var enPass = encrypt_hash(pass);
 	var errors = "";
 	var email_chars = email.split("");
 	if((email_chars.indexOf('@') === -1)||(email_chars.indexOf('.') === -1)){
@@ -87,29 +89,33 @@ exports.register_user = function(req,res,db){
 		errors = errors + "<br>Your password is too short.";
 	}
 	
-	user_col.findOne({email:email}, function(err, doc){
-		if(doc!=null){
-			errors = errors + "<br>Your email is already being used.";
-			console.log(errors);
-		}
-		if(errors===""){
+	
+  	if(fs.existsSync('database/users/'+email)){
+  		errors = errors + "<br>Your email is already being used.";
+  	}
+	
+	if(errors===""){
 		
-			user_col.count(function(err, count){
-				var new_id = count + 1;
-				user_col.insert({id:new_id, email:email, password: encrypt_hash(pass), project_ids:{}}, function(){
+		var jsonFileStr = JSON.stringify({user_password : enPass, projects_count:0, projects: []});
+		
+		fs.mkdir("database/users/"+email, function(){
+			fs.writeFile("database/users/"+email + "/data.json", jsonFileStr, function (err) {
+				fs.mkdir("database/users/"+email + "/projects", function(){
 					res.send({
 						success: true,
-						msg: "Successfully created your account."
+						msg: "Successfully registered your account!"
 					});
 				});
 			});
-			
-		}else{
-			console.log(errors);
-			res.send({
-				success: false,
-				msg: errors
-			});
-		}
-	});
+
+		});
+		
+	}else{
+		console.log(errors);
+		res.send({
+			success: false,
+			msg: errors
+		});
+	}
+	
 }

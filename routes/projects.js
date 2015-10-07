@@ -1,23 +1,21 @@
-exports.get_projects = function(req,res,db){
-	var user_col = db.collection('users');
+var fs = require('fs');
+
+exports.get_projects = function(req,res){
 	var user_id = req.session.user_id;
-	user_col.findOne({id:user_id}, function(err, doc){
-		var all_projects = [];
-		var all_p_ids = doc.project_ids;
+	fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
+		data = JSON.parse(data);
+		var projects = data.projects;
 		var all_ids = [];
-		for(var i in all_p_ids){
-			all_projects.push(all_p_ids[i]);	
+		var all_names = [];
+		for (var i in projects){
+			console.log();
+			all_ids.push(projects[i].id);
+			all_names.push(projects[i].name);
 		}
-		for(var i in all_p_ids){
-			all_ids.push(i);
-		}	
-		
-		
-		console.log(all_ids);
-		if(all_projects.length>0){
+		if(all_names.length>0){
 			res.send({
 				success: true,
-				projects: all_projects,
+				projects: all_names,
 				project_ids: all_ids
 			});
 		}else{
@@ -29,140 +27,170 @@ exports.get_projects = function(req,res,db){
 	});
 }
 
-exports.add_new_project = function(req,res,db){
-	var user_col = db.collection('users');
-	var project_col = db.collection('projects');
+exports.add_new_project = function(req,res){
 	var p_name = req.body.p_name;
 	if(p_name.length>2){
+		var p_desc = req.body.p_desc;
 		var string = req.body.string;
 		var user_id = req.session.user_id;
-		
-		user_col.findOne({id:user_id}, function(err, doc){
-			var all_p_ids = doc.project_ids;
-			project_col.count(function(err, count){
-				var pid = count+1;
-				
-				project_col.insert({id:pid, name:p_name, string:string}, function(err, doc){
-					all_p_ids[pid] = p_name;
-					user_col.update({id:user_id},{$set:{project_ids:all_p_ids}},function(){
-					
+		console.log(user_id);
+		var data = fs.readFileSync('database/users/'+user_id+'/data.json');
+		data = JSON.parse(data);
+		console.log(data);
+		if(data.projects.length>0){
+			var newID = data.projects[data.projects.length-1].id + 1;
+		}else{
+			var newID = 0;	
+		}
+		data.projects.push({"id":newID, "name":p_name});
+		data.projects_count = data.projects_count + 1;
+		var metaData = JSON.stringify({project_name : p_name, project_desc: p_desc});
+		fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
+			fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
+				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", string, function(){
+					fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
 						res.send({
 							success: true,
-							p_id: pid,
+							p_id: newID,
 							msg: "Success"
 						});
-						
 					});
-					
 				});
-		
-			});
-			
-		});	
+			});	
+		});
 	}else{
-		
 		res.send({
 			success: false,
 			msg: "Your project name is too short."
 		});	
-	
 	}	
-}
+};
 
 
-exports.get_project_string = function(req, res, db){
-	var project_col = db.collection('projects');
+exports.get_project_string = function(req, res){
 	var project_id = parseInt(req.body.p_id);
-	
-	project_col.findOne({id:project_id}, function(err, docs){
-		res.send({
-			string:docs.string,
-			name: docs.name,
-			success: true
-		});
-	
-	});	
-}
-
-exports.delete_project = function(req, res,db){
-	var project_col = db.collection('projects');
-	var user_col = db.collection('users');
-	var p_id = req.body.proj_id;
-	project_col.remove({id:parseInt(p_id)}, function(){
-	
-		var user_id = req.session.user_id;
-		user_col.findOne({id:user_id}, function(err, doc){
-			var all_projects = [];
-			console.log(doc);
-			var all_p_ids = doc.project_ids;
-			var new_p_list = {};
-			
-			for(var i in all_p_ids){
-				console.log(i + "---" + all_p_ids[i]);
-				if(i!=p_id){
-					new_p_list[i]=all_p_ids[i];
+	var user_id = req.session.user_id;
+	fs.readFile('database/users/'+user_id+'/projects/'+project_id+'/string.json','utf-8', function(err,data){
+		fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,pdata){
+			pdata = JSON.parse(pdata);
+			var pname = "";
+			for (var i in pdata.projects){
+				if(pdata.projects[i].id==project_id){
+					pname = pdata.projects[i].name;
 				}
 			}
-			
-			user_col.update(
-				{id:user_id},
-				{$set:{project_ids:new_p_list}},
-				 function(){
-					res.send({
-						success: true
+			res.send({
+				string:data,
+				name: pname,
+				success: true
+			});
+		});
+	});	
+};
+
+exports.delete_project = function(req, res){
+	var p_id = req.body.proj_id;
+	var user_id = req.session.user_id;
+	fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
+		data = JSON.parse(data);
+		for (var i in data.projects){
+			if(data.projects[i].id==p_id){
+				data.projects.splice(i,1);
+			}
+		}
+		fs.unlink('database/users/'+user_id +'/projects/'+p_id+'/string.json', function(){
+			fs.unlink('database/users/'+user_id +'/projects/'+p_id+'/meta.json', function(){
+				fs.rmdir('database/users/'+user_id +'/projects/'+p_id, function(){
+					fs.writeFile('database/users/'+user_id + '/data.json', JSON.stringify(data), function(){
+						res.send({
+							success: true
+						});
+					});
 				});
 			});
-		});	
-	});	
-}
+		});
+		
+	
+	});
+};
 
 
-exports.save_p_changes = function(req,res,db){
-	var user_col = db.collection('users');
-	var project_col = db.collection("projects");
+exports.save_p_changes = function(req,res){
+
 	var user_id = req.session.user_id;
 	var p_id = req.body.p_id;
 	var proj_name = req.body.p_name;
 	var new_string = req.body.string;
+	var p_desc = req.body.p_desc;
 	if(p_id!="hold"){
-		project_col.update(
-					{id:parseInt(p_id)},
-					{$set: {string: new_string, name:proj_name}});
-		user_col.findOne({id:parseInt(user_id)}, function(err, doc){
-			var all_p_ids = doc.project_ids;
-			all_p_ids[p_id] = proj_name;
-			user_col.update(
-					{id:parseInt(user_id)},
-					{$set: {project_ids:all_p_ids}});
-		});			
-		res.send({
-			success: true
-			
+		fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
+			data = JSON.parse(data);
+			var name = "";
+			for (var i in data.projects){
+				if(data.projects[i].id==p_id){
+					data.projects[i].name = proj_name;
+				}
+			}
+			var newMeta = JSON.stringify({project_name:proj_name,project_desc:p_desc});
+			fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
+				fs.writeFile('database/users/'+user_id+'/projects/'+p_id+'/string.json', new_string, function(){
+					fs.writeFile('database/users/'+user_id+'/projects/'+p_id+'/meta.json', newMeta, function(){
+						res.send({
+							success: true
+						});
+					});
+				});
+			});
 		});
 	}else{
-		user_col.findOne({id:user_id}, function(err, doc){
-			var all_p_ids = doc.project_ids;
-			project_col.count(function(err, count){
-				var pid = count+1;
-				
-				project_col.insert({id:pid, name:proj_name, string:new_string}, function(err, doc){
-					all_p_ids[pid] = proj_name;
-					
-					user_col.update({id:user_id},{$set:{project_ids:all_p_ids}},function(){
-					
+		
+		if(proj_name.length>2){
+			var data = fs.readFileSync('database/users/'+user_id+'/data.json');
+			data = JSON.parse(data);
+			if(data.projects.length>0){
+				var newID = data.projects[data.projects.length-1].id + 1;
+			}else{
+				var newID = 0;	
+			}
+			data.projects.push({"id":newID, "name":proj_name});
+			data.projects_count = data.projects_count + 1;
+			var metaData = JSON.stringify({project_name : proj_name, project_desc: p_desc});
+			fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
+			fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
+				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", new_string, function(){
+					fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
 						res.send({
 							success: true,
-							p_id: pid,
+							p_id: newID,
 							msg: "Success"
 						});
-						
 					});
-					
 				});
-		
-			});
-			
-		});	
+			});	
+		});
+		}else{
+			res.send({
+				success: false,
+				msg: "Your project name is too short."
+			});	
+		}	
 	}
 		
-}
+};
+
+exports.get_meta = function (req, res){
+	var pid = req.body.pid;
+	
+	if(pid!==""&&pid!==null){
+		console.log(pid);
+		var user_id = req.session.user_id;
+		var dir = 'database/users/'+user_id+'/projects/'+pid+'/meta.json';
+		console.log(dir);
+		fs.readFile(dir, 'utf8', function(err,data){
+			data = JSON.parse(data);
+			res.send(data);
+		});	
+	}else{
+		res.send({result: ""});
+	}
+};
