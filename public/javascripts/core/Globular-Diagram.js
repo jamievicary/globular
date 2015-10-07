@@ -130,22 +130,17 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     if (reverse === undefined) reverse = false;
 
-/*
     // Special code to deal with interchangers
-    if (nCell.id === 'interchanger-left' || nCell.id === 'interchanger-right') {
+    if (nCell.id[0] === 'I'){
         if (reverse) {
-            if (nCell.id === 'interchanger-left') {
-                nCell.id === 'interchanger-right';
+            if (nCell.id.tail('I')){
+                nCell.id = nCell.id.substr(0, nCell.id.length - 2);
+                //== 'interchanger-right';
             }
             else {
-                nCell.id === 'interchanger-left';
+                nCell.id = nCell.id + 'I';
             }
         }
-        this.rewriteInterchanger(nCell);
-        return;
-    }
-*/
-    if (nCell.id[0] === 'I'){ // We are dealing with an interchanger
         var rewrite = this.rewriteInterchanger(nCell);
     }
     else{
@@ -603,25 +598,6 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
-Diagram.prototype.constructInterchangerAtHeight = function(id, height) {
-    if (this.getDimension() != 2) return null;
-    if (this.nCells.length <= height + 1) return null;
-    var c1 = this.nCells[height];
-    var c2 = this.nCells[height + 1];
-    var r1 = gProject.signature.getGenerator(c1.id);
-    var r2 = gProject.signature.getGenerator(c2.id);
-    var coords;
-    if (c1.coordinates[0] < c2.coordinates[0]) {
-        coords = [c1.coordinates[0], height];
-    }
-    else {
-        coords = [c2.coordinates[0], height];
-    }
-    return {
-        id: id,
-        coordinates: coords
-    };
-};
 
 Diagram.prototype.getInterchangers = function() {
 
@@ -631,48 +607,28 @@ Diagram.prototype.getInterchangers = function() {
         var temp_coordinates = this.nCells[i].coordinates.slice(0);
         temp_coordinates.push(i);
         if (this.interchangerAllowed({
-                id: 'interchanger-left',
+                id: 'Int',
                 coordinates: temp_coordinates
             })) {
             interchangers.push({
-                id: "interchanger-left",
+                id: "Int",
                 coordinates: temp_coordinates,
                 tension_change: 0 //this.computeTensionChange(i, i + 1)
             });
         }
         if (this.interchangerAllowed({
-                id: 'interchanger-right',
+                id: 'IntI',
                 coordinates: temp_coordinates
             })) {
             interchangers.push({
-                id: "interchanger-right",
+                id: "IntI",
                 coordinates: temp_coordinates,
                 tension_change: 0 //this.computeTensionChange(i + 1, i)
             });
         }
     }
-    //console.log("Diagram.getInterchangers: " + parseInt(performance.now() - t0) + "ms");
     return interchangers;
 }
-
-Diagram.prototype.computeTensionChange = function(h1, h2) {
-    var gen1 = this.nCells[h1]; //index of array is the height; array nCells doesn't actually contain generator
-    var gen2 = this.nCells[h2];
-    var gen1_input = gProject.signature.getGenerator(gen1.id).source.nCells.length; //these will be diagrams
-    var gen2_input = gProject.signature.getGenerator(gen2.id).source.nCells.length;
-    var gen1_output = gProject.signature.getGenerator(gen1.id).target.nCells.length;
-    var gen2_output = gProject.signature.getGenerator(gen2.id).target.nCells.length;
-    if (h1 > h2) {
-        gen1_input *= -1;
-        gen2_output *= -1;
-    }
-    else {
-        gen1_output *= -1;
-        gen2_input *= -1;
-    }
-    return gen1_input + gen2_input + gen1_output + gen2_output;
-}
-
 
 Diagram.prototype.setCoordinates = function(nCell, position, new_coordinates) {
     nCell.coordinates[position] = new_coordinates;
