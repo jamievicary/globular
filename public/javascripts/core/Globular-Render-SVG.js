@@ -298,19 +298,21 @@ function globular_render_2d(container, diagram, subdiagram) {
         else {
             // We start at a vertex
             var vertex = data.vertices[edge.start_vertex];
-            path_s += SVG_move_to({
-                x: vertex.x,
-                y: vertex.y
-            });
-            //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
-            path_s += SVG_bezier_to({
-                c1x: edge.x,
-                c1y: vertex.y,
-                c2x: edge.x,
-                c2y: vertex.y + 0.4,
-                x: edge.x,
-                y: edge.start_height + 0.5
-            });
+            if (!vertex.interchanger) {
+                path_s += SVG_move_to({
+                    x: vertex.x,
+                    y: vertex.y
+                });
+                //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
+                path_s += SVG_bezier_to({
+                    c1x: edge.x,
+                    c1y: vertex.y,
+                    c2x: edge.x,
+                    c2y: vertex.y + 0.4,
+                    x: edge.x,
+                    y: edge.start_height + 0.5
+                });
+            }
         }
 
         // Do the main straight part of the edge
@@ -325,24 +327,24 @@ function globular_render_2d(container, diagram, subdiagram) {
         if (finish_boundary) {
             var z = 0;
             // Nothing to do, unless also coming from source boundary
-            //if (start_boundary) {
             path_s += SVG_line_to({
                 x: edge.x,
                 y: edge.finish_height
             });
-            //}
         }
         else {
             var vertex = data.vertices[edge.finish_vertex];
-            //path_s += SVG_line_to(vertex.x, vertex.height + 0.5);
-            path_s += SVG_bezier_to({
-                c1x: edge.x,
-                c1y: vertex.y - 0.4,
-                c2x: edge.x,
-                c2y: vertex.y,
-                x: vertex.x,
-                y: vertex.y
-            });
+            if (!vertex.interchanger) {
+                //path_s += SVG_line_to(vertex.x, vertex.height + 0.5);
+                path_s += SVG_bezier_to({
+                    c1x: edge.x,
+                    c1y: vertex.y - 0.4,
+                    c2x: edge.x,
+                    c2y: vertex.y,
+                    x: vertex.x,
+                    y: vertex.y
+                });
+            }
         }
 
         // Add the path to the SVG object
@@ -355,15 +357,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 
     // Draw the vertices
     for (var i = 0; i < data.vertices.length; i++) {
-        var vertex = data.vertices[i];
-        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttributeNS(null, "cx", vertex.x);
-        circle.setAttributeNS(null, "cy", vertex.y);
-        circle.setAttributeNS(null, "r", 0.05);
-        circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
-        circle.setAttributeNS(null, "stroke", "none");
-        g.appendChild(circle);
         
+        // Make this height clickable
         $(container)[0].rectangles.push({
             height: i,
             x_min: 0,
@@ -372,6 +367,73 @@ function globular_render_2d(container, diagram, subdiagram) {
             y_max: i+1
         });
 
+        var vertex = data.vertices[i];
+        
+        if (vertex.interchanger) {
+            // Draw the interchanger
+            var e1_bot, e2_bot, e1_top, e2_top;
+            var p = (vertex.type == 'Int' ? 1 : 0);
+            var q = 1 - p;
+            e1_bot = vertex.source_edges[p];
+            e2_bot = vertex.target_edges[q];
+            e1_top = vertex.source_edges[q];
+            e2_top = vertex.target_edges[p];
+            
+            // Draw lower path
+            var path_bot = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path_bot += SVG_move_to({
+                x: e1_bot.x,
+                y: i
+            });
+            path_bot += SVG_bezier_to({
+                c1x: e1_bot.x,
+                c1y: i+0.5,
+                c2x: e2_bot.x,
+                c2y: i+0.5,
+                x: e2_bot.x,
+                y: i+1
+            });
+            g.appendChild(SVG_create_path({
+                string: path_bot,
+                stroke: /*gProject.getColour(e1_bot.type)*/ '#FFFFFF',
+                stroke_width: 0.1
+            }));
+
+            // Draw upper path
+            var path_top = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path_top += SVG_move_to({
+                x: e1_top.x,
+                y: i
+            });
+            path_top += SVG_bezier_to({
+                c1x: e1_top.x,
+                c1y: i+0.5,
+                c2x: e2_top.x,
+                c2y: i+0.5,
+                x: e2_top.x,
+                y: i+1
+            });
+            g.appendChild(SVG_create_path({
+                string: path_top,
+                stroke: '#FFFFFF',
+                stroke_width: 0.2 /* obscure */
+            }));
+            g.appendChild(SVG_create_path({
+                string: path_top,
+                stroke: gProject.getColour(e1_top.type),
+                stroke_width: 0.1
+            }));
+        }
+        else {
+            var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttributeNS(null, "cx", vertex.x);
+            circle.setAttributeNS(null, "cy", vertex.y);
+            circle.setAttributeNS(null, "r", 0.05);
+            circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
+            circle.setAttributeNS(null, "stroke", "none");
+            g.appendChild(circle);
+            
+        }
     }
 
     // Render the highlight

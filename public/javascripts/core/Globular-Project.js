@@ -588,7 +588,7 @@ Project.prototype.clickCell = function(height) {
             var interchanger = new NCell(temp_id, temp_coordinates);
 
             if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
                 if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
                     alert("Cannot interchange these cells");
                     this.selected_cell = null;
@@ -607,11 +607,11 @@ Project.prototype.clickCell = function(height) {
             interchanger.coordinates.push(Math.min(first_click, second_click));
 
 
-            if (interchanger.id === 'Int-I') {
+            if (interchanger.id === 'IntI') {
                 interchanger.id = 'Int';
             }
             else {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
             }
 
 
@@ -636,7 +636,7 @@ Project.prototype.clickCell = function(height) {
             var interchanger = new NCell(temp_id, temp_coordinates);
 
             if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'Int-I';
+                interchanger.id = 'IntI';
                 if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
                     alert("Cannot interchange these cells");
                     this.selected_cell = null;
