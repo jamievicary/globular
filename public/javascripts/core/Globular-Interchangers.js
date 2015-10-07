@@ -35,6 +35,7 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     if (type.tail('Int', 'IntI')) {
         list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
         list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
+        return list;
     }
 
     if (type.tail('L', 'R')) {
