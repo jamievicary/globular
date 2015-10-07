@@ -56,3 +56,12 @@ function getMean(arr) {
 Array.prototype.last = function() {
     return this[this.length - 1];
 };
+
+Array.prototype.increment_last = function(value) {
+    this[this.length - 1] += value;
+};
+
+String.prototype.tail = function(elements) {
+    return this.substr(this.length - elements, this.length);
+};
+
