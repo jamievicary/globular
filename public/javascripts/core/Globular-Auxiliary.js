@@ -61,7 +61,12 @@ Array.prototype.increment_last = function(value) {
     this[this.length - 1] += value;
 };
 
-String.prototype.tail = function(elements) {
-    return this.substr(this.length - elements, this.length);
+String.prototype.tail = function() {
+    for (var i=0; i<arguments.length; i++) {
+        var t = arguments[i];
+        if (this.substr(this.length - t.length), t.length) == t) return true;
+    }
+    return false;
+    //return this.substr(this.length - elements, this.length);
 };
 
