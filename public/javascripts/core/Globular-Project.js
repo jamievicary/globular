@@ -620,7 +620,7 @@ Project.prototype.clickCell = function(height) {
             this.diagram.source = temp_interchanged_source;
 
             var maxVal = $('#slider').val() + 1;
-            $('#slider').attr('max', maxVal)
+            $('#slider').attr('max', maxVal);
 
         }
         else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
@@ -875,6 +875,7 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
         map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
     */
     
+    /*
     if (diagram.dimension === 3) {
             slider.attr('max', diagram.nCells.length);
             if(slider.val() === undefined){
@@ -888,7 +889,10 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
         }
     else {
         diagram.render(div, highlight);
-        }
+    }
+    */
+
+    diagram.render(div, highlight);
 }
 
 // Render a generator

@@ -24,7 +24,6 @@ Diagram.prototype.expand = function(type, x, n, m) {
     }
 
     return list;
-
 }
 
 Diagram.prototype.atomicInterchangerSource = function(type, heights) {
