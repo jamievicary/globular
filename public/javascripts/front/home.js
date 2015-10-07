@@ -403,7 +403,15 @@ $(document).ready(function() {
                
                 var projects_str = "";
                 for (var i = 0; i < projects.length; i++) {
-                    projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span><span id = '2-p-row-" + p_ids[i] + "'><span class = 'select-project' id = 'id-" + p_ids[i] + "'>" + projects[i] + "</span><span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span></span><hr size = '1'>";
+                    projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span>"+
+                    "<span id = '2-p-row-" + p_ids[i] + "'>"+
+                        "<span class = 'select-project' id = 'id-" + p_ids[i] + "'>"+
+                            projects[i]+
+                        "</span>"+
+                        "<span style = 'font-size:80%;color: #335566;float: right;margin-top:3px;'>"+
+                           "<span class = 'publish-project' id = 'id-" + p_ids[i] + "'>Publish</span>&middot;"+
+                           "<span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span>"+
+                    "</span></span><hr size = '1'>";
                 }
 
                 $("#project-list").html(projects_str);
@@ -427,6 +435,13 @@ $(document).ready(function() {
                     });
 
                 });
+                $(".publish-project").click(function(){
+                    var p_id = $(this).attr("id").substring(3);
+                    $.post('/publish_project', {pid: p_id}, function(){
+                        
+                    });
+                });
+                
                 $(".del-project").click(function() {
                     var org_name = $(this).attr("p_name");
                     var p_id = $(this).attr("id").substring(3);
@@ -538,4 +553,35 @@ $(document).ready(function() {
     $("#mm-about").click(function(){
         $("#about-box").fadeIn();
     });
+
+    var pathName = window.location.pathname;
+    pathName = pathName.substring(1);
+    var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
+    if(regexResult==0){
+        
+        var dateName = pathName.substring(0,4);
+        
+        var posVersion = pathName.search(/([v])/);
+        var version;
+        var projectNo;
+        if(posVersion==-1){
+            version = "v1";
+            projectNo = pathName.substring(5);
+        }else{
+            version = pathName.substring(posVersion);
+            projectNo = pathName.substring(5,posVersion);
+        }
+        $.post('/get_public_project', {
+            dateName: dateName,
+            version: version,
+            projectNo: projectNo
+            
+        }, function(result){
+            render_project_front(result.string, result.pname, pathName);
+            $("#text-p-desc").val(result.meta.project_desc);
+        });
+    }else{
+        
+    }
+    
 });

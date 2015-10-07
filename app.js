@@ -12,6 +12,8 @@ var projects = require('./routes/projects');
 var session = require('express-session');
 var app = express();
 
+var user_projects = {};
+
 // Set large limit for POST requests
 app.use(bodyParser({limit: '50mb'}));
 
@@ -32,7 +34,6 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: true }
 }));
-
 
     	//routes
 
@@ -77,6 +78,12 @@ app.post('/register_user', function(req, res){
 	}
 });
 
+app.post('/publish_project', function(req, res){
+	if(req.session.user_id!=undefined){
+		projects.publish_project(req,res);
+	}
+});
+
 app.post('/get_projects', function(req, res){
 	if(req.session.user_id!=undefined){
 		projects.get_projects(req,res);
@@ -107,6 +114,13 @@ app.post('/save_project_changes', function(req, res){
 	projects.save_p_changes(req,res);	
 });
     
+app.get("/:value", function(req, res){
+	res.sendfile("public/index.html");
+});
+
+app.post('/get_public_project', function(req, res){
+	projects.get_pp(req, res);
+});
 
 
 

@@ -520,13 +520,6 @@ div.preview-icon > svg {
 }
 
 /* line 467, ../sass/style.sass */
-#no-projects-open-e {
-  font-size: 200%;
-  text-align: center;
-  margin-top: 30%;
-}
-
-/* line 472, ../sass/style.sass */
 .mini-opt-links {
   color: #ffffff;
   text-decoration: underline;
@@ -535,14 +528,19 @@ div.preview-icon > svg {
   cursor: pointer;
 }
 
-/* line 480, ../sass/style.sass */
+/* line 475, ../sass/style.sass */
 .del-project {
   float: right;
   color: #335566;
   cursor: pointer;
 }
 
-/* line 485, ../sass/style.sass */
+/* line 480, ../sass/style.sass */
+.publish-project {
+  cursor: pointer;
+}
+
+/* line 483, ../sass/style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -552,7 +550,7 @@ div.preview-icon > svg {
   color: salmon;
 }
 
-/* line 493, ../sass/style.sass */
+/* line 491, ../sass/style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -561,7 +559,7 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 500, ../sass/style.sass */
+/* line 498, ../sass/style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -570,7 +568,7 @@ div.preview-icon > svg {
   left: 80px;
 }
 
-/* line 507, ../sass/style.sass */
+/* line 505, ../sass/style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -578,7 +576,7 @@ div.preview-icon > svg {
   padding-top: 20px;
 }
 
-/* line 513, ../sass/style.sass */
+/* line 511, ../sass/style.sass */
 #slider {
   top: 80px;
   right: 10px;
@@ -586,18 +584,18 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 519, ../sass/style.sass */
+/* line 517, ../sass/style.sass */
 #sto-form {
   background-color: #008b8b;
   margin-left: 5px;
 }
 
-/* line 523, ../sass/style.sass */
+/* line 521, ../sass/style.sass */
 #run-process {
   background-color: #008b8b;
 }
 
-/* line 526, ../sass/style.sass */
+/* line 524, ../sass/style.sass */
 #process-form {
   text-align: left;
   padding: 10px;

@@ -194,3 +194,80 @@ exports.get_meta = function (req, res){
 		res.send({result: ""});
 	}
 };
+
+exports.publish_project = function (req, res){
+	
+	var pid = req.body.pid;
+	var user_id = req.session.user_id;
+	var date = new Date();
+	var month = (date.getMonth()+1).toString();
+	var string = fs.readFileSync('database/users/'+user_id+'/projects/'+pid+'/string.json', 'utf8');
+	var metaData = fs.readFileSync('database/users/'+user_id+'/projects/'+pid+'/meta.json', 'utf8');
+	
+	var day = date.getDate();
+	
+	if(month.length==1){
+		month = "0"+month;
+	}
+	var year = date.getFullYear().toString().substr(2,2);
+	var dateName  =  year+month ;
+	var publish_date = day.toString() + "/" + month + "/" + year;
+	
+	
+	function construct_project(){
+		fs.readdir('database/projects/'+dateName,function(err, files){
+			var pcount = (files.length + 1).toString();
+			switch(pcount.length){
+				case 1:
+					pcount = "00"+pcount;
+					break;
+				case 2:
+					pcount = "0"+pcount;
+					break;
+			}
+			
+			var data = JSON.stringify({owners:[user_id], date_published:publish_date});
+			
+			fs.mkdir('database/projects/'+dateName+'/'+pcount, function(){
+				fs.writeFile('database/projects/'+dateName+'/'+pcount+'/data.json', data, function(){
+					fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/', function(){
+						fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/v1/', function(){
+							fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/string.json', string, function(){
+								fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/meta.json', metaData, function(){
+									
+									
+								
+								});
+							});
+						});	
+					});
+				});
+  			});
+		});
+
+	}
+	
+	if(!fs.existsSync('database/projects/'+dateName)){
+  		fs.mkdir('database/projects/'+dateName, function(){
+  			construct_project();
+  		});
+  	}else{
+  		construct_project();
+  	}
+}
+
+exports.get_pp = function(req,res){
+	var dateName = req.body.dateName;
+	var version = req.body.version;
+	var projectNo = req.body.projectNo;
+	fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/string.json', 'utf8', function(err, string){
+		fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/meta.json', 'utf8', function(err, meta){
+			res.send({
+				string: string,
+				meta: meta,
+				pid: "public"
+			});
+		});
+		
+	});	
+};
