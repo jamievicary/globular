@@ -96,7 +96,7 @@ body, html
 	overflow-x: none
 	
 #diagram-body
-	overflow:hidden
+	overflow: hidden
 	white-space: nowrap
 	background-color: $lightgrey
 	
@@ -183,11 +183,16 @@ div.preview-icon>svg
 	//display: none
 	text-align: center
 	top: 70px
+	//display: block
+	clear: left
 
 .cell-detail
-	margin-left: 75px
+	//overflow: hidden
+	//white-space: nowrap
+	//margin-left: 120px
 	height: $icon_size
-	
+	float: right
+
 .match-cell-icon
 	height: $icon_size
 	width: $icon_size
@@ -212,7 +217,8 @@ div.preview-icon>svg
 	outline-width: 0px
 	letter-spacing: 1px
 	position: absolute
-	left: $icon_size + $spacing
+	//left: $icon_size + $spacing
+	left: 163px
 	//margin-top: 5px
 	margin-left: $spacing
 	height: 15px
@@ -225,7 +231,7 @@ div.preview-icon>svg
 	position: absolute
 	display: none
 	border: none
-	left: $icon_size + $spacing
+	left: 163px
 	margin-left: $spacing
 	bottom: $spacing
 	height: 16px
@@ -236,7 +242,7 @@ div.preview-icon>svg
 	width: 50px
 	letter-spacing: 1px
 	margin-top: 21px
-	left: $icon_size + $spacing
+	left: 163px
 	position: absolute
 	//margin-top: 5px
 	margin-left: $spacing
@@ -246,8 +252,8 @@ div.preview-icon>svg
 	
 .target-rule-arrow
 	position: absolute
-	margin-left: 72px
-	top: 30px
+	margin-left: 63px
+	top: 25px
 
 .button-style-1
 	background-color: $blue

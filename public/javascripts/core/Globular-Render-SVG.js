@@ -31,16 +31,23 @@ function globular_render(container, diagram, subdiagram) {
     else {
         return;
     }
-
-
 }
 
-function prepare_SVG_container(container, min_x, max_x, min_y, max_y) {
+function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     container = $(container);
     container.empty();
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
+    var x_center = (min_x + max_x)/2;
+    var y_center = (min_y + max_y)/2;
+    var w, h;
+    if (container.attr('id') == 'diagram-canvas' && diagram.getDimension() == 2 && diagram.source.nCells.length == 0) {
+        w = 15;
+        h = 15;
+        svg.setAttributeNS(null, "viewBox",  (x_center - w/2).toString() + " " + (-y_center - h/2).toString() + " "  + w + " " + h);
+    } else {
+        svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
+    }
     svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
     svg.setAttribute("width", container.width());
     svg.setAttribute("height", container.height());
@@ -51,7 +58,7 @@ function prepare_SVG_container(container, min_x, max_x, min_y, max_y) {
 }
 
 function globular_render_0d(container, diagram, subdiagram) {
-    var g = prepare_SVG_container(container, -0.5, 0.5, -0.5, 0.5);
+    var g = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
     var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttributeNS(null, "cx", 0);
     circle.setAttributeNS(null, "cy", 0);
@@ -63,7 +70,7 @@ function globular_render_0d(container, diagram, subdiagram) {
 
 function globular_render_1d(container, diagram, subdiagram) {
     var length = Math.max(1, diagram.nCells.length);
-    var g = prepare_SVG_container(container, 0, length, -0.5, 0.5);
+    var g = prepare_SVG_container(container, diagram, 0, length, -0.5, 0.5);
 
     /*
     if (diagram.nCells.length == 0) {
@@ -153,11 +160,15 @@ function globular_render_1d(container, diagram, subdiagram) {
 
 function globular_render_2d(container, diagram, subdiagram) {
 
-    if (diagram.getDimension() != 2) return;
+    //if (diagram.getDimension() < 2) return;
+    
+    /*
+        We now render the top 2 dimensions
+    */
 
     // Deal with an empty 2-diagram specially
     if ((diagram.nCells.length == 0) && (diagram.source.nCells.length == 0)) {
-        var g = prepare_SVG_container(container, -0.5, 0.5, -0.5, 0.5);
+        var g = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
         g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
             fill: gProject.getColour(diagram.source.source.nCells[0].id)
@@ -168,25 +179,30 @@ function globular_render_2d(container, diagram, subdiagram) {
     var data = SVG_prepare(diagram);
 
     // Prepare the SVG group in which to render the diagram    
-    var g = prepare_SVG_container(container, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.nCells.length));
+    var g = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.nCells.length));
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.nCells.length == 0);
+    var x_center = (data.max_x + 0) / 2;
+    var y_center = Math.max(1, data.vertices.length) / 2;
+    var w = big_background ? 20 : data.max_x + 1;
+    var h = big_background ? 20 : Math.max(1, data.vertices.length);
     var path_string = SVG_move_to({
-        x: -0.5,
-        y: 0
+        x: x_center - w/2,
+        y: y_center - h/2
     });
     path_string += SVG_line_to({
-        x: data.max_x + 0.5,
-        y: 0
+        x: x_center + w/2,
+        y: y_center - h/2
     });
     path_string += SVG_line_to({
-        x: data.max_x + 0.5,
-        y: Math.max(1, data.vertices.length)
+        x: x_center + w/2,
+        y: y_center + h/2
     });
     path_string += SVG_line_to({
-        x: -0.5,
-        y: Math.max(1, data.vertices.length)
+        x: x_center - w/2,
+        y: y_center + h/2
     });
     g.appendChild(SVG_create_path({
         string: path_string,
@@ -343,7 +359,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttributeNS(null, "cx", vertex.x);
         circle.setAttributeNS(null, "cy", vertex.y);
-        circle.setAttributeNS(null, "r", 0.1);
+        circle.setAttributeNS(null, "r", 0.05);
         circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
         circle.setAttributeNS(null, "stroke", "none");
         g.appendChild(circle);
@@ -987,7 +1003,8 @@ function SVG_prepare(diagram, subdiagram) {
     var vertices = data.vertices;
     var edges_at_level = data.edges_at_level;
 
-    if (diagram.getDimension() != 2) return;
+    // Can't layout a diagram of dimension less than 2
+    if (diagram.getDimension() < 2) return;
 
     // Start with the edges that exist at the source boundary
     var current_edges = [];
@@ -1020,8 +1037,18 @@ function SVG_prepare(diagram, subdiagram) {
     edges_at_level.push(current_edges.slice());
 
     for (var level = 0; level < diagram.nCells.length; level++) {
+        
         var attachment = diagram.nCells[level];
-        var rewrite = gProject.signature.getGenerator(attachment.id);
+        var interchanger = (attachment.id.substring(0, 3) == 'int');
+        var source_cells, target_cells;
+        if (interchanger) {
+            source_cells = [null, null];
+            target_cells = [null, null];
+        } else {
+            var r = gProject.signature.getGenerator(attachment.id);
+            source_cells = r.source.nCells;
+            target_cells = r.target.nCells;
+        }
 
         // Add to the list of vertices
         var vertex = {
@@ -1035,7 +1062,7 @@ function SVG_prepare(diagram, subdiagram) {
 
         // For each edge consumed by this rewrite, indicate its finish
         // height and remove it from the list of current edges
-        for (var i = 0; i < rewrite.source.nCells.length; i++) {
+        for (var i = 0; i < source_cells.length; i++) {
             var remove_edge_index = current_edges[attachment.coordinates[0]];
             vertex.source_edges.push(remove_edge_index);
             if (edges[remove_edge_index] === undefined) {
@@ -1047,7 +1074,7 @@ function SVG_prepare(diagram, subdiagram) {
         }
 
         // Add the first target of the rewrite in the succeedence partial order
-        if (rewrite.target.nCells.length > 0) {
+        if (target_cells.length > 0) {
             if (attachment.coordinates[0] > 0) {
                 edges[current_edges[attachment.coordinates[0] - 1]].succeeding.push({
                     index: edges.length,
@@ -1058,9 +1085,9 @@ function SVG_prepare(diagram, subdiagram) {
 
         // For each edge produced by this rewrite, add it to the lists
         // of edges and current edges, and correctly set succeeding data
-        for (i = 0; i < rewrite.target.nCells.length; i++) {
+        for (i = 0; i < target_cells.length; i++) {
             var new_edge = {
-                type: rewrite.target.nCells[i].id,
+                type: (target_cells[i] == null ? null : target_cells[i].id),
                 attachment_coordinate: attachment.coordinates[0],
                 start_height: level + 0.5,
                 finish_height: null,
@@ -1073,7 +1100,7 @@ function SVG_prepare(diagram, subdiagram) {
             var new_edge_index = edges.length - 1;
             current_edges.splice(attachment.coordinates[0] + i, 0, new_edge_index);
             vertex.target_edges.push(new_edge_index);
-            if (i != rewrite.target.nCells.length - 1) {
+            if (i != target_cells.length - 1) {
                 new_edge.succeeding.push({
                     index: new_edge_index + 1,
                     offset: 1
@@ -1082,9 +1109,9 @@ function SVG_prepare(diagram, subdiagram) {
         }
 
         // Add succeeding data for the first edge after the rewrite
-        if (rewrite.target.nCells.length > 0) {
-            if (attachment.coordinates[0] + rewrite.target.nCells.length < current_edges.length) {
-                var subsequent_edge_index = current_edges[attachment.coordinates[0] + rewrite.target.nCells.length];
+        if (target_cells.length > 0) {
+            if (attachment.coordinates[0] + target_cells.length < current_edges.length) {
+                var subsequent_edge_index = current_edges[attachment.coordinates[0] + target_cells.length];
                 edges[edges.length - 1].succeeding.push({
                     index: subsequent_edge_index,
                     offset: 1
