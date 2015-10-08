@@ -318,7 +318,7 @@ Project.prototype.storeTheorem = function() {
 
 };
 
-Project.prototype.dragCell = function(location, positive) {
+Project.prototype.drag_cell = function(location, positive) {
     console.log('Detected a drag at ' + JSON.stringify(location.logical) + ' in direction ' + (positive ? '+' : '-'));
 } 
 
