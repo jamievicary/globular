@@ -20,16 +20,13 @@ function globular_render(container, diagram, subdiagram) {
     container_dom.rectangles = [];
 
     if (diagram.getDimension() == 0) {
-        globular_render_0d(container, diagram, subdiagram);
+        return globular_render_0d(container, diagram, subdiagram);
     }
     else if (diagram.getDimension() == 1) {
-        globular_render_1d(container, diagram, subdiagram);
+        return globular_render_1d(container, diagram, subdiagram);
     }
     else if (diagram.getDimension() >= 2) {
-        globular_render_2d(container, diagram, subdiagram);
-    }
-    else {
-        return;
+        return globular_render_2d(container, diagram, subdiagram);
     }
 }
 
@@ -358,15 +355,6 @@ function globular_render_2d(container, diagram, subdiagram) {
     // Draw the vertices
     for (var i = 0; i < data.vertices.length; i++) {
         
-        // Make this height clickable
-        $(container)[0].rectangles.push({
-            height: i,
-            x_min: 0,
-            x_max: data.max_x + 1,
-            y_min: i,
-            y_max: i+1
-        });
-
         var vertex = data.vertices[i];
         
         if (vertex.interchanger) {
@@ -435,9 +423,36 @@ function globular_render_2d(container, diagram, subdiagram) {
             
         }
     }
+    
+    // Prepare active regions
+    var active = [];
+    for (var i=0; i<data.vertices.length; i++) {
+        var vertex = data.vertices[i];
+        // Add vertex active region
+        active.push({x: vertex.x, y: vertex.y, boundary_type: null, boundary_depth: 0, logical: [i], horizontal: false, direction: 'vertical'});
+    }
+    for (var i=0; i<data.edges.length; i++) {
+        var edge = data.edges[i];
+        
+        // Add source boundary active region
+        if (edge.start_vertex == null) {
+            active.push({x: edge.x, y: edge.start_height, boundary_type: 's', boundary_depth: 1, logical: [data.edges_at_level[0].indexOf(i)], direction: 'horizontal'});
+        }
+        
+        // Add target boundary active region
+        if (edge.target_vertex == null) {
+            var height = diagram.nCells.length;
+            active.push({x: edge.x, y: edge.finish_height, boundary_type: 't', boundary_depth: 1, logical: [data.edges_at_level[height].indexOf(i)], direction: 'horizontal'});
+        }
+        
+        // Add line active region
+        for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height); height ++) {
+            active.push({x: edge.x, y: height + 0.5, boundary_type: null, boundary_depth: 0, logical: [height, data.edges_at_level[height].indexOf(i)], direction: 'horizontal'});
+        }
+    }
 
     // Render the highlight
-    if (subdiagram === undefined) return;
+    if (subdiagram === undefined) return active;
     var delta = 0.0005;
     if (subdiagram.boundaryPath.length == 2) {
         // Highlight left or right side boundary
@@ -586,6 +601,9 @@ function globular_render_2d(container, diagram, subdiagram) {
             + SVG_line_to({x: max_x, y: max_y}) + SVG_line_to({x: max_x, y: min_y});
         g.appendChild(SVG_create_path({string: path_string, fill: highlight_colour, fill_opacity: highlight_opacity}));
     }
+    
+    // Return active region data
+    return active;
 }
 
 function SVG_create_path(data) {
@@ -1080,7 +1098,8 @@ function SVG_prepare(diagram, subdiagram) {
             succeeding: [],
             x: 0,
             start_vertex: null,
-            finish_vertex: null
+            finish_vertex: null,
+            //coordinates: [0, attachment.coordinates[0]]
         };
 
         // Every source edge except the last has a succeeding edge
@@ -1118,7 +1137,8 @@ function SVG_prepare(diagram, subdiagram) {
             level: level,
             y: level + 0.5,
             source_edges: [],
-            target_edges: []
+            target_edges: [],
+            //coordinates: level // DEFINITELY RIGHT!!!!!!
         };
         vertices.push(vertex);
 

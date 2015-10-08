@@ -318,6 +318,10 @@ Project.prototype.storeTheorem = function() {
 
 };
 
+Project.prototype.dragCell = function(location, positive) {
+    console.log('Detected a drag at ' + JSON.stringify(location.logical) + ' in direction ' + (positive ? '+' : '-'));
+} 
+
 // Handle a click on a 2-cell to implement interchangers
 Project.prototype.clickCell = function(height) {
 
