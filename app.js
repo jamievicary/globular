@@ -13,7 +13,6 @@ var session = require('express-session');
 var app = express();
 
 if(!fs.existsSync('database/')){
-	console.log("DOESNT EXIST");
 	fs.mkdir('database/');	
 }
 if(!fs.existsSync('database/projects')){
@@ -64,10 +63,7 @@ app.use('/private', function(req, res) {
 app.use('/public',  express.static(__dirname + '/database/projects'));
 
     	//routes
-app.get('/', function(req,res){
-	
 
-});
 app.post('/login', function(req, res){
 	users.login_user(req, res);
 	

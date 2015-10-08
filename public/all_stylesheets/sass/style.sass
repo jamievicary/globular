@@ -64,9 +64,10 @@ body, html
 
 #main-menu
 	cursor: pointer
-	float: right
+	float: center
 	display: inline-block
 	width: auto
+	position: fixed
 
 #main-menu>div
 	float: right
@@ -85,6 +86,7 @@ body, html
 	
 #main-menu>div:hover
 	background-color: lightblue
+	color: white
 	
 #control-body
 	height: calc(100% - 35px)
@@ -99,7 +101,8 @@ body, html
 	
 #diagram-canvas
 	draggable: false
-	
+	//border: 1px solid grey
+
 #diagram-body
 	overflow: hidden
 	white-space: nowrap
@@ -111,16 +114,29 @@ body, html
 	
 #project-menu
 	cursor: pointer
-	position: absolute
 	bottom: 0px
-	padding-left: 0px
 	height: $top-menu-height
 	list-style: none
-	background-color: $lightgrey
-	height: 30px
-	width: 100%
+	position: relative
+	float: right
+	margin-right: 10px
 	z-index: 1000000
-	white-space: nowrap
+	top: calc($header_height - 40px)
+
+#project-menu li
+	margin-top: 7px
+
+.button-style-3
+	background-color: grey
+	color: white
+	border-radius: $border_radius
+	width: 100px
+	text-align: center
+	height: 17px
+	letter-spacing: 1px
+	padding: 7px
+	cursor: pointer
+	font-size: 60%
 	
 #main-menu li 
 	float: left
@@ -211,44 +227,38 @@ div.preview-icon>svg
 	background-color: lightgrey
 
 .cell-label
-	width: auto
-	width: 50px
+	width: 80px
 	border: none
 	outline-width: 0px
 	letter-spacing: 1px
 	position: absolute
 	//left: $icon_size + $spacing
 	//margin-top: 5px
-//	margin-left: $spacing
+	margin-left: 5px
 	height: 15px
-	padding: 10px
 	border-radius: $border_radius
 
 .stochastic-rate
 	width: 50px
 	outline-width: 0px
 	letter-spacing: 1px
-	position: absolute
 	display: none
 	border: none
 	//left: $icon_size + $spacing
-//	margin-left: $spacing
-	bottom: $spacing
-	height: 16px
+	margin-left: 5px
+	margin-top: 40px
 	border-radius: $border_radius
 	height: 15px
 	
 .color-picker
-	width: 50px
+	width: 80px
 	letter-spacing: 1px
 	margin-top: 21px
-//	left: $icon_size + $spacing
-	position: absolute
-	//margin-top: 5px
-//	margin-left: $spacing
+	margin-left: 5px
+	border: none
+	position: fixed
 	border-radius: $border_radius
 	height: 15px
-	border: none
 	
 .target-rule-arrow
 	position: absolute
@@ -281,30 +291,16 @@ div.preview-icon>svg
 	margin: 1px
 	cursor: pointer
 	font-size: 110%
-	
-.button-style-3
-	background-color: $blue
-	color: white
-	border-radius: 1px
-	width: 100px
-	text-align: center
-	height: 17px
-	letter-spacing: 1px
-	padding: 7px
-	float: left
-	cursor: pointer
-	font-size: 60%
 
 
 #view-p-desc
-	background-color: $blue
+	background-color: grey
 	color: white
-	left: -10px
-	border-radius: 1px
+	position: absolute
+	margin-left: 235px
+	border-radius: $border_radius
 	width: 100px
-	transform: rotate(270deg)
-	margin-top: -45px
-	transform-origin: left top 0
+	margin-top: -265px
 	text-align: center
 	height: 30px
 	letter-spacing: 1px
@@ -314,24 +310,23 @@ div.preview-icon>svg
 
 #view-desc-plate
 	margin-left: 50px
-	background-color: $blue
+	background-color: grey
 	height: 210px
-	width: 300px
+	width: 500px
 	padding: 10px
 	
 #view-desc-body
 	width: 300px
 	float: right
-	top: calc(50% - 200px)
-	right: calc(0% - 250px)
+	top: calc(100%)
+	left: calc(50% - 300px)
 	position: absolute
 	
 #text-p-desc
 	height: 200px
 	resize: none
-	width: 80%
+	width: 99%
 	margin-top: 5px
-	margin-left: 10px
 	color: #44bbbb
 	border: none
 	border-radius: 3px
@@ -425,21 +420,17 @@ div.preview-icon>svg
 	padding: 10px
 	overflow: hidden
 
-
-
-#project-menu
-	bottom: calc(0% - 15px)
-	
-#project-menu li
-	margin-left: 3px
 	
 #save-project-opt
 	background-color: #4cd2bb
 	
+#save-project-opt:hover
+	background-color: lightblue	
+	
 #diagram-title
-	font-size: 115%
 	color: black
 	height: 30px
+	font-size: 25px
 	background-color: #9BDCC4
 	border: none
 	width: $control_width - 2px
@@ -457,9 +448,7 @@ div.preview-icon>svg
 	background-size: 60%
 	height: 55px
 	width: 55px
-	left: 97%
 	position: absolute
-	bottom: calc(0% - 15px)
 	z-index: 10000
 	background-repeat: no-repeat
 
@@ -470,12 +459,17 @@ div.preview-icon>svg
 
 .mini-opt-links
 	color: #ffffff
-	//font-size: 70%
-	text-decoration: underline
+	letter-spacing: 2px
+	font-size: 70%
 	padding: 5px
 	float: right
 	cursor: pointer
 
+#add-0-cell-opt
+	margin-left: -112px
+	position: absolute
+	padding: 5px
+	
 .del-project
 	float: right
 	color: #335566
@@ -510,17 +504,11 @@ div.preview-icon>svg
 	padding-top: 20px
 
 #slider
-	top: $header_height + 10px
+	top: $header_height
 	right: 10px
 	width: 100px
 	position: absolute
 	
-#sto-form
-	background-color: #008b8b
-	margin-left: 5px
-	
-#run-process
-	background-color: #008b8b
 	
 #process-form
 	text-align: left
@@ -551,3 +539,11 @@ div.control.inline
 	font-size: 110%
 	margin-top: -10px
 	position: fixed
+
+.publish-project
+	cursor: pointer
+
+	
+.button-style-3:hover
+	background-color: lightblue
+	
