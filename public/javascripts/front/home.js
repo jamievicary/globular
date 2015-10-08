@@ -606,7 +606,6 @@ $(document).ready(function() {
                         $.get("/public/" + dateName + "/" + projectNo + "/data.json", function(data) {
                             var pname = meta.project_name;
                             var pdesc = meta.project_desc;
-
                             if (pdesc == "") {
                                 pdesc = "No description provided.";
                             }
