@@ -18,6 +18,8 @@ function Display(container, diagram) {
     this.diagram = diagram;
     this.active = null;
     this.select_zone = null;
+    this.suppress_input = null;
+    this.coordinates = [];
     var self = this;
     $(container).mousedown(function(event) {
         self.mousedown(event)
@@ -25,6 +27,7 @@ function Display(container, diagram) {
     $(container).mouseup(function(event) {
         self.mouseup(event)
     });
+    this.create_controls();
 }
 
 Display.prototype.mousedown = function(event) {
@@ -109,9 +112,65 @@ Display.prototype.pixelsToLogical = function(event) {
     };
 }
 
-Display.prototype.prepare_controls = function() {
+Display.prototype.has_controls = function() {
+    return ($(this.container).children('div.control').length > 0);
+}
+
+// Make sure all the coordinates and suppressions make sense
+Display.prototype.update_controls = function() {
+    
+    // If there's no diagram, nothing to do
+    if (this.diagram == null) return;
+    
+    // If there are no controls, create them
+    if (!this.has_controls()) this.create_controls();
+    
+    // Can't suppress all the dimensions of the diagram
+    $(this.suppress_input).val(Math.min($(this.suppress_input).val(), Math.max(this.diagram.getDimension() - 1, 0)));
+    
+    // Calculate how many dimensions must be accounted for by sliders
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
+    
+    // Make best guess for the slice coordinates
+    var new_coordinates = [];
+    for (var i=0; i<remaining_dimensions; i++) {
+        if (i < this.coordinates.length) {
+            new_coordinates[i] = this.coordinates[i].val();
+        } else {
+            new_coordinates[i] = 0;
+        }
+    }
+    
+    // Create the new slice data
+    $(this.container).children('div.control').children('div.slice_container').remove();
+    var new_slice_controls = this.create_slice_container(new_coordinates);
+    $(this.container).children('div.control').append(new_slice_controls);
+    
+    var slice = this.diagram.copy();
+    for (var i=0; i<this.coordinates.length; i++) {
+        if (i >= remaining_dimensions) this.coordinates[i].remove();
+        var c = this.coordinates[i];
+        
+    }
+    
+    // Make sure coordinate array is the correct length
+}
+
+Display.prototype.update_sliders = function() {
+    
+}
+
+Display.prototype.control_change = function() {
+    this.update_controls();
+    this.render();
+}
+
+Display.prototype.create_controls = function() {
     var c = $(this.container);
-    this.suppress = 0;
+    
+    // Remove any existing controls
+    $(this.container).children('div.control').remove();
+    if (this.diagram == null) return;
 
     // Choose popout mode if the display is small
     var popout = (c.width() < 100 || c.height() < 100);
@@ -119,31 +178,41 @@ Display.prototype.prepare_controls = function() {
     this.control = $('<div>').addClass('control').addClass(popout ? 'popout' : 'inline');
     this.container.append(this.control);
     this.control.append(document.createTextNode('Suppress '));
-    var suppress_input = document.createElement('input');
-    suppress_input.type = 'number';
-    suppress_input.className = 'control';
-    suppress_input.min = 0;
-    suppress_input.max = this.diagram.getDimension();
-    this.control.append(suppress_input);
-    var remaining_dimensions = this.diagram.getDimension() - this.suppress - 2;
+    this.suppress_input = document.createElement('input');
+    this.suppress_input.type = 'number';
+    this.suppress_input.className = 'control';
+    this.suppress_input.min = 0;
+    this.suppress_input.max = this.diagram.getDimension();
+    this.control.append(this.suppress_input);
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
+    var zeros = (new Array()).fill(0, remaining_dimensions);
+    var slice_container = this.create_slice_container(zeros);
+    this.control.append(slice_container);
+}
+
+Display.prototype.create_slice_container = function(dimensions) {
     this.coordinates = [];
-
-    if (remaining_dimensions > 0) {
-        this.control.append($('<br>'));
-        var slice = this.diagram.copy();
-        for (var i = 0; i < remaining_dimensions; i++) {
-            this.coordinates[i] =
-                $('input')
-                .addClass('control')
-                .attr('type', 'number')
-                .attr('min', 0)
-                .attr('max', slice.nCells.length);
-            this.control.append(this.coordinates[i]);
-            var slice = slice.getSource();
-        }
+    var slice_container = $('<div>').addClass('slice_container');
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
+    if (remaining_dimensions <= 0) return slice_container;
+    slice_container.append(document.createTextNode('Slice '));
+    var slice = this.diagram.copy();
+    for (var i = 0; i < remaining_dimensions; i++) {
+        dimensions[i] = Math.min(dimensions[i], slice.nCells.length);
+        this.coordinates[i] =
+            $('<input>')
+            .addClass('control')
+            .addClass('slice')
+            .attr('type', 'number')
+            .attr('min', 0)
+            .attr('max', slice.nCells.length)
+            .val(dimensions[i]);
+        slice_container.append(this.coordinates[i]);
+        slice = slice.getSlice(0);
     }
-
-    $(this.container).append(this.control);
+    var self = this;
+    slice_container.children('input.slice').on('input', function(event) { self.control_change(event) });
+    return slice_container;
 }
 
 // Attach the given diagram to the window
@@ -153,7 +222,7 @@ Display.prototype.set_diagram = function(diagram) {
         this.container.empty();
     }
     else {
-        this.prepare_controls();
+        this.update_controls();
         this.render();
     }
 }
@@ -182,6 +251,4 @@ Display.prototype.render = function() {
         // Pad the logical coordinates with the slider coordinates
         this.active[i].logical = pad_coordinates.concat(this.active[i].logical);
     }
-
-    // Add in the missing dimensions to the active region data
 }

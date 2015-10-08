@@ -32,7 +32,7 @@ function globular_render(container, diagram, subdiagram) {
 
 function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     container = $(container);
-    container.empty();
+    container.children('svg').remove();
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     var x_center = (min_x + max_x)/2;
