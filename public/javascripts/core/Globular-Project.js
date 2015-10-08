@@ -318,6 +318,10 @@ Project.prototype.storeTheorem = function() {
 
 };
 
+Project.prototype.drag_cell = function(drag) {
+    console.log("Detected drag: " + JSON.stringify(drag));
+} 
+
 // Handle a click on a 2-cell to implement interchangers
 Project.prototype.clickCell = function(height) {
 
@@ -696,36 +700,8 @@ Project.prototype.renderGenerator = function(div, id) {
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
     var t0 = performance.now();
-
-    var div = '#diagram-canvas';
-    if (this.diagram == null) {
-        $('#slider').hide()
-        $('#diagram-canvas').empty();
-        /*
-        var canvas = $(div).find('canvas');
-        if (canvas.length != 0) {
-            canvas = canvas[0];
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        }
-        */
-    }
-    else {/*
-        if (this.diagram.dimension === 3) {
-            $('#slider').attr('max', this.diagram.nCells.length);
-            $('#slider').show()
-            var slider = $('#slider').val();
-            var diagram = this.diagram.getSlice(slider);
-            this.render(div, diagram);
-        }
-        else {
-            $('#slider').hide()
-            */
-            this.render(div, this.diagram, $('#slider'));
-       // }
-    }
-
-    //console.log("Project.renderDiagram(): " + parseInt(performance.now() - t0) + "ms");
-
+    
+    MainDisplay.set_diagram(this.diagram);
 };
 
 // Need to write this code

@@ -12,6 +12,16 @@ var projects = require('./routes/projects');
 var session = require('express-session');
 var app = express();
 
+if(!fs.existsSync('database/')){
+	fs.mkdir('database/');	
+}
+if(!fs.existsSync('database/projects')){
+	fs.mkdir('database/projects/');	
+}
+if(!fs.existsSync('database/users')){
+	fs.mkdir('database/users/');	
+}
+
 var user_projects = {};
 
 // Set large limit for POST requests
@@ -53,19 +63,7 @@ app.use('/private', function(req, res) {
 app.use('/public',  express.static(__dirname + '/database/projects'));
 
     	//routes
-app.get('/', function(req,res){
-	
-	if(!fs.existsSync('database/')){
-		fs.mkdir('database/');	
-	}
-	if(!fs.existsSync('database/projects')){
-		fs.mkdir('database/projects/');	
-	}
-	if(!fs.existsSync('database/users')){
-		fs.mkdir('database/users/');	
-	}
 
-});
 app.post('/login', function(req, res){
 	users.login_user(req, res);
 	

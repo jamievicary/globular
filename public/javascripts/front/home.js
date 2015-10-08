@@ -2,12 +2,14 @@
 
 // Global project object
 var gProject = {};
+var MainDisplay = null;
 var global_p_id = "null";
 var timeout = null;
 
 $(document).ready(function() {
 
     globular_prepare_renderer();
+    MainDisplay = new Display($('#diagram-canvas'));
 
     // Handle key presses
     $(document).keypress(function(event) {
@@ -71,7 +73,7 @@ $(document).ready(function() {
     $("#slider").on("input change", function() {
         gProject.renderDiagram();
     });
-    
+
     var original_msg_html = $("#errors").html();
     $(".box").draggable({
         containment: "document",
@@ -79,72 +81,25 @@ $(document).ready(function() {
     });
 
     var dbltoggle = 0;
-    
+
     $("#view-p-desc").click(function() {
 
         if (dbltoggle % 2 == 0) {
             $("#view-desc-plate, #view-p-desc").animate({
                 marginLeft: "-=300px"
             }, 1500);
-           
+
         }
         else {
             $("#view-desc-plate, #view-p-desc").animate({
                 marginLeft: "+=300px"
             }, 1500);
-           
+
         }
         dbltoggle = dbltoggle + 1;
     });
 
     // Click handler on main diagram
-    var c = $('#diagram-canvas').click(function(event) {
-        var this_width = $(this).width();
-        var this_height = $(this).height();
-        if (this_width == 0) return;
-        if (this_height == 0) return;
-        var b = this.bounds;
-        if (b === undefined) return;
-        b.top_left = {};
-        b.height = b.top - b.bottom;
-        b.width = b.right - b.left;
-        if (this_width / this_height < b.width / b.height) {
-            // Picture is short and fat, touching the sides of the viewing area
-            b.top_left.pix_x = 0;
-            b.top_left.pix_y = (this_height - (b.height * this_width / b.width)) / 2;
-            b.pix_width = this_width;
-            b.pix_height = b.height * this_width / b.width;
-        }
-        else {
-            // Picture is tall and thin, touching the top and bottom of the viewing area
-            b.top_left.pix_x = (this_width - (b.width * this_height / b.height)) / 2;
-            b.top_left.pix_y = 0;
-            b.pix_width = b.width * this_height / b.height;
-            b.pix_height = this_height;
-        }
-        var x = 0.5 + b.left + (event.offsetX - b.top_left.pix_x) * b.width / b.pix_width;
-        var y = b.top - (event.offsetY - b.top_left.pix_y) * b.height / b.pix_height;
-        //var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
-        //var y = b.bottom + ((b.bottom - b.top) * event.offsetY / $(this).height());
-        var rectangles = $('#diagram-canvas')[0].rectangles;
-        console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
-
-        if (rectangles === undefined) return;
-
-        for (var i = 0; i < rectangles.length; i++) {
-            var r = rectangles[i];
-            if (x < r.x_min) continue;
-            if (x > r.x_max) continue;
-            if (y < r.y_min) continue;
-            if (y > r.y_max) continue;
-
-            // Tell the project object that we've clicked on a rectangle
-            console.log("Clicked in rectangle " + i);
-            gProject.clickCell(r.height);
-            return;
-        }
-    });
-
     // Handle navigation by forward and back buttons
     window.onpopstate = function(event) {
         if (event.state === null) {
@@ -153,7 +108,8 @@ $(document).ready(function() {
         else if (event.state === "") {
             render_project_front(null);
             $("#diagram-title").val("New Project");
-        } else {
+        }
+        else {
             render_project_front(JSON.parse(event.state.string));
         }
     };
@@ -214,7 +170,7 @@ $(document).ready(function() {
         if (window.location.pathname.length < 3) {
             render_project_front(null);
             $("#diagram-title").val("New Project");
-            
+
         }
     }
 
@@ -241,14 +197,14 @@ $(document).ready(function() {
             login_email: login_email
         }, function(result, status) {
             if (status == "success") {
-                
+
                 if (result.success) {
                     $("#login-box").fadeOut();
                     render_page();
                 }
                 else {
                     render_page();
-                    
+
                     show_msg("Incorrect login details, please try again.", 3000, 1);
                 }
             }
@@ -286,7 +242,7 @@ $(document).ready(function() {
         });
     });
 
-    
+
     $("#reg_submit").click(function() {
         var email = $("#reg_email").val();
         var pass = $("#reg_pass").val();
@@ -405,12 +361,12 @@ $(document).ready(function() {
 
                 $("#project-list").html(projects_str);
                 $("#my-projects-box").fadeIn();
-                
+
                 //when one project on list is requested to be deleted
                 $(".del-project").click(function() {
                     var org_name = $(this).attr("p_name");
                     var p_id = $(this).attr("id").substring(3);
-            
+
                     $("#2-p-row-" + p_id).hide();
                     $("#1-p-row-" + p_id).html("<input id = 'dct-" + p_id + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + p_id + "' class = 'cancel-del'>x</span>");
                     $("#dct-" + p_id).animate({
@@ -424,9 +380,9 @@ $(document).ready(function() {
                                 padding: "0px"
                             }, 100);
                             setTimeout(function() {
-            
+
                                 $("#errors").fadeOut();
-            
+
                                 $.post('/delete_project', {
                                     proj_id: p_id
                                 }, function(result, status) {
@@ -438,13 +394,13 @@ $(document).ready(function() {
                             }, 1000);
                         }
                     });
-            
+
                     $("#cancel-del-" + p_id).click(function() {
                         $("#1-p-row-" + p_id).html("");
                         $("#2-p-row-" + p_id).show();
                     });
                 });
-                
+
                 //when a specific project is selected to be rendered.
                 $(".select-project").click(function() {
                     var global_p_id = $(this).attr("id").substring(3);
@@ -453,34 +409,34 @@ $(document).ready(function() {
                         valid: true
                     }, function(email, status) {
                         $.get("/private/" + email + "/projects/" + global_p_id + "/string.json",
-                        function(result, status) {
-                            render_project_front(result);
-                             gProject.saveState();
-                        });
-                        $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json", 
-                        function(result) {
-                            $("#text-p-desc").val(result.project_desc);
-                            $("#diagram-title").val(result.project_name);
-                            
-                        });
-                        
+                            function(result, status) {
+                                render_project_front(result);
+                                gProject.saveState();
+                            });
+                        $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json",
+                            function(result) {
+                                $("#text-p-desc").val(result.project_desc);
+                                $("#diagram-title").val(result.project_name);
+
+                            });
+
                     });
                 });
-                
+
                 //specific project is requested to be published
                 $(".publish-project").click(function() {
                     var p_id = $(this).attr("id").substring(3);
                     $.post('/publish_project', {
                         pid: p_id
                     }, function() {
-            
+
                     });
                 });
             }
         });
     });
 
-    
+
     $("#save-project-opt").click(function() {
         var currentString = gProject.currentString();
         $.post("/c-loggedin", {
@@ -527,8 +483,8 @@ $(document).ready(function() {
         gProject.clearDiagram();
     });
 
-    
-    
+
+
     /*
         var main_string;
         var client = new XMLHttpRequest();
@@ -631,53 +587,60 @@ $(document).ready(function() {
 
     }
 
-    function render_gallery(dateName){
-        $.post('/get_gallery_data', {dateName: dateName}, function(result){
+    function render_gallery(dateName) {
+        $.post('/get_gallery_data', {
+            dateName: dateName
+        }, function(result) {
             var projects = result.projectNoArr;
             // create all the divs for the different projects
-            for (var num=0; num<projects.length; num++) {
+            for (var num = 0; num < projects.length; num++) {
                 var projectNo = projects[num];
-                var pID = dateName+"."+projectNo;
-                $("#gallery-box").html($("#gallery-box").html() + "<a href = '/"+pID+"' id = 'a"+pID+"' style = 'text-decoration: none;'></a>");
+                var pID = dateName + "_" + projectNo;
+                $("#gallery-box").append($("<a href = '/" + pID + "' id = 'a" + pID + "' style = 'text-decoration: none;'></a>"));
             }
-            for (var num=0; num<projects.length; num++) {
+            for (var num = 0; num < projects.length; num++) {
                 var latestVersion = "v1";
                 var projectNo = projects[num];
-                (function (projectNo) {$.get("/public/"+dateName+"/"+projectNo+"/versions/"+latestVersion+"/meta.json", function(meta){
-                    $.get("/public/"+dateName+"/"+projectNo+"/data.json", function(data){
-                        var pname = meta.project_name;
-                        var pdesc = meta.project_desc;
-                        
-                        if(pdesc==""){
-                            pdesc = "No description provided.";
-                        }
-                        var datePublished = data.date_published;
-                        var owners = data.owners.join();
-                        var disDateName = dateName.substring(0,2) + "/" + dateName.substring(2,4);
-                        $("#gg-date-title").html(" - "+disDateName);
-                        var pID = dateName+"."+projectNo;
-                        console.log("#a"+pID);
-                        $("#a"+pID).html(
-                        "<div id = '"+pID+"' class = 'gallery-pcomp'>"+
-                            "<b style = 'color: dimgrey;font-size:115%;'>"+pname+"</b><br>"+
-                            "Date Published: "+datePublished+"<br>"+
-                            "Authors: "+owners+"<br>"+
-                            "<span style = 'color:#887f8d'>"+pdesc+"</span>"+
-                        "</div>");
-                        
-                    });
-                })})(projectNo);
+                (function(projectNo) {
+                    $.get("/public/" + dateName + "/" + projectNo + "/versions/" + latestVersion + "/meta.json", function(meta) {
+                        $.get("/public/" + dateName + "/" + projectNo + "/data.json", function(data) {
+                            var pname = meta.project_name;
+                            var pdesc = meta.project_desc;
+
+                            if (pdesc == "") {
+                                pdesc = "No description provided.";
+                            }
+                            var datePublished = data.date_published;
+                            var owners = data.owners.join();
+                            var disDateName = dateName.substring(0, 2) + "/" + dateName.substring(2, 4);
+                            $("#gg-date-title").html(" - " + disDateName);
+                            var pID = dateName + "_" + projectNo;
+                            console.log("#a" + pID);
+                            var obj = $('#a' + pID);
+                            obj.append($("<div>Hi there my friend</div>"));
+                            /*
+                            $("#a" + pID).html(
+                                "<div id = '" + pID + "' class = 'gallery-pcomp'>" +
+                                "<b style = 'color: dimgrey;font-size:115%;'>" + pname + "</b><br>" +
+                                "Date Published: " + datePublished + "<br>" +
+                                "Authors: " + owners + "<br>" +
+                                "<span style = 'color:#887f8d'>" + pdesc + "</span>" +
+                                "</div>");
+                            */
+                        });
+                    })
+                })(projectNo);
             }
         });
     }
     var date = new Date();
-    var curYear = date.getFullYear().toString().substr(2,2);
-    var curMonth = (date.getMonth()+1).toString();
+    var curYear = date.getFullYear().toString().substr(2, 2);
+    var curMonth = (date.getMonth() + 1).toString();
     var currentDateName = curYear + curMonth;
     $("#mm-gallery").click(function() {
         $("#gallery-box").fadeIn();
         render_gallery(currentDateName);
     });
-    
-    
+
+
 });
