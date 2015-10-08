@@ -169,7 +169,7 @@ $(document).ready(function() {
         if (window.location.pathname.length < 3) {
             render_project_front(null);
             $("#diagram-title").val("New Project");
-            show_msg("Loading New Project...", 500, 2);
+            
         }
     }
 
@@ -196,12 +196,14 @@ $(document).ready(function() {
             login_email: login_email
         }, function(result, status) {
             if (status == "success") {
+                
                 if (result.success) {
                     $("#login-box").fadeOut();
                     render_page();
                 }
                 else {
                     render_page();
+                    
                     show_msg("Incorrect login details, please try again.", 3000, 1);
                 }
             }
