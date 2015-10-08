@@ -18,7 +18,6 @@ function Display(container, diagram) {
     this.diagram = diagram;
     this.active = null;
     this.select_zone = null;
-    this.prepare_controls();
     var self = this;
     $(container).mousedown(function(event) {
         self.mousedown(event)
@@ -55,15 +54,22 @@ Display.prototype.mouseup = function(event) {
     var logical = this.pixelsToLogical(event);
     var dx = logical.x - this.select_logical.x;
     var dy = logical.y - this.select_logical.y;
-    var data = {boundary_depth: z.boundary_depth, boundary_type: z.boundary_type, coordinates: z.logical};
-    if (z.direction == 'horizontal' && Math.abs(dx) > 0.25) {
-        data.positive = (dx > 0);
-        gProject.drag_cell(data)
+    var primary = (z.direction == 'vertical' ? dy : dx);
+    if (Math.abs(primary) < 0.25) {
+        this.select_zone = null;
+        return;
     }
-    else if (z.direction == 'vertical' && Math.abs(dy) > 0.25) {
-        data.positive = (dy > 0);
-        gProject.drag_cell(data)
+    var data = {
+        boundary_depth: z.boundary_depth,
+        boundary_type: z.boundary_type,
+        coordinates: z.logical,
+        primary: Math.abs(primary) > 0.25 ? (primary > 0 ? 1 : -1) : 0,
+        secondary: 0
+    };
+    if (z.direction == 'vertical') {
+        data.secondary = Math.abs(dx) > 0.25 ? (dx > 0 ? 1 : -1) : 0
     }
+    gProject.drag_cell(data);
     this.select_zone = null;
 }
 
@@ -147,6 +153,7 @@ Display.prototype.set_diagram = function(diagram) {
         this.container.empty();
     }
     else {
+        this.prepare_controls();
         this.render();
     }
 }
