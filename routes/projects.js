@@ -147,18 +147,20 @@ exports.save_p_changes = function(req,res){
 		});
 	}else{
 		
-		if(proj_name.length>2){
-			var data = fs.readFileSync('database/users/'+user_id+'/data.json');
-			data = JSON.parse(data);
-			if(data.projects.length>0){
-				var newID = data.projects[data.projects.length-1].id + 1;
-			}else{
-				var newID = 0;	
-			}
-			data.projects.push({"id":newID, "name":proj_name});
-			data.projects_count = data.projects_count + 1;
-			var metaData = JSON.stringify({project_name : proj_name, project_desc: p_desc});
-			fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
+		if(proj_name.length==0){
+			proj_name = "(No Name)";
+		}
+		var data = fs.readFileSync('database/users/'+user_id+'/data.json');
+		data = JSON.parse(data);
+		if(data.projects.length>0){
+			var newID = data.projects[data.projects.length-1].id + 1;
+		}else{
+			var newID = 0;	
+		}
+		data.projects.push({"id":newID, "name":proj_name});
+		data.projects_count = data.projects_count + 1;
+		var metaData = JSON.stringify({project_name : proj_name, project_desc: p_desc});
+		fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
 			fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
 				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", new_string, function(){
 					fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
@@ -171,12 +173,6 @@ exports.save_p_changes = function(req,res){
 				});
 			});	
 		});
-		}else{
-			res.send({
-				success: false,
-				msg: "Your project name is too short."
-			});	
-		}	
 	}
 		
 };

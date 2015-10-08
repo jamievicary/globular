@@ -56,7 +56,6 @@ app.use('/public',  express.static(__dirname + '/database/projects'));
 app.get('/', function(req,res){
 	
 	if(!fs.existsSync('database/')){
-		console.log("DOESNT EXIST");
 		fs.mkdir('database/');	
 	}
 	if(!fs.existsSync('database/projects')){
