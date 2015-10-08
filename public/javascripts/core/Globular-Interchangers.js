@@ -141,7 +141,12 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     if (type.tail('1I')) {
         list.push(new_type, heights[heights - 2]);
-        list.push(new_type + 'I', heights[heights - 2]);
+        if(new_type.tail('I')){
+            list.push(new_type.substr(0, new_type.length - 1), heights[heights - 2]);
+        }
+        else{
+            list.push(new_type + 'I', heights[heights - 2]);
+        }
     }
 
     var new_type = type.slice(0, type.length - 2);
