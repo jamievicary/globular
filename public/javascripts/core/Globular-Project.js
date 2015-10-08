@@ -311,7 +311,7 @@ Project.prototype.drag_cell = function(drag) {
     var id;
     
     if (this.diagram.getDimension() === 2){
-        if(!drag.positive){
+        if(drag.primary < 0){
             drag.coordinates.increment_last(-1);
         }
         if(this.diagram.nCells[drag.coordinates.last()].coordinates.last()  >
