@@ -617,18 +617,21 @@ div.control.inline {
 
 /* line 538, ../sass/style.sass */
 .gallery-pcomp {
-  width: 100%;
-  height: 150px;
-  font-size: 80%;
+  width: 97%;
+  cursor: pointer;
+  font-size: 85%;
   background-color: #84c9b6;
   margin-top: 10px;
+  color: white;
+  padding: 10px;
 }
 
-/* line 545, ../sass/style.sass */
+/* line 547, ../sass/style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
   padding: 5px;
+  font-size: 110%;
   margin-top: -10px;
   position: fixed;
 }

@@ -14,7 +14,6 @@ exports.get_projects = function(req,res){
 			all_names.push(projects[i].name);
 		}
 		if(all_names.length>0){
-			
 			res.send({
 				success: true,
 				projects: all_names,
