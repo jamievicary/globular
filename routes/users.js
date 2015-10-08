@@ -6,7 +6,7 @@ encrypt_hash = function (string){
 	var value = hash_sha512.update(string+ "hvtItvv5854b").digest("hex");
 	console.log(value);
 	return value;
-}
+};
 
 exports.login_user = function(req, res){
 	var login_email = req.body.login_email;
@@ -35,9 +35,7 @@ exports.get_profile = function(req, res){
 	var valid = req.body.valid;
 	if(valid){
 		var user_id = req.session.user_id;
-	
-			res.send(user_id);
-
+		res.send(user_id);
 	}
 }
 

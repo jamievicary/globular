@@ -3,6 +3,7 @@
 // Global project object
 var gProject = {};
 var MainDisplay = null;
+var global_p_id = "null";
 var timeout = null;
 
 $(document).ready(function() {
@@ -36,8 +37,11 @@ $(document).ready(function() {
         }
         else if (key == ' ') {
             if (timeout == null) {
-                timeout = setInterval(function(){gProject.applyStochasticProcess(1);}, 1000);
-            } else {
+                timeout = setInterval(function() {
+                    gProject.applyStochasticProcess(1);
+                }, 1000);
+            }
+            else {
                 clearInterval(timeout);
                 timeout = null;
             }
@@ -47,11 +51,12 @@ $(document).ready(function() {
     $("div.enable_if-in").hide();
     //$("div.enable_if-out").show();
 
+    //Menu item instructions
     $("#mm-login").click(function() {
         $("#login-box").fadeIn();
     });
     $("#mm-logout").click(function() {
-       window.location = "/logout";
+        window.location = "/logout";
     });
     $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
@@ -68,22 +73,28 @@ $(document).ready(function() {
     $("#slider").on("input change", function() {
         gProject.renderDiagram();
     });
-
+    
     var original_msg_html = $("#errors").html();
     $(".box").draggable({
         containment: "document",
         cursor: "crosshair"
     });
-    
-    $("#view-desc-body").draggable({ containment: "parent" });
-    
+
     var dbltoggle = 0;
-    $("#view-p-desc").dblclick(function() {
-       
-        if(dbltoggle %2 == 0){
-            $("#view-desc-body").animate({left:"-300px"}, 1500);
-        }else{
-            $("#view-desc-body").animate({left:"0px"}, 1500);
+    
+    $("#view-p-desc").click(function() {
+
+        if (dbltoggle % 2 == 0) {
+            $("#view-desc-plate, #view-p-desc").animate({
+                marginLeft: "-=300px"
+            }, 1500);
+           
+        }
+        else {
+            $("#view-desc-plate, #view-p-desc").animate({
+                marginLeft: "+=300px"
+            }, 1500);
+           
         }
         dbltoggle = dbltoggle + 1;
     });
@@ -91,14 +102,18 @@ $(document).ready(function() {
     // Click handler on main diagram
     // Handle navigation by forward and back buttons
     window.onpopstate = function(event) {
-        if (event.state == null) {
-            render_project_front("", "", "");
+        if (event.state === null) {
+            // do nothing
         }
-        else {
-            render_project_front(event.state.string, "test", 0);
+        else if (event.state === "") {
+            render_project_front(null);
+            $("#diagram-title").val("New Project");
+        } else {
+            render_project_front(JSON.parse(event.state.string));
         }
     };
 
+    //function for producing all pop ups/errors
     function show_msg(value, dur, type) {
         var color = "";
         switch (type) {
@@ -132,6 +147,7 @@ $(document).ready(function() {
         });
     }
 
+    //renders buffering wheel
     $(document).ajaxStart(function() {
         $("#ajax-loading").fadeIn();
     });
@@ -139,19 +155,25 @@ $(document).ready(function() {
         $("#ajax-loading").fadeOut();
     });
 
+    //determines wether user is logged in or out - renders different home pages
     function render_frontend(state) {
         if (state === "out") {
             $("div.enable_if-in").hide();
             $("div.enable_if-out").show();
+
         }
         else {
             $("div.enable_if-in").show();
             $("div.enable_if-out").hide();
         }
-        render_project_front("", "New Project", "null", state);
-        show_msg("Loading New Project...", 500, 2);
+        if (window.location.pathname.length < 3) {
+            render_project_front(null);
+            $("#diagram-title").val("New Project");
+            show_msg("Loading New Project...", 500, 2);
+        }
     }
 
+    //actually renders page.
     function render_page() {
         $.post("/c-loggedin", {
             valid: true
@@ -165,6 +187,7 @@ $(document).ready(function() {
 
     render_page();
 
+    //login trigger
     $("#login-button").click(function() {
         var login_email = $("#login_email").val();
         var login_pass = $("#login_pass").val();
@@ -188,6 +211,7 @@ $(document).ready(function() {
         });
     });
 
+    //request to view profile (fetches user data, and includes change password system)
     $("#mm-profile").click(function() {
         $.post("/profile", {
             valid: true
@@ -215,6 +239,7 @@ $(document).ready(function() {
         });
     });
 
+    
     $("#reg_submit").click(function() {
         var email = $("#reg_email").val();
         var pass = $("#reg_pass").val();
@@ -230,17 +255,18 @@ $(document).ready(function() {
             if (result.success == true) {
                 $("#signup-box").fadeOut();
                 type = 2;
-            }else {
+            }
+            else {
                 type = 1;
             }
             show_msg(result.msg, 4000, type);
         });
     });
 
-    function render_project_front(s, name, p_id) {
+    //renders a project
+    function render_project_front(s) {
         $("#cell-body").html("");
         $("#my-projects-box").fadeOut();
-        $("#save-project-opt").attr("p_id", p_id);
         // Make sure diagram canvas has the right size
         $('#diagram-canvas').css('width', window.innerWidth - 300);
         $('#diagram-canvas').css('height', window.innerHeight - 20);
@@ -274,7 +300,7 @@ $(document).ready(function() {
 
         $("#project-menu").show();
         $("#diagram-canvas").show();
-        $("#diagram-title").val(name).show();
+        $("#diagram-title").show();
 
         function close_project() {
             $("#diagram-canvas").fadeOut(1000);
@@ -297,35 +323,136 @@ $(document).ready(function() {
         $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
         });
-        $("#run-process-go").click(function(){
+        $("#run-process-go").click(function() {
             var iterations = $("#rp-iters").val();
             iterations = Number(iterations);
             gProject.applyStochasticProcess(iterations);
             gProject.renderDiagram();
         });
-       
+
     }
+
+    //on request to see list of projects
+    $("#mm-projects").click(function() {
+        $.post("/get_projects", {}, function(result, status) {
+            if (result.success == false) {
+                $("#project-list").html(result.msg);
+                $("#my-projects-box").fadeIn();
+            }
+            else {
+                var projects = result.projects;
+                var p_ids = result.project_ids;
+
+                var projects_str = "";
+                for (var i = 0; i < projects.length; i++) {
+                    projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span>" +
+                        "<span id = '2-p-row-" + p_ids[i] + "'>" +
+                        "<span class = 'select-project' id = 'id-" + p_ids[i] + "'>" +
+                        projects[i] +
+                        "</span>" +
+                        "<span style = 'font-size:80%;color: #335566;float: right;margin-top:3px;'>" +
+                        "<span class = 'publish-project' id = 'id-" + p_ids[i] + "'>Publish</span>&middot;" +
+                        "<span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span>" +
+                        "</span></span><hr size = '1'>";
+                }
+
+                $("#project-list").html(projects_str);
+                $("#my-projects-box").fadeIn();
+                
+                //when one project on list is requested to be deleted
+                $(".del-project").click(function() {
+                    var org_name = $(this).attr("p_name");
+                    var p_id = $(this).attr("id").substring(3);
+            
+                    $("#2-p-row-" + p_id).hide();
+                    $("#1-p-row-" + p_id).html("<input id = 'dct-" + p_id + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + p_id + "' class = 'cancel-del'>x</span>");
+                    $("#dct-" + p_id).animate({
+                        width: "200px"
+                    }, 1000).focus();
+                    $("#dct-" + p_id).keyup(function() {
+                        if ($(this).val() == "delete") {
+                            $("#dct-" + p_id).animate({
+                                width: "0px"
+                            }, 1000).animate({
+                                padding: "0px"
+                            }, 100);
+                            setTimeout(function() {
+            
+                                $("#errors").fadeOut();
+            
+                                $.post('/delete_project', {
+                                    proj_id: p_id
+                                }, function(result, status) {
+                                    if (result.success == true) {
+                                        $("#my-projects-box").fadeOut();
+                                        show_msg("Successfully deleted.", 2000, 2);
+                                    }
+                                });
+                            }, 1000);
+                        }
+                    });
+            
+                    $("#cancel-del-" + p_id).click(function() {
+                        $("#1-p-row-" + p_id).html("");
+                        $("#2-p-row-" + p_id).show();
+                    });
+                });
+                
+                //when a specific project is selected to be rendered.
+                $(".select-project").click(function() {
+                    var global_p_id = $(this).attr("id").substring(3);
+                    $("#errors").fadeOut();
+                    $.post("/profile", {
+                        valid: true
+                    }, function(email, status) {
+                        $.get("/private/" + email + "/projects/" + global_p_id + "/string.json",
+                        function(result, status) {
+                            render_project_front(result);
+                             gProject.saveState();
+                        });
+                        $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json", 
+                        function(result) {
+                            $("#text-p-desc").val(result.project_desc);
+                            $("#diagram-title").val(result.project_name);
+                            
+                        });
+                        
+                    });
+                });
+                
+                //specific project is requested to be published
+                $(".publish-project").click(function() {
+                    var p_id = $(this).attr("id").substring(3);
+                    $.post('/publish_project', {
+                        pid: p_id
+                    }, function() {
+            
+                    });
+                });
+            }
+        });
+    });
 
     
     $("#save-project-opt").click(function() {
         var currentString = gProject.currentString();
-        var p_id = $(this).attr("p_id");
         $.post("/c-loggedin", {
                 valid: true
             },
             function(result, status) {
-                if (result.status === "in" && p_id == "null") {
-                    p_id = "hold";
+                if (result.status === "in" && global_p_id == "null") {
+                    global_p_id = "hold";
                 }
-                if(p_id == "null") {
+                if (global_p_id == "null") {
                     show_msg("Please login in order to save this project. If you do not have an account then sign up now!", 7000, 3);
-                }else {
+                }
+                else {
                     var name = $("#diagram-title").val();
                     $.post("/save_project_changes", {
                         string: currentString,
-                        p_id: p_id,
+                        p_id: global_p_id,
                         p_name: name,
-                        p_desc:$("#text-p-desc").val()
+                        p_desc: $("#text-p-desc").val()
                     }, function(result, status) {
 
                         show_msg("Successfully saved changes.", 2000, 2);
@@ -334,7 +461,6 @@ $(document).ready(function() {
                 }
 
             });
-
     });
 
     $("#use-t-opt").click(function() {
@@ -354,84 +480,8 @@ $(document).ready(function() {
         gProject.clearDiagram();
     });
 
-    //$("#my-projects-opt").click(function() {
-    $("#mm-projects").click(function() {
-        $.post("/get_projects", {}, function(result, status) {
-            if (result.success == false) {
-                $("#project-list").html(result.msg);
-                $("#my-projects-box").fadeIn();
-            }
-            else {
-                var projects = result.projects;
-                var p_ids = result.project_ids;
-               
-                var projects_str = "";
-                for (var i = 0; i < projects.length; i++) {
-                    projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span><span id = '2-p-row-" + p_ids[i] + "'><span class = 'select-project' id = 'id-" + p_ids[i] + "'>" + projects[i] + "</span><span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span></span><hr size = '1'>";
-                }
-
-                $("#project-list").html(projects_str);
-                $("#my-projects-box").fadeIn();
-
-                $(".select-project").click(function() {
-
-                    var p_id = $(this).attr("id").substring(3);
-                    $("#errors").fadeOut();
-
-                    $.post("/get_project_string", {
-                        p_id: p_id
-                    }, function(result, status) {
-                        var s = result.string;
-                        render_project_front(s, result.name, p_id);
-                        gProject.saveState();
-                    });
-                    
-                    $.post('/get-project-meta', {pid:  p_id}, function(result){
-                        $("#text-p-desc").val(result.project_desc);
-                    });
-
-                });
-                $(".del-project").click(function() {
-                    var org_name = $(this).attr("p_name");
-                    var p_id = $(this).attr("id").substring(3);
-
-                    $("#2-p-row-" + p_id).hide();
-                    $("#1-p-row-" + p_id).html("<input id = 'dct-" + p_id + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + p_id + "' class = 'cancel-del'>x</span>");
-                    $("#dct-" + p_id).animate({
-                        width: "200px"
-                    }, 1000).focus();
-                    $("#dct-" + p_id).keyup(function() {
-                        if ($(this).val() == "delete") {
-                            $("#dct-" + p_id).animate({
-                                width: "0px"
-                            }, 1000).animate({
-                                padding: "0px"
-                            }, 100);
-                            setTimeout(function() {
-
-                                $("#errors").fadeOut();
-
-                                $.post('/delete_project', {
-                                    proj_id: p_id
-                                }, function(result, status) {
-                                    if (result.success == true) {
-                                        $("#my-projects-box").fadeOut();
-                                        show_msg("Successfully deleted.", 2000, 2);
-                                    }
-                                });
-                            }, 1000);
-                        }
-                    });
-
-                    $("#cancel-del-" + p_id).click(function() {
-                        $("#1-p-row-" + p_id).html("");
-                        $("#2-p-row-" + p_id).show();
-                    });
-                });
-            }
-        });
-    });
-
+    
+    
     /*
         var main_string;
         var client = new XMLHttpRequest();
@@ -453,7 +503,7 @@ $(document).ready(function() {
         var main_string = $("#ap-string").val();
         $.post("/add_new_project", {
             p_name: p_name,
-            p_desc:p_desc,
+            p_desc: p_desc,
             string: main_string
         }, function(result, status) {
             var colour = 2;
@@ -483,23 +533,81 @@ $(document).ready(function() {
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
-    
-    $("#msg-close-opt-help").click(function(){
+
+    $("#msg-close-opt-help").click(function() {
         $("#help-box").fadeOut();
     });
-    $("#msg-close-opt-about").click(function(){
+    $("#msg-close-opt-about").click(function() {
         $("#about-box").fadeOut();
     });
-    $("#msg-close-opt-gallery").click(function(){
+    $("#msg-close-opt-gallery").click(function() {
         $("#gallery-box").fadeOut();
     });
-    $("#mm-help").click(function(){
+    $("#mm-help").click(function() {
         $("#help-box").fadeIn();
     });
-    $("#mm-gallery").click(function(){
+    $("#mm-gallery").click(function() {
         $("#gallery-box").fadeIn();
     });
-    $("#mm-about").click(function(){
+    $("#mm-about").click(function() {
         $("#about-box").fadeIn();
     });
+
+    var pathName = window.location.pathname;
+    pathName = pathName.substring(1);
+    var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
+    if (regexResult == 0) {
+
+        var dateName = pathName.substring(0, 4);
+
+        var posVersion = pathName.search(/([v])/);
+        var version;
+        var projectNo;
+        if (posVersion == -1) {
+            version = "v1";
+            projectNo = pathName.substring(5);
+        }
+        else {
+            version = pathName.substring(posVersion);
+            projectNo = pathName.substring(5, posVersion);
+        }
+        $.post('/get_public_project', {
+            dateName: dateName,
+            version: version,
+            projectNo: projectNo
+
+        }, function(result) {
+            render_project_front(JSON.parse(result.string), result.meta.project_name, pathName);
+            $("#text-p-desc").val(result.meta.project_desc);
+            $("#diagram-title").val(result.meta.project_name);
+        });
+    }
+    else {
+
+    }
+
+    function render_gallery(dateName){
+        $.post('/get_gallery_data', {dateName: dateName}, function(result){
+            var projects = result.projectNoArr;
+            var allMeta;
+            for (var num=0; num<projects.length; num++) {
+                var latestVersion = "v1";
+                $.get("/public/"+dateName+"/"+projects[num]+"/versions/"+latestVersion+"/meta.json", function(result){
+
+                    var pname = result.project_name;
+                    var pdesc = result.project_desc;
+                    var disDateName = dateName.substring(0,2) + "/" + dateName.substring(2,4);
+                    $("#gg-date-title").html(" - "+disDateName);
+                    var pID = dateName+"."+num;
+                    $("#gallery-box").html($("#gallery-box").html() + "<div id = '"+pID+"' class = 'gallery-pcomp'><b style = 'color: dimgrey;'>"+pname+"</b><br>"+pdesc+"</div>");
+                });
+            }
+        });
+    }
+    var date = new Date();
+    var curYear = date.getFullYear().toString().substr(2,2);
+    var curMonth = (date.getMonth()+1).toString();
+    var currentDateName = curYear + curMonth;
+    render_gallery(currentDateName);
+    
 });
