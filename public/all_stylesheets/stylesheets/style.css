@@ -597,7 +597,7 @@ div.preview-icon > svg {
 /* line 510, ../sass/style.sass */
 div.control.inline {
   position: absolute;
-  right: 10px;
+  right: 150px;
   top: 10px;
 }
 

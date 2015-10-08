@@ -70,3 +70,10 @@ String.prototype.tail = function() {
     //return this.substr(this.length - elements, this.length);
 };
 
+Array.prototype.fill = function(value, length) {
+    this.length = 0;
+    for (var i=0; i<length; i++) {
+        this[i] = value;
+    }
+    return this;
+}

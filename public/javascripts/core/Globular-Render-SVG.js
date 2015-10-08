@@ -15,24 +15,25 @@ function globular_set_viewbox() {
     $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
 }
 
-function globular_render(container, diagram, subdiagram) {
+function globular_render(container, diagram, subdiagram, suppress) {
+    if (suppress == undefined) suppress = 0;
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
 
-    if (diagram.getDimension() == 0) {
+    if (diagram.getDimension() - suppress == 0) {
         return globular_render_0d(container, diagram, subdiagram);
     }
-    else if (diagram.getDimension() == 1) {
+    else if (diagram.getDimension() - suppress == 1) {
         return globular_render_1d(container, diagram, subdiagram);
     }
-    else if (diagram.getDimension() >= 2) {
+    else if (diagram.getDimension() - suppress >= 2) {
         return globular_render_2d(container, diagram, subdiagram);
     }
 }
 
 function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     container = $(container);
-    container.empty();
+    container.children('svg').remove();
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     var x_center = (min_x + max_x)/2;

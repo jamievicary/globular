@@ -309,11 +309,17 @@ Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
     
     var id;
+<<<<<<< HEAD
     var temp_coordinates = new Array();
     var interchanger;
 
     if (this.diagram.getDimension() === 2){ // n - coordinates - suppress
         if(drag.primary === -1){
+=======
+    
+    if (this.diagram.getDimension() === 2){
+        if(drag.primary < 0){
+>>>>>>> 9f489ab6ed6c74cb096b883c4ecfdd0e561063b0
             drag.coordinates.increment_last(-1);
         }
         if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() <
@@ -954,17 +960,17 @@ Project.prototype.renderNCells = function(n) {
     if (replace == false) {
         var cell_group_html;
         if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links' style = 'position:block;'><span id = 'add-0-cell-opt' class = 'button-style-3' style = 'position:block;'>New 0-cell</span></div>";
+            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt'>New 0-cell</span></div>";
         }
         else {
             cell_group_html = "";
         }
-        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-CELLS</div>";
+        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-Cells</div>";
         $("#cell-body").append($(cell_group_html));
     }
     var cells = this.listGenerators()[n]; //["testCell1", "testCell2", "TESTcell3"];
     if (cells == undefined) cells = [];
-    $("#cell-group-" + n.toString()).html(n + "-CELLS");
+    $("#cell-group-" + n.toString()).html(n + "-Cells");
 
     for (var i = 0; i < cells.length; i++) {
 
