@@ -305,6 +305,10 @@ Project.prototype.storeTheorem = function() {
 
 };
 
+Project.prototype.drag_cell = function(drag) {
+    console.log("Detected drag: " + JSON.stringify(drag));
+} 
+
 // Handle a click on a 2-cell to implement interchangers
 Project.prototype.clickCell = function(height) {
 
@@ -638,6 +642,7 @@ Project.prototype.renderGenerator = function(div, id) {
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
     var t0 = performance.now();
+<<<<<<< HEAD
 
     var div = '#diagram-canvas';
     if (this.diagram == null) {
@@ -666,6 +671,10 @@ Project.prototype.renderDiagram = function() {
        // }
     }
 
+=======
+    
+    MainDisplay.set_diagram(this.diagram);
+>>>>>>> 15d5dd8f0a728e7137a7fa6937d02ad047f0c497
 };
 
 // Need to write this code
