@@ -36,6 +36,8 @@ app.use(session({
   cookie: { secure: true }
 }));
 
+
+
 // user will ask for '/private/casparwylie@gmail.com/projects/%EH^%YJERTHE/string.json'
 app.use('/private', function(req, res) {
 	if(req.session.user_id==undefined) return false;
@@ -51,7 +53,20 @@ app.use('/private', function(req, res) {
 app.use('/public',  express.static(__dirname + '/database/projects'));
 
     	//routes
+app.get('/', function(req,res){
+	
+	if(!fs.existsSync('database/')){
+		console.log("DOESNT EXIST");
+		fs.mkdir('database/');	
+	}
+	if(!fs.existsSync('database/projects')){
+		fs.mkdir('database/projects/');	
+	}
+	if(!fs.existsSync('database/users')){
+		fs.mkdir('database/users/');	
+	}
 
+});
 app.post('/login', function(req, res){
 	users.login_user(req, res);
 	
