@@ -79,19 +79,6 @@ Project.prototype.getColour = function(id) {
     return this.dataList.get(id).colour;
 };
 
-// Sets the front-end colour to what the user wants
-Project.prototype.set_rate = function(id, rate) {
-    var tempData = this.dataList.get(id);
-    tempData.rate = rate;
-    this.dataList.put(id, tempData);
-    this.saveState();
-};
-
-// Gets the front-end colour to what the user wants
-Project.prototype.get_rate = function(id) {
-    return this.dataList.get(id).rate;
-};
-
 
 /* 
 Takes a rule (generator) and a string describing how to get to an appropriate boundary of this diagram as arguments
@@ -320,6 +307,46 @@ Project.prototype.storeTheorem = function() {
 
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
+    
+    var id;
+    
+    if (this.diagram.getDimension() === 2){
+        if(!drag.positive){
+            drag.coordinates.increment_last(-1);
+        }
+        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last()  >
+            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
+                
+            id = 'Int';
+        }
+        else{
+            id = 'IntI';
+        }
+        
+    var temp_coordinates = new Array();
+    for(var i = 0; i < this.diagram.dimension - 1; i++)
+        temp_coordinates.push(0);
+    temp_coordinates.push(drag.coordinates.last()); 
+     
+    var interchanger = new NCell(id, temp_coordinates);
+    
+    if (!this.diagram.interchangerAllowed(interchanger)) {
+        alert("Cannot interchange these cells");
+        this.selected_cell = null;
+        return;
+    }
+
+    // Attempt to perform the interchanger
+    this.diagram.rewrite(interchanger, false);
+
+
+    // Finish up and render the result
+    this.selected_cell = null;
+    this.saveState();
+    $('div.cell-b-sect').empty();
+    this.renderDiagram();    
+    }
+    
 } 
 
 // Handle a click on a 2-cell to implement interchangers
@@ -643,52 +670,7 @@ Project.prototype.addZeroCell = function() {
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
-    /*
-        if (highlight === undefined) {
-            highlight = {
-                inclusion: {
-                    bounds: []
-                },
-                boundaryPath: ""
-            };
-        }
-
-        // Update the highlight data to refer to top-level names
-        var boundary_array = highlight.boundaryPath.split();
-        var bounds = [];
-        for (var i = 0; i < highlight.inclusion.bounds.length; i++) {
-            bounds[i] = {};
-            bounds[i].preceding = map_diagram.elementGeneralName(highlight.inclusion.bounds[i].preceding, boundary_array);
-            bounds[i].succeeding = map_diagram.elementGeneralName(highlight.inclusion.bounds[i].succeeding, boundary_array);
-        }
-
-        // Make an array of colour data.
-        // In the future, only do this for colours we actually need,
-        // or find some other way to do this - it's a bit ugly.
-        var tempColours = new Hashtable();
-        map_diagram.map.each(function(key, value) {
-            tempColours.put(key, this.dataList.get(value).colour);
-        }.bind(this));
-        map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
-    */
     
-    /*
-    if (diagram.dimension === 3) {
-            slider.attr('max', diagram.nCells.length);
-            if(slider.val() === undefined){
-                slider.val(0);
-            }
-            slider.show()
-            var slider_value = slider.val();
-            var diagram_slice = diagram.getSlice(slider_value);
-            
-            diagram_slice.render(div, highlight);
-        }
-    else {
-        diagram.render(div, highlight);
-    }
-    */
-
     diagram.render(div, highlight);
 }
 
@@ -699,6 +681,7 @@ Project.prototype.renderGenerator = function(div, id) {
 
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
+    
     MainDisplay.set_diagram(this.diagram);
 };
 
@@ -960,17 +943,17 @@ Project.prototype.renderNCells = function(n) {
     if (replace == false) {
         var cell_group_html;
         if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links' style = 'position:block;'><span id = 'add-0-cell-opt' class = 'button-style-3' style = 'position:block;'>New 0-cell</span></div>";
+            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt'>New 0-cell</span></div>";
         }
         else {
             cell_group_html = "";
         }
-        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-CELLS</div>";
+        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-Cells</div>";
         $("#cell-body").append($(cell_group_html));
     }
     var cells = this.listGenerators()[n]; //["testCell1", "testCell2", "TESTcell3"];
     if (cells == undefined) cells = [];
-    $("#cell-group-" + n.toString()).html(n + "-CELLS");
+    $("#cell-group-" + n.toString()).html(n + "-Cells");
 
     for (var i = 0; i < cells.length; i++) {
 
