@@ -11,11 +11,11 @@ var T = 1;
     this in the destringify routine, so we should do nothing. If it's empty,
     construct an empty project. Otherwise, destringify.
 */
-function Project(s) {
-    if (s === undefined) {
+function Project(project_compressed) {
+    if (project_compressed === undefined) {
         return;
     }
-    if (s === "") {
+    if (project_compressed === null) {
         this.diagram = null;
         this.signature = new Signature(null);
 
@@ -30,8 +30,8 @@ function Project(s) {
         return;
     }
 
-    // Rebuild the project from the given string
-    globular_destringify(s, this);
+    // Rebuild the project from the given compressed structure
+    globular_extract(project_compressed, this);
 };
 
 Project.prototype.getType = function() {

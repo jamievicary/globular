@@ -3,6 +3,7 @@ var fs = require('fs');
 exports.get_projects = function(req,res){
 	var user_id = req.session.user_id;
 	fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
+		
 		data = JSON.parse(data);
 		var projects = data.projects;
 		var all_ids = [];
@@ -13,11 +14,13 @@ exports.get_projects = function(req,res){
 			all_names.push(projects[i].name);
 		}
 		if(all_names.length>0){
+			
 			res.send({
 				success: true,
 				projects: all_names,
 				project_ids: all_ids
 			});
+				
 		}else{
 			res.send({
 				success: false,
@@ -33,10 +36,8 @@ exports.add_new_project = function(req,res){
 		var p_desc = req.body.p_desc;
 		var string = req.body.string;
 		var user_id = req.session.user_id;
-		console.log(user_id);
 		var data = fs.readFileSync('database/users/'+user_id+'/data.json');
 		data = JSON.parse(data);
-		console.log(data);
 		if(data.projects.length>0){
 			var newID = data.projects[data.projects.length-1].id + 1;
 		}else{
@@ -122,6 +123,8 @@ exports.save_p_changes = function(req,res){
 	var proj_name = req.body.p_name;
 	var new_string = req.body.string;
 	var p_desc = req.body.p_desc;
+	//if saving public project, 
+	
 	if(p_id!="hold"){
 		fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
 			data = JSON.parse(data);
@@ -262,6 +265,7 @@ exports.get_pp = function(req,res){
 	var projectNo = req.body.projectNo;
 	fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/string.json', 'utf8', function(err, string){
 		fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/meta.json', 'utf8', function(err, meta){
+			meta = JSON.parse(meta);
 			res.send({
 				string: string,
 				meta: meta,
@@ -271,3 +275,41 @@ exports.get_pp = function(req,res){
 		
 	});	
 };
+
+exports.get_gallery_data = function(req,res){
+	var dateName = req.body.dateName;
+	fs.readdir('database/projects/'+dateName, function(err,files){
+		res.send({projectNoArr: files});	
+	});
+};	
+
+/*exports.get_gallery_data = function(req,res){
+	var dateName = req.body.dateName;
+	var allMeta = {};
+	fs.readdir('database/projects/'+dateName, function(err,files){
+		
+		for(var projectNo in files){
+			fs.readdir('database/projects/'+dateName+'/'+files[projectNo]+'/versions/', function(err,versions){
+
+				var accVersions = [];
+				var latestVersion;
+				if(versions.length>1){
+					for(var version in versions){
+						accVersions.push(parseInt(version.substring(1)));
+					}
+					
+					var sortedVs = accVersions.sort();
+					latestVersion = "v"+(sortedVs[sortedVs.length-1]).toString();
+				}else{
+					latestVersion = "v1";
+				}
+				console.log(files[projectNo]);
+				fs.readFile('database/projects/'+dateName+'/'+files[projectNo]+'/versions/'+latestVersion+'/meta.json', 'utf8', function(err, meta){
+					meta = JSON.parse(meta);
+					console.log(JSON.stringify(meta) + "gg");
+					//allMeta.push(meta);
+				});
+			});	
+		}
+	});
+};*/
