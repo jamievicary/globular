@@ -948,7 +948,7 @@ Project.prototype.renderNCells = function(n) {
     if (replace == false) {
         var cell_group_html;
         if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt' class = 'button-style-3'>New 0-cell</span></div>";
+            cell_group_html = "<div class = 'mini-opt-links' style = 'position:block;'><span id = 'add-0-cell-opt' class = 'button-style-3' style = 'position:block;'>New 0-cell</span></div>";
         }
         else {
             cell_group_html = "";
