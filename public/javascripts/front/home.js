@@ -591,9 +591,7 @@ $(document).ready(function() {
     $("#mm-help").click(function() {
         $("#help-box").fadeIn();
     });
-    $("#mm-gallery").click(function() {
-        $("#gallery-box").fadeIn();
-    });
+
     $("#mm-about").click(function() {
         $("#about-box").fadeIn();
     });
@@ -634,18 +632,39 @@ $(document).ready(function() {
     function render_gallery(dateName){
         $.post('/get_gallery_data', {dateName: dateName}, function(result){
             var projects = result.projectNoArr;
-            var allMeta;
+            // create all the divs for the different projects
+            for (var num=0; num<projects.length; num++) {
+                var projectNo = projects[num];
+                var pID = dateName+"."+projectNo;
+                $("#gallery-box").html($("#gallery-box").html() + "<a href = '/"+pID+"' id = 'a"+pID+"' style = 'text-decoration: none;'></a>");
+            }
             for (var num=0; num<projects.length; num++) {
                 var latestVersion = "v1";
-                $.get("/public/"+dateName+"/"+projects[num]+"/versions/"+latestVersion+"/meta.json", function(result){
-
-                    var pname = result.project_name;
-                    var pdesc = result.project_desc;
-                    var disDateName = dateName.substring(0,2) + "/" + dateName.substring(2,4);
-                    $("#gg-date-title").html(" - "+disDateName);
-                    var pID = dateName+"."+num;
-                    $("#gallery-box").html($("#gallery-box").html() + "<div id = '"+pID+"' class = 'gallery-pcomp'><b style = 'color: dimgrey;'>"+pname+"</b><br>"+pdesc+"</div>");
-                });
+                var projectNo = projects[num];
+                (function (projectNo) {$.get("/public/"+dateName+"/"+projectNo+"/versions/"+latestVersion+"/meta.json", function(meta){
+                    $.get("/public/"+dateName+"/"+projectNo+"/data.json", function(data){
+                        var pname = meta.project_name;
+                        var pdesc = meta.project_desc;
+                        
+                        if(pdesc==""){
+                            pdesc = "No description provided.";
+                        }
+                        var datePublished = data.date_published;
+                        var owners = data.owners.join();
+                        var disDateName = dateName.substring(0,2) + "/" + dateName.substring(2,4);
+                        $("#gg-date-title").html(" - "+disDateName);
+                        var pID = dateName+"."+projectNo;
+                        console.log("#a"+pID);
+                        $("#a"+pID).html(
+                        "<div id = '"+pID+"' class = 'gallery-pcomp'>"+
+                            "<b style = 'color: dimgrey;font-size:115%;'>"+pname+"</b><br>"+
+                            "Date Published: "+datePublished+"<br>"+
+                            "Authors: "+owners+"<br>"+
+                            "<span style = 'color:#887f8d'>"+pdesc+"</span>"+
+                        "</div>");
+                        
+                    });
+                })})(projectNo);
             }
         });
     }
@@ -653,6 +672,10 @@ $(document).ready(function() {
     var curYear = date.getFullYear().toString().substr(2,2);
     var curMonth = (date.getMonth()+1).toString();
     var currentDateName = curYear + curMonth;
-    render_gallery(currentDateName);
+    $("#mm-gallery").click(function() {
+        $("#gallery-box").fadeIn();
+        render_gallery(currentDateName);
+    });
+    
     
 });
