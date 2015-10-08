@@ -313,16 +313,26 @@ Project.prototype.drag_cell = function(drag) {
     var interchanger;
 
     if (this.diagram.getDimension() === 2){ // n - coordinates - suppress
-        if(!drag.positive){
+        if(drag.primary === -1){
             drag.coordinates.increment_last(-1);
         }
-        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last()  <
+        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() <
             this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
                 
             id = 'IntI';
         }
-        else{
+        else if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() >
+            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
             id = 'Int';
+        }else{
+            if(drag.secondary === 1){
+                id = 'IntI'      
+            }else if(drag.secondary === -1){
+                id = 'Int'      
+            }else{
+                // no secondary drag direction supplied - impossible to resolve
+                console.log("Provide a left/right drag direction to resolve conflict")
+            }
         }
         
     for(var i = 0; i < this.diagram.dimension - 1; i++)
@@ -338,7 +348,7 @@ Project.prototype.drag_cell = function(drag) {
          
             temp_coordinates.concat(drag.coordinates);
     
-            if(drag.positive){
+            if(drag.primary === 1){
                 id = 'Int-1I';
             }
             else{
@@ -351,8 +361,47 @@ Project.prototype.drag_cell = function(drag) {
             temp_coordinates.push(0); // Need to pad with one 0
             temp_coordinates.push(drag.coordinates.last());
 
-            if(drag.positive){
-
+            if(drag.primary === 1){
+                if(drag.secondary === 0){
+                       
+                }
+                else{
+                    
+                    if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                        id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+                    }
+                    else{
+                        console.log("No way to pull through");
+                    }
+                    
+                    if(drag.secondary === 1){
+                        id = id + '-L';   
+                    }
+                    else if(drag.secondary === -1){
+                        id = id + '-R';   
+                    }
+                }
+            }
+            else{
+                if(drag.secondary === 0){
+                       
+                }
+                else{
+                    
+                    if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                        id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+                    }
+                    else{
+                        console.log("No way to pull through");
+                    }
+                    
+                    if(drag.secondary === 1){
+                        id = id + '-RI';   
+                    }
+                    else if(drag.secondary === -1){
+                        id = id + '-LI';   
+                    }
+                }
                 
             }
         }
