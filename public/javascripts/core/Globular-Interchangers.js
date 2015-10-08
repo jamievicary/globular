@@ -24,7 +24,6 @@ Diagram.prototype.expand = function(type, x, n, m) {
     }
 
     return list;
-
 }
 
 Diagram.prototype.atomicInterchangerSource = function(type, heights) {
@@ -221,7 +220,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
     if (nCell.id.tail('1I')) {
         if (this.nCells[x].id === new_type) {
-            if (this.nCells[x + 1] === new_type + 'I' || this.nCells[x + 1] === new_type.substr(0, new_type.length - 1))
+            if (this.nCells[x + 1].id === new_type + 'I' || this.nCells[x + 1].id === new_type.substr(0, new_type.length - 1))
                 return true;
         }
         return false;
