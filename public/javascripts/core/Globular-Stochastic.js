@@ -222,3 +222,47 @@ Diagram.prototype.computeTensionChange = function(h1, h2) {
     }
     return gen1_input + gen2_input + gen1_output + gen2_output;
 }
+
+Diagram.prototype.getInterchangers = function() {
+
+    var t0 = performance.now();
+    var interchangers = new Array();
+    for (var i = 0; i < this.nCells.length - 1; i++) {
+        var temp_coordinates = this.nCells[i].coordinates.slice(0);
+        temp_coordinates.push(i);
+        if (this.interchangerAllowed({
+                id: 'Int',
+                coordinates: temp_coordinates
+            })) {
+            interchangers.push({
+                id: "Int",
+                coordinates: temp_coordinates,
+                tension_change: 0 //this.computeTensionChange(i, i + 1)
+            });
+        }
+        if (this.interchangerAllowed({
+                id: 'IntI',
+                coordinates: temp_coordinates
+            })) {
+            interchangers.push({
+                id: "IntI",
+                coordinates: temp_coordinates,
+                tension_change: 0 //this.computeTensionChange(i + 1, i)
+            });
+        }
+    }
+    return interchangers;
+}
+
+// Sets the front-end colour to what the user wants
+Project.prototype.set_rate = function(id, rate) {
+    var tempData = this.dataList.get(id);
+    tempData.rate = rate;
+    this.dataList.put(id, tempData);
+    this.saveState();
+};
+
+// Gets the front-end colour to what the user wants
+Project.prototype.get_rate = function(id) {
+    return this.dataList.get(id).rate;
+};

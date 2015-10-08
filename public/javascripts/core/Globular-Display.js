@@ -55,11 +55,7 @@ Display.prototype.mouseup = function(event) {
     var logical = this.pixelsToLogical(event);
     var dx = logical.x - this.select_logical.x;
     var dy = logical.y - this.select_logical.y;
-    var data = {
-        boundary_depth: z.boundary_depth,
-        boundary_type: z.boundary_type,
-        coordinate: z.logical
-    };
+    var data = {boundary_depth: z.boundary_depth, boundary_type: z.boundary_type, coordinates: z.logical};
     if (z.direction == 'horizontal' && Math.abs(dx) > 0.25) {
         data.positive = (dx > 0);
         gProject.drag_cell(data)
