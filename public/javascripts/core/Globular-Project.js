@@ -79,19 +79,6 @@ Project.prototype.getColour = function(id) {
     return this.dataList.get(id).colour;
 };
 
-// Sets the front-end colour to what the user wants
-Project.prototype.set_rate = function(id, rate) {
-    var tempData = this.dataList.get(id);
-    tempData.rate = rate;
-    this.dataList.put(id, tempData);
-    this.saveState();
-};
-
-// Gets the front-end colour to what the user wants
-Project.prototype.get_rate = function(id) {
-    return this.dataList.get(id).rate;
-};
-
 
 /* 
 Takes a rule (generator) and a string describing how to get to an appropriate boundary of this diagram as arguments
@@ -639,52 +626,7 @@ Project.prototype.addZeroCell = function() {
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
-    /*
-        if (highlight === undefined) {
-            highlight = {
-                inclusion: {
-                    bounds: []
-                },
-                boundaryPath: ""
-            };
-        }
-
-        // Update the highlight data to refer to top-level names
-        var boundary_array = highlight.boundaryPath.split();
-        var bounds = [];
-        for (var i = 0; i < highlight.inclusion.bounds.length; i++) {
-            bounds[i] = {};
-            bounds[i].preceding = map_diagram.elementGeneralName(highlight.inclusion.bounds[i].preceding, boundary_array);
-            bounds[i].succeeding = map_diagram.elementGeneralName(highlight.inclusion.bounds[i].succeeding, boundary_array);
-        }
-
-        // Make an array of colour data.
-        // In the future, only do this for colours we actually need,
-        // or find some other way to do this - it's a bit ugly.
-        var tempColours = new Hashtable();
-        map_diagram.map.each(function(key, value) {
-            tempColours.put(key, this.dataList.get(value).colour);
-        }.bind(this));
-        map_diagram.render(div, tempColours, {boundaryPath: highlight.boundaryPath, bounds: bounds, bubble_bounds: highlight.inclusion.bubble_bounds});
-    */
     
-    /*
-    if (diagram.dimension === 3) {
-            slider.attr('max', diagram.nCells.length);
-            if(slider.val() === undefined){
-                slider.val(0);
-            }
-            slider.show()
-            var slider_value = slider.val();
-            var diagram_slice = diagram.getSlice(slider_value);
-            
-            diagram_slice.render(div, highlight);
-        }
-    else {
-        diagram.render(div, highlight);
-    }
-    */
-
     diagram.render(div, highlight);
 }
 
@@ -723,8 +665,6 @@ Project.prototype.renderDiagram = function() {
             this.render(div, this.diagram, $('#slider'));
        // }
     }
-
-    //console.log("Project.renderDiagram(): " + parseInt(performance.now() - t0) + "ms");
 
 };
 
