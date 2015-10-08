@@ -130,6 +130,9 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     if (reverse === undefined) reverse = false;
 
+    var source;
+    var target;
+
     // Special code to deal with interchangers
     if (nCell.id[0] === 'I'){
         if (reverse) {
@@ -142,22 +145,23 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             }
         }
         var rewrite = this.rewriteInterchanger(nCell);
+        source = rewrite.source.copy();
+        target = rewrite.target.copy();
     }
     else{
     // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(nCell.id);
+        if (reverse) {
+            source = rewrite.target.copy();
+            target = rewrite.source.copy();
+        }
+        else {
+            source = rewrite.source.copy();
+            target = rewrite.target.copy();
+        }
     }
     
-    var source;
-    var target;
-    if (reverse) {
-        source = rewrite.target.copy();
-        target = rewrite.source.copy();
-    }
-    else {
-        source = rewrite.source.copy();
-        target = rewrite.target.copy();
-    }
+
     var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
@@ -169,10 +173,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         In the process of inserting n-cells in the target of the rewrite into the list of nCells, we need to shift
         the inclusion information by the location of the rewrite in the overall diagram
         */
-        if(nCell.id.substr(0,3) != 'Int'){
-            for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
-                target.nCells[i].coordinates[j] += nCell.coordinates[j];
-            }
+        for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
+            target.nCells[i].coordinates[j] += nCell.coordinates[j];
         }
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
@@ -598,37 +600,6 @@ Diagram.prototype.getFullDimensions = function() {
     return full_dimensions;
 };
 
-
-Diagram.prototype.getInterchangers = function() {
-
-    var t0 = performance.now();
-    var interchangers = new Array();
-    for (var i = 0; i < this.nCells.length - 1; i++) {
-        var temp_coordinates = this.nCells[i].coordinates.slice(0);
-        temp_coordinates.push(i);
-        if (this.interchangerAllowed({
-                id: 'Int',
-                coordinates: temp_coordinates
-            })) {
-            interchangers.push({
-                id: "Int",
-                coordinates: temp_coordinates,
-                tension_change: 0 //this.computeTensionChange(i, i + 1)
-            });
-        }
-        if (this.interchangerAllowed({
-                id: 'IntI',
-                coordinates: temp_coordinates
-            })) {
-            interchangers.push({
-                id: "IntI",
-                coordinates: temp_coordinates,
-                tension_change: 0 //this.computeTensionChange(i + 1, i)
-            });
-        }
-    }
-    return interchangers;
-}
 
 Diagram.prototype.setCoordinates = function(nCell, position, new_coordinates) {
     nCell.coordinates[position] = new_coordinates;

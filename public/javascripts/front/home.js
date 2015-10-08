@@ -627,7 +627,7 @@ $(document).ready(function() {
                             
                             var pname = meta.project_name;
                             var pdesc = meta.project_desc;
-    
+
                             if (pdesc == "") {
                                 pdesc = "No description provided.";
                             }
