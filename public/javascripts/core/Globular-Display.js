@@ -125,9 +125,12 @@ Display.prototype.update_controls = function() {
     // If there are no controls, create them
     if (!this.has_controls()) this.create_controls();
     
-    // Can't suppress all the dimensions of the diagram
-    $(this.suppress_input).val(Math.min($(this.suppress_input).val(), Math.max(this.diagram.getDimension() - 1, 0)));
-    
+    // Update the suppression input
+    var new_suppress = this.suppress_input.val();
+    new_suppress = Math.min(new_suppress, this.diagram.getDimension() - 1);
+    if (new_suppress < 0) new_suppress = 0;
+    this.suppress_input.val(new_suppress);
+
     // Calculate how many dimensions must be accounted for by sliders
     var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
     
@@ -178,11 +181,14 @@ Display.prototype.create_controls = function() {
     this.control = $('<div>').addClass('control').addClass(popout ? 'popout' : 'inline');
     this.container.append(this.control);
     this.control.append(document.createTextNode('Suppress '));
-    this.suppress_input = document.createElement('input');
-    this.suppress_input.type = 'number';
-    this.suppress_input.className = 'control';
-    this.suppress_input.min = 0;
-    this.suppress_input.max = this.diagram.getDimension();
+    this.suppress_input =
+        $('<input>')
+        .attr('type', 'number')
+        .addClass('control')
+        .attr('min', 0)
+        .attr('max', this.diagram.getDimension() - 1);
+    var self = this;
+    this.suppress_input.on('input', function(event) { self.control_change(event) });
     this.control.append(this.suppress_input);
     var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
     var zeros = (new Array()).fill(0, remaining_dimensions);
@@ -234,7 +240,7 @@ Display.prototype.render = function() {
     for (var i = 0; i < this.coordinates.length; i++) {
         slice = slice.getSlice(this.coordinates[i].val());
     }
-    this.active = globular_render(this.container, slice, this.highlight);
+    this.active = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
     if (this.active == null) return;
 
     var pad_coordinates = [];
