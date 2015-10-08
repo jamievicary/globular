@@ -307,6 +307,46 @@ Project.prototype.storeTheorem = function() {
 
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
+    
+    var id;
+    
+    if (this.diagram.getDimension() === 2){
+        if(!drag.positive){
+            drag.coordinates.increment_last(-1);
+        }
+        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last()  >
+            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
+                
+            id = 'Int';
+        }
+        else{
+            id = 'IntI';
+        }
+        
+    var temp_coordinates = new Array();
+    for(var i = 0; i < this.diagram.dimension - 1; i++)
+        temp_coordinates.push(0);
+    temp_coordinates.push(drag.coordinates.last()); 
+     
+    var interchanger = new NCell(id, temp_coordinates);
+    
+    if (!this.diagram.interchangerAllowed(interchanger)) {
+        alert("Cannot interchange these cells");
+        this.selected_cell = null;
+        return;
+    }
+
+    // Attempt to perform the interchanger
+    this.diagram.rewrite(interchanger, false);
+
+
+    // Finish up and render the result
+    this.selected_cell = null;
+    this.saveState();
+    $('div.cell-b-sect').empty();
+    this.renderDiagram();    
+    }
+    
 } 
 
 // Handle a click on a 2-cell to implement interchangers
@@ -641,40 +681,8 @@ Project.prototype.renderGenerator = function(div, id) {
 
 // Render the main diagram
 Project.prototype.renderDiagram = function() {
-    var t0 = performance.now();
-<<<<<<< HEAD
-
-    var div = '#diagram-canvas';
-    if (this.diagram == null) {
-        $('#slider').hide()
-        $('#diagram-canvas').empty();
-        /*
-        var canvas = $(div).find('canvas');
-        if (canvas.length != 0) {
-            canvas = canvas[0];
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        }
-        */
-    }
-    else {/*
-        if (this.diagram.dimension === 3) {
-            $('#slider').attr('max', this.diagram.nCells.length);
-            $('#slider').show()
-            var slider = $('#slider').val();
-            var diagram = this.diagram.getSlice(slider);
-            this.render(div, diagram);
-        }
-        else {
-            $('#slider').hide()
-            */
-            this.render(div, this.diagram, $('#slider'));
-       // }
-    }
-
-=======
     
     MainDisplay.set_diagram(this.diagram);
->>>>>>> 15d5dd8f0a728e7137a7fa6937d02ad047f0c497
 };
 
 // Need to write this code
