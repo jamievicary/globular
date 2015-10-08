@@ -363,7 +363,12 @@ Project.prototype.drag_cell = function(drag) {
 
             if(drag.primary === 1){
                 if(drag.secondary === 0){
-                       
+                    if(this.diagram.nCells[drag.coordinate.last()].id.substr(0, 3) === 'Int' &&
+                    this.diagram.nCells[drag.coordinate.last()].coordinates.last() ===
+                    this.diagram.nCells[drag.coordinate.last() + 1].coordinates.last() ){
+                        id = this.diagram.nCells[drag.coordinate.last()].id + '-1';
+                        
+                    }                       
                 }
                 else{
                     
