@@ -340,7 +340,7 @@ Project.prototype.drag_cell = function(drag) {
     temp_coordinates.push(drag.coordinates.last()); 
     
     }
-    else if(this.diagram.getDimension() === 3){  // n - coordinates - suppress
+    else if(this.diagram.getDimension() === 3){  // n - coordinates - suppress, squashed view
                     
         for(var i = 0; i < this.diagram.dimension - 2; i++)
             temp_coordinates.push(0);
@@ -410,6 +410,12 @@ Project.prototype.drag_cell = function(drag) {
                 
             }
         }
+    }
+    else if (id == ''){ // We have sliders
+    
+    // Then interpretation: within a slice, we perform the Int and its inverse
+    // On the boundary, we just perform the Int
+        
     }
     
     interchanger = new NCell(id, temp_coordinates);
