@@ -185,16 +185,11 @@ div.preview-icon>svg
 	//display: none
 	text-align: center
 	top: 70px
-	//display: block
-	clear: left
 
 .cell-detail
-	//overflow: hidden
-	//white-space: nowrap
-	//margin-left: 120px
+	margin-left: 75px
 	height: $icon_size
-	float: right
-
+	
 .match-cell-icon
 	height: $icon_size
 	width: $icon_size
@@ -220,7 +215,6 @@ div.preview-icon>svg
 	letter-spacing: 1px
 	position: absolute
 	//left: $icon_size + $spacing
-	left: 163px
 	//margin-top: 5px
 //	margin-left: $spacing
 	height: 15px
@@ -306,7 +300,7 @@ div.preview-icon>svg
 	border-radius: 1px
 	width: 100px
 	transform: rotate(270deg)
-	margin-top: -130px
+	margin-top: -45px
 	transform-origin: left top 0
 	text-align: center
 	height: 30px
@@ -318,14 +312,17 @@ div.preview-icon>svg
 #view-desc-plate
 	margin-left: 50px
 	background-color: $blue
-	height: 300px
+	height: 210px
 	width: 300px
 	padding: 10px
 	
 #view-desc-body
 	width: 300px
 	float: right
-
+	top: calc(50% - 200px)
+	right: calc(0% - 250px)
+	position: absolute
+	
 #text-p-desc
 	height: 200px
 	resize: none
@@ -338,13 +335,6 @@ div.preview-icon>svg
 	font-size: 90%
 	letter-spacing: 1px
 
-#view-desc-container
-	position: absolute
-	overflow: hidden
-	width: 600px
-	top: calc(50% - 200px)
-	right: calc(0% - 250px)
-	
 #site-controller-body
 	border: 3px solid grey
 	height: 200px
@@ -532,3 +522,24 @@ div.preview-icon>svg
 #process-form
 	text-align: left
 	padding: 10px
+
+#gallery-box
+	overflow: auto
+	background: #b0e0e6
+	
+.gallery-pcomp
+	width: 97%
+	cursor: pointer
+	font-size: 85%
+	background-color: #84c9b6
+	margin-top: 10px
+	color: white
+	padding: 10px
+
+#gg-title
+	background-color: #b0e0e6
+	color: #e88d8f
+	padding: 5px
+	font-size: 110%
+	margin-top: -10px
+	position: fixed

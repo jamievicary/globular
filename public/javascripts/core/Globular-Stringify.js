@@ -44,9 +44,13 @@ function globular_stringify(object) {
     });
 }
 
-function globular_destringify(string, store) {
-    var object = JSON.parse(string);
+function globular_extract(object, store) {
     globular_rebuild(object.head, object.library, [], store);
+    return store;
+}
+
+function globular_destringify(string, store) {
+    globular_extract(JSON.parse(string), store);
     return store;
 }
 
