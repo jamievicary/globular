@@ -18,9 +18,14 @@ function Display(container, diagram) {
     this.diagram = diagram;
     this.active = null;
     this.select_zone = null;
+    this.prepare_controls();
     var self = this;
-    $(container).mousedown(function(event) { self.mousedown(event) });
-    $(container).mouseup(function(event) { self.mouseup(event) });
+    $(container).mousedown(function(event) {
+        self.mousedown(event)
+    });
+    $(container).mouseup(function(event) {
+        self.mouseup(event)
+    });
 }
 
 Display.prototype.mousedown = function(event) {
@@ -29,7 +34,7 @@ Display.prototype.mousedown = function(event) {
     var closest_zone = null;
     var shortest_sq_dist = Number.MAX_VALUE;
     var logical = this.pixelsToLogical(event);
-    for (var i=0; i<this.active.length; i++) {
+    for (var i = 0; i < this.active.length; i++) {
         var zone = this.active[i];
         var dx = logical.x - zone.x;
         var dy = logical.y - zone.y;
@@ -50,7 +55,11 @@ Display.prototype.mouseup = function(event) {
     var logical = this.pixelsToLogical(event);
     var dx = logical.x - this.select_logical.x;
     var dy = logical.y - this.select_logical.y;
-    var data = {boundary_depth: z.boundary_depth, boundary_type: z.boundary_type, coordinate: z.logical};
+    var data = {
+        boundary_depth: z.boundary_depth,
+        boundary_type: z.boundary_type,
+        coordinate: z.logical
+    };
     if (z.direction == 'horizontal' && Math.abs(dx) > 0.25) {
         data.positive = (dx > 0);
         gProject.drag_cell(data)
@@ -92,7 +101,10 @@ Display.prototype.pixelsToLogical = function(event) {
     //var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
     //var y = b.bottom + ((b.bottom - b.top) * event.offsetY / $(this).height());
     //console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
-    return {x: x, y: y};
+    return {
+        x: x,
+        y: y
+    };
 }
 
 Display.prototype.prepare_controls = function() {
@@ -128,6 +140,8 @@ Display.prototype.prepare_controls = function() {
             var slice = slice.getSource();
         }
     }
+
+    $(this.container).append(this.control);
 }
 
 // Attach the given diagram to the window
@@ -135,36 +149,36 @@ Display.prototype.set_diagram = function(diagram) {
     this.diagram = diagram;
     if (this.diagram == null) {
         this.container.empty();
-    } else {
-        this.prepare_controls();
+    }
+    else {
         this.render();
     }
 }
 
 Display.prototype.render = function() {
-    
+
     // Slice the diagram appropriately
     var slice = this.diagram.copy();
-    for (var i=0; i<this.coordinates.length; i++) {
+    for (var i = 0; i < this.coordinates.length; i++) {
         slice = slice.getSlice(this.coordinates[i].val());
     }
     this.active = globular_render(this.container, slice, this.highlight);
     if (this.active == null) return;
-    
+
     var pad_coordinates = [];
-    for (var i=0; i<this.coordinates.length; i++) {
+    for (var i = 0; i < this.coordinates.length; i++) {
         pad_coordinates[i] = this.coordinates[i].val();
     }
-    for (var i=0; i<this.active.length; i++) {
-        
+    for (var i = 0; i < this.active.length; i++) {
+
         // Pad the boundary depth if it's a boundary coordinate
         if (this.active[i].boundary_depth > 0) {
             this.active[i].boundary_depth += this.coordinates.length;
         }
-        
+
         // Pad the logical coordinates with the slider coordinates
         this.active[i].logical = pad_coordinates.concat(this.active[i].logical);
     }
-    
+
     // Add in the missing dimensions to the active region data
 }
