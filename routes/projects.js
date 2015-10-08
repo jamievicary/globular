@@ -233,7 +233,7 @@ exports.publish_project = function (req, res){
 							fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/string.json', string, function(){
 								fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/meta.json', metaData, function(){
 									
-									
+									res.send({projectURL: dateName + "." + pcount});
 								
 								});
 							});

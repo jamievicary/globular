@@ -85,14 +85,14 @@ $(document).ready(function() {
     $("#view-p-desc").click(function() {
 
         if (dbltoggle % 2 == 0) {
-            $("#view-desc-plate, #view-p-desc").animate({
-                marginLeft: "-=300px"
+            $("#view-desc-body").animate({
+                marginTop: "-=225px"
             }, 1500);
 
         }
         else {
-            $("#view-desc-plate, #view-p-desc").animate({
-                marginLeft: "+=300px"
+            $("#view-desc-body").animate({
+                marginTop: "+=225px"
             }, 1500);
 
         }
@@ -283,13 +283,13 @@ $(document).ready(function() {
         // Bind resizing to the correct rendering function		
         $(window).unbind('resize');
         $(window).bind('resize', function() {
-            $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
-            $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
+            $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width()-150);
+            $('#diagram-canvas').css('height', window.innerHeight - $('#header').height()-50);
             globular_set_viewbox();
             //gProject.renderDiagram();
         })
-        $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width());
-        $('#diagram-canvas').css('height', window.innerHeight - $('#header').height());
+        $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width()- 150);
+        $('#diagram-canvas').css('height', window.innerHeight - $('#header').height()-50);
 
         // Render the list of n-cells
         gProject.renderCells();
@@ -428,8 +428,9 @@ $(document).ready(function() {
                     var p_id = $(this).attr("id").substring(3);
                     $.post('/publish_project', {
                         pid: p_id
-                    }, function() {
-
+                    }, function(result) {
+                        var win = window.open("/"+result.projectURL, '_blank');
+                        //win.focus();
                     });
                 });
             }
@@ -592,45 +593,60 @@ $(document).ready(function() {
             dateName: dateName
         }, function(result) {
             var projects = result.projectNoArr;
+            var disDateName = dateName.substring(0, 2) + "/" + dateName.substring(2, 4);
+            $("#gg-date-title").html(" - " + disDateName);
+            if(projects.length!=undefined){
             // create all the divs for the different projects
-            for (var num = 0; num < projects.length; num++) {
-                var projectNo = projects[num];
-                var pID = dateName + "_" + projectNo;
-                $("#gallery-box").append($("<a href = '/" + pID + "' id = 'a" + pID + "' style = 'text-decoration: none;'></a>"));
-            }
-            for (var num = 0; num < projects.length; num++) {
-                var latestVersion = "v1";
-                var projectNo = projects[num];
-                (function(projectNo) {
-                    $.get("/public/" + dateName + "/" + projectNo + "/versions/" + latestVersion + "/meta.json", function(meta) {
-                        $.get("/public/" + dateName + "/" + projectNo + "/data.json", function(data) {
+                for (var num = 0; num < projects.length; num++) {
+                    var projectNo = projects[num];
+                    var pID = dateName + "_" + projectNo;
+                    var pIDlink = dateName + "." + projectNo;
+                    $("#gallery-box").append($(
+                       
+                        "<div id = '" + pID + "' class = 'gallery-pcomp' link = '"+pIDlink+"'>"+
+                        "<b style = 'color: dimgrey;font-size:115%;' id = 'title"+pID+"'></b><br>"+
+                        "Date Published: <span id = 'date"+pID+"'></span><br>"+
+                        "Authors: <span id = 'authors"+pID+"'></span><br>"+
+                        "<span style = 'color:#887f8d' id = 'desc"+pID+"'></span>" +
+                        "</div>"
+                    ));
+                    
+                    $("#"+pID).click(function(){
+                        var url = $(this).attr("link");
+                        var win = window.open("/"+url, '_blank');
+                        //win.focus(); 
+                    });
+                }
+                for (var num = 0; num < projects.length; num++) {
+                    var latestVersion = "v1";
+                    var projectNo = projects[num];
+                    (function(projectNo) {
+                        var pID = dateName + "_" + projectNo;
+                        var obj = $('#a' + pID);
+                        $.get("/public/" + dateName + "/" + projectNo + "/versions/" + latestVersion + "/meta.json", function(meta) {
+                            
                             var pname = meta.project_name;
                             var pdesc = meta.project_desc;
-
+    
                             if (pdesc == "") {
                                 pdesc = "No description provided.";
                             }
+                            
+                            $("#title"+pID).html(pname);
+                            $("#desc"+pID).html(pdesc);
+                           
+                        });
+                        $.get("/public/" + dateName + "/" + projectNo + "/data.json", function(data) {
                             var datePublished = data.date_published;
                             var owners = data.owners.join();
-                            var disDateName = dateName.substring(0, 2) + "/" + dateName.substring(2, 4);
-                            $("#gg-date-title").html(" - " + disDateName);
-                            var pID = dateName + "_" + projectNo;
-                            console.log("#a" + pID);
-                            var obj = $('#a' + pID);
-                            obj.append($("<div>Hi there my friend</div>"));
-                            /*
-                            $("#a" + pID).html(
-                                "<div id = '" + pID + "' class = 'gallery-pcomp'>" +
-                                "<b style = 'color: dimgrey;font-size:115%;'>" + pname + "</b><br>" +
-                                "Date Published: " + datePublished + "<br>" +
-                                "Authors: " + owners + "<br>" +
-                                "<span style = 'color:#887f8d'>" + pdesc + "</span>" +
-                                "</div>");
-                            */
+                            $("#date"+pID).html(datePublished);
+                            $("#authors"+pID).html(owners);
                         });
-                    })
-                })(projectNo);
-            }
+                    })(projectNo);
+                }
+            }else{
+                $("#gallery-box").append("There are no projects in this month.");
+            }    
         });
     }
     var date = new Date();

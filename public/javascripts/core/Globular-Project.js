@@ -962,17 +962,17 @@ Project.prototype.renderNCells = function(n) {
     if (replace == false) {
         var cell_group_html;
         if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt'>New 0-cell</span></div>";
+            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt' class = 'button-style-3'>New 0-cell</span></div>";
         }
         else {
             cell_group_html = "";
         }
-        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-Cells</div>";
+        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-CELLS</div>";
         $("#cell-body").append($(cell_group_html));
     }
     var cells = this.listGenerators()[n]; //["testCell1", "testCell2", "TESTcell3"];
     if (cells == undefined) cells = [];
-    $("#cell-group-" + n.toString()).html(n + "-Cells");
+    $("#cell-group-" + n.toString()).html(n + "-CELLS");
 
     for (var i = 0; i < cells.length; i++) {
 
