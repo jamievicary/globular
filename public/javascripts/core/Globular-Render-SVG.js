@@ -429,7 +429,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     for (var i=0; i<data.vertices.length; i++) {
         var vertex = data.vertices[i];
         // Add vertex active region
-        active.push({x: vertex.x, y: vertex.y, boundary_type: null, boundary_depth: 0, logical: [i], horizontal: false, direction: 'vertical'});
+        active.push({x: vertex.x, y: vertex.y, boundary_type: null, boundary_depth: 0, logical: [i], direction: 'vertical'});
     }
     for (var i=0; i<data.edges.length; i++) {
         var edge = data.edges[i];
@@ -440,14 +440,17 @@ function globular_render_2d(container, diagram, subdiagram) {
         }
         
         // Add target boundary active region
-        if (edge.target_vertex == null) {
+        if (edge.finish_vertex == null) {
             var height = diagram.nCells.length;
             active.push({x: edge.x, y: edge.finish_height, boundary_type: 't', boundary_depth: 1, logical: [data.edges_at_level[height].indexOf(i)], direction: 'horizontal'});
         }
         
         // Add line active region
         for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height); height ++) {
-            active.push({x: edge.x, y: height + 0.5, boundary_type: null, boundary_depth: 0, logical: [height, data.edges_at_level[height].indexOf(i)], direction: 'horizontal'});
+            var y = height;
+            if (y == 0) y += 0.25;
+            else if (y == diagram.nCells.length) y -= 0.25;
+            active.push({x: edge.x, y: y, boundary_type: null, boundary_depth: 0, logical: [height, data.edges_at_level[height].indexOf(i)], direction: 'horizontal'});
         }
     }
 
