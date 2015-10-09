@@ -602,12 +602,17 @@ div.control.inline {
 }
 
 /* line 515, ../sass/style.sass */
+input.control {
+  width: 30px;
+}
+
+/* line 518, ../sass/style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 519, ../sass/style.sass */
+/* line 522, ../sass/style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -618,7 +623,7 @@ div.control.inline {
   padding: 10px;
 }
 
-/* line 528, ../sass/style.sass */
+/* line 531, ../sass/style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -628,12 +633,12 @@ div.control.inline {
   position: fixed;
 }
 
-/* line 536, ../sass/style.sass */
+/* line 539, ../sass/style.sass */
 .publish-project {
   cursor: pointer;
 }
 
-/* line 540, ../sass/style.sass */
+/* line 543, ../sass/style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
