@@ -601,12 +601,41 @@ Project.prototype.selectGenerator = function(id) {
 
   +++ Need to get rid of the slider and replace it with controls data +++
 
-*/
-    var slices = MainDisplay. // provided by display
-    
-    
-    
-/*
+*/ 
+
+    var slices_data = MainDisplay.get_current_slice(); 
+    var boundary_pointer = this.diagram;
+    while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+        boundary_pointer = boundary_pointer.getSourceBoundary();
+    }
+   
+    if(slices_data.length === 0){
+        sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+        targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+
+    }
+    else{    
+        var slices_counter = 0;
+        var slice_pointer = this.diagram;
+        while(slices_counter < slices_data.length - 1){
+            boundary_pointer = boundary_pointer.getSourceBoundary();
+            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
+            slices_counter++;
+        }
+        
+        if((slices_data[slices_counter] === slice_pointer.nCells.length - 1|| slice_pointer.nCells.length  === 1)
+            /*&& this.diagram.getDimension() === matched_diagram.getDimension()*/){
+            targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+        }
+        else if(slices_data[slices_counter] === 0 /*&& this.diagram.getDimension() === matched_diagram.getDimension()*/){
+            sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+        }else {
+            boundary_pointer = boundary_pointer.getSourceBoundary();
+            sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+            targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+        }
+    }
+    /*
    if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
         var ok = false;
@@ -637,23 +666,17 @@ Project.prototype.selectGenerator = function(id) {
     return enumerationData;
 }
 
-Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
+Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, boundary_depth, boundary_boolean) {
 
     var pattern_diagram;
     var matched_diagram_boundary;
 
     if (boundary_boolean === 's') {
-        pattern_diagram = this.diagram.getSourceBoundary();
-        for (var i = 0; i < boundary_depth; i++) {
-            pattern_diagram = pattern_diagram.getSourceBoundary();
-        }
+        pattern_diagram = subject_diagram.getSourceBoundary();
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
     else {
-        pattern_diagram = this.diagram.getTargetBoundary();
-        for (var i = 0; i < boundary_depth; i++) {
-            pattern_diagram = pattern_diagram.getTargetBoundary();
-        }
+        pattern_diagram = subject_diagram.getTargetBoundary();
         matched_diagram_boundary = matched_diagram.getSourceBoundary();
     }
 

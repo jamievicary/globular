@@ -236,7 +236,7 @@ Display.prototype.set_diagram = function(diagram) {
 Display.prototype.get_current_slice = function() {
     var coordinates = [];
     for (var i=0; i<this.coordinates.length; i++) {
-        coordinates.push(this.coordinates[i].val());
+        coordinates.push(Number(this.coordinates[i].val()));
     }
     return coordinates;
 }
