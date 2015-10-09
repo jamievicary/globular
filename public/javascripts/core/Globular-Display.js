@@ -51,27 +51,35 @@ Display.prototype.mousedown = function(event) {
     //console.log(JSON.stringify(this.select_zone));
 }
 
+var min_drag = 0.25;
 Display.prototype.mouseup = function(event) {
-    var z = this.select_zone;
+    var z = new Object(this.select_zone);
+    this.select_zone = null;
     if (z == null) return;
     var logical = this.pixelsToLogical(event);
     var dx = logical.x - this.select_logical.x;
     var dy = logical.y - this.select_logical.y;
-    var primary = (z.direction == 'vertical' ? dy : dx);
-    if (Math.abs(primary) < 0.25) {
-        this.select_zone = null;
-        return;
-    }
+
     var data = {
         boundary_depth: z.boundary_depth,
         boundary_type: z.boundary_type,
         coordinates: z.logical,
-        primary: Math.abs(primary) > 0.25 ? (primary > 0 ? 1 : -1) : 0,
-        secondary: 0
+        primary: null,
+        secondary: null,
+        conflict: null
     };
-    if (z.direction == 'vertical') {
-        data.secondary = Math.abs(dx) > 0.25 ? (dx > 0 ? 1 : -1) : 0
+
+    if (z.direction == 'horizontal') {
+        if (Math.abs(dx) < 0.25) return;
+        data.primary = (dx > 0 ? +1 : -1);
     }
+    else if (z.direction == 'vertical') {
+        if (Math.abs(dy) < 0.25) return;
+        data.primary = (dy > 0 ? +1 : -1);
+        data.secondary = (Math.abs(dx) > 0.25 ? (dx > 0 ? +1 : -1) : 0);
+        data.conflict = (dx > 0 ? +1 : -1);
+    }
+
     gProject.drag_cell(data);
     this.select_zone = null;
 }
@@ -118,13 +126,13 @@ Display.prototype.has_controls = function() {
 
 // Make sure all the coordinates and suppressions make sense
 Display.prototype.update_controls = function() {
-    
+
     // If there's no diagram, nothing to do
     if (this.diagram == null) return;
-    
+
     // If there are no controls, create them
     if (!this.has_controls()) this.create_controls();
-    
+
     // Update the suppression input
     var new_suppress = this.suppress_input.val();
     new_suppress = Math.min(new_suppress, this.diagram.getDimension() - 1);
@@ -136,7 +144,7 @@ Display.prototype.update_controls = function() {
 }
 
 Display.prototype.update_sliders = function() {
-    
+
 }
 
 Display.prototype.control_change = function() {
@@ -147,7 +155,7 @@ Display.prototype.control_change = function() {
 // Create the control panel, only called in the constructor
 Display.prototype.create_controls = function() {
     var c = $(this.container);
-    
+
     // Remove any existing controls
     $(this.container).children('div.control').remove();
 
@@ -157,7 +165,7 @@ Display.prototype.create_controls = function() {
     // Construct the main control div
     this.control = $('<div>').addClass('control').addClass(popout ? 'popout' : 'inline');
     this.container.append(this.control);
-    
+
     // Construct the suppress control
     this.control.append(document.createTextNode('Suppress '));
     this.suppress_input =
@@ -167,9 +175,11 @@ Display.prototype.create_controls = function() {
         .attr('min', 0)
         .val(0);
     var self = this;
-    this.suppress_input.on('input', function(event) { self.control_change(event) });
+    this.suppress_input.on('input', function(event) {
+        self.control_change(event)
+    });
     this.control.append(this.suppress_input);
-    
+
     // Construct the container for the slice controls
     this.slice_div = $('<div>').addClass('slice_container');
     this.slice_div.append(document.createTextNode('Slice '));
@@ -181,7 +191,7 @@ Display.prototype.update_slice_container = function() {
 
     // If the diagram is null, we shouldn't have any slice controls
     if (this.diagram == null) {
-        for (var i=0; i<this.coordinates.length; i++) {
+        for (var i = 0; i < this.coordinates.length; i++) {
             this.coordinates[i].remove();
         }
         this.coordinates = [];
@@ -191,16 +201,16 @@ Display.prototype.update_slice_container = function() {
     // Calculate the desired number of slice controls
     var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
     if (remaining_dimensions < 0) remaining_dimensions = 0;
-    
+
     // Remove any superfluous slice controls
     while (this.coordinates.length > remaining_dimensions) {
         this.coordinates.last().remove();
         this.coordinates.pop();
     }
-    
+
     // Add any additional slice controls with a dimension of zero
     var self = this;
-    for (var i=this.coordinates.length; i<remaining_dimensions; i++) {
+    for (var i = this.coordinates.length; i < remaining_dimensions; i++) {
         this.coordinates[i] =
             $('<input>')
             .addClass('control')
@@ -208,10 +218,12 @@ Display.prototype.update_slice_container = function() {
             .attr('type', 'number')
             .attr('min', 0)
             .val(0)
-            .on('input', function(event) { self.control_change(event) })
+            .on('input', function(event) {
+                self.control_change(event)
+            })
         this.slice_div.append(this.coordinates[i]);
     }
-    
+
     // Ensure the slice coordinates are valid
     var slice = this.diagram.copy();
     for (var i = 0; i < remaining_dimensions; i++) {
@@ -235,7 +247,7 @@ Display.prototype.set_diagram = function(diagram) {
 
 Display.prototype.get_current_slice = function() {
     var coordinates = [];
-    for (var i=0; i<this.coordinates.length; i++) {
+    for (var i = 0; i < this.coordinates.length; i++) {
         coordinates.push(Number(this.coordinates[i].val()));
     }
     return coordinates;
