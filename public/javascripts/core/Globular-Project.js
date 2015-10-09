@@ -317,32 +317,54 @@ Project.prototype.drag_cell = function(drag) {
     temp_coordinates.concat(drag.coordinates);
 
 
+    if(drag.secondary === 0){
         if(drag.primary === -1){
-            drag.coordinates.increment_last(-1);
+            temp_coordinates.increment_last(-1);
         }
-        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() <
-            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
-                
-            id = 'IntI';
+        var int1_bool = false;
+        var int2_bool = false;
+        id = 'Int';
+        var interchanger_1 = new NCell(id, temp_coordinates);
+        if (this.diagram.interchangerAllowed(interchanger_1)) {
+            int1_bool = true;    
         }
-        else if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() >
-            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
-            id = 'Int';
-        }else{
-            if(drag.secondary === 1){
-                id = 'IntI'      
-            }else if(drag.secondary === -1){
-                id = 'Int'      
-            }else{
-                // no secondary drag direction supplied - impossible to resolve
-                console.log("Provide a left/right drag direction to resolve conflict")
-            }
+        id = 'IntI'
+        var interchanger_2 = new NCell(id, temp_coordinates);
+        if(this.diagram.interchangerAllowed(interchanger_2)){
+            int2_bool = true;
         }
         
-   
+        if(!int1_bool && !int2_bool){
+            console.log("cannot interchange");
+        }
+        else if(int1_bool && int2_bool){
+            if(drag.conflict === 1){
+                interchanger = interchanger_1;
+            }
+            else{
+                interchanger = interchanger_2;
+            }
+        }
+        else if(int1_bool){
+            interchanger = interchanger_1;
+        }
+        else{
+            interchanger = interchanger_2;
+        }
+        
+        
+    }
+    else if(drag.secondary === 1){
 
-    else if(drag.coordinates.length === 2){  // n - coordinates - suppress, squashed view
-                    
+    }
+
+
+    else{
+
+    }
+    
+
+
 
         if(drag.coordinates.length > 1){
          
@@ -410,22 +432,8 @@ Project.prototype.drag_cell = function(drag) {
                 
             }
         }
-    }
-    else if (id == ''){ // We have sliders
     
-    // Then interpretation: within a slice, we perform the Int and its inverse
-    // On the boundary, we just perform the Int
         
-    }
-    
-    interchanger = new NCell(id, temp_coordinates);
-
-    if (!this.diagram.interchangerAllowed(interchanger)) {
-        alert("Cannot interchange these cells");
-        this.selected_cell = null;
-        return;
-    }
-
     // Attempt to perform the interchanger
     this.diagram.rewrite(interchanger, false);
 
