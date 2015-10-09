@@ -309,17 +309,11 @@ Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
     
     var id;
-<<<<<<< HEAD
     var temp_coordinates = new Array();
     var interchanger;
 
     if (this.diagram.getDimension() === 2){ // n - coordinates - suppress
         if(drag.primary === -1){
-=======
-    
-    if (this.diagram.getDimension() === 2){
-        if(drag.primary < 0){
->>>>>>> 9f489ab6ed6c74cb096b883c4ecfdd0e561063b0
             drag.coordinates.increment_last(-1);
         }
         if(this.diagram.nCells[drag.coordinates.last()].coordinates.last() <
@@ -573,7 +567,7 @@ Project.prototype.selectGenerator = function(id) {
         alert("0-cells can never be attached");
         return null;
     }
-
+    
     var matched_diagram = cell.diagram.copy();
 
     if (matched_diagram.getDimension() > this.diagram.getDimension()) {
@@ -597,14 +591,23 @@ Project.prototype.selectGenerator = function(id) {
         return enumerationData;
     }
 
-
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
     var sourceMatches = [];
     var targetMatches = [];
 
-    if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
+/*
+
+  +++ Need to get rid of the slider and replace it with controls data +++
+
+*/
+    var slices = MainDisplay. // provided by display
+    
+    
+    
+/*
+   if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
         var slider = Number($('#slider').val());
         var ok = false;
         if (slider === 0) {
@@ -624,6 +627,7 @@ Project.prototype.selectGenerator = function(id) {
         sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
         targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
     }
+    */
 
     var enumerationData = {
         attachmentFlag: true,
