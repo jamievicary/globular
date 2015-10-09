@@ -447,7 +447,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         }
         
         // Add line active region
-        for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height); height ++) {
+        for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height - 0.5); height ++) {
             var y = height;
             if (y == 0) y += 0.25;
             else if (y == diagram.nCells.length) y -= 0.25;
@@ -1149,20 +1149,20 @@ function SVG_prepare(diagram, subdiagram) {
         // For each edge consumed by this rewrite, indicate its finish
         // height and remove it from the list of current edges
         for (var i = 0; i < source_cells.length; i++) {
-            var remove_edge_index = current_edges[attachment.coordinates[0]];
+            var remove_edge_index = current_edges[attachment.coordinates.last()];
             vertex.source_edges.push(remove_edge_index);
             if (edges[remove_edge_index] === undefined) {
                 var x = 0;
             }
             edges[remove_edge_index].finish_height = level + 0.5;
             edges[remove_edge_index].finish_vertex = vertices.length - 1;
-            current_edges.splice(attachment.coordinates[0], 1);
+            current_edges.splice(attachment.coordinates.last(), 1);
         }
 
         // Add the first target of the rewrite in the succeedence partial order
         if (target_cells.length > 0) {
             if (attachment.coordinates[0] > 0) {
-                edges[current_edges[attachment.coordinates[0] - 1]].succeeding.push({
+                edges[current_edges[attachment.coordinates.last() - 1]].succeeding.push({
                     index: edges.length,
                     offset: 1
                 });
@@ -1174,7 +1174,7 @@ function SVG_prepare(diagram, subdiagram) {
         for (i = 0; i < target_cells.length; i++) {
             var new_edge = {
                 type: (target_cells[i] == null ? null : target_cells[i].id),
-                attachment_coordinate: attachment.coordinates[0],
+                attachment_coordinate: attachment.coordinates.last(),
                 start_height: level + 0.5,
                 finish_height: null,
                 succeeding: [],
@@ -1184,7 +1184,7 @@ function SVG_prepare(diagram, subdiagram) {
             };
             edges.push(new_edge);
             var new_edge_index = edges.length - 1;
-            current_edges.splice(attachment.coordinates[0] + i, 0, new_edge_index);
+            current_edges.splice(attachment.coordinates.last() + i, 0, new_edge_index);
             vertex.target_edges.push(new_edge_index);
             if (i != target_cells.length - 1) {
                 new_edge.succeeding.push({
@@ -1196,8 +1196,8 @@ function SVG_prepare(diagram, subdiagram) {
 
         // Add succeeding data for the first edge after the rewrite
         if (target_cells.length > 0) {
-            if (attachment.coordinates[0] + target_cells.length < current_edges.length) {
-                var subsequent_edge_index = current_edges[attachment.coordinates[0] + target_cells.length];
+            if (attachment.coordinates.last() + target_cells.length < current_edges.length) {
+                var subsequent_edge_index = current_edges[attachment.coordinates.last() + target_cells.length];
                 edges[edges.length - 1].succeeding.push({
                     index: subsequent_edge_index,
                     offset: 1
@@ -1211,17 +1211,17 @@ function SVG_prepare(diagram, subdiagram) {
         }
         else {
             vertex.scalar = true;
-            if (attachment.coordinates[0] == 0) {
+            if (attachment.coordinates.last() == 0) {
                 vertex.preceding_edge = null;
             }
             else {
-                vertex.preceding_edge = current_edges[attachment.coordinates[0] - 1];
+                vertex.preceding_edge = current_edges[attachment.coordinates.last() - 1];
             }
-            if (attachment.coordinates[0] == current_edges.length) {
+            if (attachment.coordinates.last() == current_edges.length) {
                 vertex.succeeding_edge = null;
             }
             else {
-                vertex.succeeding_edge = current_edges[attachment.coordinates[0]];
+                vertex.succeeding_edge = current_edges[attachment.coordinates.last()];
             }
             vertex.x = 0;
         }
