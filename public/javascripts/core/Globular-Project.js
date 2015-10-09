@@ -312,7 +312,11 @@ Project.prototype.drag_cell = function(drag) {
     var temp_coordinates = new Array();
     var interchanger;
 
-    if (this.diagram.getDimension() === 2){ // n - coordinates - suppress
+    for(var i = 0; i < this.diagram.dimension - drag.coordinates.length; i++)
+        temp_coordinates.push(0);
+    temp_coordinates.concat(drag.coordinates);
+
+
         if(drag.primary === -1){
             drag.coordinates.increment_last(-1);
         }
@@ -335,15 +339,11 @@ Project.prototype.drag_cell = function(drag) {
             }
         }
         
-    for(var i = 0; i < this.diagram.dimension - 1; i++)
-        temp_coordinates.push(0);
-    temp_coordinates.push(drag.coordinates.last()); 
-    
-    }
-    else if(this.diagram.getDimension() === 3){  // n - coordinates - suppress, squashed view
+   
+
+    else if(drag.coordinates.length === 2){  // n - coordinates - suppress, squashed view
                     
-        for(var i = 0; i < this.diagram.dimension - 2; i++)
-            temp_coordinates.push(0);
+
         if(drag.coordinates.length > 1){
          
             temp_coordinates.concat(drag.coordinates);
@@ -597,12 +597,6 @@ Project.prototype.selectGenerator = function(id) {
     var sourceMatches = [];
     var targetMatches = [];
 
-/*
-
-  +++ Need to get rid of the slider and replace it with controls data +++
-
-*/ 
-
     var slices_data = MainDisplay.get_current_slice(); 
     var boundary_pointer = this.diagram;
    
@@ -645,28 +639,6 @@ Project.prototype.selectGenerator = function(id) {
         }
         
     }
-    /*
-   if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
-        var slider = Number($('#slider').val());
-        var ok = false;
-        if (slider === 0) {
-            sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-            ok = true;
-        }
-        if (slider === this.diagram.nCells.length) {
-            targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
-            ok = true;
-        }
-        if (!ok) {
-            alert("Slide to the source or the target of the 3-cell to attach");
-            return [];
-        }
-    }
-    else {
-        sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-        targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
-    }
-    */
 
     var enumerationData = {
         attachmentFlag: true,
