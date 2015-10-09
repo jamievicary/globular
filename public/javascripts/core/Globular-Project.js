@@ -605,11 +605,11 @@ Project.prototype.selectGenerator = function(id) {
 
     var slices_data = MainDisplay.get_current_slice(); 
     var boundary_pointer = this.diagram;
-    while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
-        boundary_pointer = boundary_pointer.getSourceBoundary();
-    }
    
     if(slices_data.length === 0){
+        while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+            boundary_pointer = boundary_pointer.getSourceBoundary();
+        }
         sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
         targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
 
@@ -623,17 +623,27 @@ Project.prototype.selectGenerator = function(id) {
             slices_counter++;
         }
         
-        if((slices_data[slices_counter] === slice_pointer.nCells.length - 1|| slice_pointer.nCells.length  === 1)
-            /*&& this.diagram.getDimension() === matched_diagram.getDimension()*/){
-            targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
-        }
-        else if(slices_data[slices_counter] === 0 /*&& this.diagram.getDimension() === matched_diagram.getDimension()*/){
-            sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
-        }else {
-            boundary_pointer = boundary_pointer.getSourceBoundary();
+        if(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+            while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+                boundary_pointer = boundary_pointer.getSourceBoundary();
+            }
+            
             sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
             targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
         }
+        else{
+            if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
+                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+            }
+            else if(slices_data[slices_counter] === 0 ){
+                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+            }else {
+                boundary_pointer = boundary_pointer.getSourceBoundary();
+                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+            }    
+        }
+        
     }
     /*
    if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
