@@ -339,100 +339,65 @@ Project.prototype.drag_cell = function(drag) {
         }
         else if(int1_bool && int2_bool){
             if(drag.conflict === 1){
-                interchanger = interchanger_1;
+                id = 'Int';
             }
             else{
-                interchanger = interchanger_2;
+                id = 'IntI';
             }
         }
         else if(int1_bool){
-            interchanger = interchanger_1;
+            id = 'Int';
         }
         else{
-            interchanger = interchanger_2;
+            id = 'IntI';
         }
         
         
     }
     else if(drag.secondary === 1){
-
+        if(drag.primary === 1){
+            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-L';   
+        }
+        else{
+            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-RI';   
+        }
     }
 
 
     else{
-
-    }
-    
-
-
-
-        if(drag.coordinates.length > 1){
-         
-            temp_coordinates.concat(drag.coordinates);
-    
-            if(drag.primary === 1){
-                id = 'Int-1I';
+        if(drag.primary === 1){
+            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
             }
             else{
-                id = 'IntI-1I';
-                temp_coordinates[temp_coordinates.length - 2]--; // We need to modify the x coordinate
+                console.log("No way to pull through");
             }
-       
+            id = id + '-R';   
         }
         else{
-            temp_coordinates.push(0); // Need to pad with one 0
-            temp_coordinates.push(drag.coordinates.last());
-
-            if(drag.primary === 1){
-                if(drag.secondary === 0){
-                    if(this.diagram.nCells[drag.coordinate.last()].id.substr(0, 3) === 'Int' &&
-                    this.diagram.nCells[drag.coordinate.last()].coordinates.last() ===
-                    this.diagram.nCells[drag.coordinate.last() + 1].coordinates.last() ){
-                        id = this.diagram.nCells[drag.coordinate.last()].id + '-1';
-                        
-                    }                       
-                }
-                else{
-                    
-                    if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                        id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
-                    }
-                    else{
-                        console.log("No way to pull through");
-                    }
-                    
-                    if(drag.secondary === 1){
-                        id = id + '-L';   
-                    }
-                    else if(drag.secondary === -1){
-                        id = id + '-R';   
-                    }
-                }
+            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
             }
             else{
-                if(drag.secondary === 0){
-                       
-                }
-                else{
-                    
-                    if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                        id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
-                    }
-                    else{
-                        console.log("No way to pull through");
-                    }
-                    
-                    if(drag.secondary === 1){
-                        id = id + '-RI';   
-                    }
-                    else if(drag.secondary === -1){
-                        id = id + '-LI';   
-                    }
-                }
-                
+                console.log("No way to pull through");
             }
+            id = id + '-LI';   
         }
-    
+    }
+
+    interchanger = new NCell(id, temp_coordinates);
         
     // Attempt to perform the interchanger
     this.diagram.rewrite(interchanger, false);
