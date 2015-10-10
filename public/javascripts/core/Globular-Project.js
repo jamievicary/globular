@@ -311,26 +311,35 @@ Project.prototype.drag_cell = function(drag) {
     var id;
     var temp_coordinates = new Array();
     var interchanger;
+    
+    var slice_pointer = this.diagram;
+    var counter = 1;
+    while(counter < drag.coordinates.length){
+        slice_pointer = slice_pointer.getSlice(drag.coordinates[drag.coordinates.length - counter]);
+        counter++;
+    }
 
     for(var i = 0; i < this.diagram.dimension - drag.coordinates.length; i++)
         temp_coordinates.push(0);
-    temp_coordinates.concat(drag.coordinates);
-
 
     if(drag.secondary === 0){
         if(drag.primary === -1){
-            temp_coordinates.increment_last(-1);
+            drag.coordinates.increment_last(-1);
         }
+        
+        for(var i = 1; i <= drag.coordinates.length; i++)
+            temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
+        
         var int1_bool = false;
         var int2_bool = false;
         id = 'Int';
         var interchanger_1 = new NCell(id, temp_coordinates);
-        if (this.diagram.interchangerAllowed(interchanger_1)) {
+        if (slice_pointer.interchangerAllowed(interchanger_1)) {
             int1_bool = true;    
         }
         id = 'IntI'
         var interchanger_2 = new NCell(id, temp_coordinates);
-        if(this.diagram.interchangerAllowed(interchanger_2)){
+        if(slice_pointer.interchangerAllowed(interchanger_2)){
             int2_bool = true;
         }
         
@@ -398,10 +407,17 @@ Project.prototype.drag_cell = function(drag) {
     }
 
     interchanger = new NCell(id, temp_coordinates);
-        
-    // Attempt to perform the interchanger
-    this.diagram.rewrite(interchanger, false);
-
+    
+    if(drag.coordinates.length === 1){  
+        // Attempt to perform the interchanger
+        this.diagram.rewrite(interchanger, false);
+    }
+    else{
+        var interchanger_wrapper = {
+                nCells: [interchanger]
+            };
+            this.diagram.attach(interchanger_wrapper, 't');
+    }
     // Finish up and render the result
     this.selected_cell = null;
     this.saveState();
