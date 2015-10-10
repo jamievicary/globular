@@ -265,7 +265,7 @@ Display.prototype.render = function() {
 
     var pad_coordinates = [];
     for (var i = 0; i < this.coordinates.length; i++) {
-        pad_coordinates[i] = this.coordinates[i].val();
+        pad_coordinates[i] = Number(this.coordinates[i].val());
     }
     for (var i = 0; i < this.active.length; i++) {
 
