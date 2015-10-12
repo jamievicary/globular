@@ -163,7 +163,12 @@ Display.prototype.create_controls = function() {
     var popout = (c.width() < 100 || c.height() < 100);
 
     // Construct the main control div
-    this.control = $('<div>').addClass('control').addClass(popout ? 'popout' : 'inline');
+    this.control = $('<div>')
+        .addClass('control')
+        .addClass(popout ? 'popout' : 'inline')
+        .mousedown(function(e) {e.stopPropagation()})
+        .mouseup(function(e) {e.stopPropagation()})
+        .click(function(e) {e.stopPropagation()});
     this.container.append(this.control);
 
     // Construct the suppress control
