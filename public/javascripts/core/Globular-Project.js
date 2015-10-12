@@ -365,8 +365,8 @@ Project.prototype.drag_cell = function(drag) {
     }
     else if(drag.secondary === 1){
         if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
             }
             else{
                 console.log("No way to pull through");
@@ -374,8 +374,8 @@ Project.prototype.drag_cell = function(drag) {
             id = id + '-L';   
         }
         else{
-            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
             }
             else{
                 console.log("No way to pull through");
@@ -387,8 +387,8 @@ Project.prototype.drag_cell = function(drag) {
 
     else{
         if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
             }
             else{
                 console.log("No way to pull through");
@@ -396,8 +396,8 @@ Project.prototype.drag_cell = function(drag) {
             id = id + '-R';   
         }
         else{
-            if(this.diagram.nCells[drag.coordinate.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinate.last() + 1].id;   
+            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
             }
             else{
                 console.log("No way to pull through");
@@ -408,16 +408,37 @@ Project.prototype.drag_cell = function(drag) {
 
     interchanger = new NCell(id, temp_coordinates);
     
-    if(drag.coordinates.length === 1){  
-        // Attempt to perform the interchanger
+    
+    var slices_data = MainDisplay.get_current_slice(); 
+    var boundary_pointer = this.diagram;
+   
+    if(slices_data.length === 0){
         this.diagram.rewrite(interchanger, false);
     }
-    else{
-        var interchanger_wrapper = {
+    else{    
+        var slices_counter = 0;
+        var slice_pointer = this.diagram;
+        while(slices_counter < slices_data.length - 1){
+            boundary_pointer = boundary_pointer.getSourceBoundary();
+            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
+            slices_counter++;
+        }
+
+        if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
+            var interchanger_wrapper = {
                 nCells: [interchanger]
             };
-            this.diagram.attach(interchanger_wrapper, 't');
+            this.diagram.attach(interchanger_wrapper, 't');        }
+        else if(slices_data[slices_counter] === 0 ){
+            var interchanger_wrapper = {
+                nCells: [interchanger]
+            };
+            this.diagram.attach(interchanger_wrapper, 's');
+        }else {
+            this.diagram.rewrite(interchanger, false);
+        }    
     }
+
     // Finish up and render the result
     this.selected_cell = null;
     this.saveState();
