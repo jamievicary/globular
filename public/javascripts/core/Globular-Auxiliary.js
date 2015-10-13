@@ -53,6 +53,12 @@ function getMean(arr) {
     return total;
 }
 
+function detectLeftButton(event) {
+    event = event || window.event;
+    var button = event.which || event.button;
+    return button == 1;
+}
+
 Array.prototype.last = function() {
     return this[this.length - 1];
 };

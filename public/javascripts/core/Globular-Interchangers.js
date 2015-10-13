@@ -44,7 +44,7 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     if (type.tail('LI', 'RI')) {
         list = this.nCells.slice(x - gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, x);
     }
-
+    
     if (type.tail('1I')) {
         return [];
     }
@@ -170,7 +170,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     var g1 = gProject.signature.getGenerator(this.nCells[x].id);
     var g2 = gProject.signature.getGenerator(this.nCells[x + 1].id);
 
-    if (nCell.id.tail('Int')) {
+    if (nCell.id === 'Int') {
         return (c1.coordinates[c1.coordinates.length - 1] >= c2.coordinates[c2.coordinates.length - 1] + g2.source.nCells.length);
     }
 
@@ -181,8 +181,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     var new_type = type.slice(0, type.length - 2);
 
 
-    if (nCell.id.tail('L')) {
-
+    if (nCell.id.tail('Int-L')) {
         var crossings = g1.target.nCells.length;
         var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1],
             crossings, 1);
@@ -190,19 +189,19 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
-    if (nCell.id.tail('R')) {
+    if (nCell.id.tail('Int-R')) {
 
         var crossings = g1.target.nCells.length;
         var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
             1, crossings);
-
+            
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
     var new_type = type.slice(0, type.length - 3);
 
 
-    if (nCell.id.tail('LI')) {
+    if (nCell.id.tail('Int-LI')) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
@@ -212,7 +211,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
 
-    if (nCell.id.tail('RI')) {
+    if (nCell.id.tail('Int-RI')) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
@@ -223,7 +222,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     }
 
 
-    if (nCell.id.tail('1I')) {
+    if (nCell.id.tail('Int-1I')) {
         if (this.nCells[x].id === new_type) {
             if (this.nCells[x + 1].id === new_type + 'I' || this.nCells[x + 1].id === new_type.substr(0, new_type.length - 1))
                 return true;
@@ -242,8 +241,9 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 Diagram.prototype.instructionsEquiv = function(list1, list2) {
 
     for (var i = 0; i < list1.length; i++) {
-        if (!this.nCellEquiv(list1[i], list2[i]))
+        if (!this.nCellEquiv(list1[i], list2[i])) {
             return false;
+        }
     }
     return true;
 }

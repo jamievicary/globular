@@ -27,6 +27,9 @@ function Display(container, diagram) {
     $(container).mouseup(function(event) {
         self.mouseup(event)
     });
+    $(container).mousemove(function(event) {
+        self.mousemove(event)
+    });
     this.create_controls();
 }
 
@@ -52,13 +55,22 @@ Display.prototype.mousedown = function(event) {
 }
 
 var min_drag = 0.25;
-Display.prototype.mouseup = function(event) {
-    var z = new Object(this.select_zone);
-    this.select_zone = null;
-    if (z == null) return;
+Display.prototype.mousemove = function(event) {
+    
+    if (!detectLeftButton(event)) {
+        this.select_zone = null;
+        return;
+    }
+    if (this.select_zone == null) return;
     var logical = this.pixelsToLogical(event);
     var dx = logical.x - this.select_logical.x;
     var dy = logical.y - this.select_logical.y;
+    
+    //console.log("distance = " + Math.sqrt(dx*dx+dy*dy));
+    if (dx * dx + dy * dy < 0.3 * 0.3) return;
+    
+    var z = new Object(this.select_zone);
+    this.select_zone = null;
 
     var data = {
         boundary_depth: z.boundary_depth,
@@ -81,6 +93,9 @@ Display.prototype.mouseup = function(event) {
     }
 
     gProject.drag_cell(data);
+}
+
+Display.prototype.mouseup = function(event) {
     this.select_zone = null;
 }
 
@@ -111,9 +126,6 @@ Display.prototype.pixelsToLogical = function(event) {
     }
     var x = 0.5 + b.left + (event.offsetX - b.top_left.pix_x) * b.width / b.pix_width;
     var y = b.top - (event.offsetY - b.top_left.pix_y) * b.height / b.pix_height;
-    //var x = b.left + ((b.right - b.left) * event.offsetX / $(this).width());
-    //var y = b.bottom + ((b.bottom - b.top) * event.offsetY / $(this).height());
-    //console.log("Clicked pixel=(" + event.offsetX + "," + event.offsetY + ") = logical " + x + "," + y + ")");
     return {
         x: x,
         y: y
