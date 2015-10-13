@@ -323,44 +323,48 @@ Project.prototype.drag_cell = function(drag) {
         temp_coordinates.push(0);
 
     if(drag.secondary === 0){
-        if(drag.primary === -1){
-            drag.coordinates.increment_last(-1);
-        }
-        
-        for(var i = 1; i <= drag.coordinates.length; i++)
-            temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
-        
-        var int1_bool = false;
-        var int2_bool = false;
-        id = 'Int';
-        var interchanger_1 = new NCell(id, temp_coordinates);
-        if (slice_pointer.interchangerAllowed(interchanger_1)) {
-            int1_bool = true;    
-        }
-        id = 'IntI'
-        var interchanger_2 = new NCell(id, temp_coordinates);
-        if(slice_pointer.interchangerAllowed(interchanger_2)){
-            int2_bool = true;
-        }
-        
-        if(!int1_bool && !int2_bool){
-            console.log("cannot interchange");
-        }
-        else if(int1_bool && int2_bool){
-            if(drag.conflict === 1){
+        if(drag.coordinates.length === 1){
+            if(drag.primary === -1){
+                drag.coordinates.increment_last(-1);
+            }
+            
+            for(var i = 1; i <= drag.coordinates.length; i++)
+                temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
+            
+            var int1_bool = false;
+            var int2_bool = false;
+            id = 'Int';
+            var interchanger_1 = new NCell(id, temp_coordinates);
+            if (slice_pointer.interchangerAllowed(interchanger_1)) {
+                int1_bool = true;    
+            }
+            id = 'IntI'
+            var interchanger_2 = new NCell(id, temp_coordinates);
+            if(slice_pointer.interchangerAllowed(interchanger_2)){
+                int2_bool = true;
+            }
+            
+            if(!int1_bool && !int2_bool){
+                console.log("cannot interchange");
+            }
+            else if(int1_bool && int2_bool){
+                if(drag.conflict === 1){
+                    id = 'Int';
+                }
+                else{
+                    id = 'IntI';
+                }
+            }
+            else if(int1_bool){
                 id = 'Int';
             }
             else{
                 id = 'IntI';
             }
         }
-        else if(int1_bool){
-            id = 'Int';
+        else{ // We are dragging a 2-cell in a 3-diagram and want to apply either 1 or 1I
+            
         }
-        else{
-            id = 'IntI';
-        }
-        
         
     }
     else if(drag.secondary === 1){
@@ -423,19 +427,27 @@ Project.prototype.drag_cell = function(drag) {
             slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
             slices_counter++;
         }
+        
+        var interchanger_wrapper = {
+                nCells: [interchanger]
+            };
 
         if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
-            var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-            this.diagram.attach(interchanger_wrapper, 't');        }
+            boundary_pointer.attach(interchanger_wrapper, 't');        }
         else if(slices_data[slices_counter] === 0 ){
-            var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-            this.diagram.attach(interchanger_wrapper, 's');
+            
+            // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
+            if (interchanger_wrapper.nCells[0].id.tail('I')){
+                interchanger_wrapper.nCells[0].id = interchanger_wrapper.nCells[0].id.substr(0, interchanger_wrapper.nCells[0].id.length - 2);
+            }
+            else {
+                interchanger_wrapper.nCells[0].id += 'I';
+            }
+            
+            boundary_pointer.attach(interchanger_wrapper, 's');
         }else {
-            this.diagram.rewrite(interchanger, false);
+            console.log("Cannot interchange");
+            //boundary_pointer.attach(interchanger_wrapper, 's');
         }    
     }
 
@@ -1019,45 +1031,8 @@ Project.prototype.renderNCells = function(n) {
             this.render("#ci1-" + cell, target_diagram);
 
         }
-        else if (n === 4){/*
-            // Render the source diagram into $("#ci-" + cell)
-            var tempColours = new Hashtable();
-            this.dataList.each(function(key, value) {
-                tempColours.put(key, value.colour)
-            });
-            var overall_diagram = this.dataList.get(cell).diagram;
-            // Source
+        else if (n === 4){
             
-            // Create the slider
-            var check = $("#slider" + cell + "t").on("input change", function() {
-                this.render();
-            });
-            
-            var source_diagram = overall_diagram.getSourceBoundary();
-            this.render("#ci-" + cell, source_diagram, check);//"#slider");
-            
-            // Create the slider
-            check = $("#slider" + cell + "t").on("input change", function() {
-                this.render();
-            });
-            
-            
-            // ****************
-            
-            
-            
-            
-            // +++ Figure out how to actually create a slider +++
-            
-            
-            
-            
-            
-            // ****************
-            
-            // Target
-            var target_diagram = overall_diagram.getTargetBoundary();
-            this.render("#ci1-" + cell, target_diagram, check);//$("#slider" + cell + "t"));   */ 
         }
         else {
             this.renderGenerator("#ci-" + cell, cell);
