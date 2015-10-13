@@ -305,185 +305,74 @@ Project.prototype.storeTheorem = function() {
 
 };
 
-
-Project.prototype.interpret_drag = function(drag, diagram) {
-    
-    // RECURSIVE CASE
-    if (drag.coordinates.length > 1) {
-        var new_drag = drag;
-        new_drag.coordinates = drag.coordinates.slice ...
-        var action = interpret_drag(new_drag, diagram.getSlice[drag.coordinates[0]]);
-        var new_action = action;
-        new_action.id = action.id + "-1";
-        return new_action;
-    }
-    
-    // BASE CASE
-    
-    var options = [test_basic(drag, diagram), test_pull_through(drag, diagram)];
-    
-    // If options is all null, do nothing
-    // If options has one non-null entry, just do that
-    // Otherwise, ask the user to choose
-    
-}
-
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
     
-    var action = interpret_drag(drag, this.diagram.getBoundary(drag.boundary_path));
+    var diagram_pointer = this.diagram;
+    
+    var temp_drag_data = new Array();
+    
+    for(var i = 0; i < drag.boundary_depth; i++){
+        diagram_pointer = diagram_pointer.getSourceBoundary();
+        //temp_drag_data.push(drag.coordinates.last());
+        //drag.coordinates = drag.coordinates.splice(drag.coordinates.length - 1, 1);
+    }
+    
+    var options = diagram_pointer.interpret_drag(drag);
+    
+    if(options.length === 0){
+        console.log("No interchanger applies");
+        return;
+
+    }
+    else if (options.length > 1){
+        console.log("Make user choose")
+        return;
+    }
+    else{
+        
+    }
+  
+    var action = options[0];
+    action.coordinates = action.coordinates.concat(temp_drag_data);
+    var action_wrapper = {
+        nCells: [action]
+    };
     
     // Actually perform the action!
     
-    // If the original drag object was in the 0-boundary of the diagram,
-    // use action to rewrite the diagram
+    var diagram_pointer = this.diagram;
     
-    // If the original drag object was in a proper boundary of the diagram,
-    // use action to attach to the diagram
+    var temp_drag_data = new Array();
     
-    
-    var id;
-    var temp_coordinates = new Array();
-    var interchanger;
-    
-    var slice_pointer = this.diagram;
-    var counter = 1;
-    while(counter < drag.coordinates.length){
-        slice_pointer = slice_pointer.getSlice(drag.coordinates[drag.coordinates.length - counter]);
-        counter++;
+    // This is necessary to attach one level higher than the boundary itself
+    for(var i = 0; i < drag.boundary_depth - 1; i++){
+        diagram_pointer = diagram_pointer.getSourceBoundary();
     }
-
-    for(var i = 0; i < this.diagram.dimension - drag.coordinates.length; i++)
-        temp_coordinates.push(0);
-
-    if(drag.secondary === 0){
-        if(drag.coordinates.length === 1){
-            if(drag.primary === -1){
-                drag.coordinates.increment_last(-1);
-            }
-            
-            for(var i = 1; i <= drag.coordinates.length; i++)
-                temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
-            
-            var int1_bool = false;
-            var int2_bool = false;
-            id = 'Int';
-            var interchanger_1 = new NCell(id, temp_coordinates);
-            if (slice_pointer.interchangerAllowed(interchanger_1)) {
-                int1_bool = true;    
-            }
-            id = 'IntI'
-            var interchanger_2 = new NCell(id, temp_coordinates);
-            if(slice_pointer.interchangerAllowed(interchanger_2)){
-                int2_bool = true;
-            }
-            
-            if(!int1_bool && !int2_bool){
-                console.log("cannot interchange");
-            }
-            else if(int1_bool && int2_bool){
-                if(drag.conflict === 1){
-                    id = 'Int';
-                }
-                else{
-                    id = 'IntI';
-                }
-            }
-            else if(int1_bool){
-                id = 'Int';
-            }
-            else{
-                id = 'IntI';
-            }
-        }
-        else{ // We are dragging a 2-cell in a 3-diagram and want to apply either 1 or 1I
-            
-        }
-        
+    
+    if(drag.boundary_depth === 0){
+        diagram_pointer.rewrite(action, false);
     }
-    else if(drag.secondary === 1){
-        if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-L';   
-        }
-        else{
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-RI';   
-        }
-    }
-
-
     else{
-        if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-R';   
-        }
-        else{
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-LI';   
-        }
-    }
-
-    interchanger = new NCell(id, temp_coordinates);
-    
-    
-    var slices_data = MainDisplay.get_current_slice(); 
-    var boundary_pointer = this.diagram;
-   
-    if(slices_data.length === 0){
-        this.diagram.rewrite(interchanger, false);
-    }
-    else{    
-        var slices_counter = 0;
-        var slice_pointer = this.diagram;
-        while(slices_counter < slices_data.length - 1){
-            boundary_pointer = boundary_pointer.getSourceBoundary();
-            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
-            slices_counter++;
-        }
-        
-        var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-
-        if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
-            boundary_pointer.attach(interchanger_wrapper, 't');        }
-        else if(slices_data[slices_counter] === 0 ){
-            
-            // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
-            if (interchanger_wrapper.nCells[0].id.tail('I')){
-                interchanger_wrapper.nCells[0].id = interchanger_wrapper.nCells[0].id.substr(0, interchanger_wrapper.nCells[0].id.length - 2);
+        if(drag.boundary_type === 's'){
+        // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
+            if (action.id.tail('I')){
+                action_wrapper.nCells[0].id = action.id.substr(0, action.id.length - 1);
             }
             else {
-                interchanger_wrapper.nCells[0].id += 'I';
-            }
-            
-            boundary_pointer.attach(interchanger_wrapper, 's');
-        }else {
-            console.log("Cannot interchange");
-            //boundary_pointer.attach(interchanger_wrapper, 's');
-        }    
+                action_wrapper.nCells[0].id += 'I';
+            }   
+        }
+        diagram_pointer.attach(action_wrapper, drag.boundary_type);        
     }
+    
+    /*
+    If the original drag object was in the 0-boundary of the diagram,
+    use action to rewrite the diagram
+    
+    If the original drag object was in a proper boundary of the diagram,
+    use action to attach to the diagram
+    */
 
     // Finish up and render the result
     this.selected_cell = null;
