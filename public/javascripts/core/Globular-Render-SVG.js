@@ -440,12 +440,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         // Add line active region
         for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height); height++) {
-            var y = height;
-            
+
+            // Correction for case that diagram is an identity
+            var edge_height = Math.min(height, data.edges_at_level.length - 1);
+
             active.push({
                 x: edge.x,
-                y: y,
-                logical: [height, data.edges_at_level[height].indexOf(i)],
+                y: height,
+                logical: [edge_height, data.edges_at_level[edge_height].indexOf(i)],
                 direction: 'horizontal'
             });
         }
