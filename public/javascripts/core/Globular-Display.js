@@ -73,12 +73,12 @@ Display.prototype.mousemove = function(event) {
     var z = new Object(this.select_zone);
     this.select_zone = null;
 
+    var position = this.diagram.getBoundaryCoordinate(z.logical);
     var data = {
-        position: this.diagram.getBoundaryCoordinate(z.logical),
-        coordinates: z.logical
+        coordinates: position.coordinates,
+        boundary_type: position.boundary_path.last(),
+        boundary_depth: position.boundary_path.length
     };
-    data.boundary_type = data.position.boundary_path.last();
-    data.boundary_depth = data.position.boundary_path.length;
 
     if (z.direction == 'horizontal') {
         if (Math.abs(dx) < 0.25) return;
