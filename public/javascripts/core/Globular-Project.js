@@ -341,7 +341,7 @@ Project.prototype.drag_cell = function(drag) {
     
     // If the original drag object was in the 0-boundary of the diagram,
     // use action to rewrite the diagram. Otherwise attach.
-
+    
     // var slice_pointer = this.diagram;
     var diagram_pointer = this.diagram;
 
