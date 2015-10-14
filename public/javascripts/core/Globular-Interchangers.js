@@ -397,6 +397,9 @@ Diagram.prototype.test_basic = function(drag) {
             console.log("cannot interchange");
         }
         else if(int1_bool && int2_bool){
+            
+            // +++ Here, CONFLICT is still used +++ //
+            
             if(drag.conflict === 1){
                 id = 'Int';
             }
