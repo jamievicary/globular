@@ -308,12 +308,43 @@ Project.prototype.storeTheorem = function() {
 
 };
 
+Project.prototype.interpret_drag = function(drag, diagram) {
+    
+    // RECURSIVE CASE
+    /*
+    if (drag.coordinates.length > 1) {
+        var new_drag = drag;
+        new_drag.coordinates = drag.coordinates.slice ...
+        var action = interpret_drag(new_drag, diagram.getSlice[drag.coordinates[0]]);
+        var new_action = action;
+        new_action.id = action.id + "-1";
+        return new_action;
+    }
+    
+    // BASE CASE
+    
+    var options = [test_basic(drag, diagram), test_pull_through(drag, diagram)];
+    
+    // If options is all null, do nothing
+    // If options has one non-null entry, just do that
+    // Otherwise, ask the user to choose
+    */
+    
+}
+
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
     
+    //var action = interpret_drag(drag, this.diagram.getBoundary(drag.boundary_path));
+    
+    // Actually perform the action!
+    
+    // If the original drag object was in the 0-boundary of the diagram,
+    // use action to rewrite the diagram. Otherwise attach.
+
     // var slice_pointer = this.diagram;
     var diagram_pointer = this.diagram;
-    
+
     var temp_drag_data = new Array();
     
     if(drag.boundary_depth != 0){

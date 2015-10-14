@@ -76,6 +76,11 @@ String.prototype.tail = function() {
     //return this.substr(this.length - elements, this.length);
 };
 
+String.prototype.last = function() {
+    if (this.length == 0) return '';
+    return this.substr(this.length - 1, 1);
+}
+
 Array.prototype.fill = function(value, length) {
     this.length = 0;
     for (var i=0; i<length; i++) {
