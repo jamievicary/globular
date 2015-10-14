@@ -338,8 +338,9 @@ Diagram.prototype.interpret_drag = function(drag) {
         
         var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
         
-        var new_action = action;
+        var new_action = action[0];
         new_action.id = action.id + "-1";
+        new_action.coordinates.push(drag.coordinates.last());
         return new_action;
     }
     
