@@ -305,7 +305,6 @@ Project.prototype.storeTheorem = function() {
 
 };
 
-
 Project.prototype.interpret_drag = function(drag, diagram) {
     
     // RECURSIVE CASE
@@ -338,154 +337,83 @@ Project.prototype.drag_cell = function(drag) {
     // Actually perform the action!
     
     // If the original drag object was in the 0-boundary of the diagram,
-    // use action to rewrite the diagram
-    
-    // If the original drag object was in a proper boundary of the diagram,
-    // use action to attach to the diagram
-    
-    
-    var id;
-    var temp_coordinates = new Array();
-    var interchanger;
-    
-    var slice_pointer = this.diagram;
-    var counter = 1;
-    while(counter < drag.coordinates.length){
-        slice_pointer = slice_pointer.getSlice(drag.coordinates[drag.coordinates.length - counter]);
-        counter++;
-    }
+    // use action to rewrite the diagram. Otherwise attach.
 
-    for(var i = 0; i < this.diagram.dimension - drag.coordinates.length; i++)
-        temp_coordinates.push(0);
+    // var slice_pointer = this.diagram;
+    var diagram_pointer = this.diagram;
 
-    if(drag.secondary === 0){
-        if(drag.coordinates.length === 1){
-            if(drag.primary === -1){
-                drag.coordinates.increment_last(-1);
-            }
-            
-            for(var i = 1; i <= drag.coordinates.length; i++)
-                temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
-            
-            var int1_bool = false;
-            var int2_bool = false;
-            id = 'Int';
-            var interchanger_1 = new NCell(id, temp_coordinates);
-            if (slice_pointer.interchangerAllowed(interchanger_1)) {
-                int1_bool = true;    
-            }
-            id = 'IntI'
-            var interchanger_2 = new NCell(id, temp_coordinates);
-            if(slice_pointer.interchangerAllowed(interchanger_2)){
-                int2_bool = true;
-            }
-            
-            if(!int1_bool && !int2_bool){
-                console.log("cannot interchange");
-            }
-            else if(int1_bool && int2_bool){
-                if(drag.conflict === 1){
-                    id = 'Int';
-                }
-                else{
-                    id = 'IntI';
-                }
-            }
-            else if(int1_bool){
-                id = 'Int';
-            }
-            else{
-                id = 'IntI';
-            }
-        }
-        else{ // We are dragging a 2-cell in a 3-diagram and want to apply either 1 or 1I
-            
+    var temp_drag_data = new Array();
+    
+    if(drag.boundary_depth != 0){
+        for(var i = 0; i < drag.boundary_depth - 1; i++){
+            //slice_pointer = slice_pointer.getSlice();
+            diagram_pointer = diagram_pointer.getSourceBoundary();
         }
         
-    }
-    else if(drag.secondary === 1){
-        if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-L';   
+        // May need to look at slices instead - to be considered
+        if(drag.boundary_type === 's'){
+            diagram_pointer = diagram_pointer.getSourceBoundary();
         }
         else{
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-RI';   
+            diagram_pointer = diagram_pointer.getTargetBoundary();
         }
     }
+    
+    var options = diagram_pointer.interpret_drag(drag);
+    
+    if(options.length === 0){
+        console.log("No interchanger applies");
+        return;
 
-
+    }
+    else if (options.length > 1){
+        console.log("Make user choose")
+        return;
+    }
     else{
-        if(drag.primary === 1){
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-R';   
-        }
-        else{
-            if(this.diagram.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.diagram.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-            }
-            id = id + '-LI';   
-        }
-    }
-
-    interchanger = new NCell(id, temp_coordinates);
-    
-    
-    var slices_data = MainDisplay.get_current_slice(); 
-    var boundary_pointer = this.diagram;
-   
-    if(slices_data.length === 0){
-        this.diagram.rewrite(interchanger, false);
-    }
-    else{    
-        var slices_counter = 0;
-        var slice_pointer = this.diagram;
-        while(slices_counter < slices_data.length - 1){
-            boundary_pointer = boundary_pointer.getSourceBoundary();
-            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
-            slices_counter++;
-        }
         
-        var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-
-        if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
-            boundary_pointer.attach(interchanger_wrapper, 't');        }
-        else if(slices_data[slices_counter] === 0 ){
-            
-            // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
-            if (interchanger_wrapper.nCells[0].id.tail('I')){
-                interchanger_wrapper.nCells[0].id = interchanger_wrapper.nCells[0].id.substr(0, interchanger_wrapper.nCells[0].id.length - 2);
+    }
+  
+    var action = options[0];
+    action.coordinates = action.coordinates.concat(temp_drag_data);
+    var action_wrapper = {
+        nCells: [action]
+    };
+    
+    // Actually perform the action!
+    
+    var diagram_pointer = this.diagram;
+    
+    var temp_drag_data = new Array();
+    
+    // This is necessary to attach one level higher than the boundary itself
+    for(var i = 0; i < drag.boundary_depth - 1; i++){
+        diagram_pointer = diagram_pointer.getSourceBoundary();
+    }
+    
+    if(drag.boundary_depth === 0){
+        diagram_pointer.rewrite(action, false);
+    }
+    else{
+        if(drag.boundary_type === 's'){
+        // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
+            if (action.id.tail('I')){
+                action_wrapper.nCells[0].id = action.id.substr(0, action.id.length - 1);
             }
             else {
-                interchanger_wrapper.nCells[0].id += 'I';
-            }
-            
-            boundary_pointer.attach(interchanger_wrapper, 's');
-        }else {
-            console.log("Cannot interchange");
-            //boundary_pointer.attach(interchanger_wrapper, 's');
-        }    
+                action_wrapper.nCells[0].id += 'I';
+            }   
+        }
+        diagram_pointer.attach(action_wrapper, drag.boundary_type);        
     }
+    
+    /*
+    If the original drag object was in the 0-boundary of the diagram,
+    use action to rewrite the diagram
+    
+    If the original drag object was in a proper boundary of the diagram,
+    use action to attach to the diagram
+    */
 
     // Finish up and render the result
     this.selected_cell = null;
@@ -493,104 +421,8 @@ Project.prototype.drag_cell = function(drag) {
     $('div.cell-b-sect').empty();
     this.renderDiagram();    
     
-    
 } 
 
-// Handle a click on a 2-cell to implement interchangers
-Project.prototype.clickCell = function(height) {
-
-    if (this.diagram.getDimension() === 3) {
-        var slider = Number($('#slider').val());
-        if (slider === 0 && this.diagram.nCells.length != 0) {
-
-
-            var temp_coordinates = new Array();
-            for(var i = 0; i < this.diagram.dimension - 2; i++)
-                temp_coordinates.push(0);
-            if (first_click > second_click) {
-                temp_coordinates.push(second_click);
-            }
-            else{
-                temp_coordinates.push(first_click);
-            }
-
-            var temp_id = "Int";
-            var interchanger = new NCell(temp_id, temp_coordinates);
-
-            if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'IntI';
-                if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                    alert("Cannot interchange these cells");
-                    this.selected_cell = null;
-                    return;
-                }
-            }
-
-            /*
-                We need to figure out what is the inverse of the interchanger that we want to apply
-            */
-
-            var temp_interchanged_source = this.diagram.getSourceBoundary().copy();
-            temp_interchanged_source.rewrite(interchanger, false);
-
-            interchanger.coordinates = temp_interchanged_source.nCells[Math.min(first_click, second_click)].coordinates.slice(0);
-            interchanger.coordinates.push(Math.min(first_click, second_click));
-
-
-            if (interchanger.id === 'IntI') {
-                interchanger.id = 'Int';
-            }
-            else {
-                interchanger.id = 'IntI';
-            }
-
-
-            //Manual attachment
-            this.diagram.nCells.splice(0, 0, interchanger);
-            this.diagram.source = temp_interchanged_source;
-
-            var maxVal = $('#slider').val() + 1;
-            $('#slider').attr('max', maxVal);
-
-        }
-        else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
-
-            var temp_coordinates = new Array();
-            for(var i = 0; i < this.diagram.dimension - 3; i++)
-                temp_coordinates.push(0);
-            if (first_click > second_click) {
-                temp_coordinates.push(second_click);
-            }
-            else{
-                temp_coordinates.push(first_click);
-            }
-
-
-            var temp_id = 'Int';
-            var interchanger = new NCell(temp_id, temp_coordinates);
-
-            if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'IntI';
-                if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                    alert("Cannot interchange these cells");
-                    this.selected_cell = null;
-                    return;
-                }
-            }
-
-            var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-            this.diagram.attach(interchanger_wrapper, 't');
-            var maxVal = $('#slider').val() + 1;
-            $('#slider').attr('max', maxVal)
-            $('#slider').val(this.diagram.nCells.length);
-
-        }   
-
-    }
-
-}
 
 Project.prototype.saveState = function() {
     //return;

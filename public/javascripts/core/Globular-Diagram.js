@@ -165,7 +165,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
-    var insert_position = nCell.coordinates[nCell.coordinates.length - 1];
+    var insert_position = nCell.coordinates.last();
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
@@ -648,9 +648,10 @@ Diagram.prototype.getNCellTarget = function(x) {
 // Convert an internal coordinate to {boundarypath, coordinate}, by identifying
 // coordinates in slices adjacent to the boundary as being in that boundary.
 Diagram.prototype.getBoundaryCoordinate = function(internal) {
-    var location = {boundary_path: '', coordinates: internal};
+    var location = {boundary_path: '', coordinates: internal.slice()};
     var slice = this.copy();
     while (location.coordinates[0] == 0 || location.coordinates[0] == slice.nCells.length) {
+        if (location.coordinates.length == 1) break;
         if (location.coordinates[0] == 0) {
             slice = this.getSourceBoundary();
             location.boundary_path += 's';

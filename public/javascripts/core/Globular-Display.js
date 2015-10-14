@@ -39,6 +39,7 @@ Display.prototype.mousedown = function(event) {
     var closest_zone = null;
     var shortest_sq_dist = Number.MAX_VALUE;
     var logical = this.pixelsToLogical(event);
+    console.log("Detected click: " + JSON.stringify(logical));
     for (var i = 0; i < this.active.length; i++) {
         var zone = this.active[i];
         var dx = logical.x - zone.x;
@@ -51,7 +52,7 @@ Display.prototype.mousedown = function(event) {
         this.select_zone = closest_zone;
         this.select_logical = logical;
     }
-    //console.log(JSON.stringify(this.select_zone));
+    console.log("Detected mousedown: " + JSON.stringify(this.select_zone));
 }
 
 var min_drag = 0.25;
@@ -76,6 +77,8 @@ Display.prototype.mousemove = function(event) {
         position: this.diagram.getBoundaryCoordinate(z.logical),
         coordinates: z.logical
     };
+    data.boundary_type = data.position.boundary_path.last();
+    data.boundary_depth = data.position.boundary_path.length;
 
     if (z.direction == 'horizontal') {
         if (Math.abs(dx) < 0.25) return;
@@ -124,7 +127,7 @@ Display.prototype.pixelsToLogical = function(event) {
         b.pix_width = b.width * this_height / b.height;
         b.pix_height = this_height;
     }
-    var x = 0.5 + b.left + (event.offsetX - b.top_left.pix_x) * b.width / b.pix_width;
+    var x = b.left + (event.offsetX - b.top_left.pix_x) * b.width / b.pix_width;
     var y = b.top - (event.offsetY - b.top_left.pix_y) * b.height / b.pix_height;
     return {
         x: x,

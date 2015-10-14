@@ -11,12 +11,13 @@ Diagram.prototype.expand = function(type, x, n, m) {
 
     var list = new Array();
 
-    if (type === 'Int') {
+    if (type === 'Int' || type === 'IntI') {
         if (n === 1 && m === 1) {
-            list.push(this.atomicInterchangerSource(type, x));
+           // list.push(this.atomicInterchangerSource(type, [x]));
+           list.push(new NCell(type, [0, x])); // Zero is hardcoded - number of zeros has to be generic
         }
-        if (m === 1 && n != 1) {
-            list = this.expand(type, x, n, 1).concat(this.expand(type, x + 1, n, m - 1));
+        else if (m === 1 && n != 1) {
+            list = this.expand(type, x, 1, m).concat(this.expand(type, x + 1, n - 1, m));
         }
         else {
             list = this.expand(type, x + n - 1, 1, m).concat(this.expand(type, x, n - 1, m));
@@ -38,11 +39,11 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     }
 
     if (type.tail('L', 'R')) {
-        list = this.nCells.slice(x, x + gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length);
+        list = this.nCells.slice(x, x + gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length + 1);
     }
 
     if (type.tail('LI', 'RI')) {
-        list = this.nCells.slice(x - gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, x);
+        list = this.nCells.slice(x - gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, x + 1);
     }
     
     if (type.tail('1I')) {
@@ -52,12 +53,12 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('1')) {
-        list.push(new_type, heights[heights.length - 2]);
+        list.push(new NCell(new_type, heights[heights.length - 2]));
         if (new_type.tail('I')) {
-            list.push(new_type.substr(0, new_type.length - 1), heights[heights.length - 2]);
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), heights[heights.length - 2]));
         }
         else {
-            list.push(new_type + 'I', heights[heights.length - 2]);
+            list.push(new NCell(new_type + 'I', heights[heights.length - 2]));
         }
     }
 
@@ -95,7 +96,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
 
         this.nCells[x].coordinates.increment_last(1);
-        list.push(this.nCells[x].id, this.nCells[x].coordinates);
+        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
     }
 
     //var x = 2 + (type == 'int' ? 1 : 0);
@@ -106,7 +107,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
             1, gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length);
 
         this.nCells[x].coordinates.increment_last(-1);
-        list.push(this.nCells[x].id, this.nCells[x].coordinates);
+        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
     }
 
 
@@ -115,37 +116,54 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     if (type.tail('LI')) {
 
-        this.nCells[x].coordinates.increment_last(-1);
-        list.push(this.nCells[x].id, this.nCells[x].coordinates);
-
         var g = gProject.signature.getGenerator(this.nCells[x].id);
 
-        list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
+        list = list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
             new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
-            gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length), 1);
+            gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length, 1));
+
+        this.nCells[x].coordinates.increment_last(-1);
+        list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
+
+        // hack dealing with attachment point for the inverse interchanger
+        
+        // ++++
+        
+        // To be discussed thoroughly
+        
+        heights.increment_last(-g.source.nCells.length);
 
     }
 
     if (type.tail('RI')) {
 
-        this.nCells[x].coordinates.increment_last(1);
-        list.push(this.nCells[x].id, this.nCells[x].coordinates);
-
         var g = gProject.signature.getGenerator(this.nCells[x].id);
 
-        list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
-            new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1],
-            gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length), 1);
-
+        list = list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
+            new_type, this.nCells[x].coordinates.last(),
+            g.target.nCells.length, 1));
+        
+        this.nCells[x].coordinates.increment_last(1);
+        list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
+        
+        
+        // hack dealing with attachment point for the inverse interchanger
+        
+        // ++++
+        
+        // To be discussed thoroughly
+        
+        heights.increment_last(-g.source.nCells.length);
+        
     }
 
     if (type.tail('1I')) {
-        list.push(new_type, heights[heights - 2]);
+        list.push(new NCell(new_type, heights[heights - 2]));
         if(new_type.tail('I')){
-            list.push(new_type.substr(0, new_type.length - 1), heights[heights - 2]);
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), heights[heights - 2]));
         }
         else{
-            list.push(new_type + 'I', heights[heights - 2]);
+            list.push(new NCell(new_type + 'I', heights[heights - 2]));
         }
     }
 
@@ -205,7 +223,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
-            new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
+            new_type, this.nCells[x - crossings].coordinates[this.nCells[x - crossings].coordinates.length - 1] - 1,
             crossings, 1);
 
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
@@ -215,7 +233,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
         var crossings = g1.source.nCells.length;
         var template = this.getSlice(x - crossings - 1).expand(
-            new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1],
+            new_type, this.nCells[x - crossings].coordinates[this.nCells[x - crossings].coordinates.length - 1],
             1, crossings);
 
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
@@ -273,4 +291,152 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
     alert("Illegal data passed to rewriteInterchanger");
 
     return [];
+}
+
+Diagram.prototype.interpret_drag = function(drag) {
+    
+    // RECURSIVE CASE
+    if (drag.coordinates.length > 1) {
+        var new_drag = drag;
+        new_drag.coordinates = drag.coordinates.slice();
+        
+        var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
+        
+        var new_action = action;
+        new_action.id = action.id + "-1";
+        return new_action;
+    }
+    
+    // BASE CASE
+    return this.test_basic(drag).concat(this.test_pull_through(drag));
+        
+}
+
+Diagram.prototype.test_basic = function(drag) {
+    var id;
+    var temp_coordinates = new Array();
+    
+    if(drag.secondary != null && drag.secondary != 0){
+        return [];
+    }
+    
+    for(var i = 0; i < this.dimension - drag.coordinates.length; i++)
+        temp_coordinates.push(0);
+    
+    if(drag.coordinates.length === 1){
+        if(drag.primary === -1){
+            drag.coordinates.increment_last(-1);
+        }
+        
+        // Reconsider the generality of this
+        temp_coordinates.push(drag.coordinates.last());
+        
+        /*    
+        for(var i = 1; i <= drag.coordinates.length; i++)
+            temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
+        */ 
+            
+        var int1_bool = false;
+        var int2_bool = false;
+       
+        id = 'Int';
+        var interchanger_1 = new NCell(id, temp_coordinates);
+        if (this.interchangerAllowed(interchanger_1)) {
+            int1_bool = true;    
+        }
+        
+        id = 'IntI'
+        var interchanger_2 = new NCell(id, temp_coordinates);
+        if(this.interchangerAllowed(interchanger_2)){
+            int2_bool = true;
+        }
+            
+        if(!int1_bool && !int2_bool){
+            console.log("cannot interchange");
+        }
+        else if(int1_bool && int2_bool){
+            if(drag.conflict === 1){
+                id = 'Int';
+            }
+            else{
+                id = 'IntI';
+            }
+        }
+        else if(int1_bool){
+            id = 'Int';
+        }
+        else{
+            id = 'IntI';
+        }
+    return [new NCell(id, temp_coordinates)];
+    }
+    else{
+        return [];
+    }
+}
+
+Diagram.prototype.test_pull_through = function(drag) {
+    
+    var id;
+    var temp_coordinates = new Array();
+    
+    for(var i = 0; i < this.dimension - drag.coordinates.length; i++)
+        temp_coordinates.push(0);
+    temp_coordinates.push(drag.coordinates.last());
+    
+    if(drag.secondary === 1){
+        if(drag.primary === 1){
+            if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.nCells[drag.coordinates.last() + 1].id; 
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-L';   
+        }
+        else{
+            if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
+                id = this.nCells[drag.coordinates.last() - 1].id;
+
+                // Need to offset the attachment point of the interchanger by the number of inputs of the pulled-through cell
+                var g = gProject.signature.getGenerator(this.nCells[drag.coordinates.last()].id)
+                //temp_coordinates.increment_last(-g.source.nCells.length);
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-RI';   
+        }
+    }
+
+
+    else if (drag.secondary === -1){
+        if(drag.primary === 1){
+            if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+                id = this.nCells[drag.coordinates.last() + 1].id;   
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-R';   
+        }
+        else{
+            if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
+                id = this.nCells[drag.coordinates.last() - 1].id;  
+                
+                // Need to offset the attachment point of the interchanger by the number of inputs of the pulled-through cell
+                var g = gProject.signature.getGenerator(this.nCells[drag.coordinates.last()].id)
+                //temp_coordinates.increment_last(-g.source.nCells.length);
+            }
+            else{
+                console.log("No way to pull through");
+            }
+            id = id + '-LI';   
+        }
+    }
+    else{
+        return [];
+    }
+    
+    return [new NCell(id, temp_coordinates)];
 }
