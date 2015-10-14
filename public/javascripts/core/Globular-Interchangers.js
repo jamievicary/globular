@@ -328,8 +328,13 @@ Diagram.prototype.interpret_drag = function(drag) {
     
     // RECURSIVE CASE
     if (drag.coordinates.length > 1) {
-        var new_drag = drag;
-        new_drag.coordinates = drag.coordinates.slice();
+        var new_drag = {
+            boundary_type: drag.boundary_type,
+            boundary_depth: drag.boundary_depth,
+            coordinates: drag.coordinates.slice(0, drag.coordinates.length),
+            directions: drag.directions.slice(0, drag.directions.length)
+        };
+        new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
         
         var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
         
@@ -383,6 +388,7 @@ Diagram.prototype.test_basic = function(drag) {
         }
             
         if(!int1_bool && !int2_bool){
+            id = this.nCells[drag.coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
             console.log("cannot interchange");
         }
         else if(int1_bool && int2_bool){
