@@ -200,11 +200,7 @@ Diagram.prototype.copy = function() {
 
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
-        nCells.push({
-            id: this.nCells[i].id,
-            coordinates: this.nCells[i].coordinates.slice(0)
-        });
-
+        nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0)));
     }
 
     var diagram = new Diagram(source_boundary, nCells);

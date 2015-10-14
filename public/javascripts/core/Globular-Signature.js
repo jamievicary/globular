@@ -92,10 +92,7 @@ Signature.prototype.createDiagram = function (generatorId) {
         }
     }
 
-    nCells.push({
-        id: generatorId,
-        coordinates: coordinates
-    });
+    nCells.push(new NCell(generatorId, coordinates));
     
     var diagram = new Diagram(source_boundary, nCells);
     return diagram;

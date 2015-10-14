@@ -154,11 +154,14 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
     else {
         var rewrite_source_size = attached_diagram.getSourceBoundary().nCells.length;
 
+    var rewriteCell = new NCell(attached_diagram.nCells[0].id, bounds);
+
+/*
         var rewriteCell = {
             id: attached_diagram.nCells[0].id,
             coordinates: bounds
         }
-
+*/
         this.diagram.rewrite(rewriteCell);
 
     }
@@ -345,6 +348,10 @@ Project.prototype.drag_cell = function(drag) {
   
     var action = options[0];
     action.coordinates = action.coordinates.concat(temp_drag_data);
+   // var action_wrapper = new NCell(action)
+    
+    //var action_wrapper = new Diagram(action)
+    
     var action_wrapper = {
         nCells: [action]
     };
