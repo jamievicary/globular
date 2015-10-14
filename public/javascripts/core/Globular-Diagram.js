@@ -644,3 +644,22 @@ Diagram.prototype.getNCellTarget = function(x) {
     }
     
 };
+
+// Convert an internal coordinate to {boundarypath, coordinate}, by identifying
+// coordinates in slices adjacent to the boundary as being in that boundary.
+Diagram.prototype.getBoundaryCoordinate = function(internal) {
+    var location = {boundary_path: '', coordinates: internal};
+    var slice = this.copy();
+    while (location.coordinates[0] == 0 || location.coordinates[0] == slice.nCells.length) {
+        if (location.coordinates[0] == 0) {
+            slice = this.getSourceBoundary();
+            location.boundary_path += 's';
+        }
+        else if (location.coordinates[0] == slice.nCells.length) {
+            slice = this.getTargetBoundary();
+            location.boundary_path += 't';
+        }
+        location.coordinates.shift();
+    }
+    return location;
+}

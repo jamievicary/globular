@@ -440,6 +440,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     for (var i = 0; i < data.edges.length; i++) {
         var edge = data.edges[i];
 
+        /*
         // Add source boundary active region
         if (edge.start_vertex == null) {
             active.push({
@@ -464,12 +465,18 @@ function globular_render_2d(container, diagram, subdiagram) {
                 direction: 'horizontal'
             });
         }
+        */
 
         // Add line active region
         for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height - 0.5); height++) {
             var y = height;
-            if (y == 0) y += 0.25;
-            else if (y == diagram.nCells.length) y -= 0.25;
+            
+            // Don't allow line active regions at top or bottom slices, since this
+            // should match as boundary drags
+            //if (height == 0) continue;
+            //if (height == diagram.nCells.length) continue;
+            //if (y == 0) y += 0.25;
+            //else if (y == diagram.nCells.length) y -= 0.25;
             active.push({
                 x: edge.x,
                 y: y,
