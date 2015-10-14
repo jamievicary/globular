@@ -351,8 +351,13 @@ Diagram.prototype.interpret_drag = function(drag) {
 Diagram.prototype.test_basic = function(drag) {
     var id;
     var temp_coordinates = new Array();
-    
+    /*
     if(drag.secondary != null && drag.secondary != 0){
+        return [];
+    }
+    */
+    
+    if(drag.directions.length != 1){
         return [];
     }
     
@@ -360,7 +365,7 @@ Diagram.prototype.test_basic = function(drag) {
         temp_coordinates.push(0);
     
     if(drag.coordinates.length === 1){
-        if(drag.primary === -1){
+        if(drag.directions.last() === -1){
             drag.coordinates.increment_last(-1);
         }
         
@@ -417,12 +422,17 @@ Diagram.prototype.test_pull_through = function(drag) {
     var id;
     var temp_coordinates = new Array();
     
+    if(drag.directions.length != 2){
+        return [];   
+    }
+    
+    
     for(var i = 0; i < this.dimension - drag.coordinates.length; i++)
         temp_coordinates.push(0);
     temp_coordinates.push(drag.coordinates.last());
     
-    if(drag.secondary === 1){
-        if(drag.primary === 1){
+    if(drag.directions.last() === 1){
+        if(drag[0] === 1){
             if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id; 
             }
@@ -447,8 +457,8 @@ Diagram.prototype.test_pull_through = function(drag) {
     }
 
 
-    else if (drag.secondary === -1){
-        if(drag.primary === 1){
+    else if (drag.directions.last() === -1){
+        if(drag.directions[0] === 1){
             if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id;   
             }
