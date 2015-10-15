@@ -358,7 +358,7 @@ Diagram.prototype.test_basic = function(drag) {
     }
     */
     
-    if(drag.directions.length != 1){
+    if(drag.directions.length > 1 && drag.directions.last() != 0){
         return [];
     }
     
@@ -366,7 +366,7 @@ Diagram.prototype.test_basic = function(drag) {
         temp_coordinates.push(0);
     
     if(drag.coordinates.length === 1){
-        if(drag.directions.last() === -1){
+        if(drag.directions[0] === -1){
             drag.coordinates.increment_last(-1);
         }
         
@@ -436,7 +436,7 @@ Diagram.prototype.test_pull_through = function(drag) {
     temp_coordinates.push(drag.coordinates.last());
     
     if(drag.directions.last() === 1){
-        if(drag[0] === 1){
+        if(drag.directions[0] === 1){
             if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id; 
             }
