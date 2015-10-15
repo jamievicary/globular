@@ -1185,7 +1185,7 @@ function SVG_prepare(diagram, subdiagram) {
 
         // Add the first target of the rewrite in the succeedence partial order
         if (target_cells.length > 0) {
-            if (attachment.coordinates[0] > 0) {
+            if (attachment.coordinates.last() > 0) {
                 edges[current_edges[attachment.coordinates.last() - 1]].succeeding.push({
                     index: edges.length,
                     offset: 1
