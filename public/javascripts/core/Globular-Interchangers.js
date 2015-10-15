@@ -269,10 +269,11 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     }
 
 
-    if (nCell.id.tail('Int-1I')) {
+    if (nCell.id.tail('Int-1I') || nCell.id.tail('IntI-1I')) {
         if (this.nCells[x].id === new_type) {
             if (this.nCells[x + 1].id === new_type + 'I' || this.nCells[x + 1].id === new_type.substr(0, new_type.length - 1))
-                return true;
+                if(this.nCells[x].coordinates.last() === this.nCells[x + 1].coordinates.last())
+                    return true;
         }
         return false;
     }
@@ -393,7 +394,11 @@ Diagram.prototype.test_basic = function(drag) {
             
         if(!int1_bool && !int2_bool){
             id = this.nCells[drag.coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
-            console.log("cannot interchange");
+            var interchanger_3 = new NCell(id, temp_coordinates);
+            if(!this.interchangerAllowed(interchanger_3)){
+                console.log("cannot interchange");
+                return [];
+            }
         }
         else if(int1_bool && int2_bool){
             
