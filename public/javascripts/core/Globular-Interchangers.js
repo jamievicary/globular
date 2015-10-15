@@ -191,12 +191,12 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('1')) {
-        list.push(new NCell(new_type, [heights[heights - 2]]));
+        list.push(new NCell(new_type, [heights[heights.length - 2]]));
         if(new_type.tail('I')){
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), [heights[heights - 2]]));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), [heights[heights.length - 2]]));
         }
         else{
-            list.push(new NCell(new_type + 'I', [heights[heights - 2]]));
+            list.push(new NCell(new_type + 'I', [heights[heights.length - 2]]));
         }
     }
 
@@ -338,9 +338,9 @@ Diagram.prototype.interpret_drag = function(drag) {
         var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
         
         var new_action = action[0];
-        new_action.id = action.id + "-1";
+        new_action.id += "-1";
         new_action.coordinates.push(drag.coordinates.last());
-        return new_action;
+        return [new_action];
     }
     
     // BASE CASE
