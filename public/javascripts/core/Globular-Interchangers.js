@@ -325,6 +325,8 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
 
 Diagram.prototype.interpret_drag = function(drag) {
     
+    var new_drag;
+    
     // RECURSIVE CASE
     if (drag.coordinates.length > 1) {
         
@@ -332,7 +334,7 @@ Diagram.prototype.interpret_drag = function(drag) {
         drag.coordinates[0] = drag.coordinates[1];
         drag.coordinates[1] = swap;
         
-        var new_drag = {
+        new_drag = {
             boundary_type: drag.boundary_type,
             boundary_depth: drag.boundary_depth,
             coordinates: drag.coordinates.slice(0, drag.coordinates.length),
@@ -341,15 +343,24 @@ Diagram.prototype.interpret_drag = function(drag) {
         new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
         
         var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
-        
+
         var new_action = action[0];
         new_action.id += "-1";
         new_action.coordinates.push(drag.coordinates.last());
         return [new_action];
     }
     
+    // Create a copy of the drag to use in the first round of tests:
+    
+    new_drag = {
+            boundary_type: drag.boundary_type,
+            boundary_depth: drag.boundary_depth,
+            coordinates: drag.coordinates.slice(0, drag.coordinates.length),
+            directions: drag.directions.slice(0, drag.directions.length)
+        };
+        
     // BASE CASE
-    return this.test_basic(drag).concat(this.test_pull_through(drag));
+    return this.test_basic(new_drag).concat(this.test_pull_through(drag));
         
 }
 
@@ -361,10 +372,12 @@ Diagram.prototype.test_basic = function(drag) {
         return [];
     }
     */
-    
+
+    /*
     if(drag.directions.length > 1 && drag.directions.last() != 0){
         return [];
     }
+    */
     
     for(var i = 0; i < this.dimension - drag.coordinates.length; i++)
         temp_coordinates.push(0);
@@ -405,26 +418,20 @@ Diagram.prototype.test_basic = function(drag) {
                 return [];
             }
         }
-        else if(int1_bool && int2_bool){
-            if(drag.directions[0] === 1){
+        else if(int1_bool && int2_bool){ 
+            
+            // Resolve conflict using the second variable
+            if(drag.directions.last() === 1){
                 id = 'Int';
             }
             else{
                 id = 'IntI';
             }
-            // +++ Here, CONFLICT is still used +++ //
-            /*
-            if(drag.conflict === 1){
-                id = 'Int';
-            }
-            else{
-                id = 'IntI';
-            }*/
         }
         else if(int1_bool){
             id = 'Int';
         }
-        else{
+        else {
             id = 'IntI';
         }
     return [new NCell(id, temp_coordinates)];
@@ -439,7 +446,7 @@ Diagram.prototype.test_pull_through = function(drag) {
     var id;
     var temp_coordinates = new Array();
     
-    if(drag.directions.length != 2){
+    if(drag.directions.length + drag.boundary_depth != 2){
         return [];   
     }
     
