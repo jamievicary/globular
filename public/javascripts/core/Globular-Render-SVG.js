@@ -39,14 +39,16 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     var x_center = (min_x + max_x) / 2;
     var y_center = (min_y + max_y) / 2;
     var w, h;
+    /* special display mode for bio pictures
     if (container.attr('id') == 'diagram-canvas' && diagram.getDimension() == 2 && diagram.source.nCells.length == 0) {
         w = 15;
         h = 15;
         svg.setAttributeNS(null, "viewBox", (x_center - w / 2).toString() + " " + (-y_center - h / 2).toString() + " " + w + " " + h);
     }
     else {
+    */
         svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
-    }
+    //}
     svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
     svg.setAttribute("width", container.width());
     svg.setAttribute("height", container.height());
@@ -93,7 +95,9 @@ function globular_render_1d(container, diagram, subdiagram) {
             x: finish_x,
             y: 0
         });
-        var id = gProject.signature.getGenerator(diagram.nCells[i].id).source.nCells[0].id;
+        var vertex_id = diagram.nCells[i].id;
+        var generator = gProject.signature.getGenerator(vertex_id);
+        var id = generator.source.nCells[0].id;
         var colour = gProject.getColour(id);
         g.appendChild(SVG_create_path({
             string: path_string,
@@ -203,9 +207,16 @@ function globular_render_2d(container, diagram, subdiagram) {
         x: x_center - w / 2,
         y: y_center + h / 2
     });
+    
+    // Determine background colour
+    var ss = diagram.source.source;
+    while (ss.nCells.length == 0) {
+        ss = ss.source;
+    }
     g.appendChild(SVG_create_path({
         string: path_string,
-        fill: gProject.getColour(diagram.source.source.nCells[0].id)
+//        fill: gProject.getColour(diagram.source.source.nCells[0].id)
+        fill: gProject.getColour(ss.nCells[0].id)
     }));
     $(container)[0].bounds = {
         left: -0.5,
@@ -261,7 +272,16 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttributeNS(null, "d", instructions.path_string);
-        var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.nCells[0].id));
+        //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.nCells[0].id));
+        var colour;
+        if (edge.type == null) {
+            colour = '#ffffff';
+        }
+        else {
+            var generator = gProject.signature.getGenerator(edge.type);
+            colour = generator.getTargetColour();
+        }
+        
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
         path.setAttributeNS(null, "fill", colour);

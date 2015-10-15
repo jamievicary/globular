@@ -51,19 +51,15 @@ Signature.prototype.addGenerator = function (generator) {
 /*
     Returns a generator with a given id, regardless of the level of where this generator is
 */
-Signature.prototype.getGenerator = function (generatorId) {
-    
-    var varSig = this;
-    var generator = null;
-    while (varSig != null) {
-        if (varSig.nCells.get(generatorId) != null) {
-            generator = varSig.nCells.get(generatorId).copy();
-            break;
+Signature.prototype.getGenerator = function (id) {
+    var sig = this;
+    while (sig != null) {
+        if (sig.nCells.get(id) != null) {
+            return sig.nCells.get(id).copy();
         }
-        varSig = varSig.sigma;
+        sig = sig.sigma;
     }
-    
-   return generator;
+    return null;
 };
 
 /* 
