@@ -88,8 +88,8 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     if (type.tail('IntI')) {
         //var g = gProject.signature.getGenerator(this.nCells[x].id);
         
-        var g_source = this.source_size(x + 1); 
-        var g_target = this.target_size(x + 1); 
+        var g_source = this.source_size(x); 
+        var g_target = this.target_size(x); 
       
         this.nCells[x + 1].coordinates.increment_last(g_source - g_target);
 
