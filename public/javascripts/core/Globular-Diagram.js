@@ -137,7 +137,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     if (nCell.id[0] === 'I'){
         if (reverse) {
             if (nCell.id.tail('I')){
-                nCell.id = nCell.id.substr(0, nCell.id.length - 2);
+                nCell.id = nCell.id.substr(0, nCell.id.length - 1);
                 //== 'interchanger-right';
             }
             else {
@@ -548,7 +548,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     if (boundary_boolean === 't') {
         k = this.nCells.length;
     }
-    this.nCells.splice(k, 0, attached_nCell);
+    this.nCells.splice(k, 0, new NCell(attached_nCell.id, attached_nCell.coordinates));
 
     /*
         If necessary the source is rewritten.

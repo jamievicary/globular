@@ -16,8 +16,8 @@ Diagram.prototype.expand = function(type, x, n, m) {
            // list.push(this.atomicInterchangerSource(type, [x]));
            list.push(new NCell(type, [0, x])); // Zero is hardcoded - number of zeros has to be generic
         }
-        else if (m === 1 && n != 1) {
-            list = this.expand(type, x, 1, m).concat(this.expand(type, x + 1, n - 1, m));
+        else if (m != 1 && n === 1) {
+            list = this.expand(type, x, 1, 1).concat(this.expand(type, x + 1, 1, m - 1));
         }
         else {
             list = this.expand(type, x + n - 1, 1, m).concat(this.expand(type, x, n - 1, m));
@@ -50,19 +50,19 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
 
     }
     
-    if (type.tail('1I')) {
+    if (type.tail('1')) {
         return [];
     }
 
-    var new_type = type.slice(0, type.length - 2);
+    var new_type = type.slice(0, type.length - 3);
 
-    if (type.tail('1')) {
-        list.push(new NCell(new_type, heights[heights.length - 2]));
+    if (type.tail('1I')) {
+        list.push(new NCell(new_type, [heights[heights.length - 2]]));
         if (new_type.tail('I')) {
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), heights[heights.length - 2]));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), [heights[heights.length - 2]]));
         }
         else {
-            list.push(new NCell(new_type + 'I', heights[heights.length - 2]));
+            list.push(new NCell(new_type + 'I', [heights[heights.length - 2]]));
         }
     }
 
@@ -183,24 +183,22 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
         heights.increment_last(-g_source);
         
     }
-
+    
     if (type.tail('1I')) {
-        list.push(new NCell(new_type, heights[heights - 2]));
-        if(new_type.tail('I')){
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), heights[heights - 2]));
-        }
-        else{
-            list.push(new NCell(new_type + 'I', heights[heights - 2]));
-        }
+        return [];
     }
 
     var new_type = type.slice(0, type.length - 2);
 
-
     if (type.tail('1')) {
-        return [];
+        list.push(new NCell(new_type, [heights[heights - 2]]));
+        if(new_type.tail('I')){
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), [heights[heights - 2]]));
+        }
+        else{
+            list.push(new NCell(new_type + 'I', [heights[heights - 2]]));
+        }
     }
-
 
     return list;
 }
