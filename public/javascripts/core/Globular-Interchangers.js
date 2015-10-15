@@ -255,7 +255,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
             new_type, this.nCells[x - crossings].coordinates[this.nCells[x - crossings].coordinates.length - 1] - 1,
             crossings, 1);
 
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings - 1, x - 1), template);
     }
 
     if (nCell.id.tail('Int-RI')) {
@@ -265,7 +265,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
             new_type, this.nCells[x - crossings].coordinates[this.nCells[x - crossings].coordinates.length - 1],
             1, crossings);
 
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings - 1, x - 1), template);
     }
 
 
