@@ -271,7 +271,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             colour = '#ffffff';
         }
         else {
-            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_coordinates[0]);
+            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_height);
             colour = sd.getFirstColour();
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();
@@ -1126,7 +1126,7 @@ function SVG_prepare(diagram, subdiagram) {
         var attachment = diagram.source.nCells[level];
         var new_edge = {
             type: attachment.id,
-            attachment_coordinates: level,
+            attachment_height: level,
             start_height: 0,
             finish_height: null,
             succeeding: [],
@@ -1213,7 +1213,7 @@ function SVG_prepare(diagram, subdiagram) {
         for (i = 0; i < target_cells.length; i++) {
             var new_edge = {
                 type: target_cells[i].id,
-                attachment_coordinate: attachment.coordinates.last(),
+                attachment_height: attachment.coordinates.last(),
                 start_height: level + 0.5,
                 finish_height: null,
                 succeeding: [],
