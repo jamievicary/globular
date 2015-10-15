@@ -95,13 +95,9 @@ function globular_render_1d(container, diagram, subdiagram) {
             x: finish_x,
             y: 0
         });
-        var vertex_id = diagram.nCells[i].id;
-        var generator = gProject.signature.getGenerator(vertex_id);
-        var id = generator.source.nCells[0].id;
-        var colour = gProject.getColour(id);
         g.appendChild(SVG_create_path({
             string: path_string,
-            stroke: colour
+            stroke: diagram.getSlice(i).getFirstColour()
         }));
     }
 
@@ -209,14 +205,11 @@ function globular_render_2d(container, diagram, subdiagram) {
     });
     
     // Determine background colour
-    var ss = diagram.source.source;
-    while (ss.nCells.length == 0) {
-        ss = ss.source;
-    }
+    var color = diagram.source.source.getFirstColour();
     g.appendChild(SVG_create_path({
         string: path_string,
 //        fill: gProject.getColour(diagram.source.source.nCells[0].id)
-        fill: gProject.getColour(ss.nCells[0].id)
+        fill: color
     }));
     $(container)[0].bounds = {
         left: -0.5,
@@ -278,8 +271,10 @@ function globular_render_2d(container, diagram, subdiagram) {
             colour = '#ffffff';
         }
         else {
-            var generator = gProject.signature.getGenerator(edge.type);
-            colour = generator.getTargetColour();
+            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_coordinates[0]);
+            colour = sd.getFirstColour();
+            //var generator = gProject.signature.getGenerator(edge.type);
+            //colour = generator.getTargetColour();
         }
         
         path.setAttributeNS(null, "stroke-width", 0.01);

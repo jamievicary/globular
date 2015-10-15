@@ -660,3 +660,13 @@ Diagram.prototype.getBoundaryCoordinate = function(internal) {
     }
     return location;
 }
+
+// Find the first colour that appears in the diagram
+Diagram.prototype.getFirstColour = function() {
+    var d = this;
+    while (d.nCells.length == 0) {
+        d = d.getSourceBoundary();
+    }
+    var id = d.nCells[0].id;
+    return gProject.getColour(id);
+}
