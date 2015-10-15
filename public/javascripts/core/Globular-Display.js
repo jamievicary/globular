@@ -82,17 +82,11 @@ Display.prototype.mousemove = function(event) {
 
     if (z.direction == 'horizontal') {
         if (Math.abs(dx) < 0.25) return;
-        data.primary = (dx > 0 ? +1 : -1);
-        data.secondary = null;
-        data.conflict = null;
-        data.directions = [data.primary];
+        data.directions = [dx > 0 ? +1 : -1];
     }
     else if (z.direction == 'vertical') {
         if (Math.abs(dy) < 0.25) return;
-        data.primary = (dy > 0 ? +1 : -1);
-        data.secondary = (Math.abs(dx) > 0.25 ? (dx > 0 ? +1 : -1) : 0);
-        data.conflict = (dx > 0 ? +1 : -1);
-        data.directions = [data.primary, data.secondary];
+        data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
     }
 
     gProject.drag_cell(data);
