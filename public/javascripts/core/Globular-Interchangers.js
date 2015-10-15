@@ -327,6 +327,11 @@ Diagram.prototype.interpret_drag = function(drag) {
     
     // RECURSIVE CASE
     if (drag.coordinates.length > 1) {
+        
+        var swap = drag.coordinates[0];
+        drag.coordinates[0] = drag.coordinates[1];
+        drag.coordinates[1] = swap;
+        
         var new_drag = {
             boundary_type: drag.boundary_type,
             boundary_depth: drag.boundary_depth,
