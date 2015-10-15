@@ -15,6 +15,10 @@ function NCell(id, coordinates) {
     this.coordinates = coordinates;
 };
 
+NCell.prototype.getType = function() {
+    return 'NCell';
+}
+
 NCell.prototype.copy = function() {
     
     var temp_array = new Array();    
