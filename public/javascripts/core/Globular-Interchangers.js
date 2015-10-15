@@ -406,15 +406,20 @@ Diagram.prototype.test_basic = function(drag) {
             }
         }
         else if(int1_bool && int2_bool){
-            
-            // +++ Here, CONFLICT is still used +++ //
-            
-            if(drag.conflict === 1){
+            if(drag.directions[0] === 1){
                 id = 'Int';
             }
             else{
                 id = 'IntI';
             }
+            // +++ Here, CONFLICT is still used +++ //
+            /*
+            if(drag.conflict === 1){
+                id = 'Int';
+            }
+            else{
+                id = 'IntI';
+            }*/
         }
         else if(int1_bool){
             id = 'Int';
