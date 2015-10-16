@@ -179,11 +179,13 @@ Project.prototype.clearDiagram = function() {
 // Take the identity on the main diagram
 Project.prototype.takeIdentity = function() {
     if (this.diagram == null) return;
+    
+    /*
     if (this.diagram.getDimension() >= 3) {
         alert("Can't take the identity of a " + this.diagram.getDimension().toString() + "-dimensional diagram");
         return;
     }
-
+    */
     this.diagram.boost();
     this.renderDiagram();
 }
@@ -308,29 +310,6 @@ Project.prototype.storeTheorem = function() {
 
 };
 
-Project.prototype.interpret_drag = function(drag, diagram) {
-    
-    // RECURSIVE CASE
-    /*
-    if (drag.coordinates.length > 1) {
-        var new_drag = drag;
-        new_drag.coordinates = drag.coordinates.slice ...
-        var action = interpret_drag(new_drag, diagram.getSlice[drag.coordinates[0]]);
-        var new_action = action;
-        new_action.id = action.id + "-1";
-        return new_action;
-    }
-    
-    // BASE CASE
-    
-    var options = [test_basic(drag, diagram), test_pull_through(drag, diagram)];
-    
-    // If options is all null, do nothing
-    // If options has one non-null entry, just do that
-    // Otherwise, ask the user to choose
-    */
-    
-}
 
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
@@ -907,9 +886,6 @@ Project.prototype.renderNCells = function(n) {
             var target_diagram = overall_diagram.getTargetBoundary();
             this.render("#ci1-" + cell, target_diagram);
 
-        }
-        else if (n === 4){
-            
         }
         else {
             this.renderGenerator("#ci-" + cell, cell);

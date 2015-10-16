@@ -59,6 +59,14 @@ function detectLeftButton(event) {
     return button == 1;
 }
 
+function zero_array(n) {
+    var tab = new Array();
+    for(var i = 0; i < n; i++){
+        tab.push(0);
+    }
+    return tab;
+}
+
 Array.prototype.last = function() {
     return this[this.length - 1];
 };
@@ -88,3 +96,4 @@ Array.prototype.fill = function(value, length) {
     }
     return this;
 }
+
