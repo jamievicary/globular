@@ -263,7 +263,7 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
             return false;
         }
         var template = this.getSlice(x - crossings).expand(
-            new_type, this.nCells[x - crossings].coordinates.last() - 1,
+            new_type, this.nCells[x - crossings].coordinates.last(),
             crossings, 1);
 
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
