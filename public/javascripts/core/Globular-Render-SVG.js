@@ -659,7 +659,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                 x: max_x,
                 y: min_y
             });
-            g.appendChild(SVG_create_path({
+            d.g.appendChild(SVG_create_path({
                 string: path_string,
                 fill: highlight_colour,
                 fill_opacity: highlight_opacity
