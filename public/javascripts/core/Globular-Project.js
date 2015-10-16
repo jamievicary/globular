@@ -76,7 +76,9 @@ Project.prototype.setColour = function(id, colour) {
 
 // Gets the front-end colour to what the user wants
 Project.prototype.getColour = function(id) {
-    return this.dataList.get(id).colour;
+    var generator = this.dataList.get(id);
+    if (generator == null) return '#555555';
+    return generator.colour;
 };
 
 

@@ -411,10 +411,10 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             // Prepare the upper path
             var top_str = SVG_move_to({
-                x: e1_top.x,
-                y: i -epsilon
+                x: e2_bot.x,
+                y: i - epsilon
             }) + SVG_bezier_to({
-                c1x: e1_top.x,
+                c1x: e2_bot.x,
                 c1y: i + 0.5,
                 c2x: e2_top.x,
                 c2y: i + 0.5,
@@ -441,7 +441,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }
             // Draw the lower path
             var bot_str = SVG_move_to({x: e1_bot.x, y: i - epsilon})
-                + SVG_bezier_to({c1x: e1_bot.x, c1y: i + 0.5, c2x: e2_bot.x, c2y: i + 0.5, x: e2_bot.x, y: i + 1 + epsilon});
+                + SVG_bezier_to({c1x: e1_bot.x, c1y: i + 0.5, c2x: e1_top.x, c2y: i + 0.5, x: e1_top.x, y: i + 1 + epsilon});
             d.g.appendChild(SVG_create_path({
                 string: bot_str,
                 stroke: lower_colour,
