@@ -52,26 +52,27 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
     svg.setAttribute("width", container.width());
     svg.setAttribute("height", container.height());
-    container.append(svg);
+    //container.append(svg);
     svg.appendChild(g);
     g.setAttributeNS(null, "transform", "scale (1 -1)");
-    return g;
+    return {svg:svg, g:g};
 }
 
 function globular_render_0d(container, diagram, subdiagram) {
-    var g = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
+    var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
     var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttributeNS(null, "cx", 0);
     circle.setAttributeNS(null, "cy", 0);
     circle.setAttributeNS(null, "r", circle_radius);
     circle.setAttributeNS(null, "fill", gProject.getColour(diagram.nCells[0].id));
     circle.setAttributeNS(null, "stroke", "none");
-    g.appendChild(circle);
+    d.g.appendChild(circle);
+    $(container).append(d.svg);
 }
 
 function globular_render_1d(container, diagram, subdiagram) {
     var length = Math.max(1, diagram.nCells.length);
-    var g = prepare_SVG_container(container, diagram, 0, length, -0.5, 0.5);
+    var d = prepare_SVG_container(container, diagram, 0, length, -0.5, 0.5);
 
     /*
     if (diagram.nCells.length == 0) {
@@ -95,14 +96,14 @@ function globular_render_1d(container, diagram, subdiagram) {
             x: finish_x,
             y: 0
         });
-        g.appendChild(SVG_create_path({
+        d.g.appendChild(SVG_create_path({
             string: path_string,
             stroke: diagram.getSlice(i).getFirstColour()
         }));
     }
 
     // Draw last line segment
-    g.appendChild(SVG_create_path({
+    d.g.appendChild(SVG_create_path({
         string: SVG_move_to({
             x: length - 0.5 - (diagram.nCells.length == 0 ? 0.5 : 0),
             y: 0
@@ -123,38 +124,40 @@ function globular_render_1d(container, diagram, subdiagram) {
         circle.setAttributeNS(null, "r", circle_radius);
         circle.setAttributeNS(null, "fill", colour);
         circle.setAttributeNS(null, "stroke", "none");
-        g.appendChild(circle);
+        d.g.appendChild(circle);
     }
 
     // Draw highlight
-    if (subdiagram === undefined) return;
-    if (subdiagram.boundaryPath == 's') {
-        g.appendChild(SVG_create_path({
-            string: SVG_move_to({
-                x: 0,
-                y: 0
-            }) + SVG_line_to({
-                x: .25,
-                y: 0
-            }),
-            stroke: highlight_colour,
-            'stroke-opacity': highlight_opacity
-        }));
+    if (subdiagram != undefined) {
+        if (subdiagram.boundaryPath == 's') {
+            d.g.appendChild(SVG_create_path({
+                string: SVG_move_to({
+                    x: 0,
+                    y: 0
+                }) + SVG_line_to({
+                    x: .25,
+                    y: 0
+                }),
+                stroke: highlight_colour,
+                'stroke-opacity': highlight_opacity
+            }));
+        }
+        else if (subdiagram.boundaryPath == 't') {
+            d.g.appendChild(SVG_create_path({
+                string: SVG_move_to({
+                    x: length,
+                    y: 0
+                }) + SVG_line_to({
+                    x: length - .25,
+                    y: 0
+                }),
+                stroke: highlight_colour,
+                'stroke-opacity': highlight_opacity
+            }));
+        }
     }
-    else if (subdiagram.boundaryPath == 't') {
-        g.appendChild(SVG_create_path({
-            string: SVG_move_to({
-                x: length,
-                y: 0
-            }) + SVG_line_to({
-                x: length - .25,
-                y: 0
-            }),
-            stroke: highlight_colour,
-            'stroke-opacity': highlight_opacity
-        }));
-    }
-
+    
+    $(container).append(d.svg);
 }
 
 function globular_render_2d(container, diagram, subdiagram) {
@@ -167,18 +170,21 @@ function globular_render_2d(container, diagram, subdiagram) {
 
     // Deal with an empty 2-diagram specially
     if ((diagram.nCells.length == 0) && (diagram.source.nCells.length == 0)) {
-        var g = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
-        g.appendChild(SVG_create_path({
+        var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
+        d.g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
             fill: gProject.getColour(diagram.source.source.nCells[0].id)
         }));
+        $(container).append(d.svg);
         return;
     }
 
     var data = SVG_prepare(diagram);
 
     // Prepare the SVG group in which to render the diagram    
-    var g = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.nCells.length));
+    var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.nCells.length));
+    var defs = $('<defs>');
+    $(d.svg).prepend(defs);
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -206,7 +212,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     
     // Determine background colour
     var color = diagram.source.source.getFirstColour();
-    g.appendChild(SVG_create_path({
+    d.g.appendChild(SVG_create_path({
         string: path_string,
 //        fill: gProject.getColour(diagram.source.source.nCells[0].id)
         fill: color
@@ -287,7 +293,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         });
     }
     for (var i = 0; i < svg_paths.length; i++) {
-        g.appendChild(svg_paths[i].path);
+        d.g.appendChild(svg_paths[i].path);
     }
 
     // Draw the edges
@@ -313,7 +319,9 @@ function globular_render_2d(container, diagram, subdiagram) {
         else {
             // We start at a vertex
             var vertex = data.vertices[edge.start_vertex];
-            if (vertex.type.substr(0,3) != 'Int') {
+            if (vertex.type.substr(0,3) == 'Int') {
+                path_s = SVG_move_to({x: edge.x, y: edge.start_height + 0.5});
+            } else {
                 path_s += SVG_move_to({
                     x: vertex.x,
                     y: vertex.y
@@ -344,15 +352,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         // Do the top bit of the path
         if (finish_boundary) {
-            var z = 0;
             // Nothing to do, unless also coming from source boundary
-            if (edge.start_height == 0) {
+//            if (edge.start_height == 0) {
                 path_s += SVG_line_to({
                     x: edge.x,
                     y: edge.finish_height
                 });
                 drawn_something = true;
-            }
+//            }
         }
         else {
             var vertex = data.vertices[edge.finish_vertex];
@@ -376,11 +383,12 @@ function globular_render_2d(container, diagram, subdiagram) {
             path.setAttributeNS(null, "stroke", gProject.getColour(edge.type));
             path.setAttributeNS(null, "stroke-width", 0.1);
             path.setAttributeNS(null, "fill", "none");
-            g.appendChild(path);
+            d.g.appendChild(path);
         }
     }
 
     // Draw the vertices
+    var epsilon = 0.01;
     for (var i = 0; i < data.vertices.length; i++) {
 
         var vertex = data.vertices[i];
@@ -404,14 +412,14 @@ function globular_render_2d(container, diagram, subdiagram) {
             // Prepare the upper path
             var top_str = SVG_move_to({
                 x: e1_top.x,
-                y: i
+                y: i -epsilon
             }) + SVG_bezier_to({
                 c1x: e1_top.x,
                 c1y: i + 0.5,
                 c2x: e2_top.x,
                 c2y: i + 0.5,
                 x: e2_top.x,
-                y: i + 1
+                y: i + 1 + epsilon
             });
 
             // Draw lower path, possibly using an obscuring mask
@@ -427,13 +435,14 @@ function globular_render_2d(container, diagram, subdiagram) {
                     + SVG_line_to({x: left, y: i});
                 mask.append(SVG_create_path({string: transparent_str, fill: "white"}));
                 mask.append(SVG_create_path({string: top_str, stroke_width: 0.2, stroke: "black"}));
-                g.appendChild(mask[0]);
+                //g.appendChild(mask[0]);
+                defs.append(mask);
                 
             }
             // Draw the lower path
-            var bot_str = SVG_move_to({x: e1_bot.x, y: i})
-                + SVG_bezier_to({c1x: e1_bot.x, c1y: i + 0.5, c2x: e2_bot.x, c2y: i + 0.5, x: e2_bot.x, y: i + 1});
-            g.appendChild(SVG_create_path({
+            var bot_str = SVG_move_to({x: e1_bot.x, y: i - epsilon})
+                + SVG_bezier_to({c1x: e1_bot.x, c1y: i + 0.5, c2x: e2_bot.x, c2y: i + 0.5, x: e2_bot.x, y: i + 1 + epsilon});
+            d.g.appendChild(SVG_create_path({
                 string: bot_str,
                 stroke: lower_colour,
                 stroke_width: 0.1,
@@ -441,7 +450,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }));
 
             // Draw upper path
-            g.appendChild(SVG_create_path({
+            d.g.appendChild(SVG_create_path({
                 string: top_str,
                 stroke: upper_colour,
                 stroke_width: 0.1
@@ -454,7 +463,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             circle.setAttributeNS(null, "r", circle_radius);
             circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
             circle.setAttributeNS(null, "stroke", "none");
-            g.appendChild(circle);
+            d.g.appendChild(circle);
 
         }
     }
@@ -490,172 +499,178 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
 
     // Render the highlight
-    if (subdiagram === undefined) return active;
-    var delta = 0.0005;
-    if (subdiagram.boundaryPath.length == 2) {
-        // Highlight left or right side boundary
-        var x = (subdiagram.boundaryPath == 'ss' ? 0.125 - 0.5 - delta : data.max_x + 0.5 - 0.125 + delta);
-        g.appendChild(SVG_create_path({
-            string: SVG_move_to({
-                x: x,
-                y: 0
+    if (subdiagram != undefined) {
+        var delta = 0.0005;
+        if (subdiagram.boundaryPath.length == 2) {
+            // Highlight left or right side boundary
+            var x = (subdiagram.boundaryPath == 'ss' ? 0.125 - 0.5 - delta : data.max_x + 0.5 - 0.125 + delta);
+            d.g.appendChild(SVG_create_path({
+                string: SVG_move_to({
+                    x: x,
+                    y: 0
+                }) + SVG_line_to({
+                    x: x,
+                    y: Math.max(1, diagram.nCells.length)
+                }),
+                stroke_width: 0.25,
+                stroke: highlight_colour,
+                stroke_opacity: highlight_opacity
+            }));
+        }
+        else if (subdiagram.boundaryPath.length == 1) {
+            var y = (subdiagram.boundaryPath == 's' ? 0.125 - delta : Math.max(1, diagram.nCells.length) - 0.125 + delta);
+            var x1, x2;
+            var edges = data.edges_at_level[subdiagram.boundaryPath == 's' ? 0 : diagram.nCells.length];
+    
+            // Get the first and last edge of the inclusion
+            //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
+            var first_edge_index = subdiagram.inclusion[0];
+            var last_edge_index = subdiagram.inclusion[0] + subdiagram.size;
+            var x1, x2;
+            if (first_edge_index == last_edge_index) {
+                if (first_edge_index == 0) {
+                    x1 = -0.4;
+                }
+                else {
+                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.1;
+                }
+                if (first_edge_index == edges.length) {
+                    x2 = data.max_x + 0.4;
+                }
+                else {
+                    x2 = data.edges[edges[first_edge_index]].x - 0.1;
+                }
+                /*
+                if (first_edge_index == 0) {
+                    x1 = 0.15;
+                    x2 = 0.35;
+                }
+                else if (first_edge_index == edges.length) {
+                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
+                    x2 = data.edges[edges[first_edge_index - 1]].x + 0.35;
+                }
+                else {
+                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
+                    x2 = data.edges[edges[first_edge_index]].x - 0.15;
+                }
+                */
+            }
+            else {
+                var x1 = data.edges[edges[first_edge_index]].x - 0.25;
+                var x2 = data.edges[edges[last_edge_index - 1]].x + 0.25;
+            }
+            d.g.appendChild(SVG_create_path({
+                string: SVG_move_to({
+                    x: x1,
+                    y: y
+                }) + SVG_line_to({
+                    x: x2,
+                    y: y
+                }),
+                stroke_width: 0.25,
+                stroke: highlight_colour,
+                stroke_opacity: highlight_opacity
+            }));
+        }
+        else if (subdiagram.boundaryPath.length == 0) {
+            // Highlight in main diagram
+            // Design decision: pad out by 0.25 uniformly.
+    
+            // Find min and max y-values by looking at subdiagram specification
+            var inc_y = subdiagram.inclusion[1];
+            var min_y, max_y;
+            if (subdiagram.size.length == 1) {
+                // The subdiagram has height zero, so min and max y-values fall
+                // between vertices
+                min_y = inc_y + 0.1;
+                max_y = inc_y - 0.1;
+                /*
+                if (inc_y == 0) {
+                    min_y = 0.25;
+                } else if (inc_y == data.vertices.length) {
+                    min_y = data.vertices.length - 0.25;
+                } else {
+                    min_y = inc_y;
+                }
+                max_y = min_y;
+                */
+            }
+            else {
+                // Min and max y-values fall on vertices
+                min_y = inc_y + 0.5;
+                //max_y = inc_y + subdiagram.size.length - 1 + 0.5;
+                max_y = min_y + subdiagram.size.length - 2;
+            }
+    
+            // Find min and max x-values by looking at edges and vertices of diagram
+            var inc_x = subdiagram.inclusion[0];
+            var min_x = Number.MAX_VALUE;
+            var max_x = -Number.MAX_VALUE;
+            for (var height = inc_y; height < inc_y + subdiagram.size.length; height++) {
+                var size = subdiagram.size[height - inc_y];
+                var edges = data.edges_at_level[height];
+                for (var i = 0; i < size; i++) {
+                    var edge = data.edges[edges[inc_x + i]];
+                    min_x = Math.min(min_x, edge.x);
+                    max_x = Math.max(max_x, edge.x);
+                }
+            }
+            for (var height = inc_y; height < inc_y + subdiagram.size.length - 1; height++) {
+                min_x = Math.min(min_x, data.vertices[height].x);
+                max_x = Math.max(max_x, data.vertices[height].x);
+            }
+            if (min_x == Number.MAX_VALUE) {
+                // The subdiagram is an identity on an identity, so handle this case specially
+                if (inc_x == 0) {
+                    min_x = -0.5;
+                }
+                else {
+                    min_x = data.edges[data.edges_at_level[inc_y][inc_x - 1]].x + 0.5;
+                }
+                if (inc_x == data.edges_at_level[inc_y].length) {
+                    // We're at the right-hand edge
+                    max_x = data.max_x + 0.5;
+                }
+                else {
+                    max_x = data.edges[data.edges_at_level[inc_y][inc_x]].x - 0.5;
+                }
+            }
+    
+            // Pad values appropriately to give a little buffer to the highlighted area
+            min_x -= 0.45;
+            max_x += 0.45;
+            min_y -= 0.5;
+            max_y += 0.5;
+            // Clip the highlight box to within the diagram bounds
+            min_y = Math.max(min_y, 0);
+            max_y = Math.min(max_y, Math.max(1, data.vertices.length));
+            min_x = Math.max(min_x, -0.5);
+            max_x = Math.min(max_x, data.max_x + 0.5);
+            var path_string = SVG_move_to({
+                x: min_x,
+                y: min_y
             }) + SVG_line_to({
-                x: x,
-                y: Math.max(1, diagram.nCells.length)
-            }),
-            stroke_width: 0.25,
-            stroke: highlight_colour,
-            stroke_opacity: highlight_opacity
-        }));
-    }
-    else if (subdiagram.boundaryPath.length == 1) {
-        var y = (subdiagram.boundaryPath == 's' ? 0.125 - delta : Math.max(1, diagram.nCells.length) - 0.125 + delta);
-        var x1, x2;
-        var edges = data.edges_at_level[subdiagram.boundaryPath == 's' ? 0 : diagram.nCells.length];
-
-        // Get the first and last edge of the inclusion
-        //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
-        var first_edge_index = subdiagram.inclusion[0];
-        var last_edge_index = subdiagram.inclusion[0] + subdiagram.size;
-        var x1, x2;
-        if (first_edge_index == last_edge_index) {
-            if (first_edge_index == 0) {
-                x1 = -0.4;
-            }
-            else {
-                x1 = data.edges[edges[first_edge_index - 1]].x + 0.1;
-            }
-            if (first_edge_index == edges.length) {
-                x2 = data.max_x + 0.4;
-            }
-            else {
-                x2 = data.edges[edges[first_edge_index]].x - 0.1;
-            }
-            /*
-            if (first_edge_index == 0) {
-                x1 = 0.15;
-                x2 = 0.35;
-            }
-            else if (first_edge_index == edges.length) {
-                x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
-                x2 = data.edges[edges[first_edge_index - 1]].x + 0.35;
-            }
-            else {
-                x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
-                x2 = data.edges[edges[first_edge_index]].x - 0.15;
-            }
-            */
-        }
-        else {
-            var x1 = data.edges[edges[first_edge_index]].x - 0.25;
-            var x2 = data.edges[edges[last_edge_index - 1]].x + 0.25;
-        }
-        g.appendChild(SVG_create_path({
-            string: SVG_move_to({
-                x: x1,
-                y: y
+                x: min_x,
+                y: max_y
             }) + SVG_line_to({
-                x: x2,
-                y: y
-            }),
-            stroke_width: 0.25,
-            stroke: highlight_colour,
-            stroke_opacity: highlight_opacity
-        }));
+                x: max_x,
+                y: max_y
+            }) + SVG_line_to({
+                x: max_x,
+                y: min_y
+            });
+            g.appendChild(SVG_create_path({
+                string: path_string,
+                fill: highlight_colour,
+                fill_opacity: highlight_opacity
+            }));
+        }
     }
-    else if (subdiagram.boundaryPath.length == 0) {
-        // Highlight in main diagram
-        // Design decision: pad out by 0.25 uniformly.
-
-        // Find min and max y-values by looking at subdiagram specification
-        var inc_y = subdiagram.inclusion[1];
-        var min_y, max_y;
-        if (subdiagram.size.length == 1) {
-            // The subdiagram has height zero, so min and max y-values fall
-            // between vertices
-            min_y = inc_y + 0.1;
-            max_y = inc_y - 0.1;
-            /*
-            if (inc_y == 0) {
-                min_y = 0.25;
-            } else if (inc_y == data.vertices.length) {
-                min_y = data.vertices.length - 0.25;
-            } else {
-                min_y = inc_y;
-            }
-            max_y = min_y;
-            */
-        }
-        else {
-            // Min and max y-values fall on vertices
-            min_y = inc_y + 0.5;
-            //max_y = inc_y + subdiagram.size.length - 1 + 0.5;
-            max_y = min_y + subdiagram.size.length - 2;
-        }
-
-        // Find min and max x-values by looking at edges and vertices of diagram
-        var inc_x = subdiagram.inclusion[0];
-        var min_x = Number.MAX_VALUE;
-        var max_x = -Number.MAX_VALUE;
-        for (var height = inc_y; height < inc_y + subdiagram.size.length; height++) {
-            var size = subdiagram.size[height - inc_y];
-            var edges = data.edges_at_level[height];
-            for (var i = 0; i < size; i++) {
-                var edge = data.edges[edges[inc_x + i]];
-                min_x = Math.min(min_x, edge.x);
-                max_x = Math.max(max_x, edge.x);
-            }
-        }
-        for (var height = inc_y; height < inc_y + subdiagram.size.length - 1; height++) {
-            min_x = Math.min(min_x, data.vertices[height].x);
-            max_x = Math.max(max_x, data.vertices[height].x);
-        }
-        if (min_x == Number.MAX_VALUE) {
-            // The subdiagram is an identity on an identity, so handle this case specially
-            if (inc_x == 0) {
-                min_x = -0.5;
-            }
-            else {
-                min_x = data.edges[data.edges_at_level[inc_y][inc_x - 1]].x + 0.5;
-            }
-            if (inc_x == data.edges_at_level[inc_y].length) {
-                // We're at the right-hand edge
-                max_x = data.max_x + 0.5;
-            }
-            else {
-                max_x = data.edges[data.edges_at_level[inc_y][inc_x]].x - 0.5;
-            }
-        }
-
-        // Pad values appropriately to give a little buffer to the highlighted area
-        min_x -= 0.45;
-        max_x += 0.45;
-        min_y -= 0.5;
-        max_y += 0.5;
-        // Clip the highlight box to within the diagram bounds
-        min_y = Math.max(min_y, 0);
-        max_y = Math.min(max_y, Math.max(1, data.vertices.length));
-        min_x = Math.max(min_x, -0.5);
-        max_x = Math.min(max_x, data.max_x + 0.5);
-        var path_string = SVG_move_to({
-            x: min_x,
-            y: min_y
-        }) + SVG_line_to({
-            x: min_x,
-            y: max_y
-        }) + SVG_line_to({
-            x: max_x,
-            y: max_y
-        }) + SVG_line_to({
-            x: max_x,
-            y: min_y
-        });
-        g.appendChild(SVG_create_path({
-            string: path_string,
-            fill: highlight_colour,
-            fill_opacity: highlight_opacity
-        }));
-    }
+    
+    // Add SVG object to container. We have to do it in this weird way because
+    // otherwise the masks aren't recognized in Chrome v46.
+    var html = $("<div />").append($(d.svg)).html();
+    $(container).append($(html));
 
     // Return active region data
     return active;

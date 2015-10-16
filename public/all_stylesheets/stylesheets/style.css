@@ -115,12 +115,6 @@ body, html {
   background-color: #ccc;
 }
 
-/* line 111, ../sass/style.sass */
-#diagram-body > svg {
-  width: 100%;
-  height: 100%;
-}
-
 /* line 115, ../sass/style.sass */
 #project-menu {
   cursor: pointer;
