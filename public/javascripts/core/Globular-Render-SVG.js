@@ -400,14 +400,14 @@ function globular_render_2d(container, diagram, subdiagram) {
             var p = (vertex.type == 'Int' ? 1 : 0);
             var q = 1 - p;
             e1_bot = data.edges[vertex.source_edges[p]];
-            e2_bot = data.edges[vertex.target_edges[q]];
-            e1_top = data.edges[vertex.source_edges[q]];
+            e2_bot = data.edges[vertex.source_edges[q]];
+            e1_top = data.edges[vertex.target_edges[q]];
             e2_top = data.edges[vertex.target_edges[p]];
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
             
             var lower_colour = gProject.getColour(e1_bot.type);
-            var upper_colour = gProject.getColour(e1_top.type);
+            var upper_colour = gProject.getColour(e2_bot.type);
 
             // Prepare the upper path
             var top_str = SVG_move_to({
@@ -1202,8 +1202,8 @@ function SVG_prepare(diagram, subdiagram) {
         var interchanger = (attachment.id.substring(0, 3) == 'Int');
         var source_cells, target_cells;
         if (interchanger) {
-            var x = slices[level].nCells[attachment.coordinates[0]];
-            var y = slices[level].nCells[attachment.coordinates[0] + 1];
+            var x = slices[level].nCells[attachment.coordinates.last()];
+            var y = slices[level].nCells[attachment.coordinates.last() + 1];
             source_cells = [x, y];
             target_cells = [y, x];
         }
