@@ -319,7 +319,9 @@ function globular_render_2d(container, diagram, subdiagram) {
         else {
             // We start at a vertex
             var vertex = data.vertices[edge.start_vertex];
-            if (vertex.type.substr(0,3) != 'Int') {
+            if (vertex.type.substr(0,3) == 'Int') {
+                path_s = SVG_move_to({x: edge.x, y: edge.start_height + 0.5});
+            } else {
                 path_s += SVG_move_to({
                     x: vertex.x,
                     y: vertex.y
@@ -350,15 +352,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         // Do the top bit of the path
         if (finish_boundary) {
-            var z = 0;
             // Nothing to do, unless also coming from source boundary
-            if (edge.start_height == 0) {
+//            if (edge.start_height == 0) {
                 path_s += SVG_line_to({
                     x: edge.x,
                     y: edge.finish_height
                 });
                 drawn_something = true;
-            }
+//            }
         }
         else {
             var vertex = data.vertices[edge.finish_vertex];
@@ -387,7 +388,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
 
     // Draw the vertices
-    var epsilon = 0.002;
+    var epsilon = 0.01;
     for (var i = 0; i < data.vertices.length; i++) {
 
         var vertex = data.vertices[i];
