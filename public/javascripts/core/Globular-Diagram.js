@@ -648,13 +648,13 @@ Diagram.prototype.getBoundaryCoordinate = function(internal) {
     var slice = this.copy();
     while (location.coordinates[0] == 0 || location.coordinates[0] == slice.nCells.length) {
         if (location.coordinates.length == 1) break;
-        if (location.coordinates[0] == 0) {
-            slice = this.getSourceBoundary();
-            location.boundary_path += 's';
-        }
-        else if (location.coordinates[0] == slice.nCells.length) {
+        if (location.coordinates[0] == slice.nCells.length) {
             slice = this.getTargetBoundary();
             location.boundary_path += 't';
+        }
+        else if (location.coordinates[0] == 0) {
+            slice = this.getSourceBoundary();
+            location.boundary_path += 's';
         }
         location.coordinates.shift();
     }
