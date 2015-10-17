@@ -534,7 +534,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
 
     var attached_nCell = attached_diagram.nCells[0];
 
-    if (this.dimension != attached_diagram.dimension && attached_nCell.id != "Int" && attached_nCell.id != "IntI") {
+    if (this.dimension != attached_diagram.dimension && attached_nCell.id.substr(0,3) != "Int") {
         console.log("Cannot attach - dimensions do not match");
         return;
     }
