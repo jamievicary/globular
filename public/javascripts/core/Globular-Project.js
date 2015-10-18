@@ -492,7 +492,7 @@ Project.prototype.selectGenerator = function(id) {
         var slices_counter = 0;
         var slice_pointer = this.diagram;
         while(slices_counter < slices_data.length - 1){
-            boundary_pointer = boundary_pointer.getSourceBoundary();
+  //          boundary_pointer = boundary_pointer.getSourceBoundary();
             slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
             slices_counter++;
         }
