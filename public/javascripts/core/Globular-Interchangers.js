@@ -13,7 +13,6 @@ Diagram.prototype.expand = function(type, x, n, m) {
 
     if (type === 'Int' || type === 'IntI') {
         if (n === 1 && m === 1) {
-           // list.push(this.atomicInterchangerSource(type, [x]));
            list.push(new NCell(type, [0, x])); // Zero is hardcoded - number of zeros has to be generic
         }
         else if (m != 1 && n === 1) {
@@ -27,9 +26,16 @@ Diagram.prototype.expand = function(type, x, n, m) {
     return list;
 }
 
-Diagram.prototype.atomicInterchangerSource = function(type, heights) {
-
-    var x = heights[heights.length - 1];
+Diagram.prototype.atomicInterchangerSource = function(type, heights, key_location) {
+    
+    var x;
+    if(type.tail('RI') || type.tail('LI')){
+        x = key_location;
+    }
+    else{
+        x = heights[heights.length - 1];   
+    }
+    
     var list = new Array();
 
     if (type.tail('Int', 'IntI')) {
@@ -66,16 +72,23 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     return list;
 }
 
-Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
+Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_location) {
 
-    var x = heights[heights.length - 1];
 
+    var x;
+    if(type.tail('RI') || type.tail('LI')){
+        x = key_location;
+    }
+    else{
+        x = heights[heights.length - 1];   
+    }
+    
     var list = new Array();
     var entry;
 
     if (type.tail('Int')) {
-        var g_source = this.source_size(x + 1); //gProject.signature.getGenerator(this.nCells[x + 1].id);
-        var g_target = this.target_size(x + 1); //gProject.signature.getGenerator(this.nCells[x + 1].id);
+        var g_source = this.source_size(x + 1); 
+        var g_target = this.target_size(x + 1); 
         
         this.nCells[x].coordinates.increment_last(g_target - g_source);
         list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
@@ -166,9 +179,15 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 }
 
 Diagram.prototype.interchangerAllowed = function(nCell) {
-
-    var x = nCell.coordinates[nCell.coordinates.length - 1];
     
+    var x;
+    if(nCell.id.tail('RI') || nCell.id.tail('LI')){
+        x = nCell.key_location;
+    }
+    else{
+        x = nCell.coordinates[nCell.coordinates.length - 1];    
+    }
+
     // Sanity check - necessary for degenerate cases
     if(x < 0){
         return false;
@@ -291,8 +310,8 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
 
     var rewrite = {};
 
-    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.coordinates));
-    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.coordinates));
+    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.coordinates, nCell.key_location));
+    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.coordinates, nCell.key_location));
 
     if (rewrite.source.nCells.length != 0 || rewrite.target.nCells.length) return rewrite;
 
@@ -322,6 +341,9 @@ Diagram.prototype.interpret_drag = function(drag) {
         
         var action = this.getSlice(drag.coordinates.last()).interpret_drag(new_drag);
 
+        if(action.length === 0){
+            return [];
+        }
         var new_action = action[0];
         new_action.id += "-1";
         new_action.coordinates.push(drag.coordinates.last());
@@ -329,7 +351,6 @@ Diagram.prototype.interpret_drag = function(drag) {
     }
     
     // Create a copy of the drag to use in the first round of tests:
-    
     new_drag = {
             boundary_type: drag.boundary_type,
             boundary_depth: drag.boundary_depth,
@@ -345,17 +366,6 @@ Diagram.prototype.interpret_drag = function(drag) {
 Diagram.prototype.test_basic = function(drag) {
     var id;
     var temp_coordinates = new Array();
-    /*
-    if(drag.secondary != null && drag.secondary != 0){
-        return [];
-    }
-    */
-
-    /*
-    if(drag.directions.length > 1 && drag.directions.last() != 0){
-        return [];
-    }
-    */
     
     for(var i = 0; i < this.dimension - drag.coordinates.length; i++)
         temp_coordinates.push(0);
@@ -367,11 +377,7 @@ Diagram.prototype.test_basic = function(drag) {
         
         // Reconsider the generality of this
         temp_coordinates.push(drag.coordinates.last());
-        
-        /*    
-        for(var i = 1; i <= drag.coordinates.length; i++)
-            temp_coordinates.push(drag.coordinates[drag.coordinates.length-i]);
-        */ 
+
             
         var int1_bool = false;
         var int2_bool = false;
@@ -424,7 +430,7 @@ Diagram.prototype.test_pull_through = function(drag) {
     var id;
     var temp_coordinates = new Array();
     
-    if(drag.directions.length != 2){// || drag.boundary_depth != 0){
+    if(drag.directions.length != 2){
         return [];   
     }
     
@@ -447,19 +453,17 @@ Diagram.prototype.test_pull_through = function(drag) {
                 return [];
             }
             id = id + '-L';
-            //temp_coordinates.increment_last(this.source_size(x));
-            interchanger = new NCell(id, temp_coordinates);
+            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
             if(!this.interchangerAllowed(interchanger)){
                 return [];
+            }
+            else{
+                return [interchanger];
             }
         }
         else{
             if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() - 1].id;
-
-                // Need to offset the attachment point of the interchanger by the number of inputs of the pulled-through cell
-               // var g = gProject.signature.getGenerator(this.nCells[drag.coordinates.last()].id)
-                //temp_coordinates.increment_last(-g.source.nCells.length);
             }
             else{
                 console.log("No way to pull through");
@@ -467,11 +471,14 @@ Diagram.prototype.test_pull_through = function(drag) {
             }
             id = id + '-RI'; 
             
-            //temp_coordinates.increment_last(-this.source_size(x));
-            interchanger = new NCell(id, temp_coordinates);
+            temp_coordinates.increment_last(-this.source_size(x));
+            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
             if(!this.interchangerAllowed(interchanger)){
                 return [];
             }
+            else{
+                return [interchanger];
+            }            
             //temp_coordinates.increment_last(this.source_size(x));
         }
     }
@@ -488,9 +495,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             }
             id = id + '-R';  
             //temp_coordinates.increment_last(-this.source_size(x));
-            interchanger = new NCell(id, temp_coordinates);
+            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
             if(!this.interchangerAllowed(interchanger)){
                 return [];
+            }
+            else{
+                return [interchanger];
             }
             //temp_coordinates.increment_last(this.source_size(x));
         }
@@ -507,12 +517,14 @@ Diagram.prototype.test_pull_through = function(drag) {
                 return [];
             }
             id = id + '-LI';   
-            //temp_coordinates.increment_last(-this.source_size(x));
-            interchanger = new NCell(id, temp_coordinates);
+            temp_coordinates.increment_last(-this.source_size(x));
+            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
             if(!this.interchangerAllowed(interchanger)){
                 return [];
             }
-            //temp_coordinates.increment_last(this.source_size(x));
+            else{
+                return [interchanger];
+            }
         }
     }
     else{
@@ -528,7 +540,7 @@ Diagram.prototype.source_size = function(level) {
     var nCell = this.nCells[level];
 
     if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.coordinates).length;
+        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.coordinates, nCell.key_location).length;
     }
     else{
         return nCell.source_size();
@@ -541,7 +553,7 @@ Diagram.prototype.target_size = function(level) {
     var nCell = this.nCells[level];
 
     if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.coordinates).length;
+        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.coordinates, nCell.key_location).length;
     }
     else{
         return nCell.target_size();

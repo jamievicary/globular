@@ -9,10 +9,11 @@
     Creates an N-Cell of type 'id' whose location in a diagram is specified by coordinate
     This is to allow uniform treatment of interchangers and other cells
 */
-function NCell(id, coordinates) {
+function NCell(id, coordinates, key_location) {
     
     this.id = id;
     this.coordinates = coordinates;
+    this.key_location = key_location
 };
 
 NCell.prototype.getType = function() {
