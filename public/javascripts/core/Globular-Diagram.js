@@ -561,12 +561,13 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         else if (new_id.tail('R') || new_id.tail('L')){
             new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
         }
-        else if (new_id.tail('I')){
-                new_id = new_id.substr(0, new_id.length - 1);
-            }
-            else {
-                new_id = new_id + 'I';
-            }
+        
+        if (new_id.tail('I')){
+            new_id = new_id.substr(0, new_id.length - 1);
+        }
+        else {
+            new_id = new_id + 'I';
+        }
     }
 
     var k = 0;

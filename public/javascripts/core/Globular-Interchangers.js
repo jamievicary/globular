@@ -39,13 +39,10 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights) {
     }
 
     if (type.tail('L', 'R')) {
-        //        list = this.nCells.slice(x, x + gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length + 1);
-
         list = this.nCells.slice(x, x + this.target_size(x) + 1);
     }
 
     if (type.tail('LI', 'RI')) {
-       // list = this.nCells.slice(x - gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, x + 1);
        list = this.nCells.slice(x - this.source_size(x) , x + 1);
 
     }
@@ -86,8 +83,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     }
 
     if (type.tail('IntI')) {
-        //var g = gProject.signature.getGenerator(this.nCells[x].id);
-        
+
         var g_source = this.source_size(x); 
         var g_target = this.target_size(x); 
       
@@ -103,21 +99,16 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
     if (type.tail('L')) {
         list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last(),
            this.source_size(x), 1);
-            //gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length, 1);
-
 
         this.nCells[x].coordinates.increment_last(1);
         list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
     }
 
-    //var x = 2 + (type == 'int' ? 1 : 0);
 
     if (type.tail('R')) {
 
         list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
             1, this.source_size(x));
-
-            //1, gProject.signature.getGenerator(this.nCells[x].id).source.nCells.length);
 
         this.nCells[x].coordinates.increment_last(-1);
         list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
@@ -126,10 +117,8 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
     var new_type = type.slice(0, type.length - 3);
 
-
     if (type.tail('LI')) {
 
-       // var g = gProject.signature.getGenerator(this.nCells[x].id);
         var g_source = this.source_size(x);
         var g_target = this.target_size(x);
 
@@ -137,50 +126,23 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
             new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
             g_target, 1));
 
-/*
-        list = list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
-            new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
-            gProject.signature.getGenerator(this.nCells[x].id).target.nCells.length, 1));
-*/
         this.nCells[x].coordinates.increment_last(-1);
         list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-
-        // hack dealing with attachment point for the inverse interchanger
-        
-        // ++++
-        
-        // To be discussed thoroughly
-        
-//        heights.increment_last(-g_source);
 
     }
 
     if (type.tail('RI')) {
 
-       // var g = gProject.signature.getGenerator(this.nCells[x].id);
         var g_source = this.source_size(x);
         var g_target = this.target_size(x);
 
         list = list.concat(this.getSlice(x - g_source - 1).expand(
             new_type, this.nCells[x].coordinates.last(),
             1, g_target));
-
-/*
-        list = list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
-            new_type, this.nCells[x].coordinates.last(),
-            g.target.nCells.length, 1));
-*/        
+            
         this.nCells[x].coordinates.increment_last(1);
         list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-        
-        
-        // hack dealing with attachment point for the inverse interchanger
-        
-        // ++++
-        
-        // To be discussed thoroughly
-        
-        //heights.increment_last(-g_source);
+
         
     }
     
@@ -196,7 +158,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
             list.push(new NCell(new_type.substr(0, new_type.length - 1), heights.slice(0, heights.length - 1)));
         }
         else{
-            list.push(new NCell(new_type + 'I', [heights[heights.length - 2]]));
+            list.push(new NCell(new_type + 'I', heights.slice(0, heights.length - 1)));
         }
     }
 
