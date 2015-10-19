@@ -383,7 +383,7 @@ Project.prototype.drag_cell = function(drag) {
         diagram_pointer.rewrite(action, false);
     }
     else{
-        
+        /*
         if(drag.boundary_type === 's' ){//&& this.diagram.nCells.length != 0){
         // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
             if (action.id.tail('I')){
@@ -393,7 +393,7 @@ Project.prototype.drag_cell = function(drag) {
                 action_wrapper.nCells[0].id += 'I';
             }   
         }
-        
+        */
         diagram_pointer.attach(action_wrapper, drag.boundary_type);        
     }
     

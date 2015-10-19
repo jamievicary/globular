@@ -151,7 +151,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
         
         // To be discussed thoroughly
         
-        heights.increment_last(-g_source);
+//        heights.increment_last(-g_source);
 
     }
 
@@ -180,7 +180,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
         
         // To be discussed thoroughly
         
-        heights.increment_last(-g_source);
+        //heights.increment_last(-g_source);
         
     }
     

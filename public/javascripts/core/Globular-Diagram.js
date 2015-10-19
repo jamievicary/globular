@@ -134,7 +134,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var target;
 
     // Special code to deal with interchangers
-    if (nCell.id[0] === 'I'){
+    if (nCell.id.substr(0, 3) === 'Int'){
+        /*
         if (reverse) {
             if (nCell.id.tail('I')){
                 nCell.id = nCell.id.substr(0, nCell.id.length - 1);
@@ -143,7 +144,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             else {
                 nCell.id = nCell.id + 'I';
             }
-        }
+        }*/
         var rewrite = this.rewriteInterchanger(nCell);
         source = rewrite.source.copy();
         target = rewrite.target.copy();
@@ -165,7 +166,14 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
-    var insert_position = nCell.coordinates.last();
+    
+    var insert_position
+    if (nCell.id.tail('LI') || nCell.id.tail('RI')){
+        insert_position = nCell.coordinates.last() - this.source_size(nCell.coordinates.last());   
+    }
+    else{
+        insert_position = nCell.coordinates.last();   
+    }
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
@@ -539,16 +547,33 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         return;
     }
 
-
+    var new_id = attached_nCell.id 
+    var new_coordinates = attached_nCell.coordinates.slice(0);
     if (attached_nCell.id.substr(0, 3) != "Int") {
         attached_nCell.coordinates = bounds;
+        new_coordinates = bounds;
+        new_id = attached_nCell.id;
+    }
+    else if(boundary_boolean === 's'){
+        if (new_id.tail('RI') || new_id.tail('LI')){
+            new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
+        }
+        if (new_id.tail('R') || new_id.tail('L')){
+            new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
+        }
+        if (new_id.tail('I')){
+                new_id = new_id.substr(0, new_id.length - 1);
+            }
+            else {
+                new_id = new_id + 'I';
+            }
     }
 
     var k = 0;
     if (boundary_boolean === 't') {
         k = this.nCells.length;
     }
-    this.nCells.splice(k, 0, new NCell(attached_nCell.id, attached_nCell.coordinates));
+    this.nCells.splice(k, 0, new NCell(new_id, new_coordinates));
 
     /*
         If necessary the source is rewritten.
