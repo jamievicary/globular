@@ -163,7 +163,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights) {
 
         list = list.concat(this.getSlice(x - g_source - 1).expand(
             new_type, this.nCells[x].coordinates.last(),
-            g_target, 1));
+            1, g_target));
 
 /*
         list = list.concat(this.getSlice(x - g.source.nCells.length - 1).expand(
