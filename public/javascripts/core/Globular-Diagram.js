@@ -558,10 +558,10 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         if (new_id.tail('RI') || new_id.tail('LI')){
             new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
         }
-        if (new_id.tail('R') || new_id.tail('L')){
+        else if (new_id.tail('R') || new_id.tail('L')){
             new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
         }
-        if (new_id.tail('I')){
+        else if (new_id.tail('I')){
                 new_id = new_id.substr(0, new_id.length - 1);
             }
             else {

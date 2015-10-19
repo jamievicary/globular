@@ -355,46 +355,31 @@ Project.prototype.drag_cell = function(drag) {
         return;
     }
     else{
-        
+        // Display a dialog box, return user's choice
     }
   
     var action = options[0];
     action.coordinates = action.coordinates.concat(temp_drag_data);
-   // var action_wrapper = new NCell(action)
-    
-    //var action_wrapper = new Diagram(action)
-    
+
     var action_wrapper = {
         nCells: [action]
     };
     
     // Actually perform the action!
     
-    var diagram_pointer = this.diagram;
-    
-    var temp_drag_data = new Array();
-    
+    var boundary_path = new String();
+
     // This is necessary to attach one level higher than the boundary itself
     for(var i = 0; i < drag.boundary_depth - 1; i++){
-        diagram_pointer = diagram_pointer.getSourceBoundary();
+        boundary_path += 's';
     }
     
     if(drag.boundary_depth === 0){
-        diagram_pointer.rewrite(action, false);
+        this.diagram.rewrite(action, false);
     }
     else{
-        /*
-        if(drag.boundary_type === 's' ){//&& this.diagram.nCells.length != 0){
-        // We need to take the inverse of the interchanger - this may be outsourced to an external procedure
-            if (action.id.tail('I')){
-                action_wrapper.nCells[0].id = action.id.substr(0, action.id.length - 1);
-            }
-            else {
-                action_wrapper.nCells[0].id += 'I';
-            }   
-        }
-        */
-        diagram_pointer.attach(action_wrapper, drag.boundary_type);        
+        boundary_path += drag.boundary_type;
+        this.diagram.attach(action_wrapper, boundary_path);        
     }
     
     /*
