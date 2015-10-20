@@ -166,12 +166,12 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_locatio
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('1')) {
-        list.push(new NCell(new_type, heights.slice(0, heights.length - 1)));
+        list.push(new NCell(new_type, zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
         if(new_type.tail('I')){
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), heights.slice(0, heights.length - 1)));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
         }
         else{
-            list.push(new NCell(new_type + 'I', heights.slice(0, heights.length - 1)));
+            list.push(new NCell(new_type + 'I', zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
         }
     }
 

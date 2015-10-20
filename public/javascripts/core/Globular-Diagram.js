@@ -135,16 +135,6 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id.substr(0, 3) === 'Int'){
-        /*
-        if (reverse) {
-            if (nCell.id.tail('I')){
-                nCell.id = nCell.id.substr(0, nCell.id.length - 1);
-                //== 'interchanger-right';
-            }
-            else {
-                nCell.id = nCell.id + 'I';
-            }
-        }*/
         var rewrite = this.rewriteInterchanger(nCell);
         source = rewrite.source.copy();
         target = rewrite.target.copy();
@@ -212,7 +202,7 @@ Diagram.prototype.copy = function() {
 
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
-        nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0)));
+        nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key_location));
     }
 
     var diagram = new Diagram(source_boundary, nCells);
@@ -553,6 +543,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
 
     var new_id = attached_nCell.id 
     var new_coordinates = attached_nCell.coordinates.slice(0);
+    var new_key_location = attached_nCell.key_location;
     if (attached_nCell.id.substr(0, 3) != "Int") {
         attached_nCell.coordinates = bounds;
         new_coordinates = bounds;
@@ -560,10 +551,12 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     }
     else if(boundary_boolean === 's'){
         if (new_id.tail('RI') || new_id.tail('LI')){
-            new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
+            new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
+            //new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
         }
         else if (new_id.tail('R') || new_id.tail('L')){
-            new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
+            new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
+            //new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
         }
         
         if (new_id.tail('I')){
@@ -578,7 +571,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     if (boundary_boolean === 't') {
         k = this.nCells.length;
     }
-    this.nCells.splice(k, 0, new NCell(new_id, new_coordinates));
+    this.nCells.splice(k, 0, new NCell(new_id, new_coordinates, new_key_location));
 
     /*
         If necessary the source is rewritten.
