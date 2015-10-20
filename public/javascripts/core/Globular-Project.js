@@ -394,7 +394,7 @@ Project.prototype.drag_cell = function(drag) {
     this.selected_cell = null;
     this.saveState();
     $('div.cell-b-sect').empty();
-    this.renderDiagram();    
+    this.renderDiagram(drag);
     
 } 
 
@@ -571,9 +571,9 @@ Project.prototype.renderGenerator = function(div, id) {
 }
 
 // Render the main diagram
-Project.prototype.renderDiagram = function() {
+Project.prototype.renderDiagram = function(boundary_data) {
     
-    MainDisplay.set_diagram(this.diagram);
+    MainDisplay.set_diagram(this.diagram, boundary_data);
 };
 
 // Need to write this code
