@@ -67,12 +67,52 @@ function zero_array(n) {
     return tab;
 }
 
+function min_array(t1, t2) {
+    var tab = new Array();
+    
+    if(t1.length != t2.length){
+        console.log("Arrays of differnt lenght")
+    }
+    
+    for(var i = 0; i < t1.length; i++){
+        if(t1[i] <= t2[i]){
+            tab.push(t1[i]);
+        }
+        else{
+            tab.push(t2[i]);
+        }
+    }
+    return tab;
+}
+
+function diff_array(t1, t2) {
+    var tab = new Array();
+    
+    if(t1.length != t2.length){
+        console.log("Arrays of differnt lenght")
+    }
+    
+    for(var i = 0; i < t1.length; i++){
+        tab.push(t1[i] - t2[i]);
+    }
+    return tab;
+}
+
 Array.prototype.last = function() {
     return this[this.length - 1];
 };
 
 Array.prototype.increment_last = function(value) {
     this[this.length - 1] += value;
+};
+
+Array.prototype.reverse = function() {
+    var t2 = new Array();
+    for(var i = 0; i < this.length; i++){
+        t2.push(this[this.length - 1 - i]);
+    }
+    
+    return t2;
 };
 
 String.prototype.tail = function() {

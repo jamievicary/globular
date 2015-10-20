@@ -343,6 +343,8 @@ Project.prototype.drag_cell = function(drag) {
         }
     }
     
+    drag.coordinates = drag.coordinates.reverse();
+    
     var options = diagram_pointer.interpret_drag(drag);
     
     if(options.length === 0){

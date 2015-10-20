@@ -156,18 +156,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
-    
-    /*
-    var insert_position
-    if (nCell.id.tail('LI') || nCell.id.tail('RI')){
-        insert_position = nCell.coordinates.last() - this.source_size(nCell.coordinates.last());   
-    }
-    else{
-        insert_position = nCell.coordinates.last();   
-    }*/
-    
     var insert_position = nCell.coordinates.last();   
-    
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
