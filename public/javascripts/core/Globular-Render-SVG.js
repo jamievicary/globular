@@ -47,7 +47,7 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     }
     else {
     */
-        svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
+    svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
     //}
     svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
     svg.setAttribute("width", container.width());
@@ -55,7 +55,10 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     //container.append(svg);
     svg.appendChild(g);
     g.setAttributeNS(null, "transform", "scale (1 -1)");
-    return {svg:svg, g:g};
+    return {
+        svg: svg,
+        g: g
+    };
 }
 
 function globular_render_0d(container, diagram, subdiagram) {
@@ -156,7 +159,7 @@ function globular_render_1d(container, diagram, subdiagram) {
             }));
         }
     }
-    
+
     $(container).append(d.svg);
 }
 
@@ -209,12 +212,12 @@ function globular_render_2d(container, diagram, subdiagram) {
         x: x_center - w / 2,
         y: y_center + h / 2
     });
-    
+
     // Determine background colour
     var color = diagram.source.source.getFirstColour();
     d.g.appendChild(SVG_create_path({
         string: path_string,
-//        fill: gProject.getColour(diagram.source.source.nCells[0].id)
+        //        fill: gProject.getColour(diagram.source.source.nCells[0].id)
         fill: color
     }));
     $(container)[0].bounds = {
@@ -282,7 +285,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();
         }
-        
+
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
         path.setAttributeNS(null, "fill", colour);
@@ -319,9 +322,13 @@ function globular_render_2d(container, diagram, subdiagram) {
         else {
             // We start at a vertex
             var vertex = data.vertices[edge.start_vertex];
-            if (vertex.type.substr(0,3) == 'Int') {
-                path_s = SVG_move_to({x: edge.x, y: edge.start_height + 0.5});
-            } else {
+            if (vertex.type.is_basic_interchanger()) {
+                path_s = SVG_move_to({
+                    x: edge.x,
+                    y: edge.start_height + 0.5
+                });
+            }
+            else {
                 path_s += SVG_move_to({
                     x: vertex.x,
                     y: vertex.y
@@ -353,17 +360,17 @@ function globular_render_2d(container, diagram, subdiagram) {
         // Do the top bit of the path
         if (finish_boundary) {
             // Nothing to do, unless also coming from source boundary
-//            if (edge.start_height == 0) {
-                path_s += SVG_line_to({
-                    x: edge.x,
-                    y: edge.finish_height
-                });
-                drawn_something = true;
-//            }
+            //            if (edge.start_height == 0) {
+            path_s += SVG_line_to({
+                x: edge.x,
+                y: edge.finish_height
+            });
+            drawn_something = true;
+            //            }
         }
         else {
             var vertex = data.vertices[edge.finish_vertex];
-            if (vertex.type.substr(0,3) != 'Int') {
+            if (!vertex.type.is_basic_interchanger()) {
                 //path_s += SVG_line_to(vertex.x, vertex.height + 0.5);
                 path_s += SVG_bezier_to({
                     c1x: edge.x,
@@ -393,8 +400,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         var vertex = data.vertices[i];
 
-        if (vertex.type.substring(0, 3) == 'Int') {
-            
+        if (vertex.type.is_basic_interchanger()) {
+
             // Draw the interchanger. First, decide which strand goes on top
             var e1_bot, e2_bot, e1_top, e2_top;
             var p = (vertex.type == 'Int' ? 1 : 0);
@@ -405,7 +412,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             e2_top = data.edges[vertex.target_edges[p]];
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
-            
+
             var lower_colour = gProject.getColour(e1_bot.type);
             var upper_colour = gProject.getColour(e2_bot.type);
 
@@ -427,21 +434,50 @@ function globular_render_2d(container, diagram, subdiagram) {
             var mask_id = "mask" + i;
             if (obscure) {
                 // Add the obscuring mask, which is a fattened version of the upper line
-                var mask = $('<mask>', {id: mask_id});
-                var transparent_str = SVG_move_to({x: left, y: i})
-                    + SVG_line_to({x: left, y: i+1})
-                    + SVG_line_to({x: right, y: i+1})
-                    + SVG_line_to({x: right, y: i})
-                    + SVG_line_to({x: left, y: i});
-                mask.append(SVG_create_path({string: transparent_str, fill: "white"}));
-                mask.append(SVG_create_path({string: top_str, stroke_width: 0.2, stroke: "black"}));
+                var mask = $('<mask>', {
+                    id: mask_id
+                });
+                var transparent_str = SVG_move_to({
+                    x: left,
+                    y: i
+                }) + SVG_line_to({
+                    x: left,
+                    y: i + 1
+                }) + SVG_line_to({
+                    x: right,
+                    y: i + 1
+                }) + SVG_line_to({
+                    x: right,
+                    y: i
+                }) + SVG_line_to({
+                    x: left,
+                    y: i
+                });
+                mask.append(SVG_create_path({
+                    string: transparent_str,
+                    fill: "white"
+                }));
+                mask.append(SVG_create_path({
+                    string: top_str,
+                    stroke_width: 0.2,
+                    stroke: "black"
+                }));
                 //g.appendChild(mask[0]);
                 defs.append(mask);
-                
+
             }
             // Draw the lower path
-            var bot_str = SVG_move_to({x: e1_bot.x, y: i - epsilon})
-                + SVG_bezier_to({c1x: e1_bot.x, c1y: i + 0.5, c2x: e1_top.x, c2y: i + 0.5, x: e1_top.x, y: i + 1 + epsilon});
+            var bot_str = SVG_move_to({
+                x: e1_bot.x,
+                y: i - epsilon
+            }) + SVG_bezier_to({
+                c1x: e1_bot.x,
+                c1y: i + 0.5,
+                c2x: e1_top.x,
+                c2y: i + 0.5,
+                x: e1_top.x,
+                y: i + 1 + epsilon
+            });
             d.g.appendChild(SVG_create_path({
                 string: bot_str,
                 stroke: lower_colour,
@@ -521,7 +557,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             var y = (subdiagram.boundaryPath == 's' ? 0.125 - delta : Math.max(1, diagram.nCells.length) - 0.125 + delta);
             var x1, x2;
             var edges = data.edges_at_level[subdiagram.boundaryPath == 's' ? 0 : diagram.nCells.length];
-    
+
             // Get the first and last edge of the inclusion
             //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
             var first_edge_index = subdiagram.inclusion[0];
@@ -575,7 +611,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         else if (subdiagram.boundaryPath.length == 0) {
             // Highlight in main diagram
             // Design decision: pad out by 0.25 uniformly.
-    
+
             // Find min and max y-values by looking at subdiagram specification
             var inc_y = subdiagram.inclusion[1];
             var min_y, max_y;
@@ -601,7 +637,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                 //max_y = inc_y + subdiagram.size.length - 1 + 0.5;
                 max_y = min_y + subdiagram.size.length - 2;
             }
-    
+
             // Find min and max x-values by looking at edges and vertices of diagram
             var inc_x = subdiagram.inclusion[0];
             var min_x = Number.MAX_VALUE;
@@ -635,7 +671,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                     max_x = data.edges[data.edges_at_level[inc_y][inc_x]].x - 0.5;
                 }
             }
-    
+
             // Pad values appropriately to give a little buffer to the highlighted area
             min_x -= 0.45;
             max_x += 0.45;
@@ -666,7 +702,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }));
         }
     }
-    
+
     // Add SVG object to container. We have to do it in this weird way because
     // otherwise the masks aren't recognized in Chrome v46.
     var html = $("<div />").append($(d.svg)).html();
@@ -1201,11 +1237,18 @@ function SVG_prepare(diagram, subdiagram) {
         var attachment = diagram.nCells[level];
         var interchanger = (attachment.id.substring(0, 3) == 'Int');
         var source_cells, target_cells;
-        if (interchanger) {
+        if (attachment.id.is_interchanger()) {
+            var source_size = diagram.source_size(level);
+            var target_size = diagram.target_size(level);
+            var pos = attachment.coordinates.last();
+            source_cells = slices[level].nCells.slice(pos, pos + source_size);
+            target_cells = slices[level + 1].nCells.slice(pos, pos + target_size);
+            /*
             var x = slices[level].nCells[attachment.coordinates.last()];
             var y = slices[level].nCells[attachment.coordinates.last() + 1];
             source_cells = [x, y];
             target_cells = [y, x];
+            */
         }
         else {
             var r = gProject.signature.getGenerator(attachment.id);

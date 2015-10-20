@@ -134,7 +134,7 @@ Display.prototype.has_controls = function() {
 }
 
 // Make sure all the coordinates and suppressions make sense
-Display.prototype.update_controls = function() {
+Display.prototype.update_controls = function(boundary) {
 
     // If there's no diagram, nothing to do
     if (this.diagram == null) return;
@@ -149,7 +149,7 @@ Display.prototype.update_controls = function() {
     this.suppress_input.val(new_suppress);
 
     // Update the slice controls
-    this.update_slice_container();
+    this.update_slice_container(boundary);
 }
 
 Display.prototype.update_sliders = function() {
@@ -187,7 +187,8 @@ Display.prototype.create_controls = function() {
         .attr('type', 'number')
         .addClass('control')
         .attr('min', 0)
-        .val(0);
+        .val(0)
+        .mouseover(function(){this.focus();});
     var self = this;
     this.suppress_input.on('input', function(event) {
         self.control_change(event)
@@ -201,7 +202,7 @@ Display.prototype.create_controls = function() {
     this.coordinates = [];
 }
 
-Display.prototype.update_slice_container = function() {
+Display.prototype.update_slice_container = function(boundary) {
 
     // If the diagram is null, we shouldn't have any slice controls
     if (this.diagram == null) {
@@ -221,6 +222,21 @@ Display.prototype.update_slice_container = function() {
         this.coordinates.last().remove();
         this.coordinates.pop();
     }
+    
+    // If a particular boundary has been requested, make sure it is within view
+    if (boundary != undefined) {
+        if (boundary.boundary_depth == 0) {
+            // do nothing
+        } else {
+            var slice_index = boundary.boundary_depth - 1;
+            if (boundary.boundary_type == 't') {
+                if (slice_index < this.coordinates.length) {
+                    var current = this.coordinates[slice_index].val();
+                    this.coordinates[slice_index].val(current + 1);
+                }
+            }
+        }
+    }
 
     // Add any additional slice controls with a dimension of zero
     var self = this;
@@ -235,6 +251,7 @@ Display.prototype.update_slice_container = function() {
             .on('input', function(event) {
                 self.control_change(event)
             })
+            .mouseover(function(){this.focus();});
         this.slice_div.append(this.coordinates[i]);
     }
 
@@ -243,18 +260,19 @@ Display.prototype.update_slice_container = function() {
     for (var i = 0; i < remaining_dimensions; i++) {
         var input = this.coordinates[i];
         input.val(Math.min(input.val(), slice.nCells.length));
+        input.attr('max', slice.nCells.length);
         slice = slice.getSlice(input.val());
     }
 }
 
-// Attach the given diagram to the window
-Display.prototype.set_diagram = function(diagram) {
+// Attach the given diagram to the window, showing at least the specified boundary
+Display.prototype.set_diagram = function(diagram, boundary) {
     this.diagram = diagram;
     if (this.diagram == null) {
         this.container.empty();
     }
     else {
-        this.update_controls();
+        this.update_controls(boundary);
         this.render();
     }
 }

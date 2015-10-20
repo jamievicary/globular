@@ -137,3 +137,10 @@ Array.prototype.fill = function(value, length) {
     return this;
 }
 
+String.prototype.is_basic_interchanger = function() {
+    return (this == 'Int' || this == 'IntI');
+}
+
+String.prototype.is_interchanger = function() {
+    return (this.substr(0, 3) == 'Int');
+}
