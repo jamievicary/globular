@@ -102,6 +102,10 @@ Array.prototype.last = function() {
     return this[this.length - 1];
 };
 
+Array.prototype.penultimate = function() {
+    return this[this.length - 2];
+};
+
 Array.prototype.increment_last = function(value) {
     this[this.length - 1] += value;
 };

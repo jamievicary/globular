@@ -88,11 +88,10 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_locatio
     var temp_coordinates_x = zero_array(heights.length - 2);
     temp_coordinates_x.push(this.nCells[x].coordinates.last());
     */
-    
-    var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
+    if(this.nCells.length != 0){
+        var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
+    }
     //temp_coordinates_x.push(this.nCells[x].coordinates.last());
-    
-    diff_array
     
     if(x + 1 < this.nCells.length){
         /*
@@ -283,7 +282,12 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
 
     if (nCell.id.tail('L')) {
         var crossings = g1_target;
-        var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last(),
+        
+        if(this.nCells[nCell.key_location].coordinates.last() === this.getSlice(x).nCells.length - 1){
+            return false;
+        }
+        
+        var template = this.getSlice(x).expand(new_type, 0, //this.nCells[x].coordinates.last(),
             crossings, 1);
 
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template, nCell.coordinates);
@@ -292,7 +296,12 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     if (nCell.id.tail('R')) {
 
         var crossings = g1_target;
-        var template = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last() - 1,
+        
+        if(this.nCells[nCell.key_location].coordinates.last()=== 0){
+            return false;
+        }
+        
+        var template = this.getSlice(x).expand(new_type, 0, //this.nCells[x].coordinates.last() - 1,
             1, crossings);
             
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template, nCell.coordinates);
@@ -304,11 +313,12 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     if (nCell.id.tail('LI')) {
 
         var crossings = g1_source;
-        if(x - crossings < 0){
+        if(x - crossings < 0 || this.nCells[nCell.key_location].coordinates.last() === 0){
             return false;
         }
+        
         var template = this.getSlice(x - crossings).expand(
-            new_type, this.nCells[x - /*HACK*/ 1].coordinates.last(),
+            new_type, 0, //this.nCells[x - /*HACK*/ 1].coordinates.last(),
             crossings, 1);
 
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template, nCell.coordinates);
@@ -323,11 +333,12 @@ Diagram.prototype.interchangerAllowed = function(nCell) {
     if (nCell.id.tail('RI')) {
 
         var crossings = g1_source;
-        if(x - crossings < 0){
+        if(x - crossings < 0 || this.nCells[nCell.key_location].coordinates.last() === this.getSlice(x).nCells.length - 1){
             return false;
         }
+        
         var template = this.getSlice(x - crossings).expand(
-            new_type, this.nCells[x - crossings].coordinates.last(),
+            new_type, 0, //this.nCells[x - crossings].coordinates.last(),
             1, crossings);
         
         /*   
@@ -483,7 +494,7 @@ Diagram.prototype.test_basic = function(drag) {
         }
             
         if(!int1_bool && !int2_bool){
-            id = this.nCells[drag.coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
+            id = this.nCells[temp_coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
             var interchanger_3 = new NCell(id, temp_coordinates);
             if(!this.interchangerAllowed(interchanger_3)){
                 console.log("cannot interchange");
@@ -535,6 +546,10 @@ Diagram.prototype.test_pull_through = function(drag) {
             }
             id = id + '-L';
             
+            if(x + this.target_size(x) >= this.nCells.length){
+                return [];
+            }
+            
             temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
                                     this.nCells[x + this.target_size(x)].coordinates.slice(0))
             temp_coordinates.push(drag.coordinates.last());
@@ -559,6 +574,10 @@ Diagram.prototype.test_pull_through = function(drag) {
             id = id + '-RI'; 
             
             //temp_coordinates = this.nCells[drag.coordinates.last() - this.source_size(x)].coordinates.slice(0);
+            
+            if(x - this.source_size(x) < 0){
+                return [];
+            }
             
             temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
                                     this.nCells[x - this.source_size(x)].coordinates.slice(0))
@@ -594,8 +613,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             //temp_coordinates = this.nCells[drag.coordinates.last()/*Hack?*/].coordinates.slice(0);
             //temp_coordinates.increment_last(-1);
             
+            if(x + 1 >= this.nCells.length){
+                return [];
+            }
+            
             temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x + this.target_size(x)].coordinates.slice(0))
+                                    this.nCells[x + 1].coordinates.slice(0))
             
             temp_coordinates.push(drag.coordinates.last());
             
@@ -623,8 +646,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             
             //temp_coordinates = this.nCells[drag.coordinates.last()/*Hack?*/].coordinates.slice(0);
             //temp_coordinates.increment_last(-1);
+            if(x - 1 < 0){
+                return [];
+            }
+            
             temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x - this.source_size(x)].coordinates.slice(0))
+                                    this.nCells[x - 1].coordinates.slice(0))
             
             temp_coordinates.push(drag.coordinates.last());
             temp_coordinates.increment_last(-this.source_size(x));
