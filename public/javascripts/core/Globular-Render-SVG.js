@@ -191,7 +191,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.nCells.length == 0);
+    //var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.nCells.length == 0);
+    var big_background = false;
     var x_center = (data.max_x + 0) / 2;
     var y_center = Math.max(1, data.vertices.length) / 2;
     var w = big_background ? 20 : data.max_x + 1;
@@ -280,7 +281,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             colour = '#ffffff';
         }
         else {
-            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_height);
+            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_height + 1);
             colour = sd.getFirstColour();
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();

@@ -760,7 +760,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             }
                         }
                         //project.renderAll();
-                        project.renderDiagram();
+                        project.renderDiagram({boundary_type: match.boundaryPath.last(), boundary_depth: match.boundaryPath.length});
                         project.saveState();
                     });
                 })(match_array[i]);
