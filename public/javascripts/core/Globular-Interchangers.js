@@ -564,7 +564,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             }
             */
             if(this.target_size(x) === 0){
-                id = this.getSlice(drag.coordinates.last()).test_basic(new_drag)[0].id;
+                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
+                if(sub_action.length === 0){
+                    return [];
+                }else{
+                    id = sub_action[0].id;
+                }
             }
             else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id; 
@@ -602,7 +607,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             
             if(this.source_size(x) === 0){
                 new_drag.directions[0] = - new_drag.directions[0]; // HACK
-                id = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag)[0].id;
+                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
+                if(sub_action.length === 0){
+                    return [];
+                }else{
+                    id = sub_action[0].id;
+                }
             }
             else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() - 1].id; 
@@ -645,7 +655,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             
             //drag.coordinates = drag.coordinates.slice(0, drag.coordinates.length - 1)
             if(this.target_size(x) === 0){
-                id = this.getSlice(drag.coordinates.last()).test_basic(new_drag)[0].id;
+                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
+                if(sub_action.length === 0){
+                    return [];
+                }else{
+                    id = sub_action[0].id;
+                }
             }
             else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id; 
@@ -695,7 +710,12 @@ Diagram.prototype.test_pull_through = function(drag) {
             if(this.source_size(x) === 0){
                 new_drag.directions[0] = - new_drag.directions[0]; // HACK
                 
-                id = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag)[0].id;
+                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
+                if(sub_action.length === 0){
+                    return [];
+                }else{
+                    id = sub_action[0].id;
+                }
             }
             else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() - 1].id; 
