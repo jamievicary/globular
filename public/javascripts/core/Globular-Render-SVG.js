@@ -281,7 +281,16 @@ function globular_render_2d(container, diagram, subdiagram) {
             colour = '#ffffff';
         }
         else {
-            var sd = diagram.getSlice(edge.start_height).getSlice(edge.attachment_height + 1);
+            var level = Math.ceil(edge.start_height);
+            var sublevel;
+            if (i < 0) {
+                sublevel = data.edges_at_level[level].length - 1;
+            } else {
+                sublevel = data.edges_at_level[level].indexOf(i);
+            }
+            var sd = diagram.getSlice(level).getSlice(sublevel + 1);
+            
+            //var sd = diagram.getSlice(Math.ceil(edge.start_height)).getSlice(edge.attachment_height + 1);
             colour = sd.getFirstColour();
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();
