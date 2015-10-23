@@ -106,6 +106,11 @@ Array.prototype.penultimate = function() {
     return this[this.length - 2];
 };
 
+Array.prototype.incremented_array = function(value) {
+    this[this.length - 1] += value;
+    return this;
+};
+
 Array.prototype.increment_last = function(value) {
     this[this.length - 1] += value;
 };
