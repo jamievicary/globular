@@ -164,11 +164,22 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         In the process of inserting n-cells in the target of the rewrite into the list of nCells, we need to shift
         the inclusion information by the location of the rewrite in the overall diagram
         */
-        for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
-            target.nCells[i].coordinates[j] += nCell.coordinates[j];
+        if(target.nCells[i].coordinates != null){
+            for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
+                target.nCells[i].coordinates[j] += nCell.coordinates[j];
+            }
+        }
+        else{
+            for (var j = 0; j < target.nCells[i].key_location.length; j++) {
+                target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1];
+            }
         }
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
+    
+    for (var i = 0; i < target.nCells.length; i++) {
+        this.nCells[insert_position + i].coordinates = this.interchangerCoordinates(insert_position + i);
+    }    
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
 
     return this;
@@ -191,7 +202,12 @@ Diagram.prototype.copy = function() {
 
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
-        nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key_location));
+        if(this.nCells[i].coordinates === null){
+            nCells.push(new NCell(this.nCells[i].id, null, this.nCells[i].key_location.slice(0)));
+        }
+        else{
+            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key_location));
+        }
     }
 
     var diagram = new Diagram(source_boundary, nCells);
@@ -510,6 +526,9 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         if (temp_path[0] === 's') {
             for (var i = 0; i < this.nCells.length; i++) {
                 this.nCells[i].coordinates[this.nCells[i].coordinates.length - temp_path.length]++;
+                if(this.nCells[i].key_location != undefined){
+                    this.nCells[i].key_location[this.nCells[i].key_location.length - temp_path.length]++;
+                }
             }
         }
 
