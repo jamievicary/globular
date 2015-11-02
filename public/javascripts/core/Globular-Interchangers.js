@@ -387,6 +387,9 @@ Diagram.prototype.test_basic = function(drag) {
                 console.log("cannot interchange");
                 return [];
             }
+            else{
+                return [new NCell(id, null, [k])];
+    }
         }
         else if(int_bool && intI_bool){ 
             
