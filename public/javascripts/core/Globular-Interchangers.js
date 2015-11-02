@@ -646,25 +646,19 @@ Diagram.prototype.target_size = function(level) {
 
 };
 
-Diagram.prototype.interchangerCoordinates = function(x) {
+Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     
-    if(this.nCells[x].coordinates != null){
-        return this.nCells[x].coordinates;
-    }
+    if(key_location.length === 0) return [];
     
-    var i = this.nCells[x].key_location.length - 1;
-    
-    var diagram_pointer = this.getSlice(x);
-    
-    while(i > 0){
-        diagram_pointer = diagram_pointer.getSlice(this.nCells[x].key_location[this.nCells[x].key_location.length - i]);   
-    }
-    var key = this.nCells[x].key_location[0];
+    var diagram_pointer = this;
+    var key = this.nCells[x].key_location.last();
     
     if(diagram_pointer.nCells[key].id.tail('RI') || diagram_pointer.nCells[key].id.tail('LI')){
         key = key - diagram_pointer.source_size(key);
     }
-
-    return diagram_pointer.interchangerCoordinates(key).slice(0).concat([key]);
     
+    // Possibly generate a new type
+    
+    return diagram_pointer.getSlice(key).interchangerCoordinates(type, key_location.slice(0, key_location.length - 1)).concat([key]);   
+
 };

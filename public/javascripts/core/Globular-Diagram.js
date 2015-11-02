@@ -178,7 +178,10 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     }
     
     for (var i = 0; i < target.nCells.length; i++) {
-        this.nCells[insert_position + i].coordinates = this.interchangerCoordinates(insert_position + i);
+        if(this.nCells[insert_position + i].coordinates === null){
+            this.nCells[insert_position + i].coordinates = 
+                this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key_location);
+        }
     }    
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
 
