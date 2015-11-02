@@ -553,28 +553,36 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     }
 
     var new_id = attached_nCell.id 
-    var new_coordinates = attached_nCell.coordinates.slice(0);
+    var new_coordinates;
     var new_key_location = attached_nCell.key_location;
     if (attached_nCell.id.substr(0, 3) != "Int") {
-        attached_nCell.coordinates = bounds;
         new_coordinates = bounds;
-        new_id = attached_nCell.id;
     }
-    else if(boundary_boolean === 's'){
-        if (new_id.tail('RI') || new_id.tail('LI')){
-            new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
-            //new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
+    else{
+        var level;
+        if(boundary_boolean === 's'){
+            level = 0;   
         }
-        else if (new_id.tail('R') || new_id.tail('L')){
-            new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
-            //new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
+        else{
+            level = this.nCells.length;   
         }
         
-        if (new_id.tail('I')){
-            new_id = new_id.substr(0, new_id.length - 1);
-        }
-        else {
-            new_id = new_id + 'I';
+        new_coordinates = this.getSlice(level).interchangerCoordinates(new_id, new_key_location);
+    
+        if(boundary_boolean === 's'){
+            if (new_id.tail('RI') || new_id.tail('LI')){
+                new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
+            }
+            else if (new_id.tail('R') || new_id.tail('L')){
+                new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
+            }
+            
+            if (new_id.tail('I')){
+                new_id = new_id.substr(0, new_id.length - 1);
+            }
+            else {
+                new_id = new_id + 'I';
+            }
         }
     }
 

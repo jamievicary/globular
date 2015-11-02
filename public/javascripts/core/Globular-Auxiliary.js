@@ -144,37 +144,12 @@ Array.prototype.fill = function(value, length) {
         this[i] = value;
     }
     return this;
-}
+};
 
 String.prototype.is_basic_interchanger = function() {
     return (this == 'Int' || this == 'IntI');
-}
+};
 
 String.prototype.is_interchanger = function() {
     return (this.substr(0, 3) == 'Int');
-}
-
-
-
-/*
-    n is the number of elements on the left, m the number of elements on the right - this explanation is to be expanded
-*/
-function expand(type, x, n, m) {
-    var list = new Array();
-
-    if (type === 'Int' || type === 'IntI') {
-        if (n === 0 || m === 0) {
-            return [];
-        }
-        else if (n === 1 && m === 1) {
-            list.push(new NCell(type, null, [x]));
-        }
-        else if (m != 1 && n === 1) {
-            list = expand(type, x, 1, 1).concat(expand(type, x + 1, 1, m - 1));
-        }
-        else {
-            list = expand(type, x + n - 1, 1, m).concat(expand(type, x, n - 1, m));
-        }
-    }
-    return list;
-}
+};
