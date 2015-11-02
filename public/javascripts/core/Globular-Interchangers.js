@@ -15,7 +15,12 @@ Diagram.prototype.expand = function(type, x, n, m) {
             return [];
         }
         else if (n === 1 && m === 1) {
-            list.push(new NCell(type, null, [x]));
+            if(type === 'Int'){
+                list.push(new NCell(type, null, [x]));
+            }
+            else{
+                list.push(new NCell(type, null, [x + 1]));
+            }
         }
         else if (m != 1 && n === 1) {
             list = this.expand(type, x, 1, 1).concat(this.expand(type, x + 1, 1, m - 1));
@@ -196,7 +201,7 @@ Diagram.prototype.interchangerAllowed = function(type, key_location) {
 
         var c2 = this.nCells[x + 1];
         var g2_source = this.source_size(x + 1);
-        var g2_target = this.target_size(x + 1); if(x - 1 >= 0)
+        var g2_target = this.target_size(x + 1);
 
         return (c1.coordinates.last() >= c2.coordinates.last() + g2_source);
     }
@@ -229,7 +234,7 @@ Diagram.prototype.interchangerAllowed = function(type, key_location) {
     if (type.tail('R')) {
 
         var crossings = g1_target;
-        if(this.nCells[x].coordinates.last() - crossings - 1 < 0) return false;
+        if(this.nCells[x].coordinates.last() - crossings < 0) return false;
         
         var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, 1, crossings);
         
@@ -376,7 +381,9 @@ Diagram.prototype.test_basic = function(drag) {
 
         if(!int_bool && !intI_bool){
             id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
-            if(!this.interchangerAllowed(id, [x])){
+            var k;
+            if(drag.directions.last() === -1) k--;
+            if(!this.interchangerAllowed(id, [k])){
                 console.log("cannot interchange");
                 return [];
             }
@@ -631,7 +638,15 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     }
     
     if(key_location.length === 1) {
-        return this.nCells[key].coordinates.slice(0).concat([key]);    
+        var list = this.nCells[key].coordinates.slice(0);
+        
+        if(type.tail('LI') || type.tail('R')){
+            list.increment_last(-1);
+        }
+        
+        
+        
+        return list.concat([key]);    
     }
     // Possibly generate a new type
     
