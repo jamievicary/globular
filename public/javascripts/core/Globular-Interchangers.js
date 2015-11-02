@@ -380,9 +380,9 @@ Diagram.prototype.test_basic = function(drag) {
         var intI_bool = this.interchangerAllowed('IntI', [x]) ;
 
         if(!int_bool && !intI_bool){
-            id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
             var k = x;
             if(drag.directions[0] === -1) k--;
+            id = this.nCells[k].id + '-1I'; // Attempt to cancel out interchangers
             if(!this.interchangerAllowed(id, [k])){
                 console.log("cannot interchange");
                 return [];

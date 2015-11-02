@@ -554,7 +554,10 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
 
     var new_id = attached_nCell.id 
     var new_coordinates;
-    var new_key_location = attached_nCell.key_location;
+    var new_key_location;
+    if(attached_nCell.key_location != undefined){
+        new_key_location = attached_nCell.key_location.slice(0);
+    }
     if (attached_nCell.id.substr(0, 3) != "Int") {
         new_coordinates = bounds;
     }
@@ -568,20 +571,24 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         }
         
         new_coordinates = this.getSlice(level).interchangerCoordinates(new_id, new_key_location);
+        attached_nCell.coordinates = new_coordinates.slice(0);
+
     
         if(boundary_boolean === 's'){
             if (new_id.tail('RI') || new_id.tail('LI')){
-                new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
+                new_key_location.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));
             }
             else if (new_id.tail('R') || new_id.tail('L')){
-                new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
+                new_key_location.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));
             }
             
             if (new_id.tail('I')){
                 new_id = new_id.substr(0, new_id.length - 1);
+                new_key_location.increment_last(-1);
             }
             else {
                 new_id = new_id + 'I';
+                new_key_location.increment_last(1);
             }
         }
     }
