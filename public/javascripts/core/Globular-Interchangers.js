@@ -356,7 +356,6 @@ Diagram.prototype.interpret_drag = function(drag) {
 Diagram.prototype.test_basic = function(drag) {
     
     var id;
-    var temp_coordinates; 
     var x = drag.coordinates.last();
 
     if(drag.coordinates.length === 1){
@@ -365,36 +364,22 @@ Diagram.prototype.test_basic = function(drag) {
             return [];
         }
         
-        if(drag.directions[0] === -1){
-            temp_coordinates = this.nCells[x - 1].coordinates.slice(0);
-            temp_coordinates.push(drag.coordinates.last());
-            temp_coordinates.increment_last(-1);
-        }
-        else{
-            temp_coordinates = this.nCells[x].coordinates.slice(0);
-            temp_coordinates.push(drag.coordinates.last());
-        }
-        
-
         var int1_bool = false;
         var int2_bool = false;
        
         id = 'Int';
-        var interchanger_1 = new NCell(id, temp_coordinates, [temp_coordinates.last()]);
-        if (this.interchangerAllowed(interchanger_1)) {
+        if (this.interchangerAllowed(id, [x])) {
             int1_bool = true;    
         }
         
         id = 'IntI'
-        var interchanger_2 = new NCell(id, temp_coordinates, [temp_coordinates.last()]);
-        if(this.interchangerAllowed(interchanger_2)){
+        if(this.interchangerAllowed(id, [x])){
             int2_bool = true;
         }
             
         if(!int1_bool && !int2_bool){
-            id = this.nCells[temp_coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
-            var interchanger_3 = new NCell(id, temp_coordinates, [temp_coordinates.last()]);
-            if(!this.interchangerAllowed(interchanger_3)){
+            id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
+            if(!this.interchangerAllowed(id, [x])){
                 console.log("cannot interchange");
                 return [];
             }
@@ -415,7 +400,7 @@ Diagram.prototype.test_basic = function(drag) {
         else {
             id = 'IntI';
         }
-    return [new NCell(id, temp_coordinates, [temp_coordinates.last()])];
+    return [new NCell(id, null, [x])];
     }
     else{
         return [];
@@ -424,36 +409,84 @@ Diagram.prototype.test_basic = function(drag) {
 
 Diagram.prototype.test_pull_through = function(drag) {
 
+    var id;
+    var x = drag.coordinates.last(); 
+
+    if(drag.directions[0] === 1){
+        
+        if(this.target_size(x) === 0){
+            if(drag.directions.last() === 1){
+                id = 'Int'   
+            }
+            else{
+                id = 'IntI'
+            }       
+        }
+        else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+            id = this.nCells[drag.coordinates.last() + 1].id; 
+        }
+        else{
+            console.log("No way to pull through");
+            return [];
+        }
+
+        var boolL = this.interchangerAllowed(id + '-L', [x]);
+        var boolR = this.interchangerAllowed(id + '-R', [x]);        
+    }
+    else{
+        
+        if(this.source_size(x) === 0){
+            if(drag.directions.last() === 1){
+                id = 'IntI'   
+            }
+            else{
+                id = 'Int'
+            }
+            
+        }
+        else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
+            id = this.nCells[drag.coordinates.last() - 1].id; 
+        }
+        else{
+            console.log("No way to pull through");
+            return [];
+        }
+        
+        var boolLI = this.interchangerAllowed(id + '-LI', [x]);
+        var boolRI = this.interchangerAllowed(id + '-RI', [x]);
+    }  
+    
+    var list = new Array();
+    
+    if(boolL){
+        list.push(new NCell(id + '-L', null, [x]));
+    }
+    if(boolR){
+        list.push(new NCell(id + '-R', null, [x]));
+    }
+    if(boolLI){
+        list.push(new NCell(id + '-LI', null, [x]));
+    }
+    if(boolRI){
+        list.push(new NCell(id + '-RI', null, [x]));
+    }
+
+/*
     if(drag.directions.length != 2){
         return [];   
     }
     
     var id;
-    var temp_coordinates
     var interchanger;
     var x = drag.coordinates.last(); 
-    
-    var new_drag = {
-        boundary_type: drag.boundary_type,
-        boundary_depth: drag.boundary_depth,
-        coordinates: [this.nCells[drag.coordinates.last()].coordinates.last()],//drag.coordinates.slice(0, drag.coordinates.length),
-        directions: drag.directions.slice(1, drag.directions.length)
-    };
-    
+    var key;
+
     if(drag.directions.last() === 1){
         if(drag.directions[0] === 1){
             
-            if(x + this.target_size(x) >= this.nCells.length){
-                return [];
-            }
-            
+
             if(this.target_size(x) === 0){
-                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
+                
             }
             else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() + 1].id; 
@@ -464,19 +497,11 @@ Diagram.prototype.test_pull_through = function(drag) {
             }
             id = id + '-L';
         
-            temp_coordinates = this.nCells[x].coordinates.slice(0);
-            temp_coordinates.push(drag.coordinates.last());
         }
         else{
             
             if(this.source_size(x) === 0){
-                new_drag.directions[0] = - new_drag.directions[0]; // HACK
-                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
+
             }
             else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
                 id = this.nCells[drag.coordinates.last() - 1].id; 
@@ -552,7 +577,6 @@ Diagram.prototype.test_pull_through = function(drag) {
     else{
         return [];
     }
-    //interchanger = new NCell(id, temp_coordinates, [drag.coordinates.last()]);
     interchanger = new NCell(id, temp_coordinates, [drag.coordinates.last()]);
     
     if(!this.interchangerAllowed(interchanger)){
@@ -561,6 +585,8 @@ Diagram.prototype.test_pull_through = function(drag) {
     else{
         return [interchanger];
     }
+*/
+    
 };
 
 
