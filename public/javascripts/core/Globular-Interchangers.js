@@ -212,21 +212,24 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         return [];
     }
 
-    var new_type = type.slice(0, type.length - 2);
-    var new_key_location = key_location.slice(0, key_location.length - 1);
-    
-    for(var i = 0; i < new_key_location.length; i++){
-        new_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
-    }
-
     if (type.tail('1')) {
+        
+        var new_type = type.slice(0, type.length - 2);
+        var new_key_location = key_location.slice(0, key_location.length - 1);
+        var inverse_key_location = this.getSlice(x).interchangerInverseKey(new_type, new_key_location);
+        
+        for(var i = 0; i < new_key_location.length; i++){
+            new_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+            inverse_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+        }
+        
         if(new_type.tail('I')){
             list.push(new NCell(new_type, null, new_key_location));
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), null, this.interchangerInverseKey(new_type, new_key_location)));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), null, inverse_key_location));
         }
         else{
             list.push(new NCell(new_type, null, new_key_location));
-            list.push(new NCell(new_type + 'I', null, this.interchangerInverseKey(new_type, new_key_location)));
+            list.push(new NCell(new_type + 'I', null, inverse_key_location));
         }
     }
     
@@ -628,10 +631,10 @@ Diagram.prototype.interchangerInverseKey = function(type, key_location) {
             return [x - this.source_size(x)];
         }
         else if(type.tail('-1')){
-            return key_location;
+            return key_location.slice(0);
         }
         else if(type.tail('-1I')){
-            return key_location;
+            return key_location.slice(0);
         }
 };
 
