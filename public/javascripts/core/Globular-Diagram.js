@@ -135,8 +135,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id.substr(0, 3) === 'Int'){
-        var rewrite;
-        rewrite.target = this.rewritePasteData(nCell.id, nCell.key)
+        var rewrite = {};
+        rewrite.target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
         var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{

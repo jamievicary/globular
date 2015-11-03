@@ -13,10 +13,6 @@ var NewSingularityFamily = {
     members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
 };
 
-RegisterSingularityFamily(
-    'IntL', 4
-);
-
 // Interpret drag of this type
 Diagram.prototype.interpretDrag['IntL'] = function(drag) {
 

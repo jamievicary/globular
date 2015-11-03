@@ -3,7 +3,7 @@
 // Data for the Int-L-S family
 // This is naturality for the 4-cell pull-through
 
-RegisterSingularityFamily(
+/*RegisterSingularityFamily(
     'IntLS', 5,
     ['Int-L-S', 'Int-L-SI',
     'IntI-L-S', 'IntI-L-SI',
@@ -14,7 +14,7 @@ RegisterSingularityFamily(
     'Int-RI-S', 'Int-RI-SI',
     'IntI-RI-S', 'IntI-RI-SI']
 );
-
+*/
 Diagram.prototype.rewriteAllowed['IntLS'] = function(type, key) {
     
     // Basic check on the key
