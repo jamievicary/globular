@@ -622,6 +622,9 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     }
     // Possibly generate a new type
     
-    return diagram_pointer.getSlice(key).interchangerCoordinates(type, key_location.slice(0, key_location.length - 1)).concat([key]);   
+    var new_type = type.slice(0, type.length - 2);
+    
+    return diagram_pointer.getSlice(key).interchangerCoordinates(new_type, key_location.slice(0, key_location.length - 1)).concat([key]);   
 
 };
+
