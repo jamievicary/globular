@@ -205,7 +205,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('1')) {
-        list.push(new NCell(new_type, [0]));
+        list.push(new NCell(new_type, null, [0]));
         if(new_type.tail('I')){
             list.push(new NCell(new_type.substr(0, new_type.length - 1), null, [0]));
         }
@@ -375,7 +375,7 @@ Diagram.prototype.interpret_drag = function(drag) {
         }
         var new_action = action[0];
         new_action.id += "-1";
-        new_action.coordinates.push(drag.coordinates.last());
+        new_action.key_location.push(drag.coordinates.last());
         return [new_action];
     }
     
@@ -611,6 +611,6 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     }
     // Possibly generate a new type
     
-    return diagram_pointer.getSlice(key).interchangerCoordinates(type, key_location.slice(0)).concat([key]);   
+    return diagram_pointer.getSlice(key).interchangerCoordinates(type, key_location.slice(0, key_location.length - 1)).concat([key]);   
 
 };
