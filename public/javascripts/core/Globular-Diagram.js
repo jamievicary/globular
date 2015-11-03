@@ -135,9 +135,9 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id.substr(0, 3) === 'Int'){
-        var rewrite = this.rewriteInterchanger(nCell);
-        source = rewrite.source.copy();
-        target = rewrite.target.copy();
+        var rewrite;
+        rewrite.target = this.rewritePasteData(nCell.id, nCell.key)
+        var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{
     // Info on the source and the target of the rewrite is retrieved from the signature here
@@ -150,10 +150,10 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             source = rewrite.source.copy();
             target = rewrite.target.copy();
         }
+    var source_size = source.nCells.length;
     }
     
 
-    var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
     var insert_position = nCell.coordinates.last();   
@@ -181,7 +181,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         for (var i = 0; i < target.nCells.length; i++) {
             if(this.nCells[insert_position + i].coordinates === null){
                 this.nCells[insert_position + i].coordinates = 
-                    this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key);
+                    this.getSlice(insert_position + i).getInterchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key);
             }
         }  
     }
@@ -724,3 +724,29 @@ Diagram.prototype.getFirstColour = function() {
     var id = d.nCells[0].id;
     return gProject.getColour(id);
 }
+
+Diagram.prototype.source_size = function(level) {
+
+    var nCell = this.nCells[level];
+
+    if(nCell.id.substr(0, 3) === 'Int'){
+        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
+    }
+    else{
+        return nCell.source_size();
+    }
+
+}
+
+Diagram.prototype.target_size = function(level) {
+
+    var nCell = this.nCells[level];
+
+    if(nCell.id.substr(0, 3) === 'Int'){
+        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key).length;
+    }
+    else{
+        return nCell.target_size();
+    }
+
+};
