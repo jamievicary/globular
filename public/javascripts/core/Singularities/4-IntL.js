@@ -209,7 +209,27 @@ Diagram.prototype.expand['IntL'] = function(type, height, n, m) {
 */
 
 Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
+    
+    var diagram_pointer = this;
+    var new_key = key.last();
+    var list = [];
 
+    if(type.tail('R')){
+        list = this.nCells[new_key + 1].coordinates.slice(0);
+    }
+    else if(type.tail('L')){
+        list = this.nCells[new_key].coordinates.slice(0);
+    }
+    else if(type.tail('RI')){
+        new_key -= diagram_pointer.source_size(new_key);
+        list = this.nCells[new_key].coordinates.slice(0);
+    }
+    else if(type.tail('LI')){
+        list = this.nCells[new_key - 1].coordinates.slice(0);
+        new_key -= diagram_pointer.source_size(new_key);
+    }
+
+    return list.concat([new_key]);
 }
 
 Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
