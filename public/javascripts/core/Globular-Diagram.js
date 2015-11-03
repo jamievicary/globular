@@ -171,7 +171,9 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         }
         if(target.nCells[i].key_location != undefined){
             for (var j = 0; j < target.nCells[i].key_location.length; j++) {
-                target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1];
+               // target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1 + j];
+            target.nCells[i].key_location[target.nCells[i].key_location.length - 1 -j] += nCell.coordinates[this.dimension - 1 - 1 - j];
+                
             }
         }
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
