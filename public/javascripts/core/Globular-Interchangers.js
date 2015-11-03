@@ -146,6 +146,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
 
     var new_type = type.slice(0, type.length - 2);
 
+    /* MOVED TO 4-IntL.js
     if (type.tail('L')) {
 
         list = this.expand(new_type, 0, this.source_size(x), 1);
@@ -207,6 +208,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         } 
         list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
+    */
     
     if (type.tail('1I')) {
         return [];

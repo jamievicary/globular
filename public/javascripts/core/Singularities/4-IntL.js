@@ -2,6 +2,7 @@
 
 /*global RegisterSingularityFamily*/
 /*global Diagram*/
+/*global diff_array*/
 
 // Data for the IntL family of singularities
 // These are 4-cell pull-throughs
@@ -28,43 +29,43 @@ Diagram.prototype.interpretDrag['IntL'] = function(drag) {
         options.push({
             type: 'Int-L',
             key: key,
-            possible: this.rewriteAllowed_IntL('Int-L', key)
+            possible: this.rewriteAllowed('Int-L', key)
         });
         options.push({
             type: 'IntI-L',
             key: key,
-            possible: this.rewriteAllowed_IntL('IntI-L', key)
+            possible: this.rewriteAllowed('IntI-L', key)
         });
         options.push({
             type: 'IntI-R',
             key: key,
-            possible: this.rewriteAllowed_IntL('IntI-R', key)
+            possible: this.rewriteAllowed('IntI-R', key)
         });
         options.push({
             type: 'Int-R',
             key: key,
-            possible: this.rewriteAllowed_IntL('Int-R', key)
+            possible: this.rewriteAllowed('Int-R', key)
         });
     } else {
         options.push({
             type: 'Int-R',
             key: key,
-            possible: this.rewriteAllowed_IntL('Int-RI', key)
+            possible: this.rewriteAllowed('Int-RI', key)
         });
         options.push({
             type: 'IntI-R',
             key: key,
-            possible: this.rewriteAllowed_IntL('IntI-RI', key)
+            possible: this.rewriteAllowed('IntI-RI', key)
         });
         options.push({
             type: 'Int-L',
             key: key,
-            possible: this.rewriteAllowed_IntL('Int-LI', key)
+            possible: this.rewriteAllowed('Int-LI', key)
         });
         options.push({
             type: 'IntI-L',
             key: key,
-            possible: this.rewriteAllowed_IntL('IntI-LI', key)
+            possible: this.rewriteAllowed('IntI-LI', key)
         });
     }
 
@@ -98,49 +99,42 @@ Diagram.prototype.interpretDrag['IntL'] = function(drag) {
     }
 };
 
-Diagram.prototype.interchangerAllowed['IntL'](type, key) {
+Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
+
+    var x = key.last();
+    var g1_source = this.source_size(x);
+    var g1_target = this.target_size(x);
+    
     if (type.tail('L')) {
         var crossings = g1_target;
-
         if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
         if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
-
         var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
     if (type.tail('R')) {
-
         var crossings = g1_target;
         if (this.nCells[x].coordinates.last() <= 0) return false;
         if (this.nCells[x].coordinates.last() - 1 != this.nCells[x + 1].coordinates.last()) return false;
-
         var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, 1, crossings);
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
-
     var new_type = type.slice(0, type.length - 3);
 
     if (type.tail('LI')) {
-
         var crossings = g1_source;
-
         if (x <= 0) return false;
         if (this.nCells[x].coordinates.last() - 1 != this.nCells[x - 1].coordinates.last()) return false;
-
-
         var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, crossings, 1);
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
 
     if (type.tail('RI')) {
-
         var crossings = g1_source;
-
         if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
         if (this.nCells[x].coordinates.last() + this.source_size(x) - 1 != this.nCells[x - 1].coordinates.last()) return false;
-
         var template = this.expand(new_type, this.nCells[key_location.last()].coordinates.last(), 1, crossings);
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
@@ -148,7 +142,84 @@ Diagram.prototype.interchangerAllowed['IntL'](type, key) {
 }
 
 Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
-    // rewriteInterchangerTarget
+
+    var x = key.last();
+
+    var heights = this.interchangerCoordinates(type, key);
+
+    if(this.nCells.length != 0){
+        if(this.nCells[x].id.substr(0, 3) === 'Int'){
+            var temp_coordinates_x = null;    
+        }
+        else{
+            var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
+        }
+    }
+    
+    var list = new Array();
+
+    if (type.tail('L')) {
+
+        list = this.expand(new_type, 0, this.source_size(x), 1);
+        
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
+        }        
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+    }
+
+
+    if (type.tail('R')) {
+
+        list = this.expand(new_type, 0, 1, this.source_size(x));
+        
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(-1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
+        }
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+    }
+
+
+    var new_type = type.slice(0, type.length - 3);
+
+    if (type.tail('LI')) {
+
+        var g_source = this.source_size(x);
+        var g_target = this.target_size(x);
+
+        list = list.concat(this.expand(new_type, 0, g_target, 1));
+
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(-1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
+        }
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+    }
+
+    if (type.tail('RI')) {
+
+        var g_source = this.source_size(x);
+        var g_target = this.target_size(x);
+
+        list = list.concat(this.expand(new_type, 0, 1, g_target));
+         
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
+        } 
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+    }
+
 }
 
 /* Needed for 4-categories
