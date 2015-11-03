@@ -584,7 +584,7 @@ Diagram.prototype.source_size = function(level) {
     var nCell = this.nCells[level];
 
     if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.key).length;
+        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{
         return nCell.source_size();
@@ -609,7 +609,7 @@ Diagram.prototype.interchangerInverseKey = function(type, key_location) {
 
     var x = key_location.last();
 
-      if(type.tail('Int')){
+        if(type.tail('Int')){
             return [x + 1];
         }
         
