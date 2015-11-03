@@ -105,8 +105,12 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         var g_source = this.source_size(x + 1); 
         var g_target = this.target_size(x + 1); 
         
-        temp_coordinates_x.increment_last(g_target - g_source);
-
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(g_target - g_source);
+        }
+        else{
+            this.nCells[x].key_location.increment_last(g_target - g_source);
+        } 
         list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1, this.nCells[x + 1].key_location));
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -120,8 +124,12 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         var g_source = this.source_size(x - 1); 
         var g_target = this.target_size(x - 1); 
       
-        temp_coordinates_x.increment_last(g_source - g_target);
-
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(g_source - g_target);
+        }
+        else{
+            this.nCells[x].key_location.increment_last(g_source - g_target);
+        }   
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
         list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key_location));
     }
@@ -395,38 +403,74 @@ Diagram.prototype.test_basic = function(drag) {
             return [];
         }
         
-        var int_bool = this.interchangerAllowed('Int', [x]); 
-        var intI_bool = this.interchangerAllowed('IntI', [x]) ;
-
-        if(!int_bool && !intI_bool){
-            var k = x;
-            if(drag.directions[0] === -1) k--;
-            id = this.nCells[k].id + '-1I'; // Attempt to cancel out interchangers
-            if(!this.interchangerAllowed(id, [k])){
-                console.log("cannot interchange");
-                return [];
-            }
-            else{
-                return [new NCell(id, null, [k])];
-    }
-        }
-        else if(int_bool && intI_bool){ 
+        var int_bool;
+        var intI_bool;
             
-            // Resolve conflict using the second variable
-            if(drag.directions.last() === 1){
-                id = 'Int';
+        if(drag.directions[0] > 0){
+            int_bool = this.interchangerAllowed('Int', [x]); 
+            intI_bool = this.interchangerAllowed('IntI', [x + 1]) ;
+            
+            if(!int_bool && !intI_bool){
+                id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
+                if(!this.interchangerAllowed(id, [x])){
+                    console.log("cannot interchange");
+                    return [];
+                }
+                else{
+                    return [new NCell(id, null, [x])];
+                }
+            }   
+            else if(int_bool && intI_bool){ 
+                
+                // Resolve conflict using the second variable
+                if(drag.directions.last() === 1){
+                    intI_bool = false;
+                }
+                else{
+                    int_bool = false;
+                }
             }
-            else{
-                id = 'IntI';
+            
+            if(int_bool){
+                return [new NCell('Int', null, [x])];
+            }
+            else {
+                return [new NCell('IntI', null, [x + 1])];
             }
         }
-        else if(int_bool){
-            id = 'Int';
+        else{
+            int_bool = this.interchangerAllowed('Int', [x - 1]); 
+            intI_bool = this.interchangerAllowed('IntI', [x]);
+            
+            if(!int_bool && !intI_bool){
+                id = this.nCells[x - 1].id + '-1I'; // Attempt to cancel out interchangers
+                if(!this.interchangerAllowed(id, [x - 1])){
+                    console.log("cannot interchange");
+                    return [];
+                }
+                else{
+                    return [new NCell(id, null, [x - 1])];
+                }
+            }   
+            else if(int_bool && intI_bool){ 
+                
+                // Resolve conflict using the second variable
+                if(drag.directions.last() === 1){
+                    intI_bool = false;
+                }
+                else{
+                    int_bool = false;
+                }
+            }
+            
+            if(int_bool){
+                return [new NCell('Int', null, [x - 1])];
+            }
+            else {
+                return [new NCell('IntI', null, [x])];
+            }
+            
         }
-        else {
-            id = 'IntI';
-        }
-    return [new NCell(id, null, [x])];
     }
     else{
         return [];
@@ -498,123 +542,6 @@ Diagram.prototype.test_pull_through = function(drag) {
     }
     
     return list;
-
-/*
-    if(drag.directions.length != 2){
-        return [];   
-    }
-    
-    var id;
-    var interchanger;
-    var x = drag.coordinates.last(); 
-    var key;
-
-    if(drag.directions.last() === 1){
-        if(drag.directions[0] === 1){
-            
-
-            if(this.target_size(x) === 0){
-                
-            }
-            else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            id = id + '-L';
-        
-        }
-        else{
-            
-            if(this.source_size(x) === 0){
-
-            }
-            else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            id = id + '-RI'; 
-            
-            if(x - this.source_size(x) < 0){
-                return [];
-            }
-
-            temp_coordinates = this.nCells[x - this.source_size(x)].coordinates.slice(0)
-            temp_coordinates.push(drag.coordinates.last());
-            temp_coordinates.increment_last(-this.source_size(x));
-        }
-    }
-
-    else if (drag.directions.last() === -1){
-        if(drag.directions[0] === 1){
-
-            if(this.target_size(x) === 0){
-                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            
-            id = id + '-R';  
-           
-            temp_coordinates = this.nCells[x].coordinates.slice(0);
-            temp_coordinates.increment_last(-1);
-            temp_coordinates.push(drag.coordinates.last());
-        }
-        else{
-            if(this.source_size(x) === 0){
-                new_drag.directions[0] = - new_drag.directions[0]; // HACK
-                
-                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            
-            id = id + '-LI';  
-            
-            temp_coordinates = this.nCells[x].coordinates.slice(0);
-            temp_coordinates.increment_last(-1);
-            temp_coordinates.push(drag.coordinates.last());
-            temp_coordinates.increment_last(-this.source_size(x));
-        }
-    }
-    else{
-        return [];
-    }
-    interchanger = new NCell(id, temp_coordinates, [drag.coordinates.last()]);
-    
-    if(!this.interchangerAllowed(interchanger)){
-        return [];
-    }
-    else{
-        return [interchanger];
-    }
-*/
-    
 };
 
 
@@ -651,22 +578,34 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     var diagram_pointer = this;
     var key = key_location.last();
     
-    if(type.tail('RI') || type.tail('LI')){
-        key = key - diagram_pointer.source_size(key);
-    }
-    
-    if(type.tail('IntI')){
-        key--;
-    }
-    
     if(key_location.length === 1) {
-        var list = this.nCells[key].coordinates.slice(0);
-        
-        if(type.tail('LI') || type.tail('R')){
-            list.increment_last(-1);
+        if(type.tail('Int')){
+            list = this.nCells[key + 1].coordinates.slice(0);
         }
         
+        else if(type.tail('IntI')){
+            key--;
+            list = this.nCells[key].coordinates.slice(0);
+        }
         
+        else if(type.tail('R')){
+            list = this.nCells[key + 1].coordinates.slice(0);
+        }
+        
+        else if(type.tail('L')){
+            list = this.nCells[key].coordinates.slice(0);
+        }
+        else if(type.tail('RI')){
+            key = key - diagram_pointer.source_size(key);
+            list = this.nCells[key].coordinates.slice(0);
+        }
+        else if(type.tail('LI')){
+            list = this.nCells[key - 1].coordinates.slice(0);
+            key = key - diagram_pointer.source_size(key);
+        }
+        else{
+            var list = this.nCells[key].coordinates.slice(0);
+        }
         
         return list.concat([key]);    
     }
