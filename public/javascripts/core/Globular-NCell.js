@@ -13,7 +13,7 @@ function NCell(id, coordinates, key_location) {
     
     this.id = id;
     this.coordinates = coordinates;
-    this.key_location = key_location
+    this.key = key_location
 };
 
 NCell.prototype.getType = function() {

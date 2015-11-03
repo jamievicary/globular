@@ -170,8 +170,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             }
         }
         else{
-            for (var j = 0; j < target.nCells[i].key_location.length; j++) {
-                target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1];
+            for (var j = 0; j < target.nCells[i].key.length; j++) {
+                target.nCells[i].key[j] += nCell.coordinates[this.dimension - 1 - 1];
             }
         }
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
@@ -180,7 +180,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         for (var i = 0; i < target.nCells.length; i++) {
             if(this.nCells[insert_position + i].coordinates === undefined){
                 this.nCells[insert_position + i].coordinates = 
-                    this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key_location);
+                    this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key);
             }
         }  
     }
@@ -207,10 +207,10 @@ Diagram.prototype.copy = function() {
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
         if(this.nCells[i].coordinates === null){
-            nCells.push(new NCell(this.nCells[i].id, null, this.nCells[i].key_location.slice(0)));
+            nCells.push(new NCell(this.nCells[i].id, null, this.nCells[i].key.slice(0)));
         }
         else{
-            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key_location));
+            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key));
         }
     }
 
@@ -530,8 +530,8 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
         if (temp_path[0] === 's') {
             for (var i = 0; i < this.nCells.length; i++) {
                 this.nCells[i].coordinates[this.nCells[i].coordinates.length - temp_path.length]++;
-                if(this.nCells[i].key_location != undefined){
-                    this.nCells[i].key_location[this.nCells[i].key_location.length - temp_path.length]++;
+                if(this.nCells[i].key != undefined){
+                    this.nCells[i].key[this.nCells[i].key.length - temp_path.length]++;
                 }
             }
         }
@@ -556,8 +556,8 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     var new_id = attached_nCell.id 
     var new_coordinates;
     var new_key_location;
-    if(attached_nCell.key_location != undefined){
-        new_key_location = attached_nCell.key_location.slice(0);
+    if(attached_nCell.key != undefined){
+        new_key_location = attached_nCell.key.slice(0);
     }
     if (attached_nCell.id.substr(0, 3) != "Int") {
         new_coordinates = bounds;

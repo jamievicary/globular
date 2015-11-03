@@ -6,43 +6,79 @@
 // Data for the IntL family of singularities
 // These are 4-cell pull-throughs
 
+var NewSingularityFamily = {
+    family: 'IntL',
+    dimension: 4,
+    members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
+};
+
 RegisterSingularityFamily(
     'IntL', 4,
-    ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI',
-    'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
+
 );
-    
+
 // Interpret drag of this type
-Diagram.prototype.interpret_drag_IntL = function(drag) {
-    
+Diagram.prototype.interpret_drag['IntL'] = function(drag) {
+
     var up = drag.direction[0] > 0;
     var right = drag.direction[1] > 0;
     var key = drag.position[0];
 
-    
     var options = [];
     if (up) {
-        options.push({ type: 'Int-L', key: key, possible: this.rewriteAllowed_IntL('Int-L', key) });
-        options.push({ type: 'IntI-L', key: key, possible: this.rewriteAllowed_IntL('IntI-L', key) });
-        options.push({ type: 'IntI-R', key: key, possible: this.rewriteAllowed_IntL('IntI-R', key) });
-        options.push({ type: 'Int-R', key: key, possible: this.rewriteAllowed_IntL('Int-R', key) });
+        options.push({
+            type: 'Int-L',
+            key: key,
+            possible: this.rewriteAllowed_IntL('Int-L', key)
+        });
+        options.push({
+            type: 'IntI-L',
+            key: key,
+            possible: this.rewriteAllowed_IntL('IntI-L', key)
+        });
+        options.push({
+            type: 'IntI-R',
+            key: key,
+            possible: this.rewriteAllowed_IntL('IntI-R', key)
+        });
+        options.push({
+            type: 'Int-R',
+            key: key,
+            possible: this.rewriteAllowed_IntL('Int-R', key)
+        });
     } else {
-        options.push({ type: 'Int-R', key: key, possible: this.rewriteAllowed_IntL('Int-RI', key) });
-        options.push({ type: 'IntI-R', key: key, possible: this.rewriteAllowed_IntL('IntI-RI', key) });
-        options.push({ type: 'Int-L', key: key, possible: this.rewriteAllowed_IntL('Int-LI', key) });
-        options.push({ type: 'IntI-L', key: key, possible: this.rewriteAllowed_IntL('IntI-LI', key) });
+        options.push({
+            type: 'Int-R',
+            key: key,
+            possible: this.rewriteAllowed_IntL('Int-RI', key)
+        });
+        options.push({
+            type: 'IntI-R',
+            key: key,
+            possible: this.rewriteAllowed_IntL('IntI-RI', key)
+        });
+        options.push({
+            type: 'Int-L',
+            key: key,
+            possible: this.rewriteAllowed_IntL('Int-LI', key)
+        });
+        options.push({
+            type: 'IntI-L',
+            key: key,
+            possible: this.rewriteAllowed_IntL('IntI-LI', key)
+        });
     }
-    
+
     // Collect the possible options
     var possible_options = [];
-    for (var i=0; i<options.length; i++) {
+    for (var i = 0; i < options.length; i++) {
         if (options[i].possible) possible_options.push(options[i]);
     }
-    
+
     // Maybe it's already determined what to do
     if (possible_options.length == 0) return null;
     if (possible_options.length == 1) return possible_options[0];
-    
+
     // Otherwise select based on secondary direction
     if (right) {
         var r1 = options[0];
@@ -83,3 +119,5 @@ Diagram.prototype.rewritePasteData_IntL = function(type, key) {
 Diagram.prototype.expand_IntL(type, start, n, m) {
 }
 */
+
+RegisterSingularityFamily(NewSingularityFamily);

@@ -377,7 +377,7 @@ Project.prototype.drag_cell = function(drag) {
     }
     
     if(drag.boundary_depth === 0){
-        action.coordinates = this.diagram.interchangerCoordinates(action.id, action.key_location);
+        action.coordinates = this.diagram.interchangerCoordinates(action.id, action.key);
         this.diagram.rewrite(action, false);
     }
     else{

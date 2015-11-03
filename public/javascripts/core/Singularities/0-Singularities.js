@@ -1,21 +1,38 @@
 "use strict";
 
+/*global Diagram*/
+
+/* Core functions for each singularity
+Diagram.prototype.rewriteAllowed(type, key)
+Diagram.prototype.rewriteCutData(type, key)
+Diagram.prototype.rewritePasteData(type, key)
+Diagram.prototype.expand(type, height, n, m)
+Diagram.prototype.interpretDrag(drag)
+Diagram.prototype.getInterchangerCoordinates(type, key)
+Diagram.prototype.getInterchangerBoundingBox(type, key)
+Diagram.prototype.getInverseKey(type, key)
+*/
+
 var SingularityFamilies = {};
 var SingularityData = {};
 
-function RegisterSingularityFamily(family, dimension, members) {
-    for (var index in members) {
-        if (!members.hasOwnProperty(index)) continue;
-        SingularityFamilies[members[index]] = family;
+function RegisterSingularityFamily(data) {
+    for (var index in data.members) {
+        if (!data.members.hasOwnProperty(index)) continue;
+        SingularityFamilies[data.members[index]] = data.family;
     }
-    SingularityData[family] = {
-        dimension: dimension,
-        rewriteAllowed: eval("rewriteAllowed_" + family),
-        rewriteCutData: eval("rewriteCutData_", +family),
-        rewritePasteData: eval("rewritePasteData_" + family),
-        interpretDrag: eval("interpret_drag_" + family)
+    SingularityData[data.family] = {
+        dimension: data.dimension
+        /*
+        ,
+        rewriteAllowed: eval("rewriteAllowed_" + data.family),
+        rewriteCutData: eval("rewriteCutData_", + data.family),
+        rewritePasteData: eval("rewritePasteData_" + data.family),
+        interpretDrag: eval("interpret_drag_" + data.family)
+        */
     };
 }
+
 
 Diagram.prototype.rewriteAllowed = function(type, key) {
     return SingularityData[SingularityFamilies[type]].rewriteAllowed(type, key);
@@ -33,26 +50,32 @@ Diagram.prototype.expand = function(type, start, n, m) {
     return SingularityData[SingularityFamilies[type]].expand(type, start, n, m);
 }
 
-Diagram.prototype.interpretDrag = function(drag) {
+
+Diagram.prototype.interpret_drag = function(drag) {
     
     // See what options we have
     var options = [];
-    for (var index in SingularityData) {
-        if (!SingularityData.hasOwnProperty(index)) continue;
-        var data = SingularityData[index];
+    for (var family in SingularityData) {
+        if (!SingularityData.hasOwnProperty(family)) continue;
+        var data = SingularityData[family];
         
         // Don't bother testing if the dimension of the diagram is too low for this singularity type
-        if (Diagram.getDimension() < data.dimension) continue;
+        if (this.getDimension() < data.dimension - 1) continue;
         
         // If this is a possibility, add it
-        var result = data.interpretDrag(drag);
-        if (result != null) options.push(result);
+        /*
+        var f = this.interpret_drag[family];
+        var b = f.bind(this);
+        var r = b(drag);
+        */
+        var r = ((this.interpret_drag[family]).bind(this))(drag);
+        if (r != null) options.push(r);
     }
     
     if (options.length == 0) return null;
     
     // For now, just do the first option that's returned. We should really pop
     // up a selection box for the user if there's more than one choice.
-    return options[0];
+    return options;
 }
 

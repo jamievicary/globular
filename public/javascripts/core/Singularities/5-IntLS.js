@@ -15,7 +15,7 @@ RegisterSingularityFamily(
     'IntI-RI-S', 'IntI-RI-SI']
 );
 
-Diagram.prototype.rewriteAllowed_IntLS = function(type, key) {
+Diagram.prototype.rewriteAllowed['IntLS'] = function(type, key) {
     
     // Basic check on the key
     if (key >= this.nCells.length) return false;
@@ -23,12 +23,16 @@ Diagram.prototype.rewriteAllowed_IntLS = function(type, key) {
     var key_cell = this.nCells[key];
     
     if (type == 'Int-L-S') {
-        var f = get_cell.getSource(); // ???? does this always make sense ????
+        var f = key_cell.getSource(); // ???? does this always make sense ????
         
         // Pseudocode
         var template = concatenate(expand('Int-L', ))
     }
     
+}
+
+Diagram.prototype.getInterchangerCoordinates['IntLS'] = function(type, key) {
+    // eg: return [[1,1]]
 }
 
 // Give data to cut source from the diagram

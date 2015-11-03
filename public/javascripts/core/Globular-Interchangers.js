@@ -109,15 +109,15 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(g_target - g_source);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() + g_target - g_source);
+            this.nCells[x].key.increment_last(-heights.penultimate() + g_target - g_source);
         }
         
-        if(this.nCells[x + 1].key_location != undefined){
-            this.nCells[x + 1].key_location.increment_last(-heights.penultimate());
+        if(this.nCells[x + 1].key != undefined){
+            this.nCells[x + 1].key.increment_last(-heights.penultimate());
         }
         
-        list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1, this.nCells[x + 1].key_location));
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
+        list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1, this.nCells[x + 1].key));
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
     if (type.tail('IntI')) {
@@ -133,15 +133,15 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(g_source - g_target);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() + g_source - g_target);
+            this.nCells[x].key.increment_last(-heights.penultimate() + g_source - g_target);
         }
         
-        if(this.nCells[x - 1].key_location != undefined){
-            this.nCells[x - 1].key_location.increment_last(-heights.penultimate());
+        if(this.nCells[x - 1].key != undefined){
+            this.nCells[x - 1].key.increment_last(-heights.penultimate());
         }
 
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
-        list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key_location));
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+        list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key));
     }
 
     var new_type = type.slice(0, type.length - 2);
@@ -154,9 +154,9 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() + 1);
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
         }        
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
 
@@ -168,9 +168,9 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(-1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() - 1);
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
         }
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
 
@@ -187,9 +187,9 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(-1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() - 1);
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
         }
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
     if (type.tail('RI')) {
@@ -203,9 +203,9 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-heights.penultimate() + 1);
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
         } 
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
     
     if (type.tail('1I')) {
@@ -312,8 +312,8 @@ Diagram.prototype.interchangerAllowed = function(type, key_location) {
     if (type.tail('1I')) {
         if (this.nCells[x].id === new_type) {
             if (this.nCells[x + 1].id === new_type + 'I' || this.nCells[x + 1].id === new_type.substr(0, new_type.length - 1))
-                if(this.nCells[x].key_location.last() + 1 === this.nCells[x + 1].key_location.last()
-                    || this.nCells[x].key_location.last() - 1 === this.nCells[x + 1].key_location.last()
+                if(this.nCells[x].key.last() + 1 === this.nCells[x + 1].key.last()
+                    || this.nCells[x].key.last() - 1 === this.nCells[x + 1].key.last()
                     ) return true;
         }
         return false;
@@ -342,10 +342,10 @@ Diagram.prototype.instructionsEquiv = function(list1, list2) {
 Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
 
     if (cell_one.id != cell_two.id) return false;
-    if (cell_one.key_location.length != cell_two.key_location.length) return false;
+    if (cell_one.key.length != cell_two.key.length) return false;
     
-    for (var i = 0; i < cell_one.key_location.length; i++) {
-        if (cell_one.key_location[i] != cell_two.key_location[i]) return false;
+    for (var i = 0; i < cell_one.key.length; i++) {
+        if (cell_one.key[i] != cell_two.key[i]) return false;
     }
     return true;
 }
@@ -354,8 +354,8 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
 
     var rewrite = {};
 
-    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.key_location));
-    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.key_location));
+    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.key));
+    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.key));
 
     if (rewrite.source.nCells.length != 0 || rewrite.target.nCells.length) return rewrite;
 
@@ -386,7 +386,7 @@ Diagram.prototype.interpret_drag = function(drag) {
         }
         var new_action = action[0];
         new_action.id += "-1";
-        new_action.key_location.push(drag.coordinates.last());
+        new_action.key.push(drag.coordinates.last());
         return [new_action];
     }
     
@@ -561,7 +561,7 @@ Diagram.prototype.source_size = function(level) {
     var nCell = this.nCells[level];
 
     if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.key_location).length;
+        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.key).length;
     }
     else{
         return nCell.source_size();
@@ -574,7 +574,7 @@ Diagram.prototype.target_size = function(level) {
     var nCell = this.nCells[level];
 
     if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key_location).length;
+        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key).length;
     }
     else{
         return nCell.target_size();
