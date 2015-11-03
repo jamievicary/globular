@@ -134,16 +134,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var target;
 
     // Special code to deal with interchangers
-    if (nCell.id[0] === 'I'){
-        if (reverse) {
-            if (nCell.id.tail('I')){
-                nCell.id = nCell.id.substr(0, nCell.id.length - 2);
-                //== 'interchanger-right';
-            }
-            else {
-                nCell.id = nCell.id + 'I';
-            }
-        }
+    if (nCell.id.substr(0, 3) === 'Int'){
         var rewrite = this.rewriteInterchanger(nCell);
         source = rewrite.source.copy();
         target = rewrite.target.copy();
@@ -165,7 +156,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var source_size = source.nCells.length;
 
     // Remove cells in the source of the rewrite
-    var insert_position = nCell.coordinates[nCell.coordinates.length - 1];
+    var insert_position = nCell.coordinates.last();   
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
@@ -200,11 +191,7 @@ Diagram.prototype.copy = function() {
 
     var nCells = new Array();
     for (var i = 0; i < this.nCells.length; i++) {
-        nCells.push({
-            id: this.nCells[i].id,
-            coordinates: this.nCells[i].coordinates.slice(0)
-        });
-
+        nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key_location));
     }
 
     var diagram = new Diagram(source_boundary, nCells);
@@ -538,21 +525,42 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
 
     var attached_nCell = attached_diagram.nCells[0];
 
-    if (this.dimension != attached_diagram.dimension && attached_nCell.id != "Int" && attached_nCell.id != "IntI") {
+    if (this.dimension != attached_diagram.dimension && attached_nCell.id.substr(0,3) != "Int") {
         console.log("Cannot attach - dimensions do not match");
         return;
     }
 
-
+    var new_id = attached_nCell.id 
+    var new_coordinates = attached_nCell.coordinates.slice(0);
+    var new_key_location = attached_nCell.key_location;
     if (attached_nCell.id.substr(0, 3) != "Int") {
         attached_nCell.coordinates = bounds;
+        new_coordinates = bounds;
+        new_id = attached_nCell.id;
+    }
+    else if(boundary_boolean === 's'){
+        if (new_id.tail('RI') || new_id.tail('LI')){
+            new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
+            //new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
+        }
+        else if (new_id.tail('R') || new_id.tail('L')){
+            new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
+            //new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
+        }
+        
+        if (new_id.tail('I')){
+            new_id = new_id.substr(0, new_id.length - 1);
+        }
+        else {
+            new_id = new_id + 'I';
+        }
     }
 
     var k = 0;
     if (boundary_boolean === 't') {
         k = this.nCells.length;
     }
-    this.nCells.splice(k, 0, attached_nCell);
+    this.nCells.splice(k, 0, new NCell(new_id, new_coordinates, new_key_location));
 
     /*
         If necessary the source is rewritten.
@@ -644,3 +652,33 @@ Diagram.prototype.getNCellTarget = function(x) {
     }
     
 };
+
+// Convert an internal coordinate to {boundarypath, coordinate}, by identifying
+// coordinates in slices adjacent to the boundary as being in that boundary.
+Diagram.prototype.getBoundaryCoordinate = function(internal) {
+    var location = {boundary_path: '', coordinates: internal.slice()};
+    var slice = this.copy();
+    while (location.coordinates[0] == 0 || location.coordinates[0] == slice.nCells.length) {
+        if (location.coordinates.length == 1) break;
+        if (location.coordinates[0] == slice.nCells.length) {
+            slice = this.getTargetBoundary();
+            location.boundary_path += 't';
+        }
+        else if (location.coordinates[0] == 0) {
+            slice = this.getSourceBoundary();
+            location.boundary_path += 's';
+        }
+        location.coordinates.shift();
+    }
+    return location;
+}
+
+// Find the first colour that appears in the diagram
+Diagram.prototype.getFirstColour = function() {
+    var d = this;
+    while (d.nCells.length == 0) {
+        d = d.getSourceBoundary();
+    }
+    var id = d.nCells[0].id;
+    return gProject.getColour(id);
+}

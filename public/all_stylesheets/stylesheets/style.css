@@ -115,12 +115,6 @@ body, html {
   background-color: #ccc;
 }
 
-/* line 111, ../sass/style.sass */
-#diagram-body > svg {
-  width: 100%;
-  height: 100%;
-}
-
 /* line 115, ../sass/style.sass */
 #project-menu {
   cursor: pointer;
@@ -603,17 +597,22 @@ div.preview-icon > svg {
 /* line 516, ../sass/style.sass */
 div.control.inline {
   position: absolute;
-  right: 10px;
+  right: 150px;
   top: 10px;
 }
 
 /* line 521, ../sass/style.sass */
+input.control {
+  width: 30px;
+}
+
+/* line 524, ../sass/style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 525, ../sass/style.sass */
+/* line 528, ../sass/style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -624,7 +623,7 @@ div.control.inline {
   padding: 10px;
 }
 
-/* line 534, ../sass/style.sass */
+/* line 537, ../sass/style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -634,14 +633,14 @@ div.control.inline {
   position: fixed;
 }
 
-/* line 542, ../sass/style.sass */
+/* line 545, ../sass/style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 547, ../sass/style.sass */
+/* line 550, ../sass/style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -650,7 +649,7 @@ div.control.inline {
   text-decoration: underline;
 }
 
-/* line 554, ../sass/style.sass */
+/* line 557, ../sass/style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -659,18 +658,18 @@ div.control.inline {
   text-decoration: underline;
 }
 
-/* line 561, ../sass/style.sass */
+/* line 564, ../sass/style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 565, ../sass/style.sass */
+/* line 568, ../sass/style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
 
-/* line 568, ../sass/style.sass */
+/* line 571, ../sass/style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -679,7 +678,7 @@ div.control.inline {
   width: 100px;
 }
 
-/* line 575, ../sass/style.sass */
+/* line 578, ../sass/style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -690,24 +689,24 @@ div.control.inline {
   z-index: 100;
 }
 
-/* line 584, ../sass/style.sass */
+/* line 587, ../sass/style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 587, ../sass/style.sass */
+/* line 590, ../sass/style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 590, ../sass/style.sass */
+/* line 593, ../sass/style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 596, ../sass/style.sass */
+/* line 599, ../sass/style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;

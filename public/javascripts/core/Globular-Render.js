@@ -34,10 +34,10 @@ function globular_prepare_renderer() {
 }
 
 // Render a diagram on the offscreen canvas, then copy to the specified container
-function globular_render(container, diagram, subdiagram) {
+function globular_render(container, diagram, subdiagram, suppress) {
     
     if (render_mode == 'SVG') {
-        globular_render_SVG(container, diagram, subdiagram);
+        globular_render_SVG(container, diagram, subdiagram, suppress);
     }
     else if (render_mode == 'THREE') {
         globular_render_THREE(container, diagram, subdiagram);

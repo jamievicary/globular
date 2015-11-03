@@ -16,6 +16,16 @@ function Generator(source, target, id) {
     this.identifier = id;
 };
 
+Generator.prototype.getTargetColour = function() {
+    var t = this.target;
+    while (t.nCells.length == 0) {
+        t = t.getTargetBoundary();
+    }
+    var id = t.nCells[0].id;
+    var colour = gProject.getColour(id);
+    return colour;
+}
+
 Generator.prototype.getDimension = function() {
     if (this.source === undefined) return 0;
     if (this.source == null) return 0;

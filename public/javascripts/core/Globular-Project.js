@@ -76,7 +76,9 @@ Project.prototype.setColour = function(id, colour) {
 
 // Gets the front-end colour to what the user wants
 Project.prototype.getColour = function(id) {
-    return this.dataList.get(id).colour;
+    var generator = this.dataList.get(id);
+    if (generator == null) return '#555555';
+    return generator.colour;
 };
 
 
@@ -154,11 +156,14 @@ Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, bo
     else {
         var rewrite_source_size = attached_diagram.getSourceBoundary().nCells.length;
 
+    var rewriteCell = new NCell(attached_diagram.nCells[0].id, bounds);
+
+/*
         var rewriteCell = {
             id: attached_diagram.nCells[0].id,
             coordinates: bounds
         }
-
+*/
         this.diagram.rewrite(rewriteCell);
 
     }
@@ -176,11 +181,13 @@ Project.prototype.clearDiagram = function() {
 // Take the identity on the main diagram
 Project.prototype.takeIdentity = function() {
     if (this.diagram == null) return;
+    
+    /*
     if (this.diagram.getDimension() >= 3) {
         alert("Can't take the identity of a " + this.diagram.getDimension().toString() + "-dimensional diagram");
         return;
     }
-
+    */
     this.diagram.boost();
     this.renderDiagram();
 }
@@ -305,223 +312,94 @@ Project.prototype.storeTheorem = function() {
 
 };
 
+
 Project.prototype.drag_cell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
     
-    var id;
+    //var action = interpret_drag(drag, this.diagram.getBoundary(drag.boundary_path));
     
-    if (this.diagram.getDimension() === 2){
-        if(!drag.positive){
-            drag.coordinates.increment_last(-1);
-        }
-        if(this.diagram.nCells[drag.coordinates.last()].coordinates.last()  >
-            this.diagram.nCells[drag.coordinates.last() + 1].coordinates.last()){
-                
-            id = 'Int';
-        }
-        else{
-            id = 'IntI';
+    // Actually perform the action!
+    
+    // If the original drag object was in the 0-boundary of the diagram,
+    // use action to rewrite the diagram. Otherwise attach.
+    
+    // var slice_pointer = this.diagram;
+    var diagram_pointer = this.diagram;
+
+    var temp_drag_data = new Array();
+    
+    if(drag.boundary_depth != 0){
+        for(var i = 0; i < drag.boundary_depth - 1; i++){
+            //slice_pointer = slice_pointer.getSlice();
+            diagram_pointer = diagram_pointer.getSourceBoundary();
         }
         
-    var temp_coordinates = new Array();
-    for(var i = 0; i < this.diagram.dimension - 1; i++)
-        temp_coordinates.push(0);
-    temp_coordinates.push(drag.coordinates.last()); 
-     
-    var interchanger = new NCell(id, temp_coordinates);
+        // May need to look at slices instead - to be considered
+        if(drag.boundary_type === 's'){
+            diagram_pointer = diagram_pointer.getSourceBoundary();
+        }
+        else{
+            diagram_pointer = diagram_pointer.getTargetBoundary();
+        }
+    }
     
-    if (!this.diagram.interchangerAllowed(interchanger)) {
-        alert("Cannot interchange these cells");
-        this.selected_cell = null;
+    drag.coordinates = drag.coordinates.reverse();
+    
+    var options = diagram_pointer.interpret_drag(drag);
+    
+    if(options.length === 0){
+        console.log("No interchanger applies");
+        return;
+
+    }
+    else if (options.length > 1){
+        console.log("Make user choose")
         return;
     }
+    else{
+        // Display a dialog box, return user's choice
+    }
+  
+    var action = options[0];
+    action.coordinates = action.coordinates.concat(temp_drag_data);
 
-    // Attempt to perform the interchanger
-    this.diagram.rewrite(interchanger, false);
+    var action_wrapper = {
+        nCells: [action]
+    };
+    
+    // Actually perform the action!
+    
+    var boundary_path = new String();
 
+    // This is necessary to attach one level higher than the boundary itself
+    for(var i = 0; i < drag.boundary_depth - 1; i++){
+        boundary_path += 's';
+    }
+    
+    if(drag.boundary_depth === 0){
+        this.diagram.rewrite(action, false);
+    }
+    else{
+        boundary_path += drag.boundary_type;
+        this.diagram.attach(action_wrapper, boundary_path);        
+    }
+    
+    /*
+    If the original drag object was in the 0-boundary of the diagram,
+    use action to rewrite the diagram
+    
+    If the original drag object was in a proper boundary of the diagram,
+    use action to attach to the diagram
+    */
 
     // Finish up and render the result
     this.selected_cell = null;
     this.saveState();
     $('div.cell-b-sect').empty();
-    this.renderDiagram();    
-    }
+    this.renderDiagram(drag);
     
 } 
 
-// Handle a click on a 2-cell to implement interchangers
-Project.prototype.clickCell = function(height) {
-
-    if (this.diagram.getDimension() != 2 && this.diagram.getDimension() != 3) return;
-
-    // If this is the first click, just store it and exit
-    if (this.selected_cell == null) {
-        this.selected_cell = height;
-        return;
-    }
-
-    // If we're reclicking the same thing, just exit
-    if (this.selected_cell == height) {
-        return;
-    }
-
-    var first_click = this.selected_cell;
-    var second_click = height;
-    this.selected_cell = null;
-
-
-    if (this.diagram.getDimension() === 3) {
-        var slider = Number($('#slider').val());
-        if (slider === 0 && this.diagram.nCells.length != 0) {
-
-/*
-            var temp_coordinates = this.diagram.getSourceBoundary().nCells[first_click].coordinates.slice(0);
-            temp_coordinates.push(first_click);
-            if (first_click > second_click) {
-                temp_coordinates = this.diagram.getSourceBoundary().nCells[second_click].coordinates.slice(0);
-                temp_coordinates.push(second_click);
-            }
-*/
-            var temp_coordinates = new Array();
-            for(var i = 0; i < this.diagram.dimension - 2; i++)
-                temp_coordinates.push(0);
-            if (first_click > second_click) {
-                temp_coordinates.push(second_click);
-            }
-            else{
-                temp_coordinates.push(first_click);
-            }
-
-            var temp_id = "Int";
-            var interchanger = new NCell(temp_id, temp_coordinates);
-
-            if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'IntI';
-                if (!this.diagram.getSourceBoundary().interchangerAllowed(interchanger)) {
-                    alert("Cannot interchange these cells");
-                    this.selected_cell = null;
-                    return;
-                }
-            }
-
-            /*
-                We need to figure out what is the inverse of the interchanger that we want to apply
-            */
-
-            var temp_interchanged_source = this.diagram.getSourceBoundary().copy();
-            temp_interchanged_source.rewrite(interchanger, false);
-
-            interchanger.coordinates = temp_interchanged_source.nCells[Math.min(first_click, second_click)].coordinates.slice(0);
-            interchanger.coordinates.push(Math.min(first_click, second_click));
-
-
-            if (interchanger.id === 'IntI') {
-                interchanger.id = 'Int';
-            }
-            else {
-                interchanger.id = 'IntI';
-            }
-
-
-            //Manual attachment
-            this.diagram.nCells.splice(0, 0, interchanger);
-            this.diagram.source = temp_interchanged_source;
-
-            var maxVal = $('#slider').val() + 1;
-            $('#slider').attr('max', maxVal);
-
-        }
-        else if (slider === this.diagram.nCells.length || (slider === 0 && this.diagram.nCells.length === 0)) {
-
-            /*
-            var temp_coordinates = this.diagram.getTargetBoundary().nCells[first_click].coordinates.slice(0);
-            temp_coordinates.push(first_click);
-            if (first_click > second_click) {
-                temp_coordinates = this.diagram.getTargetBoundary().nCells[second_click].coordinates.slice(0);
-                temp_coordinates.push(second_click);
-            }
-            */
-
-            var temp_coordinates = new Array();
-            for(var i = 0; i < this.diagram.dimension - 3; i++)
-                temp_coordinates.push(0);
-            if (first_click > second_click) {
-                temp_coordinates.push(second_click);
-            }
-            else{
-                temp_coordinates.push(first_click);
-            }
-
-
-            var temp_id = 'Int';
-            var interchanger = new NCell(temp_id, temp_coordinates);
-
-            if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                interchanger.id = 'IntI';
-                if (!this.diagram.getTargetBoundary().interchangerAllowed(interchanger)) {
-                    alert("Cannot interchange these cells");
-                    this.selected_cell = null;
-                    return;
-                }
-            }
-
-            var interchanger_wrapper = {
-                nCells: [interchanger]
-            };
-            this.diagram.attach(interchanger_wrapper, 't');
-            var maxVal = $('#slider').val() + 1;
-            $('#slider').attr('max', maxVal)
-            $('#slider').val(this.diagram.nCells.length);
-
-        }   
-        else {
-            return;
-        }
-    }
-    else {
-
-        var temp_coordinates = new Array();
-        for(var i = 0; i < this.diagram.dimension - 2; i++)
-            temp_coordinates.push(0);
-        if (first_click > second_click) {
-            temp_coordinates.push(second_click);
-        }
-        else{
-            temp_coordinates.push(first_click);
-        }
-
-        var id1, id2;
-        if (first_click > second_click) {
-            id1 = 'IntI';
-            id2 = 'Int';
-        }
-        else {
-            id1 = 'Int';
-            id2 = 'IntI';
-        }
-
-        var interchanger = new NCell(id1, temp_coordinates);
-
-
-        if (!this.diagram.interchangerAllowed(interchanger)) {
-            interchanger.id = id2;
-            if (!this.diagram.interchangerAllowed(interchanger)) {
-                alert("Cannot interchange these cells");
-                this.selected_cell = null;
-                return;
-            }
-        }
-
-        // Attempt to perform the interchanger
-        this.diagram.rewrite(interchanger, false);
-    }
-
-    // Finish up and render the result
-    this.selected_cell = null;
-    this.saveState();
-    $('div.cell-b-sect').empty();
-    this.renderDiagram();
-}
 
 Project.prototype.saveState = function() {
     //return;
@@ -556,7 +434,7 @@ Project.prototype.selectGenerator = function(id) {
         alert("0-cells can never be attached");
         return null;
     }
-
+    
     var matched_diagram = cell.diagram.copy();
 
     if (matched_diagram.getDimension() > this.diagram.getDimension()) {
@@ -580,32 +458,53 @@ Project.prototype.selectGenerator = function(id) {
         return enumerationData;
     }
 
-
     // Return all the ways to attach the selected cell
     var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
 
     var sourceMatches = [];
     var targetMatches = [];
 
-    if (this.diagram.getDimension() === 3 && cell.diagram.getDimension() === 3) {
-        var slider = Number($('#slider').val());
-        var ok = false;
-        if (slider === 0) {
-            sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-            ok = true;
+    var slices_data = MainDisplay.get_current_slice(); 
+    var boundary_pointer = this.diagram;
+   
+    if(slices_data.length === 0){
+        while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+            boundary_pointer = boundary_pointer.getSourceBoundary();
         }
-        if (slider === this.diagram.nCells.length) {
-            targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
-            ok = true;
-        }
-        if (!ok) {
-            alert("Slide to the source or the target of the 3-cell to attach");
-            return [];
-        }
+        sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+        targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+
     }
-    else {
-        sourceMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 's');
-        targetMatches = this.prepareEnumerationData(matched_diagram, boundary_depth, 't');
+    else{    
+        var slices_counter = 0;
+        var slice_pointer = this.diagram;
+        while(slices_counter < slices_data.length - 1){
+  //          boundary_pointer = boundary_pointer.getSourceBoundary();
+            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
+            slices_counter++;
+        }
+        
+        if(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+            while(boundary_pointer.getDimension() > matched_diagram.getDimension()){
+                boundary_pointer = boundary_pointer.getSourceBoundary();
+            }
+            
+            sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+            targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+        }
+        else{
+            if(slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length  === 0){
+                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+            }
+            else if(slices_data[slices_counter] === 0 ){
+                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+            }else {
+                boundary_pointer = boundary_pointer.getSourceBoundary();
+                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
+                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
+            }    
+        }
+        
     }
 
     var enumerationData = {
@@ -616,23 +515,17 @@ Project.prototype.selectGenerator = function(id) {
     return enumerationData;
 }
 
-Project.prototype.prepareEnumerationData = function(matched_diagram, boundary_depth, boundary_boolean) {
+Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, boundary_depth, boundary_boolean) {
 
     var pattern_diagram;
     var matched_diagram_boundary;
 
     if (boundary_boolean === 's') {
-        pattern_diagram = this.diagram.getSourceBoundary();
-        for (var i = 0; i < boundary_depth; i++) {
-            pattern_diagram = pattern_diagram.getSourceBoundary();
-        }
+        pattern_diagram = subject_diagram.getSourceBoundary();
         matched_diagram_boundary = matched_diagram.getTargetBoundary();
     }
     else {
-        pattern_diagram = this.diagram.getTargetBoundary();
-        for (var i = 0; i < boundary_depth; i++) {
-            pattern_diagram = pattern_diagram.getTargetBoundary();
-        }
+        pattern_diagram = subject_diagram.getTargetBoundary();
         matched_diagram_boundary = matched_diagram.getSourceBoundary();
     }
 
@@ -680,9 +573,9 @@ Project.prototype.renderGenerator = function(div, id) {
 }
 
 // Render the main diagram
-Project.prototype.renderDiagram = function() {
+Project.prototype.renderDiagram = function(boundary_data) {
     
-    MainDisplay.set_diagram(this.diagram);
+    MainDisplay.set_diagram(this.diagram, boundary_data);
 };
 
 // Need to write this code
@@ -867,7 +760,7 @@ Project.prototype.createGeneratorDOMEntry = function(n, cell) {
                             }
                         }
                         //project.renderAll();
-                        project.renderDiagram();
+                        project.renderDiagram({boundary_type: match.boundaryPath.last(), boundary_depth: match.boundaryPath.length});
                         project.saveState();
                     });
                 })(match_array[i]);
@@ -943,17 +836,17 @@ Project.prototype.renderNCells = function(n) {
     if (replace == false) {
         var cell_group_html;
         if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links' style = 'position:block;'><span id = 'add-0-cell-opt' class = 'button-style-3' style = 'position:block;'>New 0-cell</span></div>";
+            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt'>New 0-cell</span></div>";
         }
         else {
             cell_group_html = "";
         }
-        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-CELLS</div>";
+        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-Cells</div>";
         $("#cell-body").append($(cell_group_html));
     }
     var cells = this.listGenerators()[n]; //["testCell1", "testCell2", "TESTcell3"];
     if (cells == undefined) cells = [];
-    $("#cell-group-" + n.toString()).html(n + "-CELLS");
+    $("#cell-group-" + n.toString()).html(n + "-Cells");
 
     for (var i = 0; i < cells.length; i++) {
 
@@ -982,46 +875,6 @@ Project.prototype.renderNCells = function(n) {
             var target_diagram = overall_diagram.getTargetBoundary();
             this.render("#ci1-" + cell, target_diagram);
 
-        }
-        else if (n === 4){/*
-            // Render the source diagram into $("#ci-" + cell)
-            var tempColours = new Hashtable();
-            this.dataList.each(function(key, value) {
-                tempColours.put(key, value.colour)
-            });
-            var overall_diagram = this.dataList.get(cell).diagram;
-            // Source
-            
-            // Create the slider
-            var check = $("#slider" + cell + "t").on("input change", function() {
-                this.render();
-            });
-            
-            var source_diagram = overall_diagram.getSourceBoundary();
-            this.render("#ci-" + cell, source_diagram, check);//"#slider");
-            
-            // Create the slider
-            check = $("#slider" + cell + "t").on("input change", function() {
-                this.render();
-            });
-            
-            
-            // ****************
-            
-            
-            
-            
-            // +++ Figure out how to actually create a slider +++
-            
-            
-            
-            
-            
-            // ****************
-            
-            // Target
-            var target_diagram = overall_diagram.getTargetBoundary();
-            this.render("#ci1-" + cell, target_diagram, check);//$("#slider" + cell + "t"));   */ 
         }
         else {
             this.renderGenerator("#ci-" + cell, cell);

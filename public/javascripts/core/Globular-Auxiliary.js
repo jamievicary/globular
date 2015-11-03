@@ -53,12 +53,75 @@ function getMean(arr) {
     return total;
 }
 
+function detectLeftButton(event) {
+    event = event || window.event;
+    var button = event.which || event.button;
+    return button == 1;
+}
+
+function zero_array(n) {
+    var tab = new Array();
+    for(var i = 0; i < n; i++){
+        tab.push(0);
+    }
+    return tab;
+}
+
+function min_array(t1, t2) {
+    var tab = new Array();
+    
+    if(t1.length != t2.length){
+        console.log("Arrays of differnt lenght")
+    }
+    
+    for(var i = 0; i < t1.length; i++){
+        if(t1[i] <= t2[i]){
+            tab.push(t1[i]);
+        }
+        else{
+            tab.push(t2[i]);
+        }
+    }
+    return tab;
+}
+
+function diff_array(t1, t2) {
+    var tab = new Array();
+    
+    if(t1.length != t2.length){
+        console.log("Arrays of differnt lenght")
+    }
+    
+    for(var i = 0; i < t1.length; i++){
+        tab.push(t1[i] - t2[i]);
+    }
+    return tab;
+}
+
 Array.prototype.last = function() {
     return this[this.length - 1];
 };
 
+Array.prototype.penultimate = function() {
+    return this[this.length - 2];
+};
+
+Array.prototype.incremented_array = function(value) {
+    this[this.length - 1] += value;
+    return this;
+};
+
 Array.prototype.increment_last = function(value) {
     this[this.length - 1] += value;
+};
+
+Array.prototype.reverse = function() {
+    var t2 = new Array();
+    for(var i = 0; i < this.length; i++){
+        t2.push(this[this.length - 1 - i]);
+    }
+    
+    return t2;
 };
 
 String.prototype.tail = function() {
@@ -70,3 +133,23 @@ String.prototype.tail = function() {
     //return this.substr(this.length - elements, this.length);
 };
 
+String.prototype.last = function() {
+    if (this.length == 0) return '';
+    return this.substr(this.length - 1, 1);
+}
+
+Array.prototype.fill = function(value, length) {
+    this.length = 0;
+    for (var i=0; i<length; i++) {
+        this[i] = value;
+    }
+    return this;
+}
+
+String.prototype.is_basic_interchanger = function() {
+    return (this == 'Int' || this == 'IntI');
+}
+
+String.prototype.is_interchanger = function() {
+    return (this.substr(0, 3) == 'Int');
+}

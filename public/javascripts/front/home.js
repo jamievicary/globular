@@ -502,7 +502,7 @@ $(document).ready(function() {
                         pIDu = dateName + "_" + projectNo;
                         datePubHTML = "Date Published: <span id = 'date"+pIDu+"'></span><br>";
                         authHTML = "Authors: <span id = 'authors"+pIDu+"'></span><br>";
-                        if(listType!=2){
+                        if(listType!=1){
                             versionOptionsHTML = "View Different Versions: <span id = 'version-list"+pIDu+"'></span>";
     
                         }else if(projectData.substring(0,2)=="av"&&listType==2){
@@ -818,7 +818,7 @@ $(document).ready(function() {
             }
             
             if($(this).val() == "3"){
-               
+
             }else{
                 render_project_list($(this).val(), "");
                 controlAddP();
