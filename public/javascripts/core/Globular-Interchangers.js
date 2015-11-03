@@ -659,6 +659,7 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
             list = this.nCells[key].coordinates.slice(0);
         }
         
+        /* MOVED TO 4-IntL.js
         else if(type.tail('R')){
             list = this.nCells[key + 1].coordinates.slice(0);
         }
@@ -674,6 +675,7 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
             list = this.nCells[key - 1].coordinates.slice(0);
             key = key - diagram_pointer.source_size(key);
         }
+        */
         else{
             var list = this.nCells[key].coordinates.slice(0);
         }
