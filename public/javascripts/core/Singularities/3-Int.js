@@ -32,7 +32,8 @@ Diagram.prototype.expand['Int'] = function (type, x, n, m){
     return list;
 };
 
-Diagram.prototype.interpret_drag['Int'] = function(drag) {
+// Interpret drag of this type
+Diagram.prototype.interpretDrag['Int'] = function(drag) {
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {

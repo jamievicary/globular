@@ -345,7 +345,7 @@ Project.prototype.drag_cell = function(drag) {
     
     drag.coordinates = drag.coordinates.reverse();
     
-    var options = diagram_pointer.interpret_drag(drag);
+    var options = diagram_pointer.interpretDrag(drag);
     
     if(options.length === 0){
         console.log("No interchanger applies");

@@ -3,8 +3,7 @@
 /*global Diagram*/
 
 /* Core functions for each singularity
-Diagram.prototype.rewriteAllowed(type, key)
-Diagram.prototype.rewriteCutData(type, key)
+Diagram.prototype.interchangerAllowed(type, key)
 Diagram.prototype.rewritePasteData(type, key)
 Diagram.prototype.expand(type, height, n, m)
 Diagram.prototype.interpretDrag(drag)
@@ -33,25 +32,43 @@ function RegisterSingularityFamily(data) {
     };
 }
 
-
-Diagram.prototype.rewriteAllowed = function(type, key) {
-    return SingularityData[SingularityFamilies[type]].rewriteAllowed(type, key);
-}
-
-Diagram.prototype.rewriteCutData = function(type, key) {
-    return SingularityData[SingularityFamilies[type]].rewriteCutData(type, key);
+Diagram.prototype.interchangerAllowed = function(type, key) {
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.interchangerAllowed[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.rewritePasteData = function(type, key) {
-    return SingularityData[SingularityFamilies[type]].rewritePasteData(type, key);
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.rewritePasteData[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.expand = function(type, start, n, m) {
-    return SingularityData[SingularityFamilies[type]].expand(type, start, n, m);
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.expand[family]).bind(this))(type, start, n, m);
 }
 
+Diagram.prototype.getInterchangerCoordinates = function(type, key) {
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.getInterchangerCoordinates[family]).bind(this))(type, key);
+}
 
-Diagram.prototype.interpret_drag = function(drag) {
+Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.getInterchangerBoundingBox[family]).bind(this))(type, key);
+}
+
+Diagram.prototype.getInverseKey = function(type, key) {
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.getInverseKey[family]).bind(this))(type, key);
+}
+
+Diagram.prototype.interpretDrag = function(drag) {
     
     // See what options we have
     var options = [];
@@ -62,20 +79,13 @@ Diagram.prototype.interpret_drag = function(drag) {
         // Don't bother testing if the dimension of the diagram is too low for this singularity type
         if (this.getDimension() < data.dimension - 1) continue;
         
-        // If this is a possibility, add it
-        /*
-        var f = this.interpret_drag[family];
-        var b = f.bind(this);
-        var r = b(drag);
-        */
-        var r = ((this.interpret_drag[family]).bind(this))(drag);
+        // See if this family can interpret the drag
+        var r = ((this.interpretDrag[family]).bind(this))(drag);
+        
+        // If so, add it to the list of options
         if (r != null) options.push(r);
     }
     
-    if (options.length == 0) return null;
-    
-    // For now, just do the first option that's returned. We should really pop
-    // up a selection box for the user if there's more than one choice.
     return options;
 }
 
@@ -101,3 +111,4 @@ Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
     }
     return true;
 }
+

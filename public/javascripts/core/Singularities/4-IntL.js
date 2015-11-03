@@ -13,12 +13,11 @@ var NewSingularityFamily = {
 };
 
 RegisterSingularityFamily(
-    'IntL', 4,
-
+    'IntL', 4
 );
 
 // Interpret drag of this type
-Diagram.prototype.interpret_drag['IntL'] = function(drag) {
+Diagram.prototype.interpretDrag['IntL'] = function(drag) {
 
     var up = drag.direction[0] > 0;
     var right = drag.direction[1] > 0;
@@ -99,25 +98,82 @@ Diagram.prototype.interpret_drag['IntL'] = function(drag) {
     }
 };
 
-/*    
-Diagram.prototype.rewriteAllowed_IntL = function(type, key) {
+Diagram.prototype.interchangerAllowed['IntL'](type, key) {
+    if (type.tail('L')) {
+        var crossings = g1_target;
+
+        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+        if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
+
+        var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
+    }
+
+    if (type.tail('R')) {
+
+        var crossings = g1_target;
+        if (this.nCells[x].coordinates.last() <= 0) return false;
+        if (this.nCells[x].coordinates.last() - 1 != this.nCells[x + 1].coordinates.last()) return false;
+
+        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, 1, crossings);
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
+    }
+
+
+    var new_type = type.slice(0, type.length - 3);
+
+    if (type.tail('LI')) {
+
+        var crossings = g1_source;
+
+        if (x <= 0) return false;
+        if (this.nCells[x].coordinates.last() - 1 != this.nCells[x - 1].coordinates.last()) return false;
+
+
+        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, crossings, 1);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+    }
+
+    if (type.tail('RI')) {
+
+        var crossings = g1_source;
+
+        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+        if (this.nCells[x].coordinates.last() + this.source_size(x) - 1 != this.nCells[x - 1].coordinates.last()) return false;
+
+        var template = this.expand(new_type, this.nCells[key_location.last()].coordinates.last(), 1, crossings);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+    }
+
+}
+
+Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
+    // rewriteInterchangerTarget
+}
+
+/* Needed for 4-categories
+Diagram.prototype.expand['IntL'] = function(type, height, n, m) {
 }
 */
 
-/*
-Diagram.prototype.rewriteCutData_IntL = function(type, key) {
-}
-*/
+Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
 
-/*
-Diagram.prototype.rewritePasteData_IntL = function(type, key) {
 }
-*/
 
+Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
 
-/*
-Diagram.prototype.expand_IntL(type, start, n, m) {
 }
-*/
+
+Diagram.prototype.getInverseKey['IntL'] = function(type, key) {
+    if (type.tail('R')) {
+        return [x + this.source_size(x)];
+    } else if (type.tail('L')) {
+        return [x + this.source_size(x)];
+    } else if (type.tail('RI')) {
+        return [x - this.source_size(x)];
+    } else if (type.tail('LI')) {
+        return [x - this.source_size(x)];
+    }
+}
 
 RegisterSingularityFamily(NewSingularityFamily);
