@@ -1,4 +1,3 @@
-"use strict";
 
 // Global project object
 var gProject = {};
@@ -87,13 +86,13 @@ $(document).ready(function() {
         if (dbltoggle % 2 == 0) {
             $("#view-desc-body").animate({
                 marginTop: "-=225px"
-            }, 1500);
+            }, 500);
 
         }
         else {
             $("#view-desc-body").animate({
                 marginTop: "+=225px"
-            }, 1500);
+            }, 500);
 
         }
         dbltoggle = dbltoggle + 1;
@@ -182,6 +181,7 @@ $(document).ready(function() {
             render_frontend(result.status);
             if (result.status === "in") {
                 $("#value-email").html(result.email);
+                $("#mm-profile").html(result.email);
             }
         });
     }
@@ -335,107 +335,6 @@ $(document).ready(function() {
 
     }
 
-    //on request to see list of projects
-    $("#mm-projects").click(function() {
-        $.post("/get_projects", {}, function(result, status) {
-            if (result.success == false) {
-                $("#project-list").html(result.msg);
-                $("#my-projects-box").fadeIn();
-            }
-            else {
-                var projects = result.projects;
-                var p_ids = result.project_ids;
-
-                var projects_str = "";
-                for (var i = 0; i < projects.length; i++) {
-                    projects_str = projects_str + "<span id = '1-p-row-" + p_ids[i] + "'></span>" +
-                        "<span id = '2-p-row-" + p_ids[i] + "'>" +
-                        "<span class = 'select-project' id = 'id-" + p_ids[i] + "'>" +
-                        projects[i] +
-                        "</span>" +
-                        "<span style = 'font-size:80%;color: #335566;float: right;margin-top:3px;'>" +
-                        "<span class = 'publish-project' id = 'id-" + p_ids[i] + "'>Publish</span>&middot;" +
-                        "<span class = 'del-project' id = 'id-" + p_ids[i] + "' p_name = '" + projects[i] + "'>Delete</span>" +
-                        "</span></span><hr size = '1'>";
-                }
-
-                $("#project-list").html(projects_str);
-                $("#my-projects-box").fadeIn();
-
-                //when one project on list is requested to be deleted
-                $(".del-project").click(function() {
-                    var org_name = $(this).attr("p_name");
-                    var p_id = $(this).attr("id").substring(3);
-
-                    $("#2-p-row-" + p_id).hide();
-                    $("#1-p-row-" + p_id).html("<input id = 'dct-" + p_id + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + p_id + "' class = 'cancel-del'>x</span>");
-                    $("#dct-" + p_id).animate({
-                        width: "200px"
-                    }, 1000).focus();
-                    $("#dct-" + p_id).keyup(function() {
-                        if ($(this).val() == "delete") {
-                            $("#dct-" + p_id).animate({
-                                width: "0px"
-                            }, 1000).animate({
-                                padding: "0px"
-                            }, 100);
-                            setTimeout(function() {
-
-                                $("#errors").fadeOut();
-
-                                $.post('/delete_project', {
-                                    proj_id: p_id
-                                }, function(result, status) {
-                                    if (result.success == true) {
-                                        $("#my-projects-box").fadeOut();
-                                        show_msg("Successfully deleted.", 2000, 2);
-                                    }
-                                });
-                            }, 1000);
-                        }
-                    });
-
-                    $("#cancel-del-" + p_id).click(function() {
-                        $("#1-p-row-" + p_id).html("");
-                        $("#2-p-row-" + p_id).show();
-                    });
-                });
-
-                //when a specific project is selected to be rendered.
-                $(".select-project").click(function() {
-                    var global_p_id = $(this).attr("id").substring(3);
-                    $("#errors").fadeOut();
-                    $.post("/profile", {
-                        valid: true
-                    }, function(email, status) {
-                        $.get("/private/" + email + "/projects/" + global_p_id + "/string.json",
-                            function(result, status) {
-                                render_project_front(result);
-                                gProject.saveState();
-                            });
-                        $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json",
-                            function(result) {
-                                $("#text-p-desc").val(result.project_desc);
-                                $("#diagram-title").val(result.project_name);
-
-                            });
-
-                    });
-                });
-
-                //specific project is requested to be published
-                $(".publish-project").click(function() {
-                    var p_id = $(this).attr("id").substring(3);
-                    $.post('/publish_project', {
-                        pid: p_id
-                    }, function(result) {
-                        var win = window.open("/"+result.projectURL, '_blank');
-                        //win.focus();
-                    });
-                });
-            }
-        });
-    });
 
 
     $("#save-project-opt").click(function() {
@@ -458,7 +357,9 @@ $(document).ready(function() {
                         p_name: name,
                         p_desc: $("#text-p-desc").val()
                     }, function(result, status) {
-
+                        if (global_p_id == "hold") {
+                            global_p_id = result.newID;
+                        }
                         show_msg("Successfully saved changes.", 2000, 2);
 
                     });
@@ -496,34 +397,6 @@ $(document).ready(function() {
         client.send();
     */
 
-    $("#add-project-opt").click(function() {
-        $("#add-project-opt").animate({
-            height: "230px"
-        }, 500);
-    });
-    $("#add-project-submit").click(function() {
-        var p_name = $("#ap-name").val();
-        var p_desc = $("#proj_desc").val();
-        var main_string = $("#ap-string").val();
-        $.post("/add_new_project", {
-            p_name: p_name,
-            p_desc: p_desc,
-            string: main_string
-        }, function(result, status) {
-            var colour = 2;
-            if (result.success == true) {
-                render_project_front("", p_name, result.p_id);
-                gProject.saveState();
-                $("#add-project-opt").animate({
-                    height: "20px"
-                }, 500);
-            }
-            else {
-                colour = 1;
-            }
-            show_msg(result.msg, 2000, colour);
-        });
-    });
 
     $("#msg-close-opt-profile").click(function() {
         $("#profile-box").fadeOut();
@@ -579,7 +452,12 @@ $(document).ready(function() {
             projectNo: projectNo
 
         }, function(result) {
-            render_project_front(JSON.parse(result.string), result.meta.project_name, pathName);
+            if(result.string==""){
+                result.string = null;
+            }else{
+                result.string = JSON.parse(result.string);
+            }
+            render_project_front(result.string, result.meta.project_name, pathName);
             $("#text-p-desc").val(result.meta.project_desc);
             $("#diagram-title").val(result.meta.project_name);
         });
@@ -588,75 +466,365 @@ $(document).ready(function() {
 
     }
 
-    function render_gallery(dateName) {
-        $.post('/get_gallery_data', {
-            dateName: dateName
-        }, function(result) {
-            var projects = result.projectNoArr;
-            var disDateName = dateName.substring(0, 2) + "/" + dateName.substring(2, 4);
-            $("#gg-date-title").html(" - " + disDateName);
-            if(projects.length!=undefined){
-            // create all the divs for the different projects
-                for (var num = 0; num < projects.length; num++) {
-                    var projectNo = projects[num];
-                    var pID = dateName + "_" + projectNo;
-                    var pIDlink = dateName + "." + projectNo;
-                    $("#gallery-box").append($(
-                       
-                        "<div id = '" + pID + "' class = 'gallery-pcomp' link = '"+pIDlink+"'>"+
-                        "<b style = 'color: dimgrey;font-size:115%;' id = 'title"+pID+"'></b><br>"+
-                        "Date Published: <span id = 'date"+pID+"'></span><br>"+
-                        "Authors: <span id = 'authors"+pID+"'></span><br>"+
-                        "<span style = 'color:#887f8d' id = 'desc"+pID+"'></span>" +
-                        "</div>"
-                    ));
+    var addingVersion = false;
+    
+    function render_project_list(listType, projectData){
+        
+        $("#plist").html("");
+        if(listType==2 || listType ==3){
+            $("#pl-addnew").html("");
+        }
+        $("#gallery-box").fadeIn();
+       
+        $.post("/get_project_list", {
+            listType: listType,
+            projectData: projectData
+        }, function(result){
+            var metaData;
+            var project_ids = result.project_ids;
+            if(project_ids.length>0){
+                for(var i = 0; i<=project_ids.length-1;i++){
+                    var pID = project_ids[i];
+                    var pIDu = project_ids[i];
+                    var datePubHTML = "";
+                    var authHTML = "";
+                    var delProjectHTML = "";
+                    var publishOptHTML = "";
+                    var shareOptHTML = "";
+                    var versionOptionsHTML = "";
+                    var versions = [];
+                    var ppOptHTML = "";
+                    var addVersionSelectOptHTML = "";
+                    if(listType == 2 || listType == 3){
+                        var dateName = pID.substring(0, 4);
+                        var projectNo = pID.substring(5);
+                        
+                        pIDu = dateName + "_" + projectNo;
+                        datePubHTML = "Date Published: <span id = 'date"+pIDu+"'></span><br>";
+                        authHTML = "Authors: <span id = 'authors"+pIDu+"'></span><br>";
+                        if(listType!=2){
+                            versionOptionsHTML = "View Different Versions: <span id = 'version-list"+pIDu+"'></span>";
+    
+                        }else if(projectData.substring(0,2)=="av"&&listType==2){
+                            addVersionSelectOptHTML = "<span id = 'AV-select"+pIDu+"' class = 'AV-select'>SELECT</span>";
+                            $(".AV-select").animate({letterSpacing: "3px"}, 700);
+                            $(".AV-select").animate({letterSpacing: "1px"}, 700);
+                            setInterval(function(){
+                                $(".AV-select").animate({letterSpacing: "3px"}, 700);
+                                $(".AV-select").animate({letterSpacing: "1px"}, 700);
+                            }, 1400);
+                        }
+                    }else if(listType==1){
+                        delProjectHTML = "<div class = 'delete-container'><span class = 'del-project' id = 'del" + pIDu + "'>Delete</span><span id = 'indel-"+pIDu+"' style = 'display:none'><input id = 'dct-" + pIDu+ "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + pIDu + "' class = 'cancel-del'>x</span></span></div>"; 
+                        publishOptHTML= "<span class = 'publish-project' id = 'pub" + pIDu + "'>Publish</span>";
+                        shareOptHTML= "<span class = 'share-project-opt' id = 'share-p"+pIDu+"'>Share</span>";
+                        ppOptHTML = "<div class = 'pp-opts'>"+publishOptHTML+shareOptHTML+delProjectHTML+"</div>";
+                    }   
                     
-                    $("#"+pID).click(function(){
-                        var url = $(this).attr("link");
-                        var win = window.open("/"+url, '_blank');
-                        //win.focus(); 
-                    });
+                   
+                    var listComponents =  "<div id = '" + pIDu + "' class = 'gallery-pcomp' link = '"+pIDu+"'>"+
+                        "<b style = 'color: dimgrey;font-size:115%;' id = 'title"+pIDu+"' class = 'gallery-comp-title'></b>"+addVersionSelectOptHTML+"<br>"+
+                        datePubHTML+ppOptHTML+
+                        authHTML+
+                        "<span style = 'color:#887f8d;' id = 'desc"+pIDu+"'></span><br>" +
+                        versionOptionsHTML+
+                        "</div>";
+                    $("#plist").append($(listComponents));
+                                    
+                } 
+                
+                for(var i = 0; i<=project_ids.length-1;i++){
+                    var pID = project_ids[i];
+                    var pIDu = project_ids[i].replace('.', '_');
+                    if(listType == 1){
+                        (function(pID){
+                            var user_id = result.user_id;
+        
+                            $.get('/private/'+user_id+'/projects/'+pID+'/meta.json', function(meta){
+                                $("#title"+pID).html(meta.project_name);
+                                if(meta.project_desc == ""){
+                                   meta.project_desc = "No Abstract Supplied"; 
+                                }
+                                $("#desc"+pID).html(meta.project_desc);
+                            });
+                        })(pID);        
+                    }else if(listType==2 || listType ==3){
+                        (function(pIDu, pID){
+                            var Edata;
+                            var dateName = project_ids[i].substring(0, 4);
+                            var projectNo = project_ids[i].substring(5);
+                            
+                            var latestVersion = "v1";
+                            $.get('/public/'+dateName+'/'+projectNo+'/versions/'+latestVersion+'/meta.json', function(meta){
+                                $("#title"+pIDu).html(meta.project_name);
+                                if(meta.project_desc == ""){
+                                   meta.project_desc = "No Abstract Supplied"; 
+                                }
+                                $("#desc"+pIDu).html(meta.project_desc);
+                            });
+                            $.get('/public/'+dateName+'/'+projectNo+'/data.json', function(data){
+                                $("#date"+pIDu).html(data.date_published);
+                                $("#authors"+pIDu).html(data.owners.join());
+                            });
+                            
+                            $.post('/get_pp_versions', {pid:pIDu},function(result){
+                               
+                                for(var i = 0;i<=result.length-1;i++){
+                                    $("#version-list"+pIDu).append("<a href = '/"+pID+result[i]+"'>"+result[i]+"</a>,");
+                                }
+                            });
+                        
+                        })(pIDu, pID);
+                    }    
                 }
-                for (var num = 0; num < projects.length; num++) {
-                    var latestVersion = "v1";
-                    var projectNo = projects[num];
-                    (function(projectNo) {
-                        var pID = dateName + "_" + projectNo;
-                        var obj = $('#a' + pID);
-                        $.get("/public/" + dateName + "/" + projectNo + "/versions/" + latestVersion + "/meta.json", function(meta) {
-                            
-                            var pname = meta.project_name;
-                            var pdesc = meta.project_desc;
-
-                            if (pdesc == "") {
-                                pdesc = "No description provided.";
+                
+                if(listType==1){
+                    
+                    // select/open a private project
+                    $(".gallery-comp-title").click(function() {
+                        global_p_id = $(this).attr("id").substring(5);
+                        $("#errors").fadeOut();
+                        $.post("/profile", {
+                            valid: true
+                        }, function(email, status) {
+                            $.get("/private/" + email + "/projects/" + global_p_id + "/string.json",
+                                function(result, status) {
+                                    render_project_front(result);
+                                    gProject.saveState();
+                            });
+                            $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json",
+                                function(result) {
+                                    $("#text-p-desc").val(result.project_desc);
+                                    $("#diagram-title").val(result.project_name);
+                                    $("#gallery-box").fadeOut();
+                            });
+                        });
+                    }); 
+                    
+                     //delete private project
+                    $(".del-project").click(function() {
+                        var p_id = $(this).attr("id").substring(3);
+                        $("#del" + p_id).hide();
+                        $("#indel-" + p_id).show();
+                        $("#dct-" + p_id).animate({
+                            width: "200px"
+                        }, 1000).focus();
+                        $("#dct-" + p_id).keyup(function() {
+                            if ($(this).val() == "delete") {
+                                $("#dct-" + p_id).animate({
+                                    width: "0px"
+                                }, 1000).animate({
+                                    padding: "0px"
+                                }, 100);
+                                setTimeout(function() {
+        
+                                    $("#errors").fadeOut();
+        
+                                    $.post('/delete_project', {
+                                        proj_id: p_id
+                                    }, function(result, status) {
+                                        if (result.success == true) {
+                                            $("#gallery-box").fadeOut();
+                                            show_msg("Successfully deleted.", 2000, 2);
+                                        }
+                                    });
+                                }, 1000);
                             }
+                        });
+                        $("#cancel-del-" + p_id).click(function() {
+                            $("#dct-" + p_id).animate({width: "0px"}, 1000, function(){
+                                $("#indel-" + p_id).hide(); 
+                                $("#del" + p_id).show();
+                            });
                             
-                            $("#title"+pID).html(pname);
-                            $("#desc"+pID).html(pdesc);
-                           
                         });
-                        $.get("/public/" + dateName + "/" + projectNo + "/data.json", function(data) {
-                            var datePublished = data.date_published;
-                            var owners = data.owners.join();
-                            $("#date"+pID).html(datePublished);
-                            $("#authors"+pID).html(owners);
+                    });
+                    
+                    //specific project is requested to be published
+                    $(".publish-project").click(function() {
+                        var p_id = $(this).attr("id").substring(3);
+                        show_msg("Would you like to publish this project as "+
+                        "a version to one of your existing public projects? If"+
+                        "not, it will be published as a new project."+
+                        "<div id = 'publish-opt-no' class = 'button-style-3'>No</div><div class = 'button-style-3' style = 'float:right;margin-top: -31px;' id = 'publish-opt-yes'>Yes</div>", 20000, 3);
+                        $("#publish-opt-no").click(function(){
+                            $.post('/publish_project', {
+                                pid: p_id
+                            }, function(result) {
+                                show_msg("Successfully published your new project. View it here: <a href = '" + window.location.href+result.projectURL+"'>"+window.location.href+result.projectURL+"</a>", 4000, 2);
+                            });
                         });
-                    })(projectNo);
+                        $("#publish-opt-yes").click(function(){
+                            $("#errors").animate({marginTop: "-160px"}, 1200);
+                            show_msg("Please select which public project you would like to add this version to...", 20000,3);
+                          
+                            $("#change-list-type").val("3").change();
+                            render_project_list(2, "av"+p_id);
+                        }); 
+                    });
+                    $(".share-project-opt").click(function() {
+                        var p_id = $(this).attr("id").substring(7);
+                        show_msg("Enter user emails: <input type = 'text' id = 'share-p-emails' class = 'text-field-style-1' placeholder = 'email@example.com, test@example.com, etc'><input type = 'button' id = 'share-p' value = 'Share' class = 'submit-field-style-1'>", 40000, 3);
+                        $("#share-p").click(function(){
+                            
+                            var emails = $("#share-p-emails").val();
+                            $.post('share_project', {
+                                p_id: p_id,
+                                emails: emails
+                            }, function(result) {
+                                show_msg(result.msg, 5000, result.successcolor);
+                            });
+                        });
+
+                    });
+                }else if(listType==3 || listType==2){
+                    $(".gallery-comp-title").click(function() {
+                        global_p_id = $(this).attr("id").substring(5);
+                        var dateName = global_p_id.substring(0, 4);
+                        var projectNo = global_p_id.substring(5);
+                        var latestVersion = "v1";
+                        $("#errors").fadeOut();
+                        $.post("/get_public_project", {
+                            dateName: dateName,
+                            version: latestVersion,
+                            projectNo: projectNo
+                        }, function(result, status) {
+                            render_project_front(JSON.parse(result.string));
+                            $("#text-p-desc").val(result.meta.project_desc);
+                            $("#diagram-title").val(result.meta.project_name);
+                            $("#gallery-box").fadeOut();
+                        });
+                    });
+                    if(listType == 2&&projectData.substring(0,2)=="av"){
+                        $(".AV-select").click(function(){
+                            var public_id = $(this).attr("id").substring(9);
+                            var private_id = projectData.substring(2);
+                            $("#errors").animate({marginTop: "0"}, 1200);
+                            $.post('add_version_pp',{public_id:public_id, private_id:private_id},function(result){
+                                if(result=="success"){
+                                    show_msg("Successfully added new version.", 3000,2);
+                                    render_project_list(1, "");
+                                }
+                            });
+                        });
+                    }
                 }
             }else{
-                $("#gallery-box").append("There are no projects in this month.");
+                $("#plist").html("<span style = 'top: 150px;position: relative;font-size:130%;color: grey;text-align: center;'>This list of projects is empty.</span>");
             }    
         });
     }
+    
+    //renders gallery project list
     var date = new Date();
     var curYear = date.getFullYear().toString().substr(2, 2);
     var curMonth = (date.getMonth() + 1).toString();
     var currentDateName = curYear + curMonth;
+    var cDateNoDir = false;
     $("#mm-gallery").click(function() {
-        $("#gallery-box").fadeIn();
-        render_gallery(currentDateName);
+        $.post('/get_all_datenames', function(result){
+            var optionsHTML = "";
+            for(var i = result.length-1;i>=0;i--){
+                console.log("if " + result[i] + " == "+ currentDateName);
+                if(result[i]==currentDateName){
+                    cDateNoDir = true;
+                }
+                optionsHTML = optionsHTML + "<option value = '"+result[i]+"'>"+result[i]+"</options>";
+            }
+            if(cDateNoDir==false){
+            //if is new month but no projects yet (no dir made yet for new month) 
+                optionsHTML = "<option value = '"+currentDateName+"'>"+currentDateName+"</options>" + optionsHTML;
+            }
+            $("#pl-title").html("The Globular Gallery <select id = 'change-gg-month' class = 'pl-selects'>"+optionsHTML+"</select>");
+            render_project_list(3, currentDateName);
+            $("#change-gg-month").change(function(){
+                render_project_list(3, $(this).val());
+            });
+        });
     });
+    
+    //renders user project list
+    $("#mm-projects").click(function() {
+        
+        function controlAddP(){
+            var apOptClicked = 0;
+            $("#addp-title").click(function() {
+                if(apOptClicked%2 == 0){
+                    $("#add-project-opt").animate({
+                        height: "230px", width: "400px", marginLeft: "-=200px"
+                    }, 500);
+                    $("#add-project-opt").css("box-shadow", "0px 0px 10px grey");
+                }else{
+                     $("#add-project-opt").animate({
+                        height: "20px", width: "200px", marginLeft: "+=200px"
+                    }, 500);
+                    $("#add-project-opt").css("box-shadow", "0px 0px 0px");
+                    
+                }
+                apOptClicked = apOptClicked + 1;
+            });
+            
+            $("#add-project-submit").click(function() {
+                var p_name = $("#ap-name").val();
+                var p_desc = $("#proj_desc").val();
+                var main_string = $("#ap-string").val();
+                $.post("/add_new_project", {
+                    p_name: p_name,
+                    p_desc: p_desc,
+                    string: main_string
+                }, function(result, status) {
+                    var colour = 2;
+                    if (result.success == true) {
+                        if(main_string==""){
+                            main_string = null;
+                        }else{
+                            main_string =JSON.parse(main_string);
+                        }
+                        render_project_front(JSON.parse(main_string));
+                        $("#text-p-desc").val(p_desc);
+                        $("#diagram-title").val(p_name);
+                        gProject.saveState();
+                        $("#add-project-opt").animate({
+                            height: "20px"
+                        }, 500);
+                        $("#add-project-opt").css("box-shadow", "0px 0px 0px");
+                        $("#gallery-box").fadeOut();
+                    }
+                    else {
+                        colour = 1;
+                    }
+                    show_msg(result.msg, 2000, colour);
+                });
+            });
+        }
+        
+        $("#pl-title").html("Your <select id = 'change-list-type' class = 'pl-selects'><option value = '1'>Private</option><option value = '2'>Published</option></select> Projects ");
+        render_project_list(1, "");
+        var addNewProjectHTML = "<div id='add-project-opt'>"+
+				"<div id = 'addp-title'>Create Project +</div>"+
+				"<input type='text' placeholder='Project Name...' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>"+
+				"<textarea id='ap-string' class='text-area-style-1' placeholder='Default String...(optional)'  style='width: 90%;margin-top:10px;'></textarea>"+
+				"<textarea id='proj_desc' class='text-area-style-1' placeholder='Description...(optional)'  style='width: 90%;height: 80px;'></textarea>"+
+				"<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>"+
+			"</div>";
+			
+        $("#pl-addnew").html(addNewProjectHTML);
+        controlAddP();
+        
+        $("#change-list-type").change(function(){
+            
+            if($(this).val() == "1"){
+                $("#pl-addnew").html(addNewProjectHTML);
+            }
+            
+            if($(this).val() == "3"){
+               
+            }else{
+                render_project_list($(this).val(), "");
+                controlAddP();
+            }
 
-
+        });
+    });
 });
+

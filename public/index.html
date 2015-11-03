@@ -44,11 +44,11 @@
 			<div id='mm-help'>HELP</div>
 			<div id='mm-about'>ABOUT</div>
 			<div id='mm-gallery'>GALLERY</div>
-			<div id='mm-profile' class='enable_if-in'>PROFILE</div>
 			<div id='mm-projects' class='enable_if-in'>PROJECTS</div>
 			<div id='mm-signup' class='enable_if-out'>SIGN UP</div>
 			<div id='mm-logout' class='enable_if-in'>LOG OUT</div>
 			<div id='mm-login' class='enable_if-out'>LOG IN</div>
+			<div id='mm-profile' class='enable_if-in'></div>
 		</div>
 	</div>
 	<div id="main-body">
@@ -63,7 +63,7 @@
 			
 				<div id = "view-desc-body">
 					<div id = "view-desc-plate"><textarea id = 'text-p-desc'></textarea></div>
-					<div id="view-p-desc" style = 'width:130px;'>^^Project Description</div>
+					<div id="view-p-desc" style = 'width:130px;'>^^Project Abstract</div>
 				</div>
 			
 			
@@ -141,22 +141,6 @@
 		</div>
 	</div>
 
-	<div class="box" id="my-projects-box">
-		<div id="my-projects-container">
-			<div id="add-project-opt">
-				Add New +
-				<input type="text" placeholder="Project Name..." id="ap-name" class="text-field-style-1" style="width: 90%;margin-top:15px;">
-				<textarea id="ap-string" class="text-area-style-1" placeholder="Default String...(optional)"  style="width: 90%;margin-top:10px;"></textarea>
-				<textarea id="proj_desc" class="text-area-style-1" placeholder="Description...(optional)"  style="width: 90%;height: 80px;"></textarea>
-				<input type="button" id="add-project-submit" class="submit-field-style-1" value="Add">
-			</div>
-			<hr size='1'>
-		</div>
-		<div id="project-list"></div>
-		<div id="msg-close-opt-projects" class="msg-close-opt">
-			Close
-		</div>
-	</div>
 	<div class="box" id="cc-box">
 		<input class='color' id='color-picker-field'>
 		<div id="msg-close-opt-cc" class="msg-close-opt">
@@ -178,7 +162,15 @@
 	<div class="box grand-box" id="gallery-box">
 		<div id="msg-close-opt-gallery" class="msg-close-opt">
 			Close
-		</div><div id = 'gg-title'>GLOBULAR GALLERY<span id = 'gg-date-title'></span></div><br>
+		</div>
+		<div id = 'pl-title'>
+		
+		</div>
+		<div id = 'pl-addnew'>
+			
+		</div>
+		<br>
+		<div id = "plist"></div>
 	</div>
 	<div class="box" id="run-proc-box">
 		<div id='process-form'>

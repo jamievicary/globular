@@ -94,7 +94,7 @@ exports.register_user = function(req,res){
 	
 	if(errors===""){
 		
-		var jsonFileStr = JSON.stringify({user_password : enPass, projects_count:0, projects: []});
+		var jsonFileStr = JSON.stringify({user_password : enPass, full_name:"Test Name", published_projects:[]});
 		
 		fs.mkdir("database/users/"+email, function(){
 			fs.writeFile("database/users/"+email + "/data.json", jsonFileStr, function (err) {

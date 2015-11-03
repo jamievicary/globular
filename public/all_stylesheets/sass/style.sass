@@ -406,11 +406,12 @@ div.preview-icon>svg
 	float: right
 
 #add-project-opt
-	background-color: #4cd2bb
+	background-color: grey
 	cursor: pointer
 	height: 20px
-	padding: 10px
+	padding: 5px
 	overflow: hidden
+	border-radius: $border_radius
 
 
 	
@@ -464,9 +465,10 @@ div.preview-icon>svg
 	padding: 5px
 	
 .del-project
-	float: right
-	color: #335566
+	color: salmon
+	display: inline-block
 	cursor: pointer
+	text-decoration: underline
 
 .del-confirm-field
 	border: none
@@ -474,13 +476,17 @@ div.preview-icon>svg
 	width: 1px
 	font-size: 115%
 	padding: 3px
+	outline-width: 0px
+	border: 1px dashed grey
+	margin-top: -5px
+	background-color: #84c9b6
 	color: salmon
 
 .cancel-del
 	cursor: pointer
 	color: salmon
-	margin-top: -5px
-	margin-left: 10px
+	margin-top: -25px
+	margin-left: 110px
 	position: absolute
 
 .cc-opt
@@ -533,10 +539,63 @@ div.control.inline
 	margin-top: -10px
 	position: fixed
 
+.pp-opts
+	width: 400px
+	height: 20px
+	padding-bottom: 5px
+	
 .publish-project
 	cursor: pointer
+	float: left
+	color: dimgrey
+	margin-left: 10px
+	text-decoration: underline
 
+.share-project-opt
+	cursor: pointer
+	float: left
+	margin-left: 10px
+	color: dimgrey
+	text-decoration: underline	
+
+.delete-container
+	float: left
+	margin-left: 10px
 	
 .button-style-3:hover
 	background-color: lightblue
+
+.pl-selects
+	border: none
+	outline-width: 0px
+	font-size: 100%
+	letter-spacing: 2px
+	width: 100px
+
+#pl-title
+	color: grey
+	font-size: 120%
+	margin-top: -5px
+	position: fixed
+	padding: 8px
+	background-color: #b0e0e6
+	z-index: 100
+
+#change-list-type
+	width: 140px
 	
+#plist
+	padding-top: 10px
+
+#pl-addnew
+	width: 200px
+	margin-left: 550px
+	position: absolute
+	
+
+.AV-select
+	color: #fd7f70
+	position: absolute
+	margin-top: 2px
+	margin-left: 15px
+	font-weight: bold

@@ -92,14 +92,13 @@ app.post('/change-pass', function(req, res){
 	
 });
 
+app.post('/get_project_list', function(req,res){
+	projects.get_project_list(req,res);	
+});
 
 app.post('/profile', function(req, res){
 	users.get_profile(req, res);
 });    
-
-app.post('/get-project-meta', function(req,res){
-	projects.get_meta(req, res);
-});
 
 app.post('/register_user', function(req, res){
 	if(req.session.user_id==undefined){
@@ -113,20 +112,10 @@ app.post('/publish_project', function(req, res){
 	}
 });
 
-app.post('/get_projects', function(req, res){
-	if(req.session.user_id!=undefined){
-		projects.get_projects(req,res);
-	}
-});
-
 app.post('/add_new_project', function(req, res){
 	if(req.session.user_id!=undefined){
 		projects.add_new_project(req,res);
 	}
-});
-
-app.post('/get_project_string', function(req,res){
-	projects.get_project_string(req, res);
 });
 
 app.post('/delete_project', function(req, res){
@@ -151,9 +140,21 @@ app.post('/get_public_project', function(req, res){
 	projects.get_pp(req, res);
 });
 
-app.post('/get_gallery_data', function(req,res){
-	projects.get_gallery_data(req, res);
+app.post('/get_all_datenames', function(req,res){
+	fs.readdir('database/projects', function(err,files){
+		res.send(files);
+	});	
 });
 
+app.post('/get_pp_versions', function(req,res){
+	projects.get_pp_versions(req,res);	
+});
 
+app.post('/add_version_pp', function(req,res){
+	projects.add_version_pp(req,res);
+});
+
+app.post('/share_project',function(req,res){
+	projects.share_project(req,res);
+});
 console.log('Express server listening on port ' + app.get('port'));

@@ -2,116 +2,101 @@ var fs = require('fs');
 
 exports.get_projects = function(req,res){
 	var user_id = req.session.user_id;
-	fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
-		
-		data = JSON.parse(data);
-		var projects = data.projects;
-		var all_ids = [];
-		var all_names = [];
-		for (var i in projects){
-			console.log();
-			all_ids.push(projects[i].id);
-			all_names.push(projects[i].name);
-		}
-		if(all_names.length>0){
-			res.send({
-				success: true,
-				projects: all_names,
-				project_ids: all_ids
-			});
-				
-		}else{
-			res.send({
-				success: false,
-				msg: "You have no projects."
-			});
-		}
-	});
+	
 }
 
+exports.get_project_list = function(req, res){
+	var listType = parseInt(req.body.listType);
+	var user_id = req.session.user_id;
+	switch (listType) {
+		case 1:
+			// get users private projects - as linear array of project IDS e.g (1,2,4).
+			fs.readdir('database/users/'+user_id+'/projects', function(err,all_ids){
+				console.log(err);
+				res.send({
+					success: true,
+					project_ids: all_ids,
+					user_id: user_id
+				});
+			});
+			break;
+		case 2:
+			//get users public projects - as list of public project IDS e,g (1510.001, 1508.004)
+			fs.readFile('database/users/'+user_id+'/data.json','utf8', function(err,result){
+				console.log(result);
+				result =  JSON.parse(result);
+				
+				var ids = result.published_projects;
+				res.send({project_ids:ids});
+			});
+			break;
+		case 3:
+			
+			//get all public projects - as list of  public project IDS e,g (1510.001, 1508.004)
+			var dateName = req.body.projectData;
+			console.log(dateName);
+			fs.readdir('database/projects/'+dateName, function(err,files){
+				var pp_addresses = [];
+				if(files != undefined){
+					for(var i = 0;i<=files.length-1;i++){
+						pp_addresses.push(dateName+"."+files[i]);
+					}
+					
+					res.send({project_ids: pp_addresses});	
+				}else{
+					res.send({project_ids:[]});	
+				}
+			});
+			break;
+	}
+}
 exports.add_new_project = function(req,res){
 	var p_name = req.body.p_name;
-	if(p_name.length>2){
-		var p_desc = req.body.p_desc;
-		var string = req.body.string;
-		var user_id = req.session.user_id;
-		var data = fs.readFileSync('database/users/'+user_id+'/data.json');
-		data = JSON.parse(data);
-		if(data.projects.length>0){
-			var newID = data.projects[data.projects.length-1].id + 1;
-		}else{
-			var newID = 0;	
-		}
-		data.projects.push({"id":newID, "name":p_name});
-		data.projects_count = data.projects_count + 1;
-		var metaData = JSON.stringify({project_name : p_name, project_desc: p_desc});
-		fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
-			fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
-				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", string, function(){
-					fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
-						res.send({
-							success: true,
-							p_id: newID,
-							msg: "Success"
-						});
-					});
-				});
-			});	
-		});
-	}else{
-		res.send({
-			success: false,
-			msg: "Your project name is too short."
-		});	
-	}	
-};
-
-
-exports.get_project_string = function(req, res){
-	var project_id = parseInt(req.body.p_id);
+	if(p_name == ""){
+		p_name = "(No Name)";
+	}
+	var p_desc = req.body.p_desc;
+	var string = req.body.string;
 	var user_id = req.session.user_id;
-	fs.readFile('database/users/'+user_id+'/projects/'+project_id+'/string.json','utf-8', function(err,data){
-		fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,pdata){
-			pdata = JSON.parse(pdata);
-			var pname = "";
-			for (var i in pdata.projects){
-				if(pdata.projects[i].id==project_id){
-					pname = pdata.projects[i].name;
-				}
-			}
-			res.send({
-				string:data,
-				name: pname,
-				success: true
+	var data = fs.readdirSync('database/users/'+user_id+'/projects');
+	
+	if(data.length>0){
+		var newID = parseInt(data[data.length-1]) + 1;
+	}else{
+		var newID = 0;	
+	}
+	//data.projects.push({"id":newID, "name":p_name});
+	//	data.projects_count = data.projects_count + 1;
+	var metaData = JSON.stringify({project_name : p_name, project_desc: p_desc});
+
+	fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
+		fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", string, function(){
+			fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
+				res.send({
+					success: true,
+					p_id: newID,
+					msg: "Success"
+				});
 			});
 		});
-	});	
+	});
+	
 };
 
 exports.delete_project = function(req, res){
 	var p_id = req.body.proj_id;
 	var user_id = req.session.user_id;
-	fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
-		data = JSON.parse(data);
-		for (var i in data.projects){
-			if(data.projects[i].id==p_id){
-				data.projects.splice(i,1);
-			}
-		}
+
 		fs.unlink('database/users/'+user_id +'/projects/'+p_id+'/string.json', function(){
 			fs.unlink('database/users/'+user_id +'/projects/'+p_id+'/meta.json', function(){
 				fs.rmdir('database/users/'+user_id +'/projects/'+p_id, function(){
-					fs.writeFile('database/users/'+user_id + '/data.json', JSON.stringify(data), function(){
-						res.send({
-							success: true
-						});
+					res.send({
+						success: true
 					});
 				});
 			});
 		});
-		
-	
-	});
+
 };
 
 
@@ -123,11 +108,9 @@ exports.save_p_changes = function(req,res){
 	var new_string = req.body.string;
 	var p_desc = req.body.p_desc;
 	//if saving public project, 
-	
 	if(p_id!="hold"){
 		fs.readFile('database/users/'+user_id+'/data.json','utf-8', function(err,data){
 			data = JSON.parse(data);
-			var name = "";
 			for (var i in data.projects){
 				if(data.projects[i].id==p_id){
 					data.projects[i].name = proj_name;
@@ -149,48 +132,31 @@ exports.save_p_changes = function(req,res){
 		if(proj_name.length==0){
 			proj_name = "(No Name)";
 		}
-		var data = fs.readFileSync('database/users/'+user_id+'/data.json');
-		data = JSON.parse(data);
-		if(data.projects.length>0){
-			var newID = data.projects[data.projects.length-1].id + 1;
+		var data = fs.readdirSync('database/users/'+user_id+'/projects');
+
+		if(data.length>0){
+			var newID = parseInt(data[data.length-1]) + 1;
 		}else{
 			var newID = 0;	
 		}
-		data.projects.push({"id":newID, "name":proj_name});
-		data.projects_count = data.projects_count + 1;
+		//data.projects.push({"id":newID, "name":proj_name});
+		//data.projects_count = data.projects_count + 1;
 		var metaData = JSON.stringify({project_name : proj_name, project_desc: p_desc});
-		fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(data), function(){
-			fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
-				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", new_string, function(){
-					fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
-						res.send({
-							success: true,
-							p_id: newID,
-							msg: "Success"
-						});
+		
+		fs.mkdir("database/users/"+user_id + "/projects/" + newID, function(){
+			fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/string.json", new_string, function(){
+				fs.writeFile('database/users/'+user_id + "/projects/" + newID + "/meta.json", metaData, function(){
+					res.send({
+						success: true,
+						p_id: newID,
+						msg: "Success"
 					});
 				});
-			});	
-		});
+			});
+		});	
+
 	}
 		
-};
-
-exports.get_meta = function (req, res){
-	var pid = req.body.pid;
-	
-	if(pid!==""&&pid!==null){
-		console.log(pid);
-		var user_id = req.session.user_id;
-		var dir = 'database/users/'+user_id+'/projects/'+pid+'/meta.json';
-		console.log(dir);
-		fs.readFile(dir, 'utf8', function(err,data){
-			data = JSON.parse(data);
-			res.send(data);
-		});	
-	}else{
-		res.send({result: ""});
-	}
 };
 
 exports.publish_project = function (req, res){
@@ -201,7 +167,7 @@ exports.publish_project = function (req, res){
 	var month = (date.getMonth()+1).toString();
 	var string = fs.readFileSync('database/users/'+user_id+'/projects/'+pid+'/string.json', 'utf8');
 	var metaData = fs.readFileSync('database/users/'+user_id+'/projects/'+pid+'/meta.json', 'utf8');
-	
+	console.log(string);
 	var day = date.getDate();
 	
 	if(month.length==1){
@@ -213,6 +179,7 @@ exports.publish_project = function (req, res){
 	
 	
 	function construct_project(){
+	
 		fs.readdir('database/projects/'+dateName,function(err, files){
 			var pcount = (files.length + 1).toString();
 			switch(pcount.length){
@@ -224,23 +191,28 @@ exports.publish_project = function (req, res){
 					break;
 			}
 			
+			var userData = fs.readFileSync('database/users/'+user_id+'/data.json');
+			userData = JSON.parse(userData);
+			userData.published_projects.push(dateName + "." + pcount);
+		
 			var data = JSON.stringify({owners:[user_id], date_published:publish_date});
-			
-			fs.mkdir('database/projects/'+dateName+'/'+pcount, function(){
-				fs.writeFile('database/projects/'+dateName+'/'+pcount+'/data.json', data, function(){
-					fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/', function(){
-						fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/v1/', function(){
-							fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/string.json', string, function(){
-								fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/meta.json', metaData, function(){
+			fs.writeFile('database/users/'+user_id+'/data.json', JSON.stringify(userData), function(){
+				fs.mkdir('database/projects/'+dateName+'/'+pcount, function(){
+					fs.writeFile('database/projects/'+dateName+'/'+pcount+'/data.json', data, function(){
+						fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/', function(){
+							fs.mkdir('database/projects/'+dateName+'/'+pcount+'/versions/v1/', function(){
+								fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/string.json', string, function(){
+									fs.writeFile('database/projects/'+dateName+'/'+pcount+'/versions/v1/meta.json', metaData, function(){
+										
+										res.send({projectURL: dateName + "." + pcount});
 									
-									res.send({projectURL: dateName + "." + pcount});
-								
+									});
 								});
-							});
-						});	
+							});	
+						});
 					});
-				});
-  			});
+	  			});
+			});	
 		});
 
 	}
@@ -256,10 +228,13 @@ exports.publish_project = function (req, res){
 
 exports.get_pp = function(req,res){
 	var dateName = req.body.dateName;
+	
 	var version = req.body.version;
 	var projectNo = req.body.projectNo;
 	fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/string.json', 'utf8', function(err, string){
+
 		fs.readFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+version+'/meta.json', 'utf8', function(err, meta){
+
 			meta = JSON.parse(meta);
 			res.send({
 				string: string,
@@ -271,40 +246,94 @@ exports.get_pp = function(req,res){
 	});	
 };
 
-exports.get_gallery_data = function(req,res){
-	var dateName = req.body.dateName;
-	fs.readdir('database/projects/'+dateName, function(err,files){
-		res.send({projectNoArr: files});	
+exports.get_pp_versions = function(req,res){
+	var pID = req.body.pid;
+	var dateName = pID.substring(0, 4);
+    var projectNo = pID.substring(5);
+	fs.readdir('database/projects/'+dateName+'/'+projectNo+'/versions/', function(err,result){
+		res.send(result);
 	});
-};	
+};
 
-/*exports.get_gallery_data = function(req,res){
-	var dateName = req.body.dateName;
-	var allMeta = {};
-	fs.readdir('database/projects/'+dateName, function(err,files){
+exports.add_version_pp = function(req,res){
+	//add private project as version to a published.
+	var public_id = req.body.public_id;
+	var private_id = req.body.private_id;
+	var user_id = req.session.user_id;
+	var dateName = public_id.substring(0, 4);
+    var projectNo = public_id.substring(5);
+    
+    var newDir = "";
+    fs.readdir('database/projects/'+dateName+'/'+projectNo+'/versions/', function(err, versions){
+    	newDir = "v"+(versions.length + 1).toString();
+		fs.readFile('database/users/'+user_id+'/projects/'+private_id+'/string.json','utf8', function(err, string){
+			fs.readFile('database/users/'+user_id+'/projects/'+private_id+'/meta.json','utf8', function(err, meta){
+				fs.mkdir('database/projects/'+dateName+'/'+projectNo+'/versions/'+newDir, function(err){
+					fs.writeFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+newDir+'/meta.json',meta, function(err){
+						fs.writeFile('database/projects/'+dateName+'/'+projectNo+'/versions/'+newDir+'/string.json',string, function(err){
+							res.send("success");
+						});
+					});
+				});
+			});
+		});
+    });	
+};
+
+exports.share_project = function(req,res){
+	var emails = req.body.emails.split(",");
+	var p_id = req.body.p_id;
+	var errors = "";
+	var user_id = req.session.user_id;
+	var invalid_emails = [];
+	var valid_emails = [];
+	
+	for(var i in emails){
+		var email = emails[i].trim();
+		if(!fs.existsSync('database/users/'+email)){
+			invalid_emails.push(email);	
+		}else{
+			valid_emails.push(email);
+		}
+	}
+	
+	if(emails.length==0){
+		errors = errors + "You must supply atleast one email. ";
+	}
+	if(invalid_emails.length>0){
+		errors = errors + "The following emails are invalid or are not registered: " +invalid_emails.join(",");
 		
-		for(var projectNo in files){
-			fs.readdir('database/projects/'+dateName+'/'+files[projectNo]+'/versions/', function(err,versions){
-
-				var accVersions = [];
-				var latestVersion;
-				if(versions.length>1){
-					for(var version in versions){
-						accVersions.push(parseInt(version.substring(1)));
+		res.send({
+			successcolor: 1,
+			msg: errors
+		});
+	}else{
+		for(var i in valid_emails){
+			var email = valid_emails[i];
+			fs.readFile('database/users/'+user_id+'/projects/'+p_id+'/string.json','utf8', function(err, string){
+				fs.readFile('database/users/'+user_id+'/projects/'+p_id+'/meta.json','utf8', function(err, meta){
+					console.log(err);
+					var existing_ids = fs.readdirSync('database/users/'+email+'/projects');
+					if(existing_ids.length>0){
+						var new_id = parseInt(existing_ids[existing_ids.length-1]) + 1;
+					}else{
+						var new_id = 0;	
 					}
 					
-					var sortedVs = accVersions.sort();
-					latestVersion = "v"+(sortedVs[sortedVs.length-1]).toString();
-				}else{
-					latestVersion = "v1";
-				}
-				console.log(files[projectNo]);
-				fs.readFile('database/projects/'+dateName+'/'+files[projectNo]+'/versions/'+latestVersion+'/meta.json', 'utf8', function(err, meta){
 					meta = JSON.parse(meta);
-					console.log(JSON.stringify(meta) + "gg");
-					//allMeta.push(meta);
+					meta.project_name = meta.project_name + "(Shared by "+user_id+")";
+					meta = JSON.stringify(meta);
+					fs.mkdir('database/users/'+email+'/projects/'+new_id, function(err){
+						fs.writeFileSync('database/users/'+email+'/projects/'+new_id+'/meta.json', meta);
+						fs.writeFileSync('database/users/'+email+'/projects/'+new_id+'/string.json', string);
+					});
+					res.send({
+						successcolor: 2,
+						msg: "Successfully shared project."
+					});
 				});
-			});	
+			});
 		}
-	});
-};*/
+	}
+	
+};

@@ -1027,5 +1027,4 @@ Project.prototype.renderNCells = function(n) {
             this.renderGenerator("#ci-" + cell, cell);
         }
     }
-
 }
