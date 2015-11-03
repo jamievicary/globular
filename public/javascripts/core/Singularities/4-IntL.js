@@ -231,6 +231,7 @@ Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
 }
 
 Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
+    var x = key.last();
     if (type.tail('R')) return [this.source_size(x) + 1, this.target_size(x) + 1];
     else if (type.tail('L')) return [this.source_size(x) + 1, this.target_size(x) + 1];
     else if (type.tail('RI')) return [this.source_size(x) + 1, this.source_size(x) + 1]; 
@@ -238,6 +239,7 @@ Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
 }
 
 Diagram.prototype.getInverseKey['IntL'] = function(type, key) {
+    var x = key.last();
     if (type.tail('R')) return [x + this.source_size(x)];
     else if (type.tail('L')) return [x + this.source_size(x)];
     else if (type.tail('RI')) return [x - this.source_size(x)]; 
