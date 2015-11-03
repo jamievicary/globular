@@ -18,7 +18,7 @@ RegisterSingularityFamily(
 );
 
 // Interpret drag of this type
-Diagram.prototype.interpret_drag['IntL'] = function(drag) {
+Diagram.prototype.interpretDrag['IntL'] = function(drag) {
 
     var up = drag.direction[0] > 0;
     var right = drag.direction[1] > 0;

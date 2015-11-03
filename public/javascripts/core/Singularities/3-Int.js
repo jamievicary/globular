@@ -19,8 +19,10 @@ Diagram.prototype.rewritePasteData['Int'] = function(type, key) {
 }
 */
 
+
+
 // Interpret drag of this type
-Diagram.prototype.interpret_drag['Int'] = function(drag) {
+Diagram.prototype.interpretDrag['Int'] = function(drag) {
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {

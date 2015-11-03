@@ -3,7 +3,7 @@
 /*global Diagram*/
 
 /* Core functions for each singularity
-Diagram.prototype.rewriteAllowed(type, key)
+Diagram.prototype.interchangerAllowed(type, key)
 Diagram.prototype.rewriteCutData(type, key)
 Diagram.prototype.rewritePasteData(type, key)
 Diagram.prototype.expand(type, height, n, m)
@@ -34,7 +34,7 @@ function RegisterSingularityFamily(data) {
 }
 
 
-Diagram.prototype.rewriteAllowed = function(type, key) {
+Diagram.prototype.interchangerAllowed = function(type, key) {
     return SingularityData[SingularityFamilies[type]].rewriteAllowed(type, key);
 }
 
@@ -51,7 +51,7 @@ Diagram.prototype.expand = function(type, start, n, m) {
 }
 
 
-Diagram.prototype.interpret_drag = function(drag) {
+Diagram.prototype.interpretDrag = function(drag) {
     
     // See what options we have
     var options = [];
@@ -62,13 +62,10 @@ Diagram.prototype.interpret_drag = function(drag) {
         // Don't bother testing if the dimension of the diagram is too low for this singularity type
         if (this.getDimension() < data.dimension - 1) continue;
         
-        // If this is a possibility, add it
-        /*
-        var f = this.interpret_drag[family];
-        var b = f.bind(this);
-        var r = b(drag);
-        */
-        var r = ((this.interpret_drag[family]).bind(this))(drag);
+        // See if this family can interpret the drag
+        var r = ((this.interpretDrag[family]).bind(this))(drag);
+        
+        // If so, add it to the list of options
         if (r != null) options.push(r);
     }
     
