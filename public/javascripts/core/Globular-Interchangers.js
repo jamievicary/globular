@@ -212,18 +212,34 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         return [];
     }
 
-    var new_type = type.slice(0, type.length - 2);
-
     if (type.tail('1')) {
+        
+        var new_type = type.slice(0, type.length - 2);
+        var new_key_location = key_location.slice(0, key_location.length - 1);
+        var inverse_key_location = this.getSlice(x).interchangerInverseKey(new_type, new_key_location);
+        
+        for(var i = 0; i < new_key_location.length; i++){
+            new_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+            inverse_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+        }
+        
         if(new_type.tail('I')){
-            list.push(new NCell(new_type, null, [1]));
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), null, [0]));
+            list.push(new NCell(new_type, null, new_key_location));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), null, inverse_key_location));
         }
         else{
-            list.push(new NCell(new_type, null, [0]));
-            list.push(new NCell(new_type + 'I', null, [1]));
+            list.push(new NCell(new_type, null, new_key_location));
+            list.push(new NCell(new_type + 'I', null, inverse_key_location));
         }
     }
+    
+    /*
+    We make key locations such, that it is possible to take key location one shorter here
+    to get the key of the thing that should be inserted
+    
+    Then an additional function would tell us what would be the key of the inverse interchanger applied
+    at the same location to undo the application of this one
+    */
 
     return list;
 }
@@ -423,12 +439,19 @@ Diagram.prototype.test_basic = function(drag) {
             
             if(!int_bool && !intI_bool){
                 id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
-                if(!this.interchangerAllowed(id, [x])){
+                var k;
+                if(this.nCells[x].id === 'Int'){
+                    k = 0;
+                }
+                else{
+                    k = 1;
+                }
+                if(!this.interchangerAllowed(id, [k, x])){
                     console.log("cannot interchange");
                     return [];
                 }
                 else{
-                    return [new NCell(id, null, [x])];
+                    return [new NCell(id, null, [k, x])];
                 }
             }   
             else if(int_bool && intI_bool){ 
@@ -582,6 +605,39 @@ Diagram.prototype.target_size = function(level) {
 
 };
 
+Diagram.prototype.interchangerInverseKey = function(type, key_location) {
+
+    var x = key_location.last();
+
+      if(type.tail('Int')){
+            return [x + 1];
+        }
+        
+        else if(type.tail('IntI')){
+            return [x - 1];
+        }
+        
+        else if(type.tail('R')){
+            return [x + this.source_size(x)];
+        }
+        
+        else if(type.tail('L')){
+            return [x + this.source_size(x)];
+        }
+        else if(type.tail('RI')){
+            return [x - this.source_size(x)];
+        }
+        else if(type.tail('LI')){
+            return [x - this.source_size(x)];
+        }
+        else if(type.tail('-1')){
+            return key_location.slice(0);
+        }
+        else if(type.tail('-1I')){
+            return key_location.slice(0);
+        }
+};
+
 Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     
     if(key_location.length === 0) return [];
@@ -622,6 +678,9 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
     }
     // Possibly generate a new type
     
-    return diagram_pointer.getSlice(key).interchangerCoordinates(type, key_location.slice(0, key_location.length - 1)).concat([key]);   
+    var new_type = type.slice(0, type.length - 2);
+    
+    return diagram_pointer.getSlice(key).interchangerCoordinates(new_type, key_location.slice(0, key_location.length - 1)).concat([key]);   
 
 };
+

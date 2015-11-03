@@ -169,16 +169,17 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
                 target.nCells[i].coordinates[j] += nCell.coordinates[j];
             }
         }
-        else{
+        if(target.nCells[i].key != undefined) {
             for (var j = 0; j < target.nCells[i].key.length; j++) {
-                target.nCells[i].key[j] += nCell.coordinates[this.dimension - 1 - 1];
+               // target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1 + j];
+                target.nCells[i].key[target.nCells[i].key.length - 1 -j] += nCell.coordinates[this.dimension - 1 - 1 - j];
             }
         }
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
     if(insert_position != undefined){
         for (var i = 0; i < target.nCells.length; i++) {
-            if(this.nCells[insert_position + i].coordinates === undefined){
+            if(this.nCells[insert_position + i].coordinates === null){
                 this.nCells[insert_position + i].coordinates = 
                     this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key);
             }
@@ -209,8 +210,11 @@ Diagram.prototype.copy = function() {
         if(this.nCells[i].coordinates === null){
             nCells.push(new NCell(this.nCells[i].id, null, this.nCells[i].key.slice(0)));
         }
+        else if(this.nCells[i].key_location === undefined){
+            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), undefined));
+        }
         else{
-            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key));
+            nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), this.nCells[i].key.slice(0)));
         }
     }
 
