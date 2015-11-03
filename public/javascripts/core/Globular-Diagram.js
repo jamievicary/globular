@@ -178,7 +178,10 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     }
     
     for (var i = 0; i < target.nCells.length; i++) {
-        this.nCells[insert_position + i].coordinates = this.interchangerCoordinates(insert_position + i);
+        if(this.nCells[insert_position + i].coordinates === null){
+            this.nCells[insert_position + i].coordinates = 
+                this.getSlice(insert_position + i).interchangerCoordinates(this.nCells[insert_position + i].id, this.nCells[insert_position + i].key_location);
+        }
     }    
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
 
@@ -550,28 +553,43 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
     }
 
     var new_id = attached_nCell.id 
-    var new_coordinates = attached_nCell.coordinates.slice(0);
-    var new_key_location = attached_nCell.key_location;
-    if (attached_nCell.id.substr(0, 3) != "Int") {
-        attached_nCell.coordinates = bounds;
-        new_coordinates = bounds;
-        new_id = attached_nCell.id;
+    var new_coordinates;
+    var new_key_location;
+    if(attached_nCell.key_location != undefined){
+        new_key_location = attached_nCell.key_location.slice(0);
     }
-    else if(boundary_boolean === 's'){
-        if (new_id.tail('RI') || new_id.tail('LI')){
-            new_key_location -= this.getSourceBoundary().source_size(new_coordinates.last())
-            //new_coordinates.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));   
+    if (attached_nCell.id.substr(0, 3) != "Int") {
+        new_coordinates = bounds;
+    }
+    else{
+        var level;
+        if(boundary_boolean === 's'){
+            level = 0;   
         }
-        else if (new_id.tail('R') || new_id.tail('L')){
-            new_key_location += this.getSourceBoundary().source_size(new_coordinates.last())
-            //new_coordinates.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));   
+        else{
+            level = this.nCells.length;   
         }
         
-        if (new_id.tail('I')){
-            new_id = new_id.substr(0, new_id.length - 1);
-        }
-        else {
-            new_id = new_id + 'I';
+        new_coordinates = this.getSlice(level).interchangerCoordinates(new_id, new_key_location);
+        attached_nCell.coordinates = new_coordinates.slice(0);
+
+    
+        if(boundary_boolean === 's'){
+            if (new_id.tail('RI') || new_id.tail('LI')){
+                new_key_location.increment_last(-this.getSourceBoundary().source_size(new_coordinates.last()));
+            }
+            else if (new_id.tail('R') || new_id.tail('L')){
+                new_key_location.increment_last(this.getSourceBoundary().source_size(new_coordinates.last()));
+            }
+            
+            if (new_id.tail('I')){
+                new_id = new_id.substr(0, new_id.length - 1);
+                new_key_location.increment_last(-1);
+            }
+            else {
+                new_id = new_id + 'I';
+                new_key_location.increment_last(1);
+            }
         }
     }
 
