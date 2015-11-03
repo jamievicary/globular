@@ -143,7 +143,6 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
 Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
 
     var x = key.last();
-
     var heights = this.interchangerCoordinates(type, key);
 
     if (this.nCells.length != 0) {
@@ -165,7 +164,6 @@ Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
         }
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
-
 
     if (type.tail('R')) {
         list = this.expand(new_type, 0, 1, this.source_size(x));
@@ -233,7 +231,7 @@ Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
 }
 
 Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
-
+    
 }
 
 Diagram.prototype.getInverseKey['IntL'] = function(type, key) {
