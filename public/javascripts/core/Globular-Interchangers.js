@@ -109,8 +109,13 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(g_target - g_source);
         }
         else{
-            this.nCells[x].key_location.increment_last(g_target - g_source);
-        } 
+            this.nCells[x].key_location.increment_last(-heights.penultimate() + g_target - g_source);
+        }
+        
+        if(this.nCells[x + 1].key_location != undefined){
+            this.nCells[x + 1].key_location.increment_last(-heights.penultimate());
+        }
+        
         list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1, this.nCells[x + 1].key_location));
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -128,8 +133,13 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(g_source - g_target);
         }
         else{
-            this.nCells[x].key_location.increment_last(g_source - g_target);
-        }   
+            this.nCells[x].key_location.increment_last(-heights.penultimate() + g_source - g_target);
+        }
+        
+        if(this.nCells[x - 1].key_location != undefined){
+            this.nCells[x - 1].key_location.increment_last(-heights.penultimate());
+        }
+
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
         list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key_location));
     }
@@ -144,7 +154,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(1);
         }
         else{
-            this.nCells[x].key_location.increment_last(1);
+            this.nCells[x].key_location.increment_last(-heights.penultimate() + 1);
         }        
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -158,7 +168,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(-1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-1);
+            this.nCells[x].key_location.increment_last(-heights.penultimate() - 1);
         }
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -177,7 +187,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(-1);
         }
         else{
-            this.nCells[x].key_location.increment_last(-1);
+            this.nCells[x].key_location.increment_last(-heights.penultimate() - 1);
         }
         list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -193,7 +203,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
             temp_coordinates_x.increment_last(1);
         }
         else{
-            this.nCells[x].key_location.increment_last(1);
+            this.nCells[x].key_location.increment_last(-heights.penultimate() + 1);
         } 
         list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key_location));
     }
@@ -205,12 +215,13 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('1')) {
-        list.push(new NCell(new_type, null, [0]));
         if(new_type.tail('I')){
+            list.push(new NCell(new_type, null, [1]));
             list.push(new NCell(new_type.substr(0, new_type.length - 1), null, [0]));
         }
         else{
-            list.push(new NCell(new_type + 'I', null, [0]));
+            list.push(new NCell(new_type, null, [0]));
+            list.push(new NCell(new_type + 'I', null, [1]));
         }
     }
 
