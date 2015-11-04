@@ -98,6 +98,10 @@ function diff_array(t1, t2) {
     return tab;
 }
 
+Array.prototype.end = function(n) {
+    return this[this.length - n];
+}
+
 Array.prototype.last = function() {
     return this[this.length - 1];
 };

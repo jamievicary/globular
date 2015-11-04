@@ -107,8 +107,8 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
 
     if (type.tail('L')) {
         var crossings = g1_target;
-        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
-        if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
+//        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+  //      if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
         var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }

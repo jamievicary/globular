@@ -208,5 +208,4 @@ Diagram.prototype.getInverseKey['Int'] = function (type, key){
     }
 };
 
-
 RegisterSingularityFamily(NewSingularityFamily);
