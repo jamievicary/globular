@@ -144,6 +144,8 @@ Diagram.prototype.rewritePasteData['Int'] = function (type, key){
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
         list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key));
     }
+    
+    return list;
 };
 
 Diagram.prototype.getInterchangerCoordinates['Int'] = function (type, key){
