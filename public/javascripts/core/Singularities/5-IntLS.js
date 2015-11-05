@@ -8,7 +8,8 @@
 // This is naturality for the 4-cell pull-through
 
 RegisterSingularityFamily(
-    'IntLS', 5, ['Int-L-S', 'Int-L-SI',
+    'IntLS', 5,
+    ['Int-L-S', 'Int-L-SI',
     'IntI-L-S', 'IntI-L-SI',
     'Int-LI-S', 'Int-LI-SI',
     'IntI-LI-S', 'IntI-LI-SI',
@@ -18,6 +19,9 @@ RegisterSingularityFamily(
     'IntI-RI-S', 'IntI-RI-SI']
 );
 
+Diagram.prototype.getSou
+
+/*
 Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
 
     // Basic check on the key
@@ -52,11 +56,13 @@ Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
         return this.instructionsEquiv(this.nCells.slice(start.last(), start.last() + template.length), template);
 
     } else {
+
         console.log("rewriteAllowed: Singularity type " + type + " not yet supported");
         return false;
     }
 
 }
+*/
 
 //Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
 Diagram.prototype.getGeometry.IntLS = function(type, key) {

@@ -135,8 +135,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
 
     // Special code to deal with interchangers
     if (nCell.id.substr(0, 3) === 'Int'){
-        var rewrite;
-        rewrite.target = this.rewritePasteData(nCell.id, nCell.key)
+        var target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
         var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{
@@ -210,7 +209,7 @@ Diagram.prototype.copy = function() {
         if(this.nCells[i].coordinates === null){
             nCells.push(new NCell(this.nCells[i].id, null, this.nCells[i].key.slice(0)));
         }
-        else if(this.nCells[i].key_location === undefined){
+        else if(this.nCells[i].key === undefined){
             nCells.push(new NCell(this.nCells[i].id, this.nCells[i].coordinates.slice(0), undefined));
         }
         else{

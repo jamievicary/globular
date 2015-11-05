@@ -2,11 +2,7 @@
 /*global RegisterSingularityFamily*/
 /*global Diagram*/
 
-// Data for the Int family
-// This is the basic interchanger
-
 var NewSingularityFamily = {family: 'Int', dimension: 3, members: ['Int', 'IntI']};
-
 
 Diagram.prototype.expand['Int'] = function (type, x, n, m){
     
@@ -83,10 +79,6 @@ Diagram.prototype.interchangerAllowed['Int'] = function (type, key){
     }
 }
 
-Diagram.prototype.rewriteCutData['Int'] = function (type, key){
-    
-    return 2;
-};
 
 Diagram.prototype.rewritePasteData['Int'] = function (type, key){
 
@@ -152,6 +144,8 @@ Diagram.prototype.rewritePasteData['Int'] = function (type, key){
         list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
         list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key));
     }
+    
+    return list;
 };
 
 Diagram.prototype.getInterchangerCoordinates['Int'] = function (type, key){
