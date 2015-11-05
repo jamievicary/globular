@@ -15,6 +15,8 @@
     'IntI-RI-S', 'IntI-RI-SI']
 );
 */
+
+
 Diagram.prototype.rewriteAllowed['IntLS'] = function(type, key) {
     
     // Basic check on the key

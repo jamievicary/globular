@@ -360,7 +360,7 @@ Project.prototype.drag_cell = function(drag) {
         // Display a dialog box, return user's choice
     }
   
-    var action = options[0];
+    var action = new NCell(options[0].id, null, options[0].key);
     //action.coordinates.concat(temp_drag_data);
 
     var action_wrapper = {

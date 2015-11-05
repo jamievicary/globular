@@ -13,55 +13,106 @@ var NewSingularityFamily = {
     members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
 };
 
+RegisterSingularityFamily(NewSingularityFamily);
+
+
+Diagram.prototype.expand['IntL'] = function (type, x, y, n, l, m){
+    
+    var list = new Array();
+    var new_type;
+    
+    var new_l = l + (this.target_size(x) - this.source_size(x));
+    var final_l = l;
+    for(var i = 0; i < n; i++){
+        final_l += (this.target_size(x + i) - this.source_size(x + i));
+    }
+    var b = this.nCells[x].coordinates.last() - y;
+    var a = y + l - this.nCells[x].coordinates.last() - this.source_size(x);
+    
+    if(type.tail('I')){
+        new_type = type.substr(0, type.length - 3)
+    }
+    else{
+        new_type = type.substr(0, type.length - 2)
+    }
+    if (n === 0 || m === 0) {
+        return [];
+    }
+    else if (n === 1 && m === 1) {
+        if(a === 0 && b === 0){
+            if(type.tail('I')){
+                list.push(new NCell(type, null, [x + 1]));
+            }
+            else{
+                list.push(new NCell(type, null, [x]));
+            }
+        }  
+        else{
+            list = this.expand(new_type, x, 1, a*m).concat(
+                this.expand(type, x + a*m, y + a, 1, this.source_size(x), 1)).concat(
+                 this.expand(new_type, x + this.source_size(x) + a*m, 1, b*m));
+        }
+    }
+    else if (m != 1 && n === 1) {
+        list = this.expand(type, x, y, 1, l, 1).concat(
+                this.expand(type, x + a + b + this.source_size(x), y + 1, 1, new_l, m - 1));
+    }
+    else {
+        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, x, y, n - 1, l, m));
+    }
+    
+    return list;
+};
+
 // Interpret drag of this type
 Diagram.prototype.interpretDrag['IntL'] = function(drag) {
 
-    var up = drag.direction[0] > 0;
-    var right = drag.direction[1] > 0;
-    var key = drag.position[0];
+    var up = drag.directions[0] > 0;
+    var right = drag.directions[1] > 0;
+    var key = [drag.coordinates[0]];
 
     var options = [];
     if (up) {
         options.push({
             type: 'Int-L',
             key: key,
-            possible: this.rewriteAllowed('Int-L', key)
+            possible: this.interchangerAllowed('Int-L', key)
         });
         options.push({
             type: 'IntI-L',
             key: key,
-            possible: this.rewriteAllowed('IntI-L', key)
+            possible: this.interchangerAllowed('IntI-L', key)
         });
         options.push({
             type: 'IntI-R',
             key: key,
-            possible: this.rewriteAllowed('IntI-R', key)
+            possible: this.interchangerAllowed('IntI-R', key)
         });
         options.push({
             type: 'Int-R',
             key: key,
-            possible: this.rewriteAllowed('Int-R', key)
+            possible: this.interchangerAllowed('Int-R', key)
         });
     } else {
         options.push({
             type: 'Int-R',
             key: key,
-            possible: this.rewriteAllowed('Int-RI', key)
+            possible: this.interchangerAllowed('Int-RI', key)
         });
         options.push({
             type: 'IntI-R',
             key: key,
-            possible: this.rewriteAllowed('IntI-RI', key)
+            possible: this.interchangerAllowed('IntI-RI', key)
         });
         options.push({
             type: 'Int-L',
             key: key,
-            possible: this.rewriteAllowed('Int-LI', key)
+            possible: this.interchangerAllowed('Int-LI', key)
         });
         options.push({
             type: 'IntI-L',
             key: key,
-            possible: this.rewriteAllowed('IntI-LI', key)
+            possible: this.interchangerAllowed('IntI-LI', key)
         });
     }
 
@@ -100,6 +151,8 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
     var x = key.last();
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
+
+    var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('L')) {
         var crossings = g1_target;
@@ -241,5 +294,3 @@ Diagram.prototype.getInverseKey['IntL'] = function(type, key) {
     else if (type.tail('RI')) return [x - this.source_size(x)]; 
     else if (type.tail('LI')) return [x - this.source_size(x)];
 }
-
-RegisterSingularityFamily(NewSingularityFamily);
