@@ -50,7 +50,7 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
     return null;
 }
 
-Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
+Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     // Is the key cell well-separated from the adjacent structure?
     if (!this.wellSeparated.IntLS(type, key)) return false;
