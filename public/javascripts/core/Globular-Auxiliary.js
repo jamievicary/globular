@@ -28,7 +28,7 @@ function prefixLabels(object, prefix) {
 // Suffix labels of an object
 function suffixLabels(arr, suffix) {
     var new_arr = [];
-    for (var i=0; i<arr.length; i++) {
+    for (var i = 0; i < arr.length; i++) {
         new_arr[i] = arr[i] + suffix;
     }
     //object = new_obj;
@@ -36,18 +36,18 @@ function suffixLabels(arr, suffix) {
 }
 
 function getMean(arr) {
-    for (var i=0; i<arr.length; i++) {
+    for (var i = 0; i < arr.length; i++) {
         if (arr[i] === undefined) {
             var x = 0;
         }
     }
     var total = arr[0].slice();
-    for (var i=1; i<arr.length; i++) {
-        for (var j=0; j<total.length; j++) {
+    for (var i = 1; i < arr.length; i++) {
+        for (var j = 0; j < total.length; j++) {
             total[j] += arr[i][j];
         }
     }
-    for (var j=0; j<total.length; j++) {
+    for (var j = 0; j < total.length; j++) {
         total[j] /= arr.length;
     }
     return total;
@@ -61,7 +61,7 @@ function detectLeftButton(event) {
 
 function zero_array(n) {
     var tab = new Array();
-    for(var i = 0; i < n; i++){
+    for (var i = 0; i < n; i++) {
         tab.push(0);
     }
     return tab;
@@ -69,16 +69,15 @@ function zero_array(n) {
 
 function min_array(t1, t2) {
     var tab = new Array();
-    
-    if(t1.length != t2.length){
+
+    if (t1.length != t2.length) {
         console.log("Arrays of differnt lenght")
     }
-    
-    for(var i = 0; i < t1.length; i++){
-        if(t1[i] <= t2[i]){
+
+    for (var i = 0; i < t1.length; i++) {
+        if (t1[i] <= t2[i]) {
             tab.push(t1[i]);
-        }
-        else{
+        } else {
             tab.push(t2[i]);
         }
     }
@@ -87,12 +86,12 @@ function min_array(t1, t2) {
 
 function diff_array(t1, t2) {
     var tab = new Array();
-    
-    if(t1.length != t2.length){
+
+    if (t1.length != t2.length) {
         console.log("Arrays of differnt lenght")
     }
-    
-    for(var i = 0; i < t1.length; i++){
+
+    for (var i = 0; i < t1.length; i++) {
         tab.push(t1[i] - t2[i]);
     }
     return tab;
@@ -121,15 +120,15 @@ Array.prototype.increment_last = function(value) {
 
 Array.prototype.reverse = function() {
     var t2 = new Array();
-    for(var i = 0; i < this.length; i++){
+    for (var i = 0; i < this.length; i++) {
         t2.push(this[this.length - 1 - i]);
     }
-    
+
     return t2;
 };
 
 String.prototype.tail = function() {
-    for (var i=0; i<arguments.length; i++) {
+    for (var i = 0; i < arguments.length; i++) {
         var t = arguments[i];
         if (this.substr(this.length - t.length, t.length) === t) return true;
     }
@@ -144,7 +143,7 @@ String.prototype.last = function() {
 
 Array.prototype.fill = function(value, length) {
     this.length = 0;
-    for (var i=0; i<length; i++) {
+    for (var i = 0; i < length; i++) {
         this[i] = value;
     }
     return this;
@@ -157,3 +156,17 @@ String.prototype.is_basic_interchanger = function() {
 String.prototype.is_interchanger = function() {
     return (this.substr(0, 3) == 'Int');
 };
+
+Array.prototype.move = function(instructions) {
+    for (var i = 0; i < instructions.length; i++) {
+        if (i == this.length) return;
+        var command = instructions.end(i);
+        var index = this.length - 1 - i;
+        if (command.relative != undefined) {
+            this[index] += command.relative;
+        }
+        else {
+            this[index] = command.absolute;
+        }
+    }
+}

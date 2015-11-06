@@ -19,50 +19,30 @@ RegisterSingularityFamily(
     'IntI-RI-S', 'IntI-RI-SI']
 );
 
-Diagram.prototype.getSou
+Diagram.prototype.getSource.IntLS = function(type, key) {
+    var coord = this.getCoordinates(type, key);
+    var cell = this.nCells[key.last()];
+    var expand_data = this.expand_source(cell);
+    if (type == 'Int-L-S') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
+    if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', expand_data, 1, coord.move([{relative: +1}])));
+    alert ('Interchanger ' + type + ' not yet handled');
+    throw 0;
+}
 
-/*
+Diagram.prototype.getTarget.IntLS = function(type, key) {
+    var coord = this.getCoordinates(type, key);
+    var cell = this.nCells[key.last()];
+    var expand_data = this.expand_source(cell);
+    if (type == 'Int-L-S') return [cell.move([{relative: -1}, {absolute: coord.last()}])].concat(this.getSlice(coord.last()).rewrite(cell).expand('Int-L', expand_data, 1, coord));
+    if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
+    alert ('Interchanger ' + type + ' not yet handled');
+    throw 0;
+}
+
 Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
 
-    // Basic check on the key
-    if (key >= this.nCells.length) return false;
-    if (key < 0) return false;
-    var key_cell = this.nCells[key];
-
-    if (type == 'Int-L-S') {
-
-        // Get the dimensions of the source of the key cell
-        var source_height;
-        var source_width;
-        if (key_cell.id.isInterchanger()) {
-            var slice = this.getSlice(key);
-            var bbox = slice.getInterchangerBoundingBox(type);
-            source_height = bbox[1];
-            source_width = bbox[0];
-        } else {
-            var source = gProject.signature.getGenerator(key_cell.id).getSource();
-            source_height = source.nCells.length;
-            source_width = source.getSourceBoundary().nCells.length;
-        }
-
-        // Get the starting point of the chain
-        var start = this.getInterchangerCoordinates(type, key);
-        if (start == null) return false;
-        var start_slice = this.getSlice(start.last());
-
-        // Build up the template and verify
-        var template = start_slice.expand('Int-L', start.penultimate(), [source_width, source_height], 1);
-        template = template.concatenate([key_cell]);
-        return this.instructionsEquiv(this.nCells.slice(start.last(), start.last() + template.length), template);
-
-    } else {
-
-        console.log("rewriteAllowed: Singularity type " + type + " not yet supported");
-        return false;
-    }
 
 }
-*/
 
 //Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
 Diagram.prototype.getGeometry.IntLS = function(type, key) {
@@ -71,7 +51,7 @@ Diagram.prototype.getGeometry.IntLS = function(type, key) {
     var key_cell = this.nCells[key.last()];
     if (type != 'Int-L-S') {
         console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
-        return null;
+        throw 0;
     }
 
     // Assuming type == 'Int-L-S'
@@ -108,9 +88,8 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     if (c == null) return null;
     
     var top_length = key.last() - c.end(0) + 1;
-    
 
-        // eg: return [[1,1]]
+    // eg: return [[1,1]]
     var key_cell = this.nCells[key.last()];
     if (type != 'Int-L-S') {
         console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
@@ -141,7 +120,9 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
 }
 
 // Data to insert result of rewrite into diagram
-Diagram.prototype.rewritePasteData.IntLS = function(type, key) {}
+Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
+    return this.getTarget(type, key);
+}
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
