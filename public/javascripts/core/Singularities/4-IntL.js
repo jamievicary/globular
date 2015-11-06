@@ -174,7 +174,7 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
 
     if (type.tail('LI')) {
         var crossings = g1_source;
-        if (x <= 0) return false;
+        if (x < 0) return false;
         if (this.nCells[x].coordinates.last() - 1 != this.nCells[x - 1].coordinates.last()) return false;
         var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, crossings, 1);
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);

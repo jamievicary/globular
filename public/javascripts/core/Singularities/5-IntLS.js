@@ -39,16 +39,36 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     throw 0;
 }
 
+// Data to insert result of rewrite into diagram
+Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
+    return this.getTarget(type, key);
+}
+
+// Interpret drag of this type
+Diagram.prototype.interpretDrag.IntLS = function(drag) {
+    if (this.dimension < 4) return null;
+    return null;
+}
+
 Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
 
     // Is the key cell well-separated from the adjacent structure?
     if (!this.wellSeparated.IntLS(type, key)) return false;
-    
-    
 
+    // See if the source of the rewrite is a subset of the diagram instruction list
+    return this.subinstructions(key, this.getSource(type, key));
 }
 
-//Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
+// Check if there is enough separation between the components involved,
+// a necessary extra check when scalars are involved
+Diagram.prototype.wellSeparated.IntLS = function(type, key) {
+    // KRZYSZTOF, WE NEED TO DISCUSS THIS
+}
+
+Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
+}
+
+/*
 Diagram.prototype.getGeometry.IntLS = function(type, key) {
 
     // eg: return [[1,1]]
@@ -111,17 +131,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     return [key.penultimate() - 1, key_cell.coordinates.last() - source_width, key.last() - rewind_template.length];
 
 }
-
-// Data to insert result of rewrite into diagram
-Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
-    return this.getTarget(type, key);
-}
-
-// Interpret drag of this type
-Diagram.prototype.interpretDrag.IntLS = function(drag) {
-    if (this.dimension < 4) return null;
-    return null;
-}
+*/
 
 /* NEEDED FOR 5-CATEGORIES
 Diagram.prototype.expand(type, start, n, m) {

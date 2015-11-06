@@ -33,11 +33,15 @@ function RegisterSingularityFamily(data) {
 }
 
 Diagram.prototype.interchangerAllowed = function(type, key) {
-    if (key < 0) throw 0;
-    if (key >= this.nCells.length) return false;
-    var family = SingularityFamilies[type];
-    if (family === undefined) throw 0;
-    return ((this.interchangerAllowed[family]).bind(this))(type, key);
+    try {
+        if (key.last() < 0) throw 0;
+        if (key >= this.nCells.length) return false;
+        var family = SingularityFamilies[type];
+        if (family === undefined) throw 0;
+        return ((this.interchangerAllowed[family]).bind(this))(type, key);
+    } catch (e) {
+        return false;
+    }
 }
 
 Diagram.prototype.rewritePasteData = function(type, key) {
@@ -120,5 +124,40 @@ Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
     for (var i = 0; i < cell_one.key.length; i++) {
         if (cell_one.key[i] != cell_two.key[i]) return false;
     }
+    return true;
+}
+
+// Compare the list to a subset of the diagram
+Diagram.prototype.subinstructions = function(diagram_key, instructions) {
+    var diagram_key_cell = this.nCells[diagram_key].coordinates;
+    var instructions_key_cell = instructions.list[instructions.key];
+    if (diagram_key_cell.coordinates.length != instructions_key_cell.length) return false;
+    var offset_array = [];
+    for (var i=0; i<diagram_key_cell.coordinates.length; i++) {
+        var offset_array = diagram_key_cell.coordinates[i] - instructions_key_cell.coordinates[i];
+    }
+    
+    for (var i=0; i<instructions.list.length; i++) {
+        var list_cell = instructions.list[i];
+        var diagram_cell = this.nCells[i + diagram_key - instructions.key];
+        var diagram_coord;
+        var list_coord;
+        if (list_cell.id.isInterchanger()) {
+            diagram_coord = diagram_cell.key;
+            list_coord = list_cell.key;
+        } else {
+            diagram_coord = diagram_cell.coordinates;
+            list_coord = list_cell.coordinates;
+        }
+        
+        // Is it the right thing?
+        if (list_cell.id != diagram_cell.id) return false;
+        
+        // Is it at the right position?
+        for (var j=0; j<offset_array.length; j++) {
+            if (diagram_coord[j] != list_coord[j] + offset_array[j]) return false;
+        }
+    }
+    
     return true;
 }
