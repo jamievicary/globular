@@ -95,22 +95,22 @@ Diagram.prototype.interpretDrag['IntL'] = function(drag) {
         });
     } else {
         options.push({
-            type: 'Int-R',
+            type: 'Int-RI',
             key: key,
             possible: this.interchangerAllowed('Int-RI', key)
         });
         options.push({
-            type: 'IntI-R',
+            type: 'IntI-RI',
             key: key,
             possible: this.interchangerAllowed('IntI-RI', key)
         });
         options.push({
-            type: 'Int-L',
+            type: 'Int-LI',
             key: key,
             possible: this.interchangerAllowed('Int-LI', key)
         });
         options.push({
-            type: 'IntI-L',
+            type: 'IntI-LI',
             key: key,
             possible: this.interchangerAllowed('IntI-LI', key)
         });
@@ -192,7 +192,7 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
 Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
 
     var x = key.last();
-    var heights = this.interchangerCoordinates(type, key);
+    var heights = this.getInterchangerCoordinates(type, key);
 
     if (this.nCells.length != 0) {
         if (this.nCells[x].id.substr(0, 3) === 'Int') {
@@ -203,6 +203,7 @@ Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
     }
 
     var list = new Array();
+    var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('L')) {
         list = this.expand(new_type, 0, this.source_size(x), 1);
@@ -247,7 +248,7 @@ Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
         }
         list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
-
+    return list;
 }
 
 /* Needed for 4-categories

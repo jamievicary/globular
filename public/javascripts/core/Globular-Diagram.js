@@ -574,7 +574,7 @@ Diagram.prototype.attach = function(attached_diagram, boundary_path, bounds) {
             level = this.nCells.length;   
         }
         
-        new_coordinates = this.getSlice(level).interchangerCoordinates(new_id, new_key_location);
+        new_coordinates = this.getSlice(level).getInterchangerCoordinates(new_id, new_key_location);
         attached_nCell.coordinates = new_coordinates.slice(0);
 
     
