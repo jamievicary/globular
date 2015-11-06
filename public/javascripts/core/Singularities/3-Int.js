@@ -28,6 +28,16 @@ Diagram.prototype.expand['Int'] = function (type, x, n, m){
     return list;
 };
 
+Diagram.prototype.reorganiseCrossings['Int'] = function (type, x, n, m){
+
+    var list = new Array();
+    for(var i = 1; i < m; i++){
+        list = list.concat(this.expand(x + i, i*(n - 1), 1));
+    }
+
+    return list;
+}
+
 // Interpret drag of this type
 Diagram.prototype.interpretDrag['Int'] = function(drag) {
     var r = {};
