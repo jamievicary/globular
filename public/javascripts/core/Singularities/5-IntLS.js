@@ -41,6 +41,10 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
 
 Diagram.prototype.rewriteAllowed.IntLS = function(type, key) {
 
+    // Is the key cell well-separated from the adjacent structure?
+    if (!this.wellSeparated.IntLS(type, key)) return false;
+    
+    
 
 }
 
@@ -69,17 +73,6 @@ Diagram.prototype.getGeometry.IntLS = function(type, key) {
         source_height = source.nCells.length;
         source_source_width = source.getSourceBoundary().nCells.length;
     }
-    
-    var key_slice = this.getSlice(key.last());
-    var rewind_template = key_slice.expand('Int-LI', key_cell.coordinates.last(), [source_source_width, source_height], 1);
-    if (rewind_template == null) return null;
-    
-    // Get the coordinates
-    var c = [key.penultimate() - 1, key_cell.coordinates.last() - source_source_width, key.last() - rewind_template.length];
-    
-    // Get the bounding box
-    var top_length = key.last() - c.end(0) + 1;
-    var first_slice_height = source_height + 
 }
 
 Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {

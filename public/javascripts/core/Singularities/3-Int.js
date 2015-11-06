@@ -33,11 +33,11 @@ Diagram.prototype.interpretDrag['Int'] = function(drag) {
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {
-        r.left = { id: 'Int', key: [h], possible: this.interchangerAllowed('Int', [h]) };
-        r.right = { id: 'IntI', key: [h+1], possible: this.interchangerAllowed('IntI', [h + 1]) };
+        r.left = { type: 'Int', key: [h], possible: this.interchangerAllowed('Int', [h]) };
+        r.right = { type: 'IntI', key: [h+1], possible: this.interchangerAllowed('IntI', [h + 1]) };
     } else {
-        r.left = { id: 'IntI', key: [h], possible: this.interchangerAllowed('IntI', [h]) };
-        r.right = { id: 'Int', key: [h - 1], possible: this.interchangerAllowed('Int', [h - 1]) };
+        r.left = { type: 'IntI', key: [h], possible: this.interchangerAllowed('IntI', [h]) };
+        r.right = { type: 'Int', key: [h - 1], possible: this.interchangerAllowed('Int', [h - 1]) };
     }
     // Return the best match in a permissive way
     if (!r.left.possible && !r.right.possible) return null;
@@ -84,7 +84,7 @@ Diagram.prototype.rewritePasteData['Int'] = function (type, key){
 
     var x = key.last();
 
-    var heights = this.interchangerCoordinates(type, key);
+    var heights = this.getInterchangerCoordinates(type, key);
 
     if(this.nCells.length != 0){
         if(this.nCells[x].id.substr(0, 3) === 'Int'){
@@ -180,13 +180,14 @@ Diagram.prototype.getInterchangerCoordinates['Int'] = function (type, key){
 Diagram.prototype.getInterchangerBoundingBox['Int'] = function (type, key){
 
     var position = this.getInterchangerCoordinates(type, key);
+    var x = key.last();
     
     if(type.tail('Int')){
         
-        return [this.nCells[key].coordinates.last() - position.penultimate() + this.source_size(key) , 2];
+        return [this.nCells[x].coordinates.last() - position.penultimate() + this.source_size(x) , 2];
     }
     else if(type.tail('IntI')){
-        return [this.nCells[key - 1].coordinates.last() - position.penultimate() + this.source_size(key) , 2];
+        return [this.nCells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x) , 2];
     }
 };
 
