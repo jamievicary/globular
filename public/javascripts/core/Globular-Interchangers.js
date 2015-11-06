@@ -146,7 +146,6 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
 
     var new_type = type.slice(0, type.length - 2);
 
-    /* MOVED TO 4-IntL.js
     if (type.tail('L')) {
 
         list = this.expand(new_type, 0, this.source_size(x), 1);
@@ -208,7 +207,7 @@ Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
         } 
         list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
-    */
+    
     
     if (type.tail('1I')) {
         return [];
@@ -280,7 +279,6 @@ Diagram.prototype.interchangerAllowed = function(type, key_location) {
 
     var new_type = type.slice(0, type.length - 2);
 
-/* MOVED TO 4-IntL.js
     if (type.tail('L')) {
         var crossings = g1_target;
         
@@ -326,7 +324,6 @@ Diagram.prototype.interchangerAllowed = function(type, key_location) {
         var template = this.expand(new_type, this.nCells[key_location.last()].coordinates.last(), 1, crossings);
         return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
-*/
 
     if (type.tail('1I')) {
         if (this.nCells[x].id === new_type) {
@@ -619,7 +616,6 @@ Diagram.prototype.interchangerInverseKey = function(type, key_location) {
         else if(type.tail('IntI')){
             return [x - 1];
         }
-/* MOVED TO 4-IntL.js
         else if(type.tail('R')){
             return [x + this.source_size(x)];
         }
@@ -633,7 +629,6 @@ Diagram.prototype.interchangerInverseKey = function(type, key_location) {
         else if(type.tail('LI')){
             return [x - this.source_size(x)];
         }
-        */
         else if(type.tail('-1')){
             return key_location.slice(0);
         }
@@ -659,7 +654,7 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
             list = this.nCells[key].coordinates.slice(0);
         }
         
-        /* MOVED TO 4-IntL.js
+       
         else if(type.tail('R')){
             list = this.nCells[key + 1].coordinates.slice(0);
         }
@@ -675,7 +670,7 @@ Diagram.prototype.interchangerCoordinates = function(type, key_location) {
             list = this.nCells[key - 1].coordinates.slice(0);
             key = key - diagram_pointer.source_size(key);
         }
-        */
+        
         else{
             var list = this.nCells[key].coordinates.slice(0);
         }
