@@ -44,15 +44,23 @@ Diagram.prototype.interchangerAllowed = function(type, key) {
     }
 }
 
+Diagram.prototype.getSource = function(type, key) {
+    var family = SingularityFamilies[type];
+    return ((this.getSource[family]).bind(this))(type, key);
+}
+
+Diagram.prototype.getTarget = function(type, key) {
+    var family = SingularityFamilies[type];
+    return ((this.getTarget[family]).bind(this))(type, key);
+}
+
 Diagram.prototype.rewritePasteData = function(type, key) {
     var family = SingularityFamilies[type];
-    if (family === undefined) throw 0;
     return ((this.rewritePasteData[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.expand = function(type, start, n, m) {
     var family = SingularityFamilies[type];
-    if (family === undefined) throw 0;
     return ((this.expand[family]).bind(this))(type, start, n, m);
 }
 
@@ -105,6 +113,19 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
+    return options;
+}
+
+Diagram.prototype.getDragOptions = function(list, key) {
+    var options = [];
+    for (var i=0; i<list.length; i++) {
+        var type = list[i];
+        options.push({
+            type: type,
+            key: key,
+            possible: this.interchangerAllowed(type, key)
+        });
+    }
     return options;
 }
 

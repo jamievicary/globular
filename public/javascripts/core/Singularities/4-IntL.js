@@ -7,114 +7,57 @@
 // Data for the IntL family of singularities
 // These are 4-cell pull-throughs
 
-var NewSingularityFamily = {
+RegisterSingularityFamily({
     family: 'IntL',
     dimension: 4,
     members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
-};
+});
 
-RegisterSingularityFamily(NewSingularityFamily);
-
-
-Diagram.prototype.expand['IntL'] = function (type, x, y, n, l, m){
-    
+Diagram.prototype.expand.IntL = function(type, x, y, n, l, m) {
     var list = new Array();
     var new_type;
-    
     var new_l = l + (this.target_size(x) - this.source_size(x));
     var final_l = l;
-    for(var i = 0; i < n; i++){
+    for (var i = 0; i < n; i++) {
         final_l += (this.target_size(x + i) - this.source_size(x + i));
     }
     var b = this.nCells[x].coordinates.last() - y;
     var a = y + l - this.nCells[x].coordinates.last() - this.source_size(x);
-    
-    if(type.tail('I')){
+    if (type.tail('I')) {
         new_type = type.substr(0, type.length - 3)
-    }
-    else{
+    } else {
         new_type = type.substr(0, type.length - 2)
     }
     if (n === 0 || m === 0) {
         return [];
-    }
-    else if (n === 1 && m === 1) {
-        if(a === 0 && b === 0){
-            if(type.tail('I')){
+    } else if (n === 1 && m === 1) {
+        if (a === 0 && b === 0) {
+            if (type.tail('I')) {
                 list.push(new NCell(type, null, [x + 1]));
-            }
-            else{
+            } else {
                 list.push(new NCell(type, null, [x]));
             }
-        }  
-        else{
-            list = this.expand(new_type, x, 1, a*m).concat(
-                this.expand(type, x + a*m, y + a, 1, this.source_size(x), 1)).concat(
-                 this.expand(new_type, x + this.source_size(x) + a*m, 1, b*m));
+        } else {
+            list = this.expand(new_type, x, 1, a * m).concat(
+                this.expand(type, x + a * m, y + a, 1, this.source_size(x), 1)).concat(
+                this.expand(new_type, x + this.source_size(x) + a * m, 1, b * m));
         }
-    }
-    else if (m != 1 && n === 1) {
+    } else if (m != 1 && n === 1) {
         list = this.expand(type, x, y, 1, l, 1).concat(
-                this.expand(type, x + a + b + this.source_size(x), y + 1, 1, new_l, m - 1));
-    }
-    else {
+            this.expand(type, x + a + b + this.source_size(x), y + 1, 1, new_l, m - 1));
+    } else {
         list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, x, y, n - 1, l, m));
     }
-    
+
     return list;
 };
 
 // Interpret drag of this type
-Diagram.prototype.interpretDrag['IntL'] = function(drag) {
-
+Diagram.prototype.interpretDrag.IntL = function(drag) {
     var up = drag.directions[0] > 0;
     var right = drag.directions[1] > 0;
     var key = [drag.coordinates[0]];
-
-    var options = [];
-    if (up) {
-        options.push({
-            type: 'Int-L',
-            key: key,
-            possible: this.interchangerAllowed('Int-L', key)
-        });
-        options.push({
-            type: 'IntI-L',
-            key: key,
-            possible: this.interchangerAllowed('IntI-L', key)
-        });
-        options.push({
-            type: 'IntI-R',
-            key: key,
-            possible: this.interchangerAllowed('IntI-R', key)
-        });
-        options.push({
-            type: 'Int-R',
-            key: key,
-            possible: this.interchangerAllowed('Int-R', key)
-        });
-    } else {
-        options.push({
-            type: 'Int-RI',
-            key: key,
-            possible: this.interchangerAllowed('Int-RI', key)
-        });
-        options.push({
-            type: 'IntI-RI',
-            key: key,
-            possible: this.interchangerAllowed('IntI-RI', key)
-        });
-        options.push({
-            type: 'Int-LI',
-            key: key,
-            possible: this.interchangerAllowed('Int-LI', key)
-        });
-        options.push({
-            type: 'IntI-LI',
-            key: key,
-            possible: this.interchangerAllowed('IntI-LI', key)
-        });
-    }
+    var options = this.getDragOptions(up ? ['Int-L', 'IntI-L', 'IntI-R', 'Int-R'] : ['Int-RI', 'IntI-RI', 'Int-LI', 'IntI-LI'], key);
 
     // Collect the possible options
     var possible_options = [];
@@ -146,7 +89,7 @@ Diagram.prototype.interpretDrag['IntL'] = function(drag) {
     }
 };
 
-Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
+Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
 
     var x = key.last();
     var g1_source = this.source_size(x);
@@ -156,8 +99,8 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
 
     if (type.tail('L')) {
         var crossings = g1_target;
-//        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
-  //      if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
+        //        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+        //      if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
         var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
@@ -189,7 +132,7 @@ Diagram.prototype.interchangerAllowed['IntL'] = function(type, key) {
     }
 }
 
-Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
+Diagram.prototype.rewritePasteData.IntL = function(type, key) {
 
     var x = key.last();
     var heights = this.getInterchangerCoordinates(type, key);
@@ -228,7 +171,7 @@ Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
     var new_type = type.slice(0, type.length - 3);
     var g_source = this.source_size(x);
     var g_target = this.target_size(x);
-    
+
     if (type.tail('LI')) {
         list = list.concat(this.expand(new_type, 0, g_target, 1));
         if (temp_coordinates_x != null) {
@@ -251,28 +194,20 @@ Diagram.prototype.rewritePasteData['IntL'] = function(type, key) {
     return list;
 }
 
-/* Needed for 4-categories
-Diagram.prototype.expand['IntL'] = function(type, height, n, m) {
-}
-*/
+Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
 
-Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
-    
     var diagram_pointer = this;
     var new_key = key.last();
     var list = [];
 
-    if(type.tail('R')){
+    if (type.tail('R')) {
         list = this.nCells[new_key + 1].coordinates.slice(0);
-    }
-    else if(type.tail('L')){
+    } else if (type.tail('L')) {
         list = this.nCells[new_key].coordinates.slice(0);
-    }
-    else if(type.tail('RI')){
+    } else if (type.tail('RI')) {
         new_key -= diagram_pointer.source_size(new_key);
         list = this.nCells[new_key].coordinates.slice(0);
-    }
-    else if(type.tail('LI')){
+    } else if (type.tail('LI')) {
         list = this.nCells[new_key - 1].coordinates.slice(0);
         new_key -= diagram_pointer.source_size(new_key);
     }
@@ -280,18 +215,18 @@ Diagram.prototype.getInterchangerCoordinates['IntL'] = function(type, key) {
     return list.concat([new_key]);
 }
 
-Diagram.prototype.getInterchangerBoundingBox['IntL'] = function(type, key) {
+Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {
     var x = key.last();
     if (type.tail('R')) return [this.source_size(x) + 1, this.target_size(x) + 1];
     else if (type.tail('L')) return [this.source_size(x) + 1, this.target_size(x) + 1];
-    else if (type.tail('RI')) return [this.source_size(x) + 1, this.source_size(x) + 1]; 
-    else if (type.tail('LI')) return [this.source_size(x) + 1, this.source_size(x) + 1]; 
+    else if (type.tail('RI')) return [this.source_size(x) + 1, this.source_size(x) + 1];
+    else if (type.tail('LI')) return [this.source_size(x) + 1, this.source_size(x) + 1];
 }
 
-Diagram.prototype.getInverseKey['IntL'] = function(type, key) {
+Diagram.prototype.getInverseKey.IntL = function(type, key) {
     var x = key.last();
     if (type.tail('R')) return [x + this.source_size(x)];
     else if (type.tail('L')) return [x + this.source_size(x)];
-    else if (type.tail('RI')) return [x - this.source_size(x)]; 
+    else if (type.tail('RI')) return [x - this.source_size(x)];
     else if (type.tail('LI')) return [x - this.source_size(x)];
 }
