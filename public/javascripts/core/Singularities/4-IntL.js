@@ -106,55 +106,80 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
-    var subtype = (type.mid(0, 4) == 'IntI' ? 'IntI' : 'Int');
-
+    var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
+    
     if (type == 'Int-L') {
-        if (this.getSlice(x).nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).min.end(2) < this.getSlice(x).getBoundingBox(coords.last() + g1_source).max.end(1)) return false; // must be deeper
+        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() + g1_source).max.end(1)) return false; // must be deeper
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'IntI-L') {
-        if (this.getSlice(x).nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).max.end(2) > this.getSlice(x).getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
+        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'Int-RI') {
-        if (this.getSlice(x).nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).max.end(2) > this.getSlice(x).getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), this.expand(new_type, this.nCells[key.last()].coordinates.last(), 1, crossings));
+        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
+        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
 
-    if (type.tail('R')) {
-        // depth test
-        if (this.nCells[x].coordinates.last() <= 0) return false; // x test
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(new_type, coords.last() - 1, 1, g1_target));
+    if (type == 'IntI-RI') {
+        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() + g1_source).max.end(1)) return false; // must be shallower
+        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
+    }
+    
+    if (type == 'Int-LI') {
+        if (coords.last() == 0) return false; // must have something on the left
+        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() - 1).max.end(1)) return false; // must be deeper
+        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
-    var new_type = type.slice(0, type.length - 3);
-
-    if (type.tail('LI')) {
-        var crossings = g1_source;
-        if (x < 0) return false;
-        if (this.nCells[x].coordinates.last() - 1 != this.nCells[x - 1].coordinates.last()) return false;
-        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, crossings, 1);
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+    if (type == 'IntI-LI') {
+        if (coords.last() == 0) return false; // must have something on the left
+        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() - 1).min.end(1)) return false; // must be shallower
+        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
-    if (type.tail('RI')) {
-        var crossings = g1_source;
-        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
-        if (this.nCells[x].coordinates.last() + this.source_size(x) - 1 != this.nCells[x - 1].coordinates.last()) return false;
-        var template = this.expand(new_type, this.nCells[key.last()].coordinates.last(), 1, crossings);
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+    if (type == 'Int-R') {
+        if (coords.last() == 0) return false; // must have something on the left
+        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() - 1).min.end(1)) return false; // must be shallower
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
+
+    if (type == 'IntI-R') {
+        if (coords.last() == 0) return false; // must have something on the left
+        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() - 1).max.end(1)) return false; // must be deeper
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
+    }
+    
+    return false;
 }
 
 Diagram.prototype.rewritePasteData.IntL = function(type, key) {
 
     var x = key.last();
+    var h = key.last();
+    var cell = this.nCells[h].copy();
+    var coords = cell.coordinates;
     var heights = this.getInterchangerCoordinates(type, key);
+    var d = new Diagram(); // dummy diagram objects for Int expansion
+    var s = this.source_size(h);
+    var t = this.target_size(h);
+    
+    if (type == 'Int-L') return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
+    if (type == 'IntI-L') return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
+    if (type == 'Int-R') return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'IntI-R') return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'Int-LI') return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
+    if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
+    if (type == 'Int-RI') return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), t, 1));
+    if (type == 'IntI-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI', coords.last(), t, 1));
+    
+    /////////// OLD
 
     if (this.nCells.length != 0) {
         if (this.nCells[x].id.substr(0, 3) === 'Int') {
@@ -217,6 +242,25 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
 
     var diagram_pointer = this;
     var new_key = key.last();
+    var h = key.last();
+    var cell = this.nCells[h];
+    var coords = cell.coordinates.slice();
+    
+    if (type.tail('Int-L', 'IntI-L')) {
+        return coords;
+    }
+    else if (type.tail('Int-LI', 'IntI-LI')) {
+        return coords.move([{relative: -1, relative: -this.source_size(h)}]);
+    }
+    else if (type.tail('Int-R', 'IntI-R')) {
+        return coords.move([{relative: -1, relative: 0}]);
+    }
+    else if (type.tail('Int-RI', 'IntI-RI')) {
+        return coords.move([{relative: -this.source_size(h)}])
+    }
+
+    //////// OLD
+    
     var list = [];
 
     if (type.tail('R')) {

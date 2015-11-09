@@ -34,11 +34,11 @@ function RegisterSingularityFamily(data) {
 
 Diagram.prototype.interchangerAllowed = function(type, key) {
 //  try {
-        if (key.last() < 0) throw 0;
-        if (key >= this.nCells.length) return false;
-        var family = SingularityFamilies[type];
-        if (family === undefined) throw 0;
-        return ((this.interchangerAllowed[family]).bind(this))(type, key);
+    if (key.last() < 0) return false;
+    if (key >= this.nCells.length) return false;
+    var family = SingularityFamilies[type];
+    if (family === undefined) throw 0;
+    return ((this.interchangerAllowed[family]).bind(this))(type, key);
 //    } catch (e) {
 //        return false;
 //    }
@@ -118,7 +118,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
-    return [];
+//    return [];
     return options;
 }
 
