@@ -545,6 +545,9 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
 
     // Render the highlight
+    if (diagram.dimension > 3) {
+        subdiagram = undefined;   
+    }
     if (subdiagram != undefined) {
         var delta = 0.0005;
         if (subdiagram.boundaryPath.length == 2) {

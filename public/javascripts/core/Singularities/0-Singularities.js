@@ -118,7 +118,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
-    return [];
+    //return [];
     return options;
 }
 
