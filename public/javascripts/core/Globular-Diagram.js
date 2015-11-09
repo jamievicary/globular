@@ -716,7 +716,7 @@ Diagram.prototype.getBoundingBox = function(level) {
 
 Diagram.prototype.getLengthsAtSource = function() {
     if (this.getDimension() == 1) return [this.nCells.length];
-    return [this.nCells.length].concat(this.getSourceBoundary().getLengthsAtSource());
+    return this.getSourceBoundary().getLengthsAtSource().concat([this.nCells.length]);
 }
 
 Diagram.prototype.source_size = function(level) {
