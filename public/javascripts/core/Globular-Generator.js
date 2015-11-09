@@ -50,12 +50,15 @@ Generator.prototype.copy = function() {
 };
 
 Generator.prototype.getBoundingBox = function() {
-    return {
+    var box = {
         min: [].fill(0, this.getDimension()),
         max: this.getSourceLengths()
     };
+    box.max.push(1);
+    return box;
 }
 
 Generator.prototype.getSourceLengths = function() {
-    return [this.source.nCells.length].concat(this.source.getSourceLengths());
+    return this.source.getLengthsAtSource();
+    //return [this.source.nCells.length].concat(this.source.getSourceLengths());
 }

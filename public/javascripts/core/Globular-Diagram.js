@@ -709,13 +709,14 @@ Diagram.prototype.getBoundingBox = function(level) {
     var box = {
         min: nCell.coordinates.concat([level])
     };
-    box.max = box.min.vector_add(gProject.signature.getGenerator(nCell.id).getBoundingBox().max);
+    var generator_bbox = gProject.signature.getGenerator(nCell.id).getBoundingBox(); 
+    box.max = box.min.vector_add(generator_bbox.max);
     return box;
 }
 
-Diagram.prototype.getSourceLengths = function() {
+Diagram.prototype.getLengthsAtSource = function() {
     if (this.getDimension() == 1) return [this.nCells.length];
-    return [this.source.nCells.length].concat(this.getSourceBoundary().getSourceLengths());
+    return [this.nCells.length].concat(this.getSourceBoundary().getLengthsAtSource());
 }
 
 Diagram.prototype.source_size = function(level) {
