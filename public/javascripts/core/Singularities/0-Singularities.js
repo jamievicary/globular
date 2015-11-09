@@ -33,15 +33,15 @@ function RegisterSingularityFamily(data) {
 }
 
 Diagram.prototype.interchangerAllowed = function(type, key) {
-//  try {
+    //  try {
     if (key.last() < 0) return false;
     if (key >= this.nCells.length) return false;
     var family = SingularityFamilies[type];
     if (family === undefined) throw 0;
     return ((this.interchangerAllowed[family]).bind(this))(type, key);
-//    } catch (e) {
-//        return false;
-//    }
+    //    } catch (e) {
+    //        return false;
+    //    }
 }
 
 Diagram.prototype.wellSeparated = function(type, key) {
@@ -118,13 +118,13 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
-//    return [];
+    //    return [];
     return options;
 }
 
 Diagram.prototype.getDragOptions = function(list, key) {
     var options = [];
-    for (var i=0; i<list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
         var type = list[i];
         options.push({
             type: type,
@@ -160,11 +160,11 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     var instructions_key_cell = instructions.list[instructions.key];
     if (diagram_key_cell.coordinates.length != instructions_key_cell.length) return false;
     var offset_array = [];
-    for (var i=0; i<diagram_key_cell.coordinates.length; i++) {
+    for (var i = 0; i < diagram_key_cell.coordinates.length; i++) {
         var offset_array = diagram_key_cell.coordinates[i] - instructions_key_cell.coordinates[i];
     }
-    
-    for (var i=0; i<instructions.list.length; i++) {
+
+    for (var i = 0; i < instructions.list.length; i++) {
         var list_cell = instructions.list[i];
         var diagram_cell = this.nCells[i + diagram_key - instructions.key];
         var diagram_coord;
@@ -176,17 +176,40 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
             diagram_coord = diagram_cell.coordinates;
             list_coord = list_cell.coordinates;
         }
-        
+
         // Is it the right thing?
         if (list_cell.id != diagram_cell.id) return false;
-        
+
         // Is it at the right position?
-        for (var j=0; j<offset_array.length; j++) {
+        for (var j = 0; j < offset_array.length; j++) {
             if (diagram_coord[j] != list_coord[j] + offset_array[j]) return false;
         }
     }
-    
+
     return true;
 }
 
 Diagram.prototype.reorganiseCrossings = {};
+
+Diagram.prototype.source_size = function(level) {
+    var bbox = this.getSliceBoundingBox(level);
+    return bbox.max.last() - bbox.min.last();
+    /*
+    var nCell = this.nCells[level];
+    if(nCell.id.substr(0, 3) === 'Int'){
+        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
+    }
+    else{
+        return nCell.source_size();
+    }
+    */
+};
+
+Diagram.prototype.target_size = function(level) {
+    var nCell = this.nCells[level];
+    if (nCell.id.substr(0, 3) === 'Int') {
+        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key).length;
+    } else {
+        return nCell.target_size();
+    }
+};

@@ -110,49 +110,49 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     
     if (type == 'Int-L') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() + g1_source).max.end(1)) return false; // must be deeper
+        if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be deeper
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'IntI-L') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
+        if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'Int-RI') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() + g1_source).min.end(1)) return false; // must be shallower
+        if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
 
     if (type == 'IntI-RI') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() + g1_source).max.end(1)) return false; // must be shallower
+        if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
     
     if (type == 'Int-LI') {
         if (coords.last() == 0) return false; // must have something on the left
-        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() - 1).max.end(1)) return false; // must be deeper
+        if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
         return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
     if (type == 'IntI-LI') {
         if (coords.last() == 0) return false; // must have something on the left
-        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() - 1).min.end(1)) return false; // must be shallower
+        if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() - 1).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
     if (type == 'Int-R') {
         if (coords.last() == 0) return false; // must have something on the left
-        if (this.getBoundingBox(x).max.end(2) > slice.getBoundingBox(coords.last() - 1).min.end(1)) return false; // must be shallower
+        if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() - 1).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
 
     if (type == 'IntI-R') {
         if (coords.last() == 0) return false; // must have something on the left
-        if (this.getBoundingBox(x).min.end(2) < slice.getBoundingBox(coords.last() - 1).max.end(1)) return false; // must be deeper
+        if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
     
@@ -280,10 +280,11 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
 
 Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {
     var x = key.last();
-    if (type.tail('R')) return [this.source_size(x) + 1, this.target_size(x) + 1];
-    else if (type.tail('L')) return [this.source_size(x) + 1, this.target_size(x) + 1];
-    else if (type.tail('RI')) return [this.source_size(x) + 1, this.source_size(x) + 1];
-    else if (type.tail('LI')) return [this.source_size(x) + 1, this.source_size(x) + 1];
+    var coords = this.getInterchangerCoordinates(type, key);
+    if (type.tail('R')) return {min: coords, max: [this.source_size(x) + 1, this.target_size(x) + 1]};
+    else if (type.tail('L')) return {min: coords, max: [this.source_size(x) + 1, this.target_size(x) + 1]};
+    else if (type.tail('RI')) return {min: coords, max: [this.source_size(x) + 1, this.source_size(x) + 1]};
+    else if (type.tail('LI')) return {min: coords, max: [this.source_size(x) + 1, this.source_size(x) + 1]};
 }
 
 Diagram.prototype.getInverseKey.IntL = function(type, key) {

@@ -133,9 +133,11 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var target;
 
     // Special code to deal with interchangers
-    if (nCell.id.substr(0, 3) === 'Int') {
+    var bounding_box;
+    if (nCell.isInterchanger()) {
         var target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
-        var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
+        //var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
+        bounding_box = this.getBoundingBox(nCell);
     } else {
         // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(nCell.id);
@@ -147,13 +149,17 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             target = rewrite.target.copy();
         }
         var source_size = source.nCells.length;
+        bounding_box = this.getBoundingBox(nCell);
     }
+    //var bounding_box = this.getBoundingBox()
 
 
 
     // Remove cells in the source of the rewrite
-    var insert_position = nCell.coordinates.last();
-    this.nCells.splice(insert_position, source_size);
+    //var insert_position = nCell.coordinates.last();
+    var insert_position = bounding_box.min.last();
+    //this.nCells.splice(insert_position, source_size);
+    this.nCells.splice(insert_position, bounding_box.max.last() - bounding_box.min.last());
     for (var i = 0; i < target.nCells.length; i++) {
 
         /* 
@@ -703,11 +709,26 @@ Diagram.prototype.getFirstColour = function() {
     return gProject.getColour(id);
 }
 
-Diagram.prototype.getBoundingBox = function(level) {
+Diagram.prototype.getSliceBoundingBox = function(level) {
+    return this.getSlice(level).getBoundingBox(this.nCells[level]);
+/*
     var nCell = this.nCells[level];
     if (nCell.isInterchanger()) return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key);
     var box = {
         min: nCell.coordinates.concat([level])
+    };
+    var generator_bbox = gProject.signature.getGenerator(nCell.id).getBoundingBox(); 
+    box.max = box.min.vector_add(generator_bbox.max);
+    return box;
+*/
+}
+
+Diagram.prototype.getBoundingBox = function(nCell) {
+    //if (param == undefined) debugger;
+    if (nCell.id == undefined) debugger;
+    if (nCell.isInterchanger()) return this.getInterchangerBoundingBox(nCell.id, nCell.key);
+    var box = {
+        min: nCell.coordinates
     };
     var generator_bbox = gProject.signature.getGenerator(nCell.id).getBoundingBox(); 
     box.max = box.min.vector_add(generator_bbox.max);

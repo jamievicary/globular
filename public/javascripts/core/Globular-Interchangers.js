@@ -579,32 +579,6 @@ Diagram.prototype.test_pull_through = function(drag) {
 };
 
 
-Diagram.prototype.source_size = function(level) {
-
-    var nCell = this.nCells[level];
-
-    if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
-    }
-    else{
-        return nCell.source_size();
-    }
-
-}
-
-Diagram.prototype.target_size = function(level) {
-
-    var nCell = this.nCells[level];
-
-    if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key).length;
-    }
-    else{
-        return nCell.target_size();
-    }
-
-};
-
 Diagram.prototype.interchangerInverseKey = function(type, key_location) {
 
     var x = key_location.last();

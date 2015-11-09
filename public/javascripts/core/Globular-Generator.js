@@ -51,10 +51,10 @@ Generator.prototype.copy = function() {
 
 Generator.prototype.getBoundingBox = function() {
     var box = {
-        min: [].fill(0, this.getDimension()),
+        min: [].fill(0, this.getDimension() - 1),
         max: this.getSourceLengths()
     };
-    box.max.push(1);
+    //box.max.push(1);
     return box;
 }
 
