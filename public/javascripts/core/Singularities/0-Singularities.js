@@ -33,15 +33,20 @@ function RegisterSingularityFamily(data) {
 }
 
 Diagram.prototype.interchangerAllowed = function(type, key) {
-    try {
+//  try {
         if (key.last() < 0) throw 0;
         if (key >= this.nCells.length) return false;
         var family = SingularityFamilies[type];
         if (family === undefined) throw 0;
         return ((this.interchangerAllowed[family]).bind(this))(type, key);
-    } catch (e) {
-        return false;
-    }
+//    } catch (e) {
+//        return false;
+//    }
+}
+
+Diagram.prototype.wellSeparated = function(type, key) {
+    var family = SingularityFamilies[type];
+    return ((this.getSource[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getSource = function(type, key) {
@@ -113,6 +118,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
+    return [];
     return options;
 }
 
@@ -182,3 +188,5 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     
     return true;
 }
+
+Diagram.prototype.reorganiseCrossings = {};

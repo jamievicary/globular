@@ -61,12 +61,20 @@ Diagram.prototype.interpretDrag.IntL = function(drag) {
 
     // Collect the possible options
     var possible_options = [];
+    var msg = 'interpretDrag.IntL: allowed ';
     for (var i = 0; i < options.length; i++) {
-        if (options[i].possible) possible_options.push(options[i]);
+        if (options[i].possible) {
+            msg += (possible_options.length != 0 ? ', ' : '') + options[i].type;
+            possible_options.push(options[i]);
+        }
     }
 
     // Maybe it's already determined what to do
-    if (possible_options.length == 0) return null;
+    if (possible_options.length == 0) {
+        console.log('interpretDrag.IntL: no moves allowed');
+        return null;
+    }
+    console.log(msg);
     if (possible_options.length == 1) return possible_options[0];
 
     // Otherwise select based on secondary direction
@@ -92,25 +100,25 @@ Diagram.prototype.interpretDrag.IntL = function(drag) {
 Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
 
     var x = key.last();
+    var slice = this.getSlice(x);
+    var cell = this.nCells[x];
+    var coords = cell.coordinates;
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
 
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('L')) {
-        var crossings = g1_target;
-        //        if (this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
-        //      if (this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
-        var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
+        var cell_depth = coords.end(1);
+        if (this.getSlice(x).nCells.length <= coords.last() + g1_source) return false; // x test
+        if (this.getBoundingBox(x).max.end(1) > this.getSlice(x).nCells[coords.last() + g1_source - 1].coordinates.last()) return false; // depth test
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(new_type, coords.last(), g1_target, 1));
     }
 
     if (type.tail('R')) {
-        var crossings = g1_target;
-        if (this.nCells[x].coordinates.last() <= 0) return false;
-        if (this.nCells[x].coordinates.last() - 1 != this.nCells[x + 1].coordinates.last()) return false;
-        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, 1, crossings);
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
+        // depth test
+        if (this.nCells[x].coordinates.last() <= 0) return false; // x test
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(new_type, coords.last() - 1, 1, g1_target));
     }
 
     var new_type = type.slice(0, type.length - 3);

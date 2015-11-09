@@ -71,7 +71,7 @@ function min_array(t1, t2) {
     var tab = new Array();
 
     if (t1.length != t2.length) {
-        console.log("Arrays of differnt lenght")
+        console.log("Arrays of different length")
     }
 
     for (var i = 0; i < t1.length; i++) {
@@ -88,7 +88,7 @@ function diff_array(t1, t2) {
     var tab = new Array();
 
     if (t1.length != t2.length) {
-        console.log("Arrays of differnt lenght")
+        console.log("Arrays of differnt length")
     }
 
     for (var i = 0; i < t1.length; i++) {
@@ -98,7 +98,7 @@ function diff_array(t1, t2) {
 }
 
 Array.prototype.end = function(n) {
-    return this[this.length - n];
+    return this[this.length - 1 - n];
 }
 
 Array.prototype.last = function() {
@@ -169,4 +169,13 @@ Array.prototype.move = function(instructions) {
             this[index] = command.absolute;
         }
     }
+}
+
+// Adds the components of the argument to the components of this array
+Array.prototype.vector_add = function(v2) {
+    if (this.length != v2.length) throw 0;
+    for (var i=0; i<this.length; i++) {
+        this[i] += v2[i];
+    }
+    return this;
 }

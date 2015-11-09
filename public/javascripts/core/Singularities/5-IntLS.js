@@ -7,9 +7,10 @@
 // Data for the Int-L-S family
 // This is naturality for the 4-cell pull-through
 
-RegisterSingularityFamily(
-    'IntLS', 5,
-    ['Int-L-S', 'Int-L-SI',
+RegisterSingularityFamily({
+    family: 'IntLS',
+    dimension: 5,
+    members: ['Int-L-S', 'Int-L-SI',
     'IntI-L-S', 'IntI-L-SI',
     'Int-LI-S', 'Int-LI-SI',
     'IntI-LI-S', 'IntI-LI-SI',
@@ -17,7 +18,7 @@ RegisterSingularityFamily(
     'IntI-R-S', 'IntI-R-SI',
     'Int-RI-S', 'Int-RI-SI',
     'IntI-RI-S', 'IntI-RI-SI']
-);
+});
 
 Diagram.prototype.getSource.IntLS = function(type, key) {
     var coord = this.getCoordinates(type, key);

@@ -32,11 +32,11 @@ Generator.prototype.getDimension = function() {
     return this.source.getDimension() + 1;
 }
 
-Generator.prototype.getType = function () {
+Generator.prototype.getType = function() {
     return 'Generator';
 }
 
-Generator.prototype.copy = function () {
+Generator.prototype.copy = function() {
     var newSource = null;
     var newTarget = null;
     if (this.source != null) {
@@ -48,3 +48,14 @@ Generator.prototype.copy = function () {
     var generator = new Generator(newSource, newTarget, this.identifier);
     return generator;
 };
+
+Generator.prototype.getBoundingBox = function() {
+    return {
+        min: [].fill(0, this.getDimension()),
+        max: this.getSourceLengths()
+    };
+}
+
+Generator.prototype.getSourceLengths = function() {
+    return [this.source.nCells.length].concat(this.source.getSourceLengths());
+}

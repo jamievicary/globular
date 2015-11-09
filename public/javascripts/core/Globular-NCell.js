@@ -27,6 +27,10 @@ NCell.prototype.copy = function() {
     return new NCell(this.id, temp_array);
 }
 
+NCell.prototype.isInterchanger = function() {
+    return this.id.is_interchanger();
+}
+
 NCell.prototype.source_size = function() {
     if (this.id.substr(0, 3) === 'Int') {
         console.log("Interchanger not in the signature");
