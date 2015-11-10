@@ -171,72 +171,15 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var s = this.source_size(h);
     var t = this.target_size(h);
     
-    if (type == 'Int-L') return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'IntI-L') return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'Int-R') return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
-    if (type == 'IntI-R') return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
-    if (type == 'Int-LI') return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
+    if (type == 'Int-L')   return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
+    if (type == 'IntI-L')  return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
+    if (type == 'Int-R')   return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'IntI-R')  return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'Int-LI')  return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
     if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
-    if (type == 'Int-RI') return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), t, 1));
+    if (type == 'Int-RI')  return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), t, 1));
     if (type == 'IntI-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI', coords.last(), t, 1));
     
-    /////////// OLD
-
-    if (this.nCells.length != 0) {
-        if (this.nCells[x].id.substr(0, 3) === 'Int') {
-            var temp_coordinates_x = null;
-        } else {
-            var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
-        }
-    }
-
-    var list = new Array();
-    var new_type = type.slice(0, type.length - 2);
-
-    if (type.tail('L')) {
-        list = this.expand(new_type, 0, this.source_size(x), 1);
-        if (temp_coordinates_x != null) {
-            temp_coordinates_x.increment_last(1);
-        } else {
-            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
-        }
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
-    }
-
-    if (type.tail('R')) {
-        list = this.expand(new_type, 0, 1, this.source_size(x));
-        if (temp_coordinates_x != null) {
-            temp_coordinates_x.increment_last(-1);
-        } else {
-            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
-        }
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
-    }
-
-    var new_type = type.slice(0, type.length - 3);
-    var g_source = this.source_size(x);
-    var g_target = this.target_size(x);
-
-    if (type.tail('LI')) {
-        list = list.concat(this.expand(new_type, 0, g_target, 1));
-        if (temp_coordinates_x != null) {
-            temp_coordinates_x.increment_last(-1);
-        } else {
-            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
-        }
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
-    }
-
-    if (type.tail('RI')) {
-        list = list.concat(this.expand(new_type, 0, 1, g_target));
-        if (temp_coordinates_x != null) {
-            temp_coordinates_x.increment_last(1);
-        } else {
-            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
-        }
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
-    }
-    return list;
 }
 
 Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
