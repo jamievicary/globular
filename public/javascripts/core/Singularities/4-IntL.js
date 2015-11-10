@@ -67,39 +67,34 @@ Diagram.prototype.interpretDrag.IntL = function(drag) {
 
     // Collect the possible options
     var possible_options = [];
-    var msg = 'interpretDrag.IntL: allowed ';
     for (var i = 0; i < options.length; i++) {
         if (options[i].possible) {
-            msg += (possible_options.length != 0 ? ', ' : '') + options[i].type;
             possible_options.push(options[i]);
         }
     }
 
-    // Maybe it's already determined what to do
     if (possible_options.length == 0) {
-        console.log('interpretDrag.IntL: no moves allowed');
-        return null;
+        return [];
     }
-    console.log(msg);
-    if (possible_options.length == 1) return possible_options[0];
+    if (possible_options.length == 1) return [possible_options[0]];
 
     // Otherwise select based on secondary direction
     if (right) {
         var r1 = options[0];
         var r2 = options[1];
-        if (r1.possible && r2.possible) return r1; // make the thing we pull be 'on top'
-        if (r1.possible && !r2.possible) return r1;
-        if (!r1.possible && r2.possible) return r2;
-        if (options[2].possible) return options[2];
-        return options[3];
+        if (r1.possible && r2.possible) return [r1]; // make the thing we pull be 'on top'
+        if (r1.possible && !r2.possible) return [r1];
+        if (!r1.possible && r2.possible) return [r2];
+        if (options[2].possible) return [options[2]];
+        return [options[3]];
     } else {
         var r1 = options[2];
         var r2 = options[3];
-        if (r1.possible && r2.possible) return r1; // make the thing we pull be 'on top'
-        if (r1.possible && !r2.possible) return r1;
-        if (!r1.possible && r2.possible) return r2;
-        if (options[0].possible) return options[0];
-        return options[1];
+        if (r1.possible && r2.possible) return [r1]; // make the thing we pull be 'on top'
+        if (r1.possible && !r2.possible) return [r1];
+        if (!r1.possible && r2.possible) return [r2];
+        if (options[0].possible) return [options[0]];
+        return [options[1]];
     }
 };
 
