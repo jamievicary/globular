@@ -47,9 +47,28 @@ Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
-    if (this.dimension < 4) return null;
-    return null;
-}
+    var up = drag.directions[0] > 0;
+    var key = [drag.coordinates[0]];
+    var options = this.getDragOptions(up ? ['Int-L-SI'] : ['Int-L-S'], key);
+
+    // Collect the possible options
+    var possible_options = [];
+    var msg = 'interpretDrag.IntLS: allowed ';
+    for (var i = 0; i < options.length; i++) {
+        if (options[i].possible) {
+            msg += (possible_options.length != 0 ? ', ' : '') + options[i].type;
+            possible_options.push(options[i]);
+        }
+    }
+
+    // Maybe it's already determined what to do
+    if (possible_options.length == 0) {
+        console.log('interpretDrag.IntLS: no moves allowed');
+        return null;
+    }
+    console.log(msg);
+    return possible_options[0];
+};
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
