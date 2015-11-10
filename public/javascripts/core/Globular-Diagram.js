@@ -724,8 +724,7 @@ Diagram.prototype.getFirstColour = function() {
     return gProject.getColour(id);
 }
 
-<<<<<<< HEAD
-=======
+
 Diagram.prototype.getBoundingBox = function(level) {
     var nCell = this.nCells[level];
     if (nCell.isInterchanger()) return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key);
@@ -742,7 +741,6 @@ Diagram.prototype.getLengthsAtSource = function() {
     return this.getSourceBoundary().getLengthsAtSource().concat([this.nCells.length]);
 }
 
->>>>>>> 3c46d99b3911cef1f8971538c5d6e71913d8e01f
 Diagram.prototype.source_size = function(level) {
 
     var nCell = this.nCells[level];

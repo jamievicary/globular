@@ -106,7 +106,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
-    var subtype = (type.mid(0, 4) == 'IntI' ? 'IntI' : 'Int');
+    var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
 
     if (type == 'Int-L') {
         if (this.getSlice(x).nCells.length <= coords.last() + g1_source) return false; // must have something on the right
