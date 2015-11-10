@@ -726,7 +726,7 @@ Diagram.prototype.getSliceBoundingBox = function(level) {
 Diagram.prototype.getBoundingBox = function(nCell) {
     //if (param == undefined) debugger;
     if (nCell.id == undefined) debugger;
-    if (nCell.isInterchanger()) return this.getInterchangerBoundingBox(nCell.id, nCell.key);
+    if (nCell.id.is_interchanger()) return this.getInterchangerBoundingBox(nCell.id, nCell.key);
     var box = {
         min: nCell.coordinates
     };

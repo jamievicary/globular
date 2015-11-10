@@ -154,7 +154,7 @@ Diagram.prototype.getDragOptions = function(list, key) {
     for (var i = 0; i < list.length; i++) {
         var type = list[i];
         options.push({
-            type: type,
+            id: type,
             key: key,
             possible: this.interchangerAllowed(type, key)
         });
