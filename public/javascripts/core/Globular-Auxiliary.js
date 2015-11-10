@@ -181,3 +181,12 @@ Array.prototype.vector_add = function(v2) {
     }
     return result;
 }
+
+// Check two arrays for equality componentwise
+Array.prototype.vector_equals = function(v2) {
+    if (this.length != v2.length) return false;
+    for (var i=0; i<this.length; i++) {
+        if (this[i] != v2[i]) return false;
+    }
+    return true;
+}

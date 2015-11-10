@@ -380,6 +380,7 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
     return [];
 }
 
+/*
 Diagram.prototype.interpret_drag = function(drag) {
     
     var new_drag;
@@ -418,7 +419,8 @@ Diagram.prototype.interpret_drag = function(drag) {
     return this.test_basic(new_drag).concat(this.test_pull_through(drag));
         
 }
-
+*/
+/*
 Diagram.prototype.test_basic = function(drag) {
     
     var id;
@@ -510,6 +512,7 @@ Diagram.prototype.test_basic = function(drag) {
         return [];
     }
 }
+*/
 
 Diagram.prototype.test_pull_through = function(drag) {
 
