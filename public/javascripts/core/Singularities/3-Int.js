@@ -43,11 +43,11 @@ Diagram.prototype.interpretDrag['Int'] = function(drag) {
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {
-        r.left = { id: 'IntI', key: [h + 1], possible: this.interchangerAllowed('IntI', [h + 1]) };
-        r.right = { id: 'Int', key: [h], possible: this.interchangerAllowed('Int', [h]) };
+        r.right = { id: 'IntI', key: [h + 1], possible: this.interchangerAllowed('IntI', [h + 1]) };
+        r.left = { id: 'Int', key: [h], possible: this.interchangerAllowed('Int', [h]) };
     } else {
-        r.left = { id: 'Int', key: [h - 1], possible: this.interchangerAllowed('Int', [h - 1]) };
-        r.right = { id: 'IntI', key: [h], possible: this.interchangerAllowed('IntI', [h]) };
+        r.right = { id: 'Int', key: [h - 1], possible: this.interchangerAllowed('Int', [h - 1]) };
+        r.left = { id: 'IntI', key: [h], possible: this.interchangerAllowed('IntI', [h]) };
     }
     // Return the best match in a permissive way
     if (!r.left.possible && !r.right.possible) return null;

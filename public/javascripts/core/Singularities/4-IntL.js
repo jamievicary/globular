@@ -232,10 +232,9 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
 Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {
     var x = key.last();
     var coords = this.getInterchangerCoordinates(type, key);
-    if (type.tail('R')) return {min: coords, max: [this.source_size(x) + 1, this.target_size(x) + 1]};
-    else if (type.tail('L')) return {min: coords, max: [this.source_size(x) + 1, this.target_size(x) + 1]};
-    else if (type.tail('RI')) return {min: coords, max: [this.source_size(x) + 1, this.source_size(x) + 1]};
-    else if (type.tail('LI')) return {min: coords, max: [this.source_size(x) + 1, this.source_size(x) + 1]};
+    if (type.tail('R', 'L')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.target_size(x) + 1}])};
+    if (type.tail('RI', 'LI')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.source_size(x) + 1}])};
+    debugger;
 }
 
 Diagram.prototype.getInverseKey.IntL = function(type, key) {

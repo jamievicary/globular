@@ -93,13 +93,11 @@ Diagram.prototype.getInterchangerCoordinates = function(type, key) {
 
 Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
     var family = GetSingularityFamily(type);
-    if (family === undefined) throw 0;
     return ((this.getInterchangerBoundingBox[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getInverseKey = function(type, key) {
     var family = GetSingularityFamily(type);
-    if (family === undefined) throw 0;
     return ((this.getInverseKey[family]).bind(this))(type, key);
 }
 

@@ -134,8 +134,13 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var target;
 
     // Special code to deal with interchangers
+    var source_size;
+    var insert_position;
     if (nCell.isInterchanger()) {
         var target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
+        var bounding_box = this.getBoundingBox(nCell);
+        insert_position = bounding_box.min.last();
+        source_size = bounding_box.max.last() - bounding_box.min.last();
     } else {
         // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(nCell.id);
@@ -147,17 +152,16 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             source = rewrite.source.copy();
             target = rewrite.target.copy();
         }
-        var source_size = source.nCells.length;
+        source_size = source.nCells.length;
+        insert_position = nCell.coordinates.last();
     }
-    var bounding_box = this.getBoundingBox(nCell);
 
 
 
     // Remove cells in the source of the rewrite
-    //var insert_position = nCell.coordinates.last();
-    var insert_position = bounding_box.min.last();
-    //this.nCells.splice(insert_position, source_size);
-    this.nCells.splice(insert_position, bounding_box.max.last() - bounding_box.min.last());
+    //var insert_position = (this.getDimension() == 0 ? 0 : bounding_box.min.last());
+    //this.nCells.splice(insert_position, this.getDimension() == 0 ? 1 : bounding_box.max.last() - bounding_box.min.last());
+    this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
         /* 
@@ -758,6 +762,7 @@ Diagram.prototype.getBoundingBox = function(nCell) {
 }
 
 Diagram.prototype.getLengthsAtSource = function() {
+    if (this.getDimension() == 0) return [];
     if (this.getDimension() == 1) return [this.nCells.length];
     return this.getSourceBoundary().getLengthsAtSource().concat([this.nCells.length]);
 }
