@@ -13,7 +13,12 @@ RegisterSingularityFamily({
     members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
 });
 
-Diagram.prototype.expand.IntL = function(type, x, y, n, l, m) {
+Diagram.prototype.expand.IntL = function(type, data, n, m) {
+    
+    var x = data.up;
+    var y = data.across;
+    var l = data.length;
+    
     var list = new Array();
     var new_type;
     var new_l = l + (this.target_size(x) - this.source_size(x));
@@ -39,14 +44,14 @@ Diagram.prototype.expand.IntL = function(type, x, y, n, l, m) {
             }
         } else {
             list = this.expand(new_type, x, 1, a * m).concat(
-                this.expand(type, x + a * m, y + a, 1, this.source_size(x), 1)).concat(
-                this.expand(new_type, x + this.source_size(x) + a * m, 1, b * m));
+                this.expand(type, {up: x + a * m, across: y + a, length: this.source_size(x)}, 1, 1)).concat(
+                this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
         }
     } else if (m != 1 && n === 1) {
-        list = this.expand(type, x, y, 1, l, 1).concat(
-            this.expand(type, x + a + b + this.source_size(x), y + 1, 1, new_l, m - 1));
+        list = this.expand(type, {up: x, across: y, length: l}, 1, 1).concat(
+            this.expand(type, {up: x + a + b + this.source_size(x), across: y + 1, up: new_l}, 1, m - 1));
     } else {
-        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, x, y, n - 1, l, m));
+        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {up: x, across: y, length: l}, n - 1, m));
     }
 
     return list;
@@ -244,7 +249,7 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     var new_key = key.last();
     var h = key.last();
     var cell = this.nCells[h];
-    var coords = cell.coordinates.slice();
+    var coords = cell.coordinates.slice(0);
     coords.push(h);
     
     if (type.tail('Int-L', 'IntI-L')) {

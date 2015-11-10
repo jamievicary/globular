@@ -21,20 +21,43 @@ RegisterSingularityFamily({
 });
 
 Diagram.prototype.getSource.IntLS = function(type, key) {
-    var coord = this.getCoordinates(type, key);
+    
+    var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.nCells[key.last()];
-    var expand_data = this.expand_source(cell);
-    if (type == 'Int-L-S') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
-    if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', expand_data, 1, coord.move([{relative: +1}])));
+    var box = this.getSliceBoundingBox(key.last())
+
+    var x = key.last();
+    var y = box.min.penultimate();
+    var n = box.max.last() - box.min.last();
+    var l = box.max.penultimate() - box.min.penultimate();
+    var m = 1;
+    
+    var source = this.getSlice(coord.last()).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
+    
+    if (type == 'Int-L-S') return {
+        list: source,
+        key: source.length - 1
+    }
+    if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', x + 1, y, n, l, m));
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
 }
 
 Diagram.prototype.getTarget.IntLS = function(type, key) {
-    var coord = this.getCoordinates(type, key);
+    
+    var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.nCells[key.last()];
-    var expand_data = this.expand_source(cell);
-    if (type == 'Int-L-S') return [cell.move([{relative: -1}, {absolute: coord.last()}])].concat(this.getSlice(coord.last()).rewrite(cell).expand('Int-L', expand_data, 1, coord));
+    var box = this.getSliceBoundingBox(key.last())
+
+
+    var x = coord.penultimate();
+    var y = coord.end(2); // 3rd from the en
+    var n = this.target_size(key.last());
+    var l = box.max.penultimate() - box.min.penultimate();
+    var m = 1;
+    
+    if (type == 'Int-L-S') return [cell.move([{relative: -1}, {absolute: coord.penultimate()}])].concat(
+        this.getSlice(coord.last()).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
     if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
@@ -73,9 +96,12 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     // Is the key cell well-separated from the adjacent structure?
-    if (!this.wellSeparated.IntLS(type, key)) return false;
+   
+// if (!this.wellSeparated.IntLS(type, key)) return false;
 
     // See if the source of the rewrite is a subset of the diagram instruction list
+
+    
     return this.subinstructions(key, this.getSource(type, key));
 }
 
@@ -86,6 +112,16 @@ Diagram.prototype.wellSeparated.IntLS = function(type, key) {
 }
 
 Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
+    
+    var diagram_pointer = this;
+    var h = key.last();
+    var cell = this.nCells[h];
+    var coords = cell.coordinates.slice(0);
+    coords.push(h);
+    
+    if (type.tail('IntI-L-S', 'Int-L-S')) {
+        return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
+    }
 }
 
 /*
