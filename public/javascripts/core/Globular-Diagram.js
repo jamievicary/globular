@@ -133,11 +133,9 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var target;
 
     // Special code to deal with interchangers
-    var bounding_box;
     if (nCell.isInterchanger()) {
         var target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
         //var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
-        bounding_box = this.getBoundingBox(nCell);
     } else {
         // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(nCell.id);
@@ -149,9 +147,9 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             target = rewrite.target.copy();
         }
         var source_size = source.nCells.length;
-        bounding_box = this.getBoundingBox(nCell);
+        //bounding_box = this.getBoundingBox(nCell);
     }
-    //var bounding_box = this.getBoundingBox()
+    var bounding_box = this.getBoundingBox(nCell);
 
 
 
