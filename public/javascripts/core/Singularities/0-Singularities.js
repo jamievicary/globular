@@ -145,7 +145,6 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (r != null) options.push(r);
     }
 
-    //    return [];
     return options;
 }
 
@@ -235,7 +234,7 @@ Diagram.prototype.source_size = function(level) {
 Diagram.prototype.target_size = function(level) {
     var nCell = this.nCells[level];
     if (nCell.id.substr(0, 3) === 'Int') {
-        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.key).length;
+        return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
     } else {
         return nCell.target_size();
     }
