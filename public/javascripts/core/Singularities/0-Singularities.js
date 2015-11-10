@@ -32,12 +32,16 @@ function RegisterSingularityFamily(data) {
     };
 }
 
+function GetSingularityFamily(type) {
+    if (type.tail('-1', '-1I')) return 'Inverses';
+    return SingularityFamilies[type];
+}
+
 Diagram.prototype.interchangerAllowed = function(type, key) {
     //  try {
     if (key.last() < 0) return false;
     if (key >= this.nCells.length) return false;
-    var family = SingularityFamilies[type];
-    if (family === undefined) throw 0;
+    var family = GetSingularityFamily(type);
     return ((this.interchangerAllowed[family]).bind(this))(type, key);
     //    } catch (e) {
     //        return false;
@@ -45,32 +49,32 @@ Diagram.prototype.interchangerAllowed = function(type, key) {
 }
 
 Diagram.prototype.wellSeparated = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     return ((this.getSource[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getSource = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     return ((this.getSource[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getTarget = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     return ((this.getTarget[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.rewritePasteData = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     return ((this.rewritePasteData[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.expand = function(type, start, n, m) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     return ((this.expand[family]).bind(this))(type, start, n, m);
 }
 
 Diagram.prototype.getInterchangerCoordinates = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     if (family === undefined) throw 0;
 
     // Call specialized code to get the coordinates of the interchanger
@@ -88,20 +92,43 @@ Diagram.prototype.getInterchangerCoordinates = function(type, key) {
 }
 
 Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     if (family === undefined) throw 0;
     return ((this.getInterchangerBoundingBox[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getInverseKey = function(type, key) {
-    var family = SingularityFamilies[type];
+    var family = GetSingularityFamily(type);
     if (family === undefined) throw 0;
     return ((this.getInverseKey[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.interpretDrag = function(drag) {
 
+    // Recursively handle a drag in a subdiagram
+    if (drag.coordinates.length > 1) {
+        var new_drag = {
+            boundary_type: drag.boundary_type,
+            boundary_depth: drag.boundary_depth,
+            coordinates: drag.coordinates.slice(0, drag.coordinates.length),
+            directions: drag.directions.slice(0, drag.directions.length)
+        };
+        new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
+        var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
+        for (var i=0; i<actions.length; i++) {
+            actions[i].id += '-1';
+            actions[i].key.push(drag.coordinates.last());
+        }
+        return actions;
+    }
+
     var options = [];
+
+    // Check for the case that we can cancel inverse cells
+    var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
+    if (inverse_action != null) options.push(inverse_action);
+    
+    // Check other singularity types
     for (var family in SingularityData) {
         if (!SingularityData.hasOwnProperty(family)) continue;
 

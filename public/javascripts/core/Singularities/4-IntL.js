@@ -54,6 +54,7 @@ Diagram.prototype.expand.IntL = function(type, x, y, n, l, m) {
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {
+    
     var up = drag.directions[0] > 0;
     var right = drag.directions[1] > 0;
     var key = [drag.coordinates[0]];
