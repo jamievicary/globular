@@ -191,13 +191,14 @@ Diagram.prototype.getInterchangerBoundingBox['Int'] = function (type, key){
 
     var position = this.getInterchangerCoordinates(type, key);
     var x = key.last();
-    
+
+    // NEEDS TO BE GENERALIZED TO COPE WITH HIGHER-DIMENSIONAL DIAGRAMS
     if(type.tail('Int')){
-        
-        return [this.nCells[x].coordinates.last() - position.penultimate() + this.source_size(x) , 2];
+        return {min: position, max: position.slice().move([{ absolute: this.nCells[x].coordinates.last() - position.penultimate() + this.source_size(x)},
+            {relative: 2}])};
     }
     else if(type.tail('IntI')){
-        return [this.nCells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x) , 2];
+        return {min: position, max: position.slice().move([{ absolute: this.nCells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x)} , {relative: 2}])};
     }
 };
 

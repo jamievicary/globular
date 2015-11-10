@@ -169,6 +169,7 @@ Array.prototype.move = function(instructions) {
             this[index] = command.absolute;
         }
     }
+    return this;
 }
 
 // Adds the components of the argument to the components of this array

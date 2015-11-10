@@ -133,13 +133,12 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     var source;
     var target;
 
-    // Special code to deal with interchangers
-    if (nCell.id.substr(0, 3) === 'Int'){
+    if (nCell.isInterchanger()) {
         var target = new Diagram(null, this.rewritePasteData(nCell.id, nCell.key));
-        var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
-    }
-    else{
-    // Info on the source and the target of the rewrite is retrieved from the signature here
+        //var source_size = this.getInterchangerBoundingBox(nCell.id, nCell.key).last();
+        //bounding_box = this.getBoundingBox(nCell);
+    } else {
+        // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(nCell.id);
         if (reverse) {
             source = rewrite.target.copy();
@@ -149,14 +148,19 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             source = rewrite.source.copy();
             target = rewrite.target.copy();
         }
-    var source_size = source.nCells.length;
+
+        var source_size = source.nCells.length;
+        //bounding_box = this.getBoundingBox(nCell);
     }
-    
+    var bounding_box = this.getBoundingBox(nCell)
+
 
 
     // Remove cells in the source of the rewrite
-    var insert_position = nCell.coordinates.last();   
-    this.nCells.splice(insert_position, source_size);
+    //var insert_position = nCell.coordinates.last();
+    var insert_position = bounding_box.min.last();
+    //this.nCells.splice(insert_position, source_size);
+    this.nCells.splice(insert_position, bounding_box.max.last() - bounding_box.min.last());
     for (var i = 0; i < target.nCells.length; i++) {
 
         /* 
@@ -168,14 +172,18 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
                 target.nCells[i].coordinates[j] += nCell.coordinates[j];
             }
         }
+
+        /*
         if(target.nCells[i].key != undefined) {
             for (var j = 0; j < target.nCells[i].key.length; j++) {
                // target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1 + j];
                 target.nCells[i].key[target.nCells[i].key.length - 1 -j] += nCell.coordinates[this.dimension - 1 - 1 - j];
             }
         }
+        */
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
+    
     if(insert_position != undefined){
         for (var i = 0; i < target.nCells.length; i++) {
             if(this.nCells[insert_position + i].coordinates === null){
@@ -184,6 +192,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             }
         }  
     }
+    
     // Due to globularity conditions, we can never remove or add a generator to the source boundary
 
     return this;
@@ -725,11 +734,26 @@ Diagram.prototype.getFirstColour = function() {
 }
 
 
-Diagram.prototype.getBoundingBox = function(level) {
+Diagram.prototype.getSliceBoundingBox = function(level) {
+    return this.getSlice(level).getBoundingBox(this.nCells[level]);
+/*
     var nCell = this.nCells[level];
     if (nCell.isInterchanger()) return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key);
     var box = {
         min: nCell.coordinates.concat([level])
+    };
+    var generator_bbox = gProject.signature.getGenerator(nCell.id).getBoundingBox(); 
+    box.max = box.min.vector_add(generator_bbox.max);
+    return box;
+*/
+}
+
+Diagram.prototype.getBoundingBox = function(nCell) {
+    //if (param == undefined) debugger;
+    if (nCell.id == undefined) debugger;
+    if (nCell.isInterchanger()) return this.getInterchangerBoundingBox(nCell.id, nCell.key);
+    var box = {
+        min: nCell.coordinates
     };
     var generator_bbox = gProject.signature.getGenerator(nCell.id).getBoundingBox(); 
     box.max = box.min.vector_add(generator_bbox.max);
