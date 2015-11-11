@@ -51,7 +51,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var cell = this.nCells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-
     var x = coord.penultimate();
     var y = coord.end(2); // 3rd from the en
     var n = this.target_size(key.last());

@@ -279,6 +279,7 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
+        if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
 
         // Render main diagram
         gProject.renderDiagram();
@@ -295,13 +296,11 @@ $(document).ready(function() {
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height()-50);
 
         // Render the list of n-cells
-        gProject.renderCells();
+        gProject.redrawAllCells();
 
         $("#add-0-cell-opt").click(function() {
-
             gProject.addZeroCell();
-            gProject.renderCells();
-
+            //gProject.renderCells();
         });
 
         $("#project-menu").show();

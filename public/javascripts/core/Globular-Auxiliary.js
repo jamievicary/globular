@@ -195,3 +195,24 @@ Array.prototype.vector_equals = function(v2) {
     }
     return true;
 }
+
+// Colour data computed with https://github.com/husl-colors/husl
+function getColourList(hue_list, saturation, lightness) {
+    var colours = [];
+    for (var i=0; i<hue_list.length; i++) {
+        var hue = hue_list[i];
+        //while (hue > 360) hue -= 360;
+        colours.push($.husl.toHex(hue, saturation, lightness));
+    }
+    return colours;
+}
+
+function hsl(hue, saturation, lightness) {
+    return $.husl.toHex(hue, saturation, lightness);
+}
+
+var GlobularColours = [
+    /* Mid   */ [hsl(250,100,60) /*blue*/, hsl(10,100,60) /*red*/, hsl(120,100,60) /*green*/],
+    /* Light */ [hsl(0, 0, 100) /*white*/, hsl(0, 0, 80) /*light gray*/],
+    /* Dark  */ [hsl(0, 0, 0) /*black*/, hsl(265,100,20) /*dark blue*/, hsl(10, 100, 20) /*dark red*/, hsl(130,100,20) /*dark green*/]
+]
