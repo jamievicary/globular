@@ -139,33 +139,16 @@ Project.prototype.limitMatches = function(matches, elements) {
 };
 
 /*
-    Takes a diagram that we want to attach, the path to the attachement boundary as arguments
+    Takes a diagram that we want to attach, the path to the attachment boundary as arguments
     Updates this diagram to be the result of the attachment
 */
 Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, boundary_path) {
-    /*
-    The attachment procedure could be rewritten so that the additional complexity arising from creating a copy of the source of the attached rewrite could be omitted
-    This got created because of how the software was developed and because at the time when the attachment procedure was written it was not yet clear
-    what will be the exact form of input provided by the front end.
-    
-    For now we leave it in the current form, as modifications to the attachment procedure would require modifying all the tests too
-    */
     if (attachmentFlag) {
         this.diagram.attach(attached_diagram, boundary_path, bounds);
     }
     else {
-        var rewrite_source_size = attached_diagram.getSourceBoundary().nCells.length;
-
-    var rewriteCell = new NCell(attached_diagram.nCells[0].id, bounds);
-
-/*
-        var rewriteCell = {
-            id: attached_diagram.nCells[0].id,
-            coordinates: bounds
-        }
-*/
+        var rewriteCell = new NCell(attached_diagram.nCells[0].id, bounds);
         this.diagram.rewrite(rewriteCell);
-
     }
 };
 
@@ -360,7 +343,7 @@ Project.prototype.drag_cell = function(drag) {
         // Display a dialog box, return user's choice
     }
   
-    var action = new NCell(options[0].type, null, options[0].key);
+    var action = new NCell(options[0].id, null, options[0].key);
     //action.coordinates.concat(temp_drag_data);
 
     var action_wrapper = {

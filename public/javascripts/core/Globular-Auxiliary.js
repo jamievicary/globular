@@ -157,6 +157,11 @@ String.prototype.is_interchanger = function() {
     return (this.substr(0, 3) == 'Int');
 };
 
+String.prototype.toggle_inverse = function() {
+    if (this.tail('I')) return this.substr(0, this.length - 1);
+    return this + 'I';
+}
+
 Array.prototype.move = function(instructions) {
     for (var i = 0; i < instructions.length; i++) {
         if (i == this.length) return;

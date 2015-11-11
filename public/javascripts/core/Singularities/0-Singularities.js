@@ -22,13 +22,6 @@ function RegisterSingularityFamily(data) {
     }
     SingularityData[data.family] = {
         dimension: data.dimension
-            /*
-            ,
-            rewriteAllowed: eval("rewriteAllowed_" + data.family),
-            rewriteCutData: eval("rewriteCutData_", + data.family),
-            rewritePasteData: eval("rewritePasteData_" + data.family),
-            interpretDrag: eval("interpret_drag_" + data.family)
-            */
     };
 }
 
@@ -93,13 +86,11 @@ Diagram.prototype.getInterchangerCoordinates = function(type, key) {
 
 Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
     var family = GetSingularityFamily(type);
-    if (family === undefined) throw 0;
     return ((this.getInterchangerBoundingBox[family]).bind(this))(type, key);
 }
 
 Diagram.prototype.getInverseKey = function(type, key) {
     var family = GetSingularityFamily(type);
-    if (family === undefined) throw 0;
     return ((this.getInverseKey[family]).bind(this))(type, key);
 }
 
@@ -125,9 +116,14 @@ Diagram.prototype.interpretDrag = function(drag) {
     var options = [];
 
     // Check for the case that we can cancel inverse cells
+
    // var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
     //if (inverse_action != null) options.push(inverse_action);
     
+    var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
+    options = options.concat(inverse_action);
+
+
     // Check other singularity types
     for (var family in SingularityData) {
         if (!SingularityData.hasOwnProperty(family)) continue;
@@ -140,9 +136,15 @@ Diagram.prototype.interpretDrag = function(drag) {
 
         // See if this family can interpret the drag
         var r = ((this.interpretDrag[family]).bind(this))(drag);
-
-        // If so, add it to the list of options
-        if (r != null) options.push(r);
+        var msg = "interpretDrag." + family + ": allowed ";
+        var found_possibilities = false;
+        for (var i=0; i<r.length; i++) {
+            if (r[i].possible) options.push(r[i]);
+            msg += (found_possibilities ? ", " : "") + r[i].id;
+            found_possibilities = true;
+        }
+        if (found_possibilities) console.log(msg);
+        else console.log("interpretDrag." + family + ": no interchangers allowed");
     }
 
     return options;
@@ -153,7 +155,7 @@ Diagram.prototype.getDragOptions = function(list, key) {
     for (var i = 0; i < list.length; i++) {
         var type = list[i];
         options.push({
-            type: type,
+            id: type,
             key: key,
             possible: this.interchangerAllowed(type, key)
         });

@@ -7,6 +7,7 @@
 // Data for the Int-L-S family
 // This is naturality for the 4-cell pull-through
 
+/*
 RegisterSingularityFamily({
     family: 'IntLS',
     dimension: 5,
@@ -19,6 +20,7 @@ RegisterSingularityFamily({
     'Int-RI-S', 'Int-RI-SI',
     'IntI-RI-S', 'IntI-RI-SI']
 });
+*/
 
 Diagram.prototype.getSource.IntLS = function(type, key) {
     
