@@ -125,8 +125,8 @@ Diagram.prototype.interpretDrag = function(drag) {
     var options = [];
 
     // Check for the case that we can cancel inverse cells
-    var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
-    if (inverse_action != null) options.push(inverse_action);
+   // var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
+    //if (inverse_action != null) options.push(inverse_action);
     
     // Check other singularity types
     for (var family in SingularityData) {
@@ -182,20 +182,23 @@ Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
 
 // Compare the list to a subset of the diagram
 Diagram.prototype.subinstructions = function(diagram_key, instructions) {
-    var diagram_key_cell = this.nCells[diagram_key].coordinates;
+    
+    var diagram_key_cell = this.nCells[diagram_key.last()];
     var instructions_key_cell = instructions.list[instructions.key];
-    if (diagram_key_cell.coordinates.length != instructions_key_cell.length) return false;
+    
+    if (diagram_key_cell.coordinates.length != instructions_key_cell.coordinates.length) return false;
     var offset_array = [];
+    
     for (var i = 0; i < diagram_key_cell.coordinates.length; i++) {
         var offset_array = diagram_key_cell.coordinates[i] - instructions_key_cell.coordinates[i];
     }
 
     for (var i = 0; i < instructions.list.length; i++) {
         var list_cell = instructions.list[i];
-        var diagram_cell = this.nCells[i + diagram_key - instructions.key];
+        var diagram_cell = this.nCells[i + diagram_key.last() - instructions.key];
         var diagram_coord;
         var list_coord;
-        if (list_cell.id.isInterchanger()) {
+        if (list_cell.isInterchanger()) {
             diagram_coord = diagram_cell.key;
             list_coord = list_cell.key;
         } else {

@@ -115,9 +115,9 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     
     var diagram_pointer = this;
     var h = key.last();
-    var cell = this.nCells[h];
+    var cell = this.nCells[h - this.source_size(h)];
     var coords = cell.coordinates.slice(0);
-    coords.push(h);
+    coords.push(h - this.source_size(h));
     
     if (type.tail('IntI-L-S', 'Int-L-S')) {
         return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
