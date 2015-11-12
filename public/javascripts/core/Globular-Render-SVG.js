@@ -652,7 +652,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }
 
             // Find min and max x-values by looking at edges and vertices of diagram
-            var inc_x = subdiagram.inclusion[0];
+            var inc_x = subdiagram.inclusion.end(1);
             var min_x = Number.MAX_VALUE;
             var max_x = -Number.MAX_VALUE;
             for (var height = inc_y; height < inc_y + subdiagram.size.length; height++) {
