@@ -111,13 +111,15 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
 
     if (type == 'Int-L') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be deeper
+        //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be deeper
+        if (this.separation([coords.last() + g1_source, key.last()], [key.last()]) <= 0) return false;
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'IntI-L') {
         if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
-        if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
+        //if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
+        if (!this.wellSeparated([coords.last() + g1_source, key.last()], [key.last()]) >= 0) return false;
         return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 

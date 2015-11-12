@@ -602,6 +602,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         project.setColour(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
         project.renderCellsAbove(generator.id);
+        project.renderDiagram();
     };
 
 

@@ -194,25 +194,26 @@ Array.prototype.vector_equals = function(v2) {
         if (this[i] != v2[i]) return false;
     }
     return true;
-}
+};
 
-// Colour data computed with https://github.com/husl-colors/husl
-function getColourList(hue_list, saturation, lightness) {
-    var colours = [];
-    for (var i=0; i<hue_list.length; i++) {
-        var hue = hue_list[i];
-        //while (hue > 360) hue -= 360;
-        colours.push($.husl.toHex(hue, saturation, lightness));
+Array.prototype.set = function(attr, val) {
+    this.attr = val;
+    return this;
+};
+
+Array.prototype.has_suffix = function(a2) {
+    for (var i=0; i<a2.length; i++) {
+        if (this.end(i) != a2.end(i)) return false;
     }
-    return colours;
+    return true;
 }
 
 function hsl(hue, saturation, lightness) {
     return $.husl.toHex(hue, saturation, lightness);
-}
+};
 
 var GlobularColours = [
     /* Mid   */ [hsl(250,100,60) /*blue*/, hsl(10,100,60) /*red*/, hsl(120,100,60) /*green*/],
     /* Light */ [hsl(0, 0, 100) /*white*/, hsl(0, 0, 80) /*light gray*/],
-    /* Dark  */ [hsl(0, 0, 0) /*black*/, hsl(265,100,20) /*dark blue*/, hsl(10, 100, 20) /*dark red*/, hsl(130,100,20) /*dark green*/]
-]
+    /* Dark  */ [hsl(0, 0, 0) /*black*/, hsl(265,100,30) /*dark blue*/, hsl(10, 100, 30) /*dark red*/, hsl(130,100,30) /*dark green*/]
+];

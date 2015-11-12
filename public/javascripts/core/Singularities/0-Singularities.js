@@ -41,11 +41,6 @@ Diagram.prototype.interchangerAllowed = function(type, key) {
     //    }
 }
 
-Diagram.prototype.wellSeparated = function(type, key) {
-    var family = GetSingularityFamily(type);
-    return ((this.getSource[family]).bind(this))(type, key);
-}
-
 Diagram.prototype.getSource = function(type, key) {
     var family = GetSingularityFamily(type);
     return ((this.getSource[family]).bind(this))(type, key);

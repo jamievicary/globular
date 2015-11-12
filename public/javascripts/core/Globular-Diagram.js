@@ -768,27 +768,82 @@ Diagram.prototype.getLengthsAtSource = function() {
 }
 
 Diagram.prototype.source_size = function(level) {
-
     var nCell = this.nCells[level];
-
     if(nCell.id.substr(0, 3) === 'Int'){
         return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{
         return nCell.source_size();
     }
-
 }
 
 Diagram.prototype.target_size = function(level) {
-
     var nCell = this.nCells[level];
-
     if(nCell.id.substr(0, 3) === 'Int'){
         return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
     }
     else{
         return nCell.target_size();
     }
-
 };
+
+// Identify separation of parts of a diagram
+Diagram.prototype.separation = function(c1, c2) {
+    var d1 = this.dimension + 1 - c1.length;
+    var d2 = this.dimension + 1 - c2.length;
+    if (d1 == d2) {
+        // ... ?
+    } else if (d1 > d2) {
+        return this.wellSeparated(c2, c1);
+    }
+    
+    /* CAN ASSUME d1 < d2 */
+    
+    // Only considering single-dimension difference at the moment
+    if (d2 != d1 + 1) return false;
+    
+    if (!c1.has_suffix(c2)) return false;
+    
+    // Find the base slice for d2
+    var slice = this;
+    for (var i=0; i<c2.length - 1; i++) {
+        slice = slice.getSlice(c2.end(i));
+    }
+    
+    // Get region where c2 is acting
+    var c2bbox = slice.getSliceBoundingBox(c2[0]);
+    
+    // Get slice on which c2 is acting
+    slice = slice.getSlice(c2[0]);
+    
+    // Find the coordinates of c1 in this slice
+    var c1coord = c1[0];
+    
+    // Find the 'future cone' of c2bbox in slice
+    var min = c2bbox.min[0];
+    var max = c2bbox.max[0];
+    var level = c2bbox.min.last();
+    for (var h = level; h <= c1coord; h++) {
+        var h_slice = slice.getSlice(h);
+        var h_bbox = slice.getSliceBoundingBox(h);
+        var delta = slice.target_size(h) - slice.source_size(h);
+        if (h_bbox.max.last() <= min) {
+            if (h == c1coord) return -1;
+            min += delta;
+            max += delta;
+        }
+        else if (h_bbox.min.last() >= max) {
+            if (h == c1coord) return 1;
+            // do nothing
+        }
+        else {
+            // interact
+            if (h == c1coord) return 0;
+            var new_min = Math.min(min, h_bbox.min.last());
+            var new_max = Math.max(max + delta, h_bbox.min.last() + h_slice.target_size(h));
+        }
+    }
+    
+    // No interaction
+    return true;
+}
