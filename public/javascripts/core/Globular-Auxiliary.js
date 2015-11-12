@@ -179,10 +179,10 @@ Array.prototype.move = function(instructions) {
 
 // Adds the components of the argument to the components of this array
 Array.prototype.vector_add = function(v2) {
-    if (this.length != v2.length) throw 0;
     var result = this.slice();
-    for (var i=0; i<this.length; i++) {
-        result[i] += v2[i];
+    var n = Math.min(this.length, v2.length);
+    for (var i=0; i<n; i++) {
+        result[result.length - 1 - i] += v2.end(i);
     }
     return result;
 }

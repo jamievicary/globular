@@ -52,3 +52,16 @@ NCell.prototype.move = function(instructions) {
     if (this.coordinates != null) this.coordinates.move(instructions);
     return this;
 }
+
+NCell.prototype.pad = function(coordinates) {
+    if (this.key != null) {
+        for (var i=0; i<this.key.length; i++) {
+            this.key[i] += coordinates[i];
+        }
+    }
+    if (this.coordinates != null) {
+        for (var i=0; i<this.coordinates.length; i++) {
+            this.coordinates[i] += coordinates[i];
+        }
+    }
+}

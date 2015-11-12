@@ -128,6 +128,12 @@ Diagram.prototype.render = function(div, highlight) {
 */
 Diagram.prototype.rewrite = function(nCell, reverse) {
 
+    if (nCell.coordinates != null) {
+        for (var i=0; i<nCell.coordinates.length; i++) {
+            if (isNaN(nCell.coordinates[i])) debugger;
+        }
+    }
+
     if (reverse === undefined) reverse = false;
 
     var source;
@@ -153,7 +159,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             target = rewrite.target.copy();
         }
         source_size = source.nCells.length;
-        insert_position = nCell.coordinates.last();
+        insert_position = (this.getDimension() == 0 ? 0 : nCell.coordinates.last());
     }
 
 
@@ -164,27 +170,16 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
-        /* 
-        In the process of inserting n-cells in the target of the rewrite into the list of nCells, we need to shift
-        the inclusion information by the location of the rewrite in the overall diagram
-        */
-        if(target.nCells[i].coordinates != null){
-            for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
-                target.nCells[i].coordinates[j] += nCell.coordinates[j];
-            }
+        // If the rewrite wasn't an interchanger, pad with the rewrite location
+        if (!nCell.id.is_interchanger()){
+            target.nCells[i].pad(nCell.coordinates);
         }
 
-        /*
-        if(target.nCells[i].key != undefined) {
-            for (var j = 0; j < target.nCells[i].key.length; j++) {
-               // target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1 + j];
-                target.nCells[i].key[target.nCells[i].key.length - 1 -j] += nCell.coordinates[this.dimension - 1 - 1 - j];
-            }
-        }
-        */
+        // Add the cell into the diagram
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
     
+    // Make sure all cells have coordinates properly defined
     if(insert_position != undefined){
         for (var i = 0; i < target.nCells.length; i++) {
             if(this.nCells[insert_position + i].coordinates === null){
@@ -194,8 +189,6 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         }  
     }
     
-    // Due to globularity conditions, we can never remove or add a generator to the source boundary
-
     return this;
 }
 

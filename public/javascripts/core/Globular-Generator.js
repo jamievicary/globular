@@ -13,7 +13,7 @@ function Generator(data) {
     this.source = data.source;
     this.target = data.target;
     this.id = data.id;
-    if (data.name == undefined) data.name = "Cell " + (gProject.signature.getCells().length + 1).length.toString();
+    if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
     this.name = data.name;
 };
 

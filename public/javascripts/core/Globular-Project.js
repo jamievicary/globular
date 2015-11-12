@@ -219,42 +219,30 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
     if (source.getDimension() != 0) { // globularity trivially satisfied for 0-diagrams
         if (!sourceOfSource.diagramBijection(sourceOfTarget)) {
             alert("Source of source does not match source of target");
-            this.cacheSourceTarget[boundary] = null;
+            //this.cacheSourceTarget[boundary] = null;
+            this.cacheSourceTarget = null;
             return true;
         }
         if (!targetOfSource.diagramBijection(targetOfTarget)) {
             alert("Target of source does not match target of target");
-            this.cacheSourceTarget[boundary] = null;
+            //this.cacheSourceTarget[boundary] = null;
+            this.cacheSourceTarget = null;
             return true;
         }
     }
 
     this.addNCell(source, target);
-
-    // Re-render and save the new state
-
-    //this.renderNCells(source.getDimension() + 1);
     this.clearDiagram();
-
     this.cacheSourceTarget = null;
     this.saveState();
 };
 
 Project.prototype.storeTheorem = function() {
-    var theorem = new Generator(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
-    var d = theorem.getDimension();
-    while (this.signature.n < d) {
-        this.signature = new Signature(this.signature);
-    }
-    this.signature.addGenerator(theorem);
-    var temp_diagram = this.signature.createDiagram(theorem.id);
-    var colour = '#FFFFFF';
-    var data = new Data(theorem.id, colour, temp_diagram, temp_diagram.getDimension());
-    this.dataList.put(theorem.id, data);
-    this.addNCell(temp_diagram, this.diagram);
-    this.addNCell(this.diagram, temp_diagram);
+    var theorem = this.addNCell(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
+    var theorem_diagram = this.signature.createDiagram(theorem.id);
+    this.addNCell(theorem_diagram, this.diagram);
+    this.addNCell(this.diagram, theorem_diagram);
     this.clearDiagram();
-    this.renderAll();
     this.saveState();
 };
 
@@ -859,7 +847,7 @@ Project.prototype.redrawAllCells = function() {
 
 Project.prototype.addNCell = function(source, target) {
     
-    var generator = new Generator({source: source, target: target, name: "Cell " + (this.signature.getAllCells().length + 1)});
+    var generator = new Generator({source: source, target: target});
 
     var d = generator.getDimension();
     while (this.signature.n < d) {
@@ -877,6 +865,8 @@ Project.prototype.addNCell = function(source, target) {
     
     // Add the diagram to the menu
     if (gProject != null) this.renderNCell(generator.id);
+    
+    return generator;
 };
 
 /*
