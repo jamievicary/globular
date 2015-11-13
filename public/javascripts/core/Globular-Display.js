@@ -292,6 +292,7 @@ Display.prototype.render = function() {
     for (var i = 0; i < this.coordinates.length; i++) {
         slice = slice.getSlice(this.coordinates[i].val());
     }
+    this.visible_diagram = slice;
     this.active = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
     if (this.active == null) return;
 

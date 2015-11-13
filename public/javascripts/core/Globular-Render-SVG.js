@@ -132,7 +132,7 @@ function globular_render_1d(container, diagram, subdiagram) {
 
     // Draw highlight
     if (subdiagram != undefined) {
-        if (subdiagram.boundaryPath == 's') {
+        if (subdiagram.boundaryType == 's' && subdiagram.visibleBoundaryDepth == 1) {
             d.g.appendChild(SVG_create_path({
                 string: SVG_move_to({
                     x: 0,
@@ -145,7 +145,7 @@ function globular_render_1d(container, diagram, subdiagram) {
                 'stroke-opacity': highlight_opacity
             }));
         }
-        else if (subdiagram.boundaryPath == 't') {
+        else if (subdiagram.boundaryType == 't' && subdiagram.visibleBoundaryDepth == 1) {
             d.g.appendChild(SVG_create_path({
                 string: SVG_move_to({
                     x: length,
@@ -545,14 +545,12 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
 
     // Render the highlight
-    if (diagram.dimension > 3) {
-        subdiagram = undefined;   
-    }
     if (subdiagram != undefined) {
         var delta = 0.0005;
-        if (subdiagram.boundaryPath.length == 2) {
+        //if (subdiagram.boundaryPath.length == 2) {
+        if (subdiagram.visibleBoundaryDepth == 2) {
             // Highlight left or right side boundary
-            var x = (subdiagram.boundaryPath == 'ss' ? 0.125 - 0.5 - delta : data.max_x + 0.5 - 0.125 + delta);
+            var x = (subdiagram.boundaryType == 's' ? 0.125 - 0.5 - delta : data.max_x + 0.5 - 0.125 + delta);
             d.g.appendChild(SVG_create_path({
                 string: SVG_move_to({
                     x: x,
@@ -566,15 +564,16 @@ function globular_render_2d(container, diagram, subdiagram) {
                 stroke_opacity: highlight_opacity
             }));
         }
-        else if (subdiagram.boundaryPath.length == 1) {
-            var y = (subdiagram.boundaryPath == 's' ? 0.125 - delta : Math.max(1, diagram.nCells.length) - 0.125 + delta);
+        //else if (subdiagram.boundaryPath.length == 1) {
+        else if (subdiagram.visibleBoundaryDepth == 1) {
+            var y = (subdiagram.boundaryType == 's' ? 0.125 - delta : Math.max(1, diagram.nCells.length) - 0.125 + delta);
             var x1, x2;
-            var edges = data.edges_at_level[subdiagram.boundaryPath == 's' ? 0 : diagram.nCells.length];
+            var edges = data.edges_at_level[subdiagram.boundaryType == 's' ? 0 : diagram.nCells.length];
 
             // Get the first and last edge of the inclusion
             //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
             var first_edge_index = subdiagram.inclusion[0];
-            var last_edge_index = subdiagram.inclusion[0] + subdiagram.size;
+            var last_edge_index = subdiagram.inclusion[0] + subdiagram.size.magnitude();
             var x1, x2;
             if (first_edge_index == last_edge_index) {
                 if (first_edge_index == 0) {
@@ -621,7 +620,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                 stroke_opacity: highlight_opacity
             }));
         }
-        else if (subdiagram.boundaryPath.length == 0) {
+        else if (subdiagram.visibleBoundaryDepth == 0) {
             // Highlight in main diagram
             // Design decision: pad out by 0.25 uniformly.
 

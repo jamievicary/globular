@@ -162,6 +162,14 @@ String.prototype.toggle_inverse = function() {
     return this + 'I';
 }
 
+String.prototype.repeat = function(n) {
+    var result = "";
+    for (var i = 0; i < n; i++) {
+        result += this;
+    }
+    return result;
+}
+
 Array.prototype.move = function(instructions) {
     for (var i = 0; i < instructions.length; i++) {
         if (i == this.length) return;
@@ -169,8 +177,7 @@ Array.prototype.move = function(instructions) {
         var index = this.length - 1 - i;
         if (command.relative != undefined) {
             this[index] += command.relative;
-        }
-        else {
+        } else {
             this[index] = command.absolute;
         }
     }
@@ -181,7 +188,7 @@ Array.prototype.move = function(instructions) {
 Array.prototype.vector_add = function(v2) {
     var result = this.slice();
     var n = Math.min(this.length, v2.length);
-    for (var i=0; i<n; i++) {
+    for (var i = 0; i < n; i++) {
         result[result.length - 1 - i] += v2.end(i);
     }
     return result;
@@ -190,7 +197,7 @@ Array.prototype.vector_add = function(v2) {
 // Check two arrays for equality componentwise
 Array.prototype.vector_equals = function(v2) {
     if (this.length != v2.length) return false;
-    for (var i=0; i<this.length; i++) {
+    for (var i = 0; i < this.length; i++) {
         if (this[i] != v2[i]) return false;
     }
     return true;
@@ -202,10 +209,18 @@ Array.prototype.set = function(attr, val) {
 };
 
 Array.prototype.has_suffix = function(a2) {
-    for (var i=0; i<a2.length; i++) {
+    for (var i = 0; i < a2.length; i++) {
         if (this.end(i) != a2.end(i)) return false;
     }
     return true;
+}
+
+Number.prototype.magnitude = function() {
+    return this;
+}
+
+Array.prototype.magnitude = function() {
+    return this.length - 1;
 }
 
 function hsl(hue, saturation, lightness) {
@@ -213,7 +228,11 @@ function hsl(hue, saturation, lightness) {
 };
 
 var GlobularColours = [
-    /* Mid   */ [hsl(250,100,60) /*blue*/, hsl(10,100,60) /*red*/, hsl(120,100,60) /*green*/],
-    /* Light */ [hsl(0, 0, 100) /*white*/, hsl(0, 0, 80) /*light gray*/],
-    /* Dark  */ [hsl(0, 0, 0) /*black*/, hsl(265,100,30) /*dark blue*/, hsl(10, 100, 30) /*dark red*/, hsl(130,100,30) /*dark green*/]
+    /* Mid   */
+    [hsl(250, 100, 60) /*blue*/ , hsl(10, 100, 60) /*red*/ , hsl(120, 100, 60) /*green*/ ],
+    /* Light */
+    [hsl(0, 0, 100) /*white*/ , hsl(0, 0, 80) /*light gray*/ ],
+    /* Dark  */
+    [hsl(0, 0, 0) /*black*/ , hsl(265, 100, 30) /*dark blue*/ , hsl(10, 100, 30) /*dark red*/ , hsl(130, 100, 30) /*dark green*/ ]
 ];
+

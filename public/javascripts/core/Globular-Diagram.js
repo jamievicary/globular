@@ -160,6 +160,7 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         }
         source_size = source.nCells.length;
         insert_position = (this.getDimension() == 0 ? 0 : nCell.coordinates.last());
+        if (insert_position < 0) debugger;
     }
 
 
