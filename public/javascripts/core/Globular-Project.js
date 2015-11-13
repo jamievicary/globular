@@ -239,20 +239,12 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 };
 
 Project.prototype.storeTheorem = function() {
-    var theorem = new Generator(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
-    var d = theorem.getDimension();
-    while (this.signature.n < d) {
-        this.signature = new Signature(this.signature);
-    }
-    this.signature.addGenerator(theorem);
-    var temp_diagram = this.signature.createDiagram(theorem.id);
-    var colour = '#FFFFFF';
-    var data = new Data(theorem.id, colour, temp_diagram, temp_diagram.getDimension());
-    this.dataList.put(theorem.id, data);
-    this.addNCell(temp_diagram, this.diagram);
-    this.addNCell(this.diagram, temp_diagram);
+    var theorem_id = this.addNCell(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
+    var theorem_diagram = this.signature.createDiagram(theorem_id);
+    this.addNCell(theorem_diagram, this.diagram);
+    this.addNCell(this.diagram, theorem_diagram);
     this.clearDiagram();
-    this.renderAll();
+    //this.renderAll();
     this.saveState();
 };
 
@@ -416,7 +408,7 @@ Project.prototype.selectGenerator = function(id) {
     var last_slice_max = null;
     for (var i=0; i<slices_data.length; i++) {
         if (i == slices_data.length - 1) last_slice_max = slice_pointer.nCells.length;
-        slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
+        slice_pointer = slice_pointer.getSlice(slices_data[i]);
         slices_counter++;
     }
     var visible_slice = slice_pointer;
@@ -769,7 +761,7 @@ Project.prototype.renderAll = function() {
 // Render all n-cells
 Project.prototype.renderCells = function() {
     var list = this.listGenerators();
-    for (var i = 0; i <= list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
         this.renderNCell(list[i]);
     }
 }
@@ -872,6 +864,8 @@ Project.prototype.addNCell = function(source, target) {
 
     // Add the diagram to the menu
     if (gProject != null) this.renderNCell(generator.id);
+    
+    return generator.id;
 };
 
 /*

@@ -814,30 +814,59 @@ Diagram.prototype.separation = function(c1, c2) {
     var c1coord = c1[0];
     
     // Find the 'future cone' of c2bbox in slice
-    var min = c2bbox.min[0];
-    var max = c2bbox.max[0];
-    var level = c2bbox.min.last();
-    for (var h = level; h <= c1coord; h++) {
+    //var min = c2bbox.min[0];
+    //var max = c2bbox.max[0];
+    //var level = c2bbox.min.last();
+    //var start_height = Math.min(c2bbox.min.last(), c1coord);
+    //var final_height = Math.max(c2bbox.min.last(), c1coord);
+    var start_height, final_height, min, max, target_min, target_max;
+    if (c2bbox.min.last() < c1coord) {
+        // Starting from the bbox
+        min = c2bbox.min[0];
+        max = c2bbox.max[0];
+        start_height = c2bbox.min.last();
+        final_height = c1coord;
+        var h_bbox = slice.getSliceBoundingBox(c1coord);
+        target_min = h_bbox.min.last();
+        target_max = h_bbox.max.last();
+    }
+    else {
+        // Starting from the point
+        var h_bbox = slice.getSliceBoundingBox(c1coord);
+        min = h_bbox.min.last();
+        max = h_bbox.max.last();
+        start_height = c1coord;
+        final_height = c2bbox.min.last();
+        target_min = c2bbox.min.end(1);
+        target_max = c2bbox.max.end(1);
+    }
+    
+    for (var h = start_height; h <= final_height; h++) {
         var h_slice = slice.getSlice(h);
         var h_bbox = slice.getSliceBoundingBox(h);
         var delta = slice.target_size(h) - slice.source_size(h);
+        if (h == final_height) {
+            var above = target_min >= max;
+            var below = target_max <= min;
+            return {above: target_min >= max, below: target_max <= min};
+            /*
+            if (target_max <= min) return -1;
+            if (target_min >= max) return +1;
+            return 0;
+            */
+        }
         if (h_bbox.max.last() <= min) {
-            if (h == c1coord) return -1;
             min += delta;
             max += delta;
         }
         else if (h_bbox.min.last() >= max) {
-            if (h == c1coord) return 1;
             // do nothing
         }
         else {
             // interact
-            if (h == c1coord) return 0;
-            var new_min = Math.min(min, h_bbox.min.last());
-            var new_max = Math.max(max + delta, h_bbox.min.last() + h_slice.target_size(h));
+            min = Math.min(min, h_bbox.min.last());
+            max = Math.max(max + delta, h_bbox.min.last() + h_slice.target_size(h));
         }
     }
     
-    // No interaction
-    return true;
 }

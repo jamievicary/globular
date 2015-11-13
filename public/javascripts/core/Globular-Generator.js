@@ -15,6 +15,7 @@ function Generator(data) {
     this.id = data.id;
     if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
     this.name = data.name;
+    return this;
 };
 
 Generator.prototype.getTargetColour = function() {
