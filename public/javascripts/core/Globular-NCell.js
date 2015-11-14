@@ -8,11 +8,11 @@
     Creates an N-Cell of type 'id' whose location in a diagram is specified by coordinate
     This is to allow uniform treatment of interchangers and other cells
 */
-function NCell(id, coordinates, key_location) {
+function NCell(id, coordinates, key) {
 
     this.id = id;
     this.coordinates = coordinates;
-    this.key = key_location
+    this.key = key;
 };
 
 NCell.prototype.getType = function() {
@@ -20,11 +20,14 @@ NCell.prototype.getType = function() {
 }
 
 NCell.prototype.copy = function() {
+    /*
     var temp_array = new Array();
     for (var i = 0; i < this.coordinates.length; i++) {
         temp_array[i] = this.coordinates[i];
     }
     return new NCell(this.id, temp_array);
+    */
+    return new NCell(this.id, this.coordinates.slice(), (this.key == undefined ? undefined : this.key.slice()));
 }
 
 NCell.prototype.isInterchanger = function() {
@@ -51,4 +54,17 @@ NCell.prototype.move = function(instructions) {
     if (this.key != undefined) this.key.move(instructions);
     if (this.coordinates != null) this.coordinates.move(instructions);
     return this;
+}
+
+NCell.prototype.pad = function(coordinates) {
+    if (this.key != null) {
+        for (var i=0; i<this.key.length; i++) {
+            this.key[i] += coordinates[i];
+        }
+    }
+    if (this.coordinates != null) {
+        for (var i=0; i<this.coordinates.length; i++) {
+            this.coordinates[i] += coordinates[i];
+        }
+    }
 }

@@ -41,7 +41,7 @@ Signature.prototype.getType = function () {
 Signature.prototype.addGenerator = function (generator) {
     var d = generator.getDimension();
     if (d == this.n) {
-        this.nCells.put(generator.identifier, generator);
+        this.nCells.put(generator.id, generator);
         this.k++;
     } else {
         this.sigma.addGenerator(generator);
@@ -112,28 +112,24 @@ Signature.prototype.copy = function () {
 
 
 /*
-    Takes an integer and returns a list of lists of all the cells
+    Takes an integer and returns a list all the cells at that level
 */
-Signature.prototype.get_NCells = function (level) {
+Signature.prototype.getNCells = function (level) {
     var varSig = this;
-    
     while (varSig.n != level) {
         varSig = varSig.sigma;
     }
     return varSig.nCells.keys();
 }
 
-/*
-    Returns a list of all the cells in this signature
-*/
-Signature.prototype.getCells = function () {
-    var tempArray = new Array();
-    var varSig = this;
-    
-    // The overall list is arranged in the order of ascending dimensions of cells in individual arrays
-    while (varSig != null) {
-        tempArray.splice(0, 0, varSig.nCells.keys())
-        varSig = varSig.sigma;
-    }
-    return tempArray;
+
+Signature.prototype.getAllCells = function () {
+    if (this.sigma == null) return this.getCells();
+    return this.sigma.getAllCells().concat(this.getCells());
 };
+
+Signature.prototype.getCells = function() {
+    return this.nCells.keys();
+};
+
+Signature.prototype.getNewColour

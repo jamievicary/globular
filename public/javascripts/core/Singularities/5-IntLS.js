@@ -51,7 +51,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var cell = this.nCells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-
     var x = coord.penultimate();
     var y = coord.end(2); // 3rd from the en
     var n = this.target_size(key.last());
@@ -109,9 +108,11 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
 // Check if there is enough separation between the components involved,
 // a necessary extra check when scalars are involved
+/*
 Diagram.prototype.wellSeparated.IntLS = function(type, key) {
     // KRZYSZTOF, WE NEED TO DISCUSS THIS
 }
+*/
 
 Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     

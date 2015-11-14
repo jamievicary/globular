@@ -128,6 +128,12 @@ Diagram.prototype.render = function(div, highlight) {
 */
 Diagram.prototype.rewrite = function(nCell, reverse) {
 
+    if (nCell.coordinates != null) {
+        for (var i=0; i<nCell.coordinates.length; i++) {
+            if (isNaN(nCell.coordinates[i])) debugger;
+        }
+    }
+
     if (reverse === undefined) reverse = false;
 
     var source;
@@ -153,7 +159,8 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
             target = rewrite.target.copy();
         }
         source_size = source.nCells.length;
-        insert_position = nCell.coordinates.last();
+        insert_position = (this.getDimension() == 0 ? 0 : nCell.coordinates.last());
+        if (insert_position < 0) debugger;
     }
 
 
@@ -164,27 +171,16 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
     this.nCells.splice(insert_position, source_size);
     for (var i = 0; i < target.nCells.length; i++) {
 
-        /* 
-        In the process of inserting n-cells in the target of the rewrite into the list of nCells, we need to shift
-        the inclusion information by the location of the rewrite in the overall diagram
-        */
-        if(target.nCells[i].coordinates != null){
-            for (var j = 0; j < target.nCells[i].coordinates.length; j++) {
-                target.nCells[i].coordinates[j] += nCell.coordinates[j];
-            }
+        // If the rewrite wasn't an interchanger, pad with the rewrite location
+        if (!nCell.id.is_interchanger()){
+            target.nCells[i].pad(nCell.coordinates);
         }
 
-        /*
-        if(target.nCells[i].key != undefined) {
-            for (var j = 0; j < target.nCells[i].key.length; j++) {
-               // target.nCells[i].key_location[j] += nCell.coordinates[this.dimension - 1 - 1 + j];
-                target.nCells[i].key[target.nCells[i].key.length - 1 -j] += nCell.coordinates[this.dimension - 1 - 1 - j];
-            }
-        }
-        */
+        // Add the cell into the diagram
         this.nCells.splice(insert_position + i, 0, target.nCells[i]);
     }
     
+    // Make sure all cells have coordinates properly defined
     if(insert_position != undefined){
         for (var i = 0; i < target.nCells.length; i++) {
             if(this.nCells[insert_position + i].coordinates === null){
@@ -194,8 +190,6 @@ Diagram.prototype.rewrite = function(nCell, reverse) {
         }  
     }
     
-    // Due to globularity conditions, we can never remove or add a generator to the source boundary
-
     return this;
 }
 
@@ -768,27 +762,111 @@ Diagram.prototype.getLengthsAtSource = function() {
 }
 
 Diagram.prototype.source_size = function(level) {
-
     var nCell = this.nCells[level];
-
     if(nCell.id.substr(0, 3) === 'Int'){
         return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
     else{
         return nCell.source_size();
     }
-
 }
 
 Diagram.prototype.target_size = function(level) {
-
     var nCell = this.nCells[level];
-
     if(nCell.id.substr(0, 3) === 'Int'){
         return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
     }
     else{
         return nCell.target_size();
     }
-
 };
+
+// Identify separation of parts of a diagram
+Diagram.prototype.separation = function(c1, c2) {
+    var d1 = this.dimension + 1 - c1.length;
+    var d2 = this.dimension + 1 - c2.length;
+    if (d1 == d2) {
+        // ... ?
+    } else if (d1 > d2) {
+        return this.wellSeparated(c2, c1);
+    }
+    
+    /* CAN ASSUME d1 < d2 */
+    
+    // Only considering single-dimension difference at the moment
+    if (d2 != d1 + 1) return false;
+    
+    if (!c1.has_suffix(c2)) return false;
+    
+    // Find the base slice for d2
+    var slice = this;
+    for (var i=0; i<c2.length - 1; i++) {
+        slice = slice.getSlice(c2.end(i));
+    }
+    
+    // Get region where c2 is acting
+    var c2bbox = slice.getSliceBoundingBox(c2[0]);
+    
+    // Get slice on which c2 is acting
+    slice = slice.getSlice(c2[0]);
+    
+    // Find the coordinates of c1 in this slice
+    var c1coord = c1[0];
+    
+    // Find the 'future cone' of c2bbox in slice
+    //var min = c2bbox.min[0];
+    //var max = c2bbox.max[0];
+    //var level = c2bbox.min.last();
+    //var start_height = Math.min(c2bbox.min.last(), c1coord);
+    //var final_height = Math.max(c2bbox.min.last(), c1coord);
+    var start_height, final_height, min, max, target_min, target_max;
+    if (c2bbox.min.last() < c1coord) {
+        // Starting from the bbox
+        min = c2bbox.min[0];
+        max = c2bbox.max[0];
+        start_height = c2bbox.min.last();
+        final_height = c1coord;
+        var h_bbox = slice.getSliceBoundingBox(c1coord);
+        target_min = h_bbox.min.last();
+        target_max = h_bbox.max.last();
+    }
+    else {
+        // Starting from the point
+        var h_bbox = slice.getSliceBoundingBox(c1coord);
+        min = h_bbox.min.last();
+        max = h_bbox.max.last();
+        start_height = c1coord;
+        final_height = c2bbox.min.last();
+        target_min = c2bbox.min.end(1);
+        target_max = c2bbox.max.end(1);
+    }
+    
+    for (var h = start_height; h <= final_height; h++) {
+        var h_slice = slice.getSlice(h);
+        var h_bbox = slice.getSliceBoundingBox(h);
+        var delta = slice.target_size(h) - slice.source_size(h);
+        if (h == final_height) {
+            var above = target_min >= max;
+            var below = target_max <= min;
+            return {above: target_min >= max, below: target_max <= min};
+            /*
+            if (target_max <= min) return -1;
+            if (target_min >= max) return +1;
+            return 0;
+            */
+        }
+        if (h_bbox.max.last() <= min) {
+            min += delta;
+            max += delta;
+        }
+        else if (h_bbox.min.last() >= max) {
+            // do nothing
+        }
+        else {
+            // interact
+            min = Math.min(min, h_bbox.min.last());
+            max = Math.max(max + delta, h_bbox.min.last() + h_slice.target_size(h));
+        }
+    }
+    
+}

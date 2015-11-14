@@ -39,7 +39,7 @@ Display.prototype.mousedown = function(event) {
     var closest_zone = null;
     var shortest_sq_dist = Number.MAX_VALUE;
     var logical = this.pixelsToLogical(event);
-    console.log("Detected click: " + JSON.stringify(logical));
+    //console.log("Detected click: " + JSON.stringify(logical));
     for (var i = 0; i < this.active.length; i++) {
         var zone = this.active[i];
         var dx = logical.x - zone.x;
@@ -52,7 +52,7 @@ Display.prototype.mousedown = function(event) {
         this.select_zone = closest_zone;
         this.select_logical = logical;
     }
-    console.log("Detected mousedown: " + JSON.stringify(this.select_zone));
+    //console.log("Detected mousedown: " + JSON.stringify(this.select_zone));
 }
 
 var min_drag = 0.25;
@@ -292,6 +292,7 @@ Display.prototype.render = function() {
     for (var i = 0; i < this.coordinates.length; i++) {
         slice = slice.getSlice(this.coordinates[i].val());
     }
+    this.visible_diagram = slice;
     this.active = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
     if (this.active == null) return;
 
