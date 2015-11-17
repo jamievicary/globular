@@ -28,8 +28,8 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var cell = this.nCells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-    var x = key.last();
-    var y = box.min.penultimate();
+    var x = this.getSlice(key.last()).getInverseKey(key.slice(0, key.length - 1)) // key.last();
+    var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
