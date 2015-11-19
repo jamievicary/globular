@@ -53,9 +53,16 @@ Signature.prototype.addGenerator = function (generator) {
 */
 Signature.prototype.getGenerator = function (id) {
     var sig = this;
+    var reverse = false;
+    if (id.last() == 'I') {
+        id = id.substr(0, id.length - 1);
+        reverse = true;
+    }
     while (sig != null) {
         if (sig.nCells.get(id) != null) {
-            return sig.nCells.get(id).copy();
+            var generator = sig.nCells.get(id).copy();
+            if (reverse) return generator.swapSourceTarget();
+            else return generator;
         }
         sig = sig.sigma;
     }
@@ -115,6 +122,7 @@ Signature.prototype.copy = function () {
     Takes an integer and returns a list all the cells at that level
 */
 Signature.prototype.getNCells = function (level) {
+    if (level > this.n) return [];
     var varSig = this;
     while (varSig.n != level) {
         varSig = varSig.sigma;

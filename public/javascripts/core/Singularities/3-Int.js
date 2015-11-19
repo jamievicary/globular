@@ -38,8 +38,9 @@ Diagram.prototype.reorganiseCrossings['Int'] = function (type, x, n, m){
     return list;
 }
 
-// Interpret drag of this type
+// Interpret drag of this type, assuming we are matching to the source
 Diagram.prototype.interpretDrag['Int'] = function(drag) {
+    if (drag.directions == null) return [];
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {

@@ -24,6 +24,7 @@ $(document).ready(function() {
             gProject.takeIdentity();
         }
         else if (key == 'c') {
+            this.cacheSourceTarget = null;
             gProject.clearDiagram();
         }
         else if (key == 'p') {

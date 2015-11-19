@@ -18,6 +18,13 @@ function Generator(data) {
     return this;
 };
 
+Generator.prototype.swapSourceTarget = function() {
+    var temp = this.source;
+    this.source = this.target;
+    this.target = temp;
+    return this;
+}
+
 Generator.prototype.getTargetColour = function() {
     var t = this.target;
     while (t.nCells.length == 0) {

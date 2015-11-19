@@ -154,8 +154,20 @@ String.prototype.is_basic_interchanger = function() {
 };
 
 String.prototype.is_interchanger = function() {
+    if (this.tail('-E', '-EI')) return true;
     return (this.substr(0, 3) == 'Int');
 };
+
+String.prototype.is_invertible = function() {
+    var checkbox = $('#invertible-' + this);
+    if (checkbox.length == 0) return false;
+    return checkbox.is(':checked');
+}
+
+String.prototype.getBaseType = function() {
+    if (this.tail('I')) return this.substr(0, this.length - 1);
+    return this;
+}
 
 String.prototype.toggle_inverse = function() {
     if (this.tail('I')) return this.substr(0, this.length - 1);
