@@ -4,7 +4,7 @@
 
 var NewSingularityFamily = {family: 'Int', dimension: 3, members: ['Int', 'IntI']};
 
-Diagram.prototype.expand['Int'] = function (type, x, n, m){
+Diagram.prototype.expand.Int = function (type, x, n, m){
     
     var list = new Array();
     if (n === 0 || m === 0) {
@@ -28,7 +28,7 @@ Diagram.prototype.expand['Int'] = function (type, x, n, m){
     return list;
 };
 
-Diagram.prototype.reorganiseCrossings['Int'] = function (type, x, n, m){
+Diagram.prototype.reorganiseCrossings.Int = function (type, x, n, m){
 
     var list = new Array();
     for(var i = 1; i < m; i++){
@@ -38,8 +38,9 @@ Diagram.prototype.reorganiseCrossings['Int'] = function (type, x, n, m){
     return list;
 }
 
-// Interpret drag of this type
-Diagram.prototype.interpretDrag['Int'] = function(drag) {
+// Interpret drag of this type, assuming we are matching to the source
+Diagram.prototype.interpretDrag.Int = function(drag) {
+    if (drag.directions == null) return [];
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {
@@ -56,7 +57,7 @@ Diagram.prototype.interpretDrag['Int'] = function(drag) {
     return [r.right];
 }
 
-Diagram.prototype.interchangerAllowed['Int'] = function (type, key){
+Diagram.prototype.interchangerAllowed.Int = function (type, key){
     
     var x = key.last();
     // Sanity check - necessary for degenerate cases
@@ -83,7 +84,7 @@ Diagram.prototype.interchangerAllowed['Int'] = function (type, key){
     }
 }
 
-Diagram.prototype.rewritePasteData['Int'] = function (type, key){
+Diagram.prototype.rewritePasteData.Int = function (type, key){
     var x = key.last();
     if (type.tail('Int')) {
         var cell1 = this.nCells[x].copy();
@@ -97,7 +98,7 @@ Diagram.prototype.rewritePasteData['Int'] = function (type, key){
     }
 };
 
-Diagram.prototype.getInterchangerCoordinates['Int'] = function (type, key){
+Diagram.prototype.getInterchangerCoordinates.Int = function (type, key){
     
     if(key.length === 0) return [];
     
@@ -126,7 +127,7 @@ Diagram.prototype.getInterchangerCoordinates['Int'] = function (type, key){
 
 };
 
-Diagram.prototype.getInterchangerBoundingBox['Int'] = function (type, key){
+Diagram.prototype.getInterchangerBoundingBox.Int = function (type, key){
 
     var position = this.getInterchangerCoordinates(type, key);
     var x = key.last();
@@ -141,7 +142,7 @@ Diagram.prototype.getInterchangerBoundingBox['Int'] = function (type, key){
     }
 };
 
-Diagram.prototype.getInverseKey['Int'] = function (type, key){
+Diagram.prototype.getInverseKey.Int = function (type, key){
 
     var x = key.last();
     

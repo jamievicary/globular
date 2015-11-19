@@ -26,7 +26,7 @@ function RegisterSingularityFamily(data) {
 }
 
 function GetSingularityFamily(type) {
-    if (type.tail('-1', '-1I')) return 'Inverses';
+    if (type.tail('-E', '-EI')) return 'Inverses';
     return SingularityFamilies[type];
 }
 
@@ -94,16 +94,20 @@ Diagram.prototype.interpretDrag = function(drag) {
     // Recursively handle a drag in a subdiagram
     if (drag.coordinates.length > 1) {
         var new_drag = {
-            boundary_type: drag.boundary_type,
-            boundary_depth: drag.boundary_depth,
-            coordinates: drag.coordinates.slice(0, drag.coordinates.length),
-            directions: drag.directions.slice(0, drag.directions.length)
+            boundary: drag.boundary,
+            coordinates: drag.coordinates.slice(0, drag.coordinates.length - 1),
+            directions: (drag.directions == null ? null : drag.directions.slice())
         };
-        new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
+        //new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
         var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
         for (var i=0; i<actions.length; i++) {
-            actions[i].id += '-1';
-            actions[i].key.push(drag.coordinates.last());
+            actions[i].id += '-E';
+            if (actions[i].key == null) {
+                actions[i].key = actions[i].coordinates.concat([drag.coordinates.last()]);
+            } else {
+                //actions[i].key.push(drag.coordinates.last());
+                actions[i].key.push(drag.coordinates.last());
+            }
         }
         return actions;
     }
@@ -233,7 +237,7 @@ Diagram.prototype.source_size = function(level) {
 
 Diagram.prototype.target_size = function(level) {
     var nCell = this.nCells[level];
-    if (nCell.id.substr(0, 3) === 'Int') {
+    if (nCell.id.is_interchanger()) {
         return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
     } else {
         return nCell.target_size();

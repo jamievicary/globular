@@ -572,8 +572,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             // Get the first and last edge of the inclusion
             //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
-            var first_edge_index = subdiagram.inclusion[0];
-            var last_edge_index = subdiagram.inclusion[0] + subdiagram.size.magnitude();
+            var first_edge_index = subdiagram.inclusion.last();
+            var last_edge_index = subdiagram.inclusion.last() + subdiagram.size.magnitude();
             var x1, x2;
             if (first_edge_index == last_edge_index) {
                 if (first_edge_index == 0) {
@@ -721,7 +721,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     $(container).append($(html));
 
     // Return active region data
-    return active;
+    return {data: data, active: active};
 }
 
 function SVG_create_path(data) {

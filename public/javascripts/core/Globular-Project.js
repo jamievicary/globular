@@ -11,26 +11,21 @@ var T = 1;
     this in the destringify routine, so we should do nothing. If it's empty,
     construct an empty project. Otherwise, destringify.
 */
-function Project(project_compressed) {
-    if (project_compressed === undefined) {
-        return;
-    }
-    if (project_compressed === null) {
+function Project(string) {
+    
+    if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
-
-        // Holds an association between individual cell names in the signature and the colours assigned by the user (which can be non-unique)
         this.dataList = new Hashtable();
-
-        //this.addZeroCell();
-
-        // Hold a MapDiagram intended to be a source/target of a new rule. Kept here temporarily so that the target/source of the rule could be constructed
         this.cacheSourceTarget = null;
         return;
     }
 
-    // Rebuild the project from the given compressed structure
-    globular_extract(project_compressed, this);
+    var new_project = globular_destringify(string);
+    for (var name in new_project) {
+        if (!new_project.hasOwnProperty(name)) continue;
+        this[name] = new_project[name];
+    }
 };
 
 Project.prototype.getType = function() {
@@ -140,13 +135,21 @@ Project.prototype.limitMatches = function(matches, elements) {
     Takes a diagram that we want to attach, the path to the attachment boundary as arguments
     Updates this diagram to be the result of the attachment
 */
-Project.prototype.attach = function(attachmentFlag, attached_diagram, bounds, boundary_path) {
-    if (attachmentFlag) {
-        this.diagram.attach(attached_diagram, boundary_path, bounds);
+Project.prototype.attach = function(cell, boundary_path) {
+    if (boundary_path.length > 0) {
+        this.diagram.attach(cell, boundary_path);
     } else {
-        var rewriteCell = new NCell(attached_diagram.nCells[0].id, bounds);
+        this.diagram.rewrite(cell);
+    }
+    /*
+    if (attachmentFlag) {
+        this.diagram.attach(cell, boundary_path//, bounds
+        );
+    } else {
+        var rewriteCell = new NCell(cell.id, bounds);
         this.diagram.rewrite(rewriteCell);
     }
+    */
 };
 
 
@@ -180,6 +183,11 @@ Project.prototype.takeIdentity = function() {
 */
 
 Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target' */ ) {
+    
+    if (this.diagram == null) {
+        this.cacheSourceTarget = null;
+        return;
+    }
 
     // If we haven't stored any source/target data yet, then just save this
     if (this.cacheSourceTarget == null) {
@@ -249,7 +257,7 @@ Project.prototype.storeTheorem = function() {
 };
 
 
-Project.prototype.drag_cell = function(drag) {
+Project.prototype.dragCell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
 
     //var action = interpret_drag(drag, this.diagram.getBoundary(drag.boundary_path));
@@ -264,14 +272,14 @@ Project.prototype.drag_cell = function(drag) {
 
     var temp_drag_data = new Array();
 
-    if (drag.boundary_depth != 0) {
-        for (var i = 0; i < drag.boundary_depth - 1; i++) {
+    if (drag.boundary != null) {
+        for (var i = 0; i < drag.boundary.depth - 1; i++) {
             //slice_pointer = slice_pointer.getSlice();
             diagram_pointer = diagram_pointer.getSourceBoundary();
         }
 
         // May need to look at slices instead - to be considered
-        if (drag.boundary_type === 's') {
+        if (drag.boundary.type === 's') {
             diagram_pointer = diagram_pointer.getSourceBoundary();
         } else {
             diagram_pointer = diagram_pointer.getTargetBoundary();
@@ -287,35 +295,31 @@ Project.prototype.drag_cell = function(drag) {
         return;
 
     } else if (options.length > 1) {
-        console.log("Make user choose")
-        return;
+        console.log(options.length.toString() + " options available; should make user choose");
+        //return;
     } else {
         // Display a dialog box, return user's choice
     }
 
-    var action = new NCell(options[0].id, null, options[0].key);
-    //action.coordinates.concat(temp_drag_data);
-
-    var action_wrapper = {
-        nCells: [action]
-    };
-
-    // Actually perform the action!
-
-    var boundary_path = new String();
+    var action = new NCell(options[0].id, options[0].coordinates, options[0].key);
 
     // This is necessary to attach one level higher than the boundary itself
+    // ??????????????????????? this isn't doing anything...
+    var boundary_path = new String();
     for (var i = 0; i < drag.boundary_depth - 1; i++) {
         boundary_path += 's';
     }
 
+    this.diagram.attach(action, drag.boundary, true);
+    /*
     if (drag.boundary_depth === 0) {
         action.coordinates = this.diagram.getInterchangerCoordinates(action.id, action.key);
         this.diagram.rewrite(action, false);
     } else {
         boundary_path += drag.boundary_type;
-        this.diagram.attach(action_wrapper, boundary_path);
+        this.diagram.attach(action, boundary_path);
     }
+    */
 
     /*
     If the original drag object was in the 0-boundary of the diagram,
@@ -652,15 +656,18 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         project.setColour(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
         project.renderCellsAbove(generator.id);
+        project.renderDiagram();
     };
-
-
-    /*$(input_color).blur(function() {
-        project.setColour(cell, '#' + $(this).val().toString());
-        project.renderAll();
-    });*/
-
     div_detail.appendChild(input_color);
+    
+    // Add invertibility selector
+    if (n > 0 && generator.id.last() != 'I') {
+        var label = $('<br><label><input type="checkbox" name="checkbox" value="value">Invertible</label>');
+        var input = label.find('input');
+        input.attr('id', 'invertible-' + generator.id);
+        $(div_detail).append(label);
+    }
+
 
     if (n != 0) {
 
@@ -717,11 +724,8 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
-                        project.attach(
-                            enumerationData.attachmentFlag,
-                            enumerationData.diagram, // the diagram we are attaching
-                            match.inclusion, // the inclusion data for the boundary
-                            match.boundaryType.repeat(match.realBoundaryDepth));
+                        var ncell = new NCell(enumerationData.diagram.nCells[0].id, match.inclusion, null);
+                        project.diagram.attach(ncell, {type: match.boundaryType, depth: match.realBoundaryDepth});
                         $('div.cell-b-sect').empty();
 
                         //project.renderAll();
