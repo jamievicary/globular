@@ -7,6 +7,7 @@
 
 // Creates a generator with a fresh id, and specific source and target, both source and target are of type Diagram
 function Generator(data) {
+    if (data == undefined) return;
     if (data.source === undefined) debugger;
     var n = (data.source == null ? 0 : data.source.getDimension() + 1);
     if (data.id == undefined) data.id = globular_freshName(n);

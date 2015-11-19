@@ -11,26 +11,21 @@ var T = 1;
     this in the destringify routine, so we should do nothing. If it's empty,
     construct an empty project. Otherwise, destringify.
 */
-function Project(project_compressed) {
-    if (project_compressed === undefined) {
-        return;
-    }
-    if (project_compressed === null) {
+function Project(string) {
+    
+    if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
-
-        // Holds an association between individual cell names in the signature and the colours assigned by the user (which can be non-unique)
         this.dataList = new Hashtable();
-
-        //this.addZeroCell();
-
-        // Hold a MapDiagram intended to be a source/target of a new rule. Kept here temporarily so that the target/source of the rule could be constructed
         this.cacheSourceTarget = null;
         return;
     }
 
-    // Rebuild the project from the given compressed structure
-    globular_extract(project_compressed, this);
+    var new_project = globular_destringify(string);
+    for (var name in new_project) {
+        if (!new_project.hasOwnProperty(name)) continue;
+        this[name] = new_project[name];
+    }
 };
 
 Project.prototype.getType = function() {

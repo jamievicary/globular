@@ -160,7 +160,7 @@ $(document).ready(function() {
         $("#ajax-loading").fadeOut();
     });
 
-    //determines wether user is logged in or out - renders different home pages
+    //determines whether user is logged in or out - renders different home pages
     function render_frontend(state) {
         if (state === "out") {
             $("div.enable_if-in").hide();
@@ -172,7 +172,7 @@ $(document).ready(function() {
             $("div.enable_if-out").hide();
         }
         if (window.location.pathname.length < 3) {
-            render_project_front(null);
+            render_project_front('');
             $("#diagram-title").val("New Project");
 
         }
