@@ -13,7 +13,7 @@ function Signature(sig) {
     if (sig === undefined) {
         return;
     }
-    this.nCells = new Hashtable();
+    this.nCells = {};
     this.sigma = sig;
     this.k = 0; // Number of n-Cells == nCells.length
     if (sig === null) {
@@ -41,7 +41,7 @@ Signature.prototype.getType = function () {
 Signature.prototype.addGenerator = function (generator) {
     var d = generator.getDimension();
     if (d == this.n) {
-        this.nCells.put(generator.identifier, generator);
+        this.nCells[generator.id] = generator;
         this.k++;
     } else {
         this.sigma.addGenerator(generator);
@@ -53,9 +53,16 @@ Signature.prototype.addGenerator = function (generator) {
 */
 Signature.prototype.getGenerator = function (id) {
     var sig = this;
+    var reverse = false;
+    if (id.last() == 'I') {
+        id = id.substr(0, id.length - 1);
+        reverse = true;
+    }
     while (sig != null) {
-        if (sig.nCells.get(id) != null) {
-            return sig.nCells.get(id).copy();
+        if (sig.nCells[id] != null) {
+            var generator = sig.nCells[id];
+            if (reverse) return generator.copy().swapSourceTarget();
+            else return generator;
         }
         sig = sig.sigma;
     }
@@ -112,28 +119,23 @@ Signature.prototype.copy = function () {
 
 
 /*
-    Takes an integer and returns a list of lists of all the cells
+    Takes an integer and returns a list all the cells at that level
 */
-Signature.prototype.get_NCells = function (level) {
+Signature.prototype.getNCells = function (level) {
+    if (level > this.n) return [];
     var varSig = this;
-    
     while (varSig.n != level) {
         varSig = varSig.sigma;
     }
-    return varSig.nCells.keys();
+    return varSig.getCells();
 }
 
-/*
-    Returns a list of all the cells in this signature
-*/
-Signature.prototype.getCells = function () {
-    var tempArray = new Array();
-    var varSig = this;
-    
-    // The overall list is arranged in the order of ascending dimensions of cells in individual arrays
-    while (varSig != null) {
-        tempArray.splice(0, 0, varSig.nCells.keys())
-        varSig = varSig.sigma;
-    }
-    return tempArray;
+
+Signature.prototype.getAllCells = function () {
+    if (this.sigma == null) return this.getCells();
+    return this.sigma.getAllCells().concat(this.getCells());
+};
+
+Signature.prototype.getCells = function() {
+    return Object.keys(this.nCells);
 };

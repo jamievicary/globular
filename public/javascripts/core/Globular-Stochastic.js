@@ -4,12 +4,17 @@
     Stochastic Simulation class
 */
 
-function timeSampler(rate)
-{
+// Initialize the user-interface elements
+/* Need to inject these elements into the UI
+<li id="run-process" class="button-style-3">Run Process</li>
+<li id='sto-form' class="button-style-3">Stochastic<input type="checkbox" id="stochastic-cb"></li>
+*/
+
+function timeSampler(rate) {
 	return -1*(Math.log(Math.random()))/rate;
 }
 
-function dimensionHelper(processesDim, diagramDim, historyOn){
+function dimensionHelper(processesDim, diagramDim, historyOn) {
     if(processesDim === diagramDim)
     {
         historyOn = true;
@@ -77,7 +82,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         for (var i = 0; i < processes.length; i++) {
             if (i < num_stdProcess) {
                 // Enumerate possible events, allowing loose matching
-                possible_events[i] = current_state.enumerate(this.dataList.get(processes[i]).diagram.getSourceBoundary(), true);
+                possible_events[i] = current_state.enumerate(this.signature.getGenerator(processes[i]).source, true);
             }
             if (i >= num_stdProcess && interchangesOn) {
                 possible_events[i] = 1; //each interchanger IS just one event, right?
@@ -256,13 +261,11 @@ Diagram.prototype.getInterchangers = function() {
 
 // Sets the front-end colour to what the user wants
 Project.prototype.set_rate = function(id, rate) {
-    var tempData = this.dataList.get(id);
-    tempData.rate = rate;
-    this.dataList.put(id, tempData);
+    this.signature.getGenerator(id).display.rate = rate;
     this.saveState();
 };
 
 // Gets the front-end colour to what the user wants
 Project.prototype.get_rate = function(id) {
-    return this.dataList.get(id).rate;
+    return this.signature.getGenerator(id).display.rate;
 };

@@ -113,9 +113,10 @@ body, html {
   overflow: hidden;
   white-space: nowrap;
   background-color: #ccc;
+  user-select: none;
 }
 
-/* line 115, ../sass/style.sass */
+/* line 116, ../sass/style.sass */
 #project-menu {
   cursor: pointer;
   bottom: 0px;
@@ -128,12 +129,12 @@ body, html {
   top: calc($header_height - 40px);
 }
 
-/* line 126, ../sass/style.sass */
+/* line 127, ../sass/style.sass */
 #project-menu li {
   margin-top: 7px;
 }
 
-/* line 129, ../sass/style.sass */
+/* line 130, ../sass/style.sass */
 .button-style-3 {
   background-color: grey;
   color: white;
@@ -147,7 +148,7 @@ body, html {
   font-size: 60%;
 }
 
-/* line 141, ../sass/style.sass */
+/* line 142, ../sass/style.sass */
 #main-menu li {
   float: left;
   list-style: none;
@@ -156,7 +157,7 @@ body, html {
   padding: 10px;
 }
 
-/* line 150, ../sass/style.sass */
+/* line 151, ../sass/style.sass */
 div.cell-group {
   color: black;
   background-color: #aaa;
@@ -166,7 +167,7 @@ div.cell-group {
   margin-bottom: 7px;
 }
 
-/* line 159, ../sass/style.sass */
+/* line 160, ../sass/style.sass */
 div.cell-opt {
   background-color: #888;
   color: #ffffff;
@@ -180,12 +181,12 @@ div.cell-opt {
   padding-right: 0px;
 }
 
-/* line 174, ../sass/style.sass */
+/* line 175, ../sass/style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 177, ../sass/style.sass */
+/* line 178, ../sass/style.sass */
 div.cell-icon {
   height: 60px;
   width: 60px;
@@ -195,7 +196,7 @@ div.cell-icon {
   float: left;
 }
 
-/* line 187, ../sass/style.sass */
+/* line 188, ../sass/style.sass */
 div.preview-icon {
   height: 60px;
   width: 60px;
@@ -204,29 +205,29 @@ div.preview-icon {
   margin-right: 7px;
 }
 
-/* line 194, ../sass/style.sass */
+/* line 195, ../sass/style.sass */
 div.preview-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 197, ../sass/style.sass */
+/* line 198, ../sass/style.sass */
 div.preview-icon > svg {
   border-radius: 2px;
 }
 
-/* line 200, ../sass/style.sass */
+/* line 201, ../sass/style.sass */
 .cell-b-sect {
   text-align: center;
   top: 70px;
 }
 
-/* line 208, ../sass/style.sass */
+/* line 209, ../sass/style.sass */
 .cell-detail {
   margin-left: 75px;
   height: 60px;
 }
 
-/* line 212, ../sass/style.sass */
+/* line 213, ../sass/style.sass */
 .match-cell-icon {
   height: 60px;
   width: 60px;
@@ -235,7 +236,7 @@ div.preview-icon > svg {
   float: left;
 }
 
-/* line 220, ../sass/style.sass */
+/* line 221, ../sass/style.sass */
 .cell-icon1 {
   height: 60px;
   border: 2px dashed black;
@@ -245,7 +246,7 @@ div.preview-icon > svg {
   background-color: lightgrey;
 }
 
-/* line 229, ../sass/style.sass */
+/* line 230, ../sass/style.sass */
 .cell-label {
   width: 80px;
   border: none;
@@ -257,7 +258,7 @@ div.preview-icon > svg {
   border-radius: 2px;
 }
 
-/* line 241, ../sass/style.sass */
+/* line 242, ../sass/style.sass */
 .stochastic-rate {
   width: 50px;
   outline-width: 0px;
@@ -270,7 +271,7 @@ div.preview-icon > svg {
   height: 15px;
 }
 
-/* line 253, ../sass/style.sass */
+/* line 254, ../sass/style.sass */
 .color-picker {
   width: 80px;
   letter-spacing: 1px;
@@ -281,14 +282,14 @@ div.preview-icon > svg {
   height: 15px;
 }
 
-/* line 262, ../sass/style.sass */
+/* line 263, ../sass/style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 65px;
   top: 30px;
 }
 
-/* line 267, ../sass/style.sass */
+/* line 268, ../sass/style.sass */
 .button-style-1 {
   background-color: #00b8ff;
   color: white;
@@ -303,7 +304,7 @@ div.preview-icon > svg {
   border-bottom: 2px solid #00b8ff;
 }
 
-/* line 281, ../sass/style.sass */
+/* line 282, ../sass/style.sass */
 .button-style-2 {
   padding: 5px;
   background-color: #00b8ff;
@@ -318,7 +319,7 @@ div.preview-icon > svg {
   font-size: 110%;
 }
 
-/* line 295, ../sass/style.sass */
+/* line 296, ../sass/style.sass */
 #view-p-desc {
   background-color: grey;
   color: white;
@@ -335,7 +336,7 @@ div.preview-icon > svg {
   font-size: 70%;
 }
 
-/* line 310, ../sass/style.sass */
+/* line 311, ../sass/style.sass */
 #view-desc-plate {
   margin-left: 50px;
   background-color: grey;
@@ -344,7 +345,7 @@ div.preview-icon > svg {
   padding: 10px;
 }
 
-/* line 317, ../sass/style.sass */
+/* line 318, ../sass/style.sass */
 #view-desc-body {
   width: 300px;
   float: right;
@@ -353,7 +354,7 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 324, ../sass/style.sass */
+/* line 325, ../sass/style.sass */
 #text-p-desc {
   height: 200px;
   resize: none;
@@ -366,13 +367,13 @@ div.preview-icon > svg {
   letter-spacing: 1px;
 }
 
-/* line 335, ../sass/style.sass */
+/* line 336, ../sass/style.sass */
 #site-controller-body {
   border: 3px solid grey;
   height: 200px;
 }
 
-/* line 339, ../sass/style.sass */
+/* line 340, ../sass/style.sass */
 .text-field-style-1 {
   border: none;
   outline-width: 0px;
@@ -382,7 +383,7 @@ div.preview-icon > svg {
   padding: 4px;
 }
 
-/* line 347, ../sass/style.sass */
+/* line 348, ../sass/style.sass */
 .text-area-style-1 {
   border: none;
   outline-width: 0px;
@@ -392,7 +393,7 @@ div.preview-icon > svg {
   width: calc( 100% - 20px );
 }
 
-/* line 357, ../sass/style.sass */
+/* line 358, ../sass/style.sass */
 .submit-field-style-1 {
   width: 70px;
   border: none;
@@ -402,7 +403,7 @@ div.preview-icon > svg {
   font-family: "Open Sans", sans-serif;
 }
 
-/* line 365, ../sass/style.sass */
+/* line 366, ../sass/style.sass */
 .box {
   display: none;
   background-color: #00b8ff;
@@ -419,7 +420,7 @@ div.preview-icon > svg {
   left: calc( 50% - 125px );
 }
 
-/* line 381, ../sass/style.sass */
+/* line 382, ../sass/style.sass */
 .grand-box {
   width: 800px;
   height: 500px;
@@ -428,29 +429,29 @@ div.preview-icon > svg {
   box-shadow: 0px 0px 20px dimgrey;
 }
 
-/* line 388, ../sass/style.sass */
+/* line 389, ../sass/style.sass */
 .zindex-error {
   z-index: 100000000;
 }
 
-/* line 391, ../sass/style.sass */
+/* line 392, ../sass/style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 396, ../sass/style.sass */
+/* line 397, ../sass/style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 399, ../sass/style.sass */
+/* line 400, ../sass/style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 402, ../sass/style.sass */
+/* line 403, ../sass/style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -458,7 +459,7 @@ div.preview-icon > svg {
   float: right;
 }
 
-/* line 408, ../sass/style.sass */
+/* line 409, ../sass/style.sass */
 #add-project-opt {
   background-color: grey;
   cursor: pointer;
@@ -468,17 +469,17 @@ div.preview-icon > svg {
   border-radius: 2px;
 }
 
-/* line 418, ../sass/style.sass */
+/* line 419, ../sass/style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 421, ../sass/style.sass */
+/* line 422, ../sass/style.sass */
 #save-project-opt:hover {
   background-color: lightblue;
 }
 
-/* line 424, ../sass/style.sass */
+/* line 425, ../sass/style.sass */
 #diagram-title {
   color: black;
   height: 30px;
@@ -492,12 +493,12 @@ div.preview-icon > svg {
   margin-bottom: 7px;
 }
 
-/* line 437, ../sass/style.sass */
+/* line 438, ../sass/style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 440, ../sass/style.sass */
+/* line 441, ../sass/style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -508,14 +509,14 @@ div.preview-icon > svg {
   background-repeat: no-repeat;
 }
 
-/* line 449, ../sass/style.sass */
+/* line 450, ../sass/style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 454, ../sass/style.sass */
+/* line 455, ../sass/style.sass */
 .mini-opt-links {
   color: #ffffff;
   letter-spacing: 2px;
@@ -525,14 +526,14 @@ div.preview-icon > svg {
   cursor: pointer;
 }
 
-/* line 462, ../sass/style.sass */
+/* line 463, ../sass/style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 467, ../sass/style.sass */
+/* line 468, ../sass/style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -540,7 +541,7 @@ div.preview-icon > svg {
   text-decoration: underline;
 }
 
-/* line 473, ../sass/style.sass */
+/* line 474, ../sass/style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -554,7 +555,7 @@ div.preview-icon > svg {
   color: salmon;
 }
 
-/* line 485, ../sass/style.sass */
+/* line 486, ../sass/style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -563,7 +564,7 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 492, ../sass/style.sass */
+/* line 493, ../sass/style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -572,7 +573,7 @@ div.preview-icon > svg {
   left: 80px;
 }
 
-/* line 499, ../sass/style.sass */
+/* line 500, ../sass/style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -580,7 +581,7 @@ div.preview-icon > svg {
   padding-top: 20px;
 }
 
-/* line 505, ../sass/style.sass */
+/* line 506, ../sass/style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -588,31 +589,31 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 512, ../sass/style.sass */
+/* line 513, ../sass/style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 516, ../sass/style.sass */
+/* line 517, ../sass/style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 521, ../sass/style.sass */
+/* line 522, ../sass/style.sass */
 input.control {
   width: 30px;
 }
 
-/* line 524, ../sass/style.sass */
+/* line 525, ../sass/style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 528, ../sass/style.sass */
+/* line 529, ../sass/style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -623,7 +624,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 537, ../sass/style.sass */
+/* line 538, ../sass/style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -633,14 +634,14 @@ input.control {
   position: fixed;
 }
 
-/* line 545, ../sass/style.sass */
+/* line 546, ../sass/style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 550, ../sass/style.sass */
+/* line 551, ../sass/style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -649,7 +650,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 557, ../sass/style.sass */
+/* line 558, ../sass/style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -658,18 +659,18 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 564, ../sass/style.sass */
+/* line 565, ../sass/style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 568, ../sass/style.sass */
+/* line 569, ../sass/style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
 
-/* line 571, ../sass/style.sass */
+/* line 572, ../sass/style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -678,7 +679,7 @@ input.control {
   width: 100px;
 }
 
-/* line 578, ../sass/style.sass */
+/* line 579, ../sass/style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -689,24 +690,24 @@ input.control {
   z-index: 100;
 }
 
-/* line 587, ../sass/style.sass */
+/* line 588, ../sass/style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 590, ../sass/style.sass */
+/* line 591, ../sass/style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 593, ../sass/style.sass */
+/* line 594, ../sass/style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 599, ../sass/style.sass */
+/* line 600, ../sass/style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;

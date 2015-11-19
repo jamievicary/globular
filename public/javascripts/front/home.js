@@ -23,6 +23,7 @@ $(document).ready(function() {
             gProject.takeIdentity();
         }
         else if (key == 'c') {
+            this.cacheSourceTarget = null;
             gProject.clearDiagram();
         }
         else if (key == 'p') {
@@ -97,6 +98,9 @@ $(document).ready(function() {
         }
         dbltoggle = dbltoggle + 1;
     });
+    
+    // Prevent keypress bubbling when editing project name
+    $("#diagram-title").keypress(function(e) {e.stopPropagation()});
 
     // Click handler on main diagram
     // Handle navigation by forward and back buttons
@@ -155,7 +159,7 @@ $(document).ready(function() {
         $("#ajax-loading").fadeOut();
     });
 
-    //determines wether user is logged in or out - renders different home pages
+    //determines whether user is logged in or out - renders different home pages
     function render_frontend(state) {
         if (state === "out") {
             $("div.enable_if-in").hide();
@@ -167,7 +171,7 @@ $(document).ready(function() {
             $("div.enable_if-out").hide();
         }
         if (window.location.pathname.length < 3) {
-            render_project_front(null);
+            render_project_front('');
             $("#diagram-title").val("New Project");
 
         }
@@ -276,6 +280,7 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
+        if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
 
         // Render main diagram
         gProject.renderDiagram();
@@ -292,13 +297,11 @@ $(document).ready(function() {
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height()-50);
 
         // Render the list of n-cells
-        gProject.renderCells();
+        gProject.redrawAllCells();
 
         $("#add-0-cell-opt").click(function() {
-
             gProject.addZeroCell();
-            gProject.renderCells();
-
+            //gProject.renderCells();
         });
 
         $("#project-menu").show();

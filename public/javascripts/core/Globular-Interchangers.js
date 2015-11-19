@@ -8,45 +8,46 @@
     n is the number of elements on the left, m the number of elements on the right - this explanation is to be expanded
 */
 Diagram.prototype.expand = function(type, x, n, m) {
-
     var list = new Array();
-    var t1 = x.slice(0);
-    var t2 = x.slice(0)
 
     if (type === 'Int' || type === 'IntI') {
         if (n === 0 || m === 0) {
             return [];
         }
         else if (n === 1 && m === 1) {
-            //list.push(new NCell(type, [0, x])); // Zero is hardcoded - number of zeros has to be generic
-            list.push(new NCell(type, x));
+            if(type === 'Int'){
+                list.push(new NCell(type, null, [x]));
+            }
+            else{
+                list.push(new NCell(type, null, [x + 1]));
+            }
         }
         else if (m != 1 && n === 1) {
-            list = this.expand(type, x, 1, 1).concat(this.expand(type, t1.incremented_array(1), 1, m - 1));
+            list = this.expand(type, x, 1, 1).concat(this.expand(type, x + 1, 1, m - 1));
         }
         else {
-            list = this.expand(type, t2.incremented_array(n - 1), 1, m).concat(this.expand(type, x, n - 1, m));
+            list = this.expand(type, x + n - 1, 1, m).concat(this.expand(type, x, n - 1, m));
         }
     }
-
     return list;
 }
 
-Diagram.prototype.atomicInterchangerSource = function(type, heights, key_location) {
+
+Diagram.prototype.atomicInterchangerSource = function(type, key_location) {
     
-    var x;
-    if(type.tail('RI') || type.tail('LI')){
-        x = key_location;
-    }
-    else{
-        x = heights[heights.length - 1];   
-    }
-    
+    var x = key_location.last();
+
     var list = new Array();
 
-    if (type.tail('Int', 'IntI')) {
+    if (type.tail('Int')) {
         list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
         list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
+        return list;
+    }
+
+    if (type.tail('IntI')) {
+        list.push(new NCell(this.nCells[x - 1].id, this.nCells[x - 1].coordinates));
+        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
         return list;
     }
 
@@ -66,116 +67,110 @@ Diagram.prototype.atomicInterchangerSource = function(type, heights, key_locatio
     var new_type = type.slice(0, type.length - 3);
 
     if (type.tail('1I')) {
-        list.push(new NCell(new_type, [heights[heights.length - 2]]));
+        list.push(new NCell(new_type, [0]));
         if (new_type.tail('I')) {
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), [heights[heights.length - 2]]));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), [0]));
         }
         else {
-            list.push(new NCell(new_type + 'I', [heights[heights.length - 2]]));
+            list.push(new NCell(new_type + 'I', [0]));
         }
     }
 
     return list;
 }
 
-Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_location) {
+Diagram.prototype.atomicInterchangerTarget = function(type, key_location) {
 
+    var x = key_location.last();
 
-    var x;
-    if(type.tail('RI') || type.tail('LI')){
-        x = key_location;
-    }
-    else{
-        x = heights[heights.length - 1];   
-    }
-    
-    /*
-    var temp_coordinates_x = zero_array(heights.length - 2);
-    temp_coordinates_x.push(this.nCells[x].coordinates.last());
-    */
+    var heights = this.interchangerCoordinates(type, key_location);
+
     if(this.nCells.length != 0){
-        var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
-    }
-    //temp_coordinates_x.push(this.nCells[x].coordinates.last());
-    
-    if(x + 1 < this.nCells.length){
-        /*
-        var temp_coordinates_x1 = zero_array(heights.length - 2);
-        temp_coordinates_x1.push(this.nCells[x+1].coordinates.last());
-        */
-     var temp_coordinates_x1 = diff_array(this.nCells[x+1].coordinates, heights.slice(0, heights.length - 1));
+        if(this.nCells[x].id.substr(0, 3) === 'Int'){
+            var temp_coordinates_x = null;    
+        }
+        else{
+            var temp_coordinates_x = diff_array(this.nCells[x].coordinates, heights.slice(0, heights.length - 1));
+        }
     }
     
     var list = new Array();
-    var entry;
 
     if (type.tail('Int')) {
+        
+        if(x + 1 < this.nCells.length){
+            var temp_coordinates_x1 = diff_array(this.nCells[x+1].coordinates, heights.slice(0, heights.length - 1));
+        }
+        
         var g_source = this.source_size(x + 1); 
         var g_target = this.target_size(x + 1); 
         
-        temp_coordinates_x.increment_last(g_target - g_source);
-        list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1));
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x));
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(g_target - g_source);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + g_target - g_source);
+        }
         
+        if(this.nCells[x + 1].key != undefined){
+            this.nCells[x + 1].key.increment_last(-heights.penultimate());
+        }
         
-        /*
-        this.nCells[x].coordinates.increment_last(g_target - g_source);
-        list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
-        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-        */
+        list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1, this.nCells[x + 1].key));
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
     if (type.tail('IntI')) {
-
-        var g_source = this.source_size(x); 
-        var g_target = this.target_size(x); 
-      
-        temp_coordinates_x1.increment_last(g_source - g_target);
-        list.push(new NCell(this.nCells[x + 1].id, temp_coordinates_x1));
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x));
         
+        if(x - 1 >= 0){
+            var temp_coordinates_x1 = diff_array(this.nCells[x-1].coordinates, heights.slice(0, heights.length - 1));
+        }
+
+        var g_source = this.source_size(x - 1); 
+        var g_target = this.target_size(x - 1); 
       
-        /*
-        this.nCells[x + 1].coordinates.increment_last(g_source - g_target);
-        list.push(new NCell(this.nCells[x + 1].id, this.nCells[x + 1].coordinates));
-        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-        */
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(g_source - g_target);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + g_source - g_target);
+        }
+        
+        if(this.nCells[x - 1].key != undefined){
+            this.nCells[x - 1].key.increment_last(-heights.penultimate());
+        }
+
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
+        list.push(new NCell(this.nCells[x - 1].id, temp_coordinates_x1, this.nCells[x - 1].key));
     }
 
     var new_type = type.slice(0, type.length - 2);
 
     if (type.tail('L')) {
-        /*
-        list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last(),
-           this.source_size(x), 1);
-        */
+
+        list = this.expand(new_type, 0, this.source_size(x), 1);
         
-        list = this.getSlice(x).expand(new_type, [0, 0],
-           this.source_size(x), 1);
-        
-        temp_coordinates_x.increment_last(1);
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x));
-       
-        /*
-        this.nCells[x].coordinates.increment_last(1);
-        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-        */
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
+        }        
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
 
     if (type.tail('R')) {
-    /*
-        list = this.getSlice(x).expand(new_type, this.nCells[x].coordinates.last() - 1,
-            1, this.source_size(x));
 
-        this.nCells[x].coordinates.increment_last(-1);
-        list.push(new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-    */
-        list = this.getSlice(x).expand(new_type, [0, 0],
-            1, this.source_size(x));
-
-        temp_coordinates_x.increment_last(-1);
-        list.push(new NCell(this.nCells[x].id, temp_coordinates_x));
+        list = this.expand(new_type, 0, 1, this.source_size(x));
+        
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(-1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
+        }
+        list.push(new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
 
@@ -186,21 +181,15 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_locatio
         var g_source = this.source_size(x);
         var g_target = this.target_size(x);
 
-        list = list.concat(this.getSlice(x - g_source- 1).expand(
-            new_type, [0, 0],
-            g_target, 1));
+        list = list.concat(this.expand(new_type, 0, g_target, 1));
 
-        temp_coordinates_x.increment_last(-1);
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x));
-
-/*
-        list = list.concat(this.getSlice(x - g_source- 1).expand(
-            new_type, this.nCells[x].coordinates[this.nCells[x].coordinates.length - 1] - 1,
-            g_target, 1));
-
-        this.nCells[x].coordinates.increment_last(-1);
-        list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-*/
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(-1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() - 1);
+        }
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
 
     if (type.tail('RI')) {
@@ -208,200 +197,172 @@ Diagram.prototype.atomicInterchangerTarget = function(type, heights, key_locatio
         var g_source = this.source_size(x);
         var g_target = this.target_size(x);
 
-/*
-        list = list.concat(this.getSlice(x - g_source - 1).expand(
-            new_type, this.nCells[x].coordinates.last(),
-            1, g_target));
-*/
-        list = list.concat(this.getSlice(x - g_source - 1).expand(
-            new_type, [0, 0],
-            1, g_target));
+        list = list.concat(this.expand(new_type, 0, 1, g_target));
          
-        temp_coordinates_x.increment_last(1);
-        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x));
-
-        /*    
-        this.nCells[x].coordinates.increment_last(1);
-        list.splice(0, 0, new NCell(this.nCells[x].id, this.nCells[x].coordinates));
-
-        */
+        if(temp_coordinates_x != null){
+            temp_coordinates_x.increment_last(1);
+        }
+        else{
+            this.nCells[x].key.increment_last(-heights.penultimate() + 1);
+        } 
+        list.splice(0, 0, new NCell(this.nCells[x].id, temp_coordinates_x, this.nCells[x].key));
     }
+    
     
     if (type.tail('1I')) {
         return [];
     }
 
-    var new_type = type.slice(0, type.length - 2);
-
     if (type.tail('1')) {
-        list.push(new NCell(new_type, zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
+        
+        var new_type = type.slice(0, type.length - 2);
+        var new_key_location = key_location.slice(0, key_location.length - 1);
+        var inverse_key_location = this.getSlice(x).interchangerInverseKey(new_type, new_key_location);
+        
+        for(var i = 0; i < new_key_location.length; i++){
+            new_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+            inverse_key_location[new_key_location.length - 1 - i] -= heights[heights.length - 2 - i];
+        }
+        
         if(new_type.tail('I')){
-            list.push(new NCell(new_type.substr(0, new_type.length - 1), zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
+            list.push(new NCell(new_type, null, new_key_location));
+            list.push(new NCell(new_type.substr(0, new_type.length - 1), null, inverse_key_location));
         }
         else{
-            list.push(new NCell(new_type + 'I', zero_array(heights.length - 1)));//heights.slice(0, heights.length - 1)));
+            list.push(new NCell(new_type, null, new_key_location));
+            list.push(new NCell(new_type + 'I', null, inverse_key_location));
         }
     }
+    
+    /*
+    We make key locations such, that it is possible to take key location one shorter here
+    to get the key of the thing that should be inserted
+    
+    Then an additional function would tell us what would be the key of the inverse interchanger applied
+    at the same location to undo the application of this one
+    */
 
     return list;
 }
 
-Diagram.prototype.interchangerAllowed = function(nCell) {
+Diagram.prototype.interchangerAllowed = function(type, key_location) {
     
-    var x;
-    if(nCell.id.tail('RI') || nCell.id.tail('LI')){
-        x = nCell.key_location;
-    }
-    else{
-        x = nCell.coordinates[nCell.coordinates.length - 1];    
-    }
-
+    var x = key_location.last();
     // Sanity check - necessary for degenerate cases
     if(x < 0){
         return false;
     }
     
-    var type = nCell.id;
-
     var c1 = this.nCells[x];
-    var g1_source = this.source_size(x); //gProject.signature.getGenerator(this.nCells[x].id);
-    var g1_target = this.target_size(x); //gProject.signature.getGenerator(this.nCells[x].id);
+    var g1_source = this.source_size(x);
+    var g1_target = this.target_size(x);
     
-    if(x + 1 < this.nCells.length){
-        var c2 = this.nCells[x + 1];
-        var g2_source = this.source_size(x + 1); //gProject.signature.getGenerator(this.nCells[x].id);
-        var g2_target = this.target_size(x + 1); //gProject.signature.getGenerator(this.nCells[x].id);
-    }
-    //var g2 = this.source_size(this.nCells[x+1]); //gProject.signature.getGenerator(this.nCells[x + 1].id);
+    if (type === 'Int') {
+        if(x + 1 >= this.nCells.length) return false;
 
-    if (nCell.id === 'Int') {
+        var c2 = this.nCells[x + 1];
+        var g2_source = this.source_size(x + 1);
+        var g2_target = this.target_size(x + 1);
+
         return (c1.coordinates.last() >= c2.coordinates.last() + g2_source);
     }
 
-    if (nCell.id.tail('IntI')) {
-        return (c1.coordinates.last() + g1_target <= c2.coordinates.last());
+    if (type.tail('IntI')) {
+        if(x - 1 < 0) return false;
+
+        var c3 = this.nCells[x - 1];
+        var g3_source = this.source_size(x - 1);
+        var g3_target = this.target_size(x - 1); 
+
+        return (c3.coordinates.last() + g3_target <= c1.coordinates.last());
     }
 
     var new_type = type.slice(0, type.length - 2);
 
-
-    if (nCell.id.tail('L')) {
+    if (type.tail('L')) {
         var crossings = g1_target;
         
-        if(this.nCells[nCell.key_location].coordinates.last() === this.getSlice(x).nCells.length - 1){
-            return false;
-        }
+        if(this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+        if(this.nCells[x].coordinates.last() + this.target_size(x) - 1 != this.nCells[x + 1].coordinates.last()) return false;
         
-        var template = this.getSlice(x).expand(new_type, this.nCells[nCell.key_location].coordinates.slice(0).incremented_array(
-                        - nCell.coordinates.penultimate()), //0, //this.nCells[x].coordinates.last(),
-            crossings, 1);
-
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template, nCell.coordinates);
+        var template = this.expand(new_type, this.nCells[x].coordinates.last(), crossings, 1);
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
 
-    if (nCell.id.tail('R')) {
+    if (type.tail('R')) {
 
         var crossings = g1_target;
+        if(this.nCells[x].coordinates.last() <= 0) return false;
+        if(this.nCells[x].coordinates.last() - 1 != this.nCells[x + 1].coordinates.last()) return false;
         
-        if(this.nCells[nCell.key_location].coordinates.last() 
-                        - nCell.coordinates.penultimate() - 1 < 0){
-            return false;
-        }
-        
-        var template = this.getSlice(x).expand(new_type, this.nCells[nCell.key_location].coordinates.slice(0).incremented_array(
-                        - nCell.coordinates.penultimate() - 1), //0, //this.nCells[x].coordinates.last() - 1,
-            1, crossings);
-            
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template, nCell.coordinates);
+        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, 1, crossings);
+        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + crossings), template);
     }
+
 
     var new_type = type.slice(0, type.length - 3);
-
-
-    if (nCell.id.tail('LI')) {
-
-        var crossings = g1_source;
-        if(x - crossings < 0 //|| this.nCells[nCell.key_location].coordinates.last() 
-                        ){//- nCell.coordinates.penultimate() - 1 < 0){
-            return false;
-        }
-        
-        var template = this.getSlice(x - crossings).expand(new_type, 
-            this.nCells[nCell.key_location].coordinates.slice(0).incremented_array(- nCell.coordinates.penultimate() - 1),
-            //0, //this.nCells[x - /*HACK*/ 1].coordinates.last(),
-            crossings, 1);
-
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template, nCell.coordinates);
-        
-        /*
-        for(var i = 0; i < template.length; i++){
-            template[i].coordinates[0] += this.nCells[x - crossings + i].coordinates[0];
-        } 
-        */
-    }
-
-    if (nCell.id.tail('RI')) {
+    
+    if (type.tail('LI')) {
 
         var crossings = g1_source;
-        if(x - crossings < 0 ){//|| this.nCells[nCell.key_location].coordinates.last() === this.getSlice(x).nCells.length - 1){
-            return false;
-        }
         
-        var template = this.getSlice(x - crossings).expand(new_type, 
-        this.nCells[nCell.key_location].coordinates.slice(0).incremented_array(- nCell.coordinates.penultimate()),
-            1, crossings);
-        
-        /*   
-        for(var i = 0; i < template.length; i++){
-            template[i].coordinates[0] += this.nCells[x - crossings + i].coordinates[0];
-        }
-        */
+        if(x <= 0 ) return false;
+        if(this.nCells[x].coordinates.last() - 1 != this.nCells[x - 1].coordinates.last()) return false;
 
-        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template, nCell.coordinates);
+
+        var template = this.expand(new_type, this.nCells[x].coordinates.last() - 1, crossings, 1);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
     }
 
+    if (type.tail('RI')) {
 
-    if (nCell.id.tail('1I')) {
+        var crossings = g1_source;
+        
+        if(this.nCells[x].coordinates.last() === this.getSlice(x).nCells.length - 1) return false;
+        if(this.nCells[x].coordinates.last() + this.source_size(x) - 1 != this.nCells[x - 1].coordinates.last()) return false;
+        
+        var template = this.expand(new_type, this.nCells[key_location.last()].coordinates.last(), 1, crossings);
+        return this.instructionsEquiv(this.nCells.slice(x - crossings, x), template);
+    }
+
+    if (type.tail('1I')) {
         if (this.nCells[x].id === new_type) {
             if (this.nCells[x + 1].id === new_type + 'I' || this.nCells[x + 1].id === new_type.substr(0, new_type.length - 1))
-                if(this.nCells[x].coordinates.last() === this.nCells[x + 1].coordinates.last())
-                    return true;
+                if(this.nCells[x].key.last() + 1 === this.nCells[x + 1].key.last()
+                    || this.nCells[x].key.last() - 1 === this.nCells[x + 1].key.last()
+                    ) return true;
         }
         return false;
     }
 
     var new_type = type.slice(0, type.length - 2);
 
-    if (nCell.id.tail('1')) {
+    if (type.tail('1')) {
         return true;
     }
 
 }
 
-Diagram.prototype.instructionsEquiv = function(list1, list2, offset) {
+Diagram.prototype.instructionsEquiv = function(list1, list2) {
 
     if(list1.length != list2.length) return false;
 
     for (var i = 0; i < list1.length; i++) {
-        if (!this.nCellEquiv(list1[i], list2[i], offset)) {
+        if (!this.nCellEquiv(list1[i], list2[i])) {
             return false;
         }
     }
     return true;
 }
 
-Diagram.prototype.nCellEquiv = function(cell_one, cell_two, offset) {
+Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
 
     if (cell_one.id != cell_two.id) return false;
-    if (cell_one.coordinates.length != cell_two.coordinates.length) return false;
-    //if (cell_one.coordinates.last() != cell_two.coordinates.last()) return false;
-
-    for (var i = 0; i < cell_one.coordinates.length; i++) {
-        if (cell_one.coordinates[i] != cell_two.coordinates[i] + offset[i]) return false;
+    if (cell_one.key.length != cell_two.key.length) return false;
+    
+    for (var i = 0; i < cell_one.key.length; i++) {
+        if (cell_one.key[i] != cell_two.key[i]) return false;
     }
-
-    // NEEED OFFSET, Do you really? (with inclusion of slices in preprocessing for Expansion - I don't think so)
-
     return true;
 }
 
@@ -409,8 +370,8 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
 
     var rewrite = {};
 
-    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.coordinates, nCell.key_location));
-    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.coordinates, nCell.key_location));
+    rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.key));
+    rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.key));
 
     if (rewrite.source.nCells.length != 0 || rewrite.target.nCells.length) return rewrite;
 
@@ -419,6 +380,7 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
     return [];
 }
 
+/*
 Diagram.prototype.interpret_drag = function(drag) {
     
     var new_drag;
@@ -441,7 +403,7 @@ Diagram.prototype.interpret_drag = function(drag) {
         }
         var new_action = action[0];
         new_action.id += "-1";
-        new_action.coordinates.push(drag.coordinates.last());
+        new_action.key.push(drag.coordinates.last());
         return [new_action];
     }
     
@@ -457,343 +419,246 @@ Diagram.prototype.interpret_drag = function(drag) {
     return this.test_basic(new_drag).concat(this.test_pull_through(drag));
         
 }
-
+*/
+/*
 Diagram.prototype.test_basic = function(drag) {
     
     var id;
-    var temp_coordinates; // = this.nCells[drag.coordinates.last()].coordinates.slice(0);
-    //temp_coordinates.push(drag.coordinates.last());
-
     var x = drag.coordinates.last();
-    var y;
-    
+
     if(drag.coordinates.length === 1){
         
         if(x + drag.directions[0] < 0 || x + drag.directions[0] >= this.nCells.length){
             return [];
         }
         
-        temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x + drag.directions[0]].coordinates.slice(0))
-        temp_coordinates.push(drag.coordinates.last());
-        
-        if(drag.directions[0] === -1){
-            temp_coordinates.increment_last(-1);
-        }
-        
-
-        var int1_bool = false;
-        var int2_bool = false;
-       
-        id = 'Int';
-        var interchanger_1 = new NCell(id, temp_coordinates);
-        if (this.interchangerAllowed(interchanger_1)) {
-            int1_bool = true;    
-        }
-        
-        id = 'IntI'
-        var interchanger_2 = new NCell(id, temp_coordinates);
-        if(this.interchangerAllowed(interchanger_2)){
-            int2_bool = true;
-        }
+        var int_bool;
+        var intI_bool;
             
-        if(!int1_bool && !int2_bool){
-            id = this.nCells[temp_coordinates.last()].id + '-1I'; // Attempt to cancel out interchangers
-            var interchanger_3 = new NCell(id, temp_coordinates);
-            if(!this.interchangerAllowed(interchanger_3)){
-                console.log("cannot interchange");
-                return [];
-            }
-        }
-        else if(int1_bool && int2_bool){ 
+        if(drag.directions[0] > 0){
+            int_bool = this.interchangerAllowed('Int', [x]); 
+            intI_bool = this.interchangerAllowed('IntI', [x + 1]) ;
             
-            // Resolve conflict using the second variable
-            if(drag.directions.last() === 1){
-                id = 'Int';
+            if(!int_bool && !intI_bool){
+                id = this.nCells[x].id + '-1I'; // Attempt to cancel out interchangers
+                var k;
+                if(this.nCells[x].id === 'Int'){
+                    k = 0;
+                }
+                else{
+                    k = 1;
+                }
+                if(!this.interchangerAllowed(id, [k, x])){
+                    console.log("cannot interchange");
+                    return [];
+                }
+                else{
+                    return [new NCell(id, null, [k, x])];
+                }
+            }   
+            else if(int_bool && intI_bool){ 
+                
+                // Resolve conflict using the second variable
+                if(drag.directions.last() === 1){
+                    intI_bool = false;
+                }
+                else{
+                    int_bool = false;
+                }
             }
-            else{
-                id = 'IntI';
+            
+            if(int_bool){
+                return [new NCell('Int', null, [x])];
+            }
+            else {
+                return [new NCell('IntI', null, [x + 1])];
             }
         }
-        else if(int1_bool){
-            id = 'Int';
+        else{
+            int_bool = this.interchangerAllowed('Int', [x - 1]); 
+            intI_bool = this.interchangerAllowed('IntI', [x]);
+            
+            if(!int_bool && !intI_bool){
+                id = this.nCells[x - 1].id + '-1I'; // Attempt to cancel out interchangers
+                if(!this.interchangerAllowed(id, [x - 1])){
+                    console.log("cannot interchange");
+                    return [];
+                }
+                else{
+                    return [new NCell(id, null, [x - 1])];
+                }
+            }   
+            else if(int_bool && intI_bool){ 
+                
+                // Resolve conflict using the second variable
+                if(drag.directions.last() === 1){
+                    intI_bool = false;
+                }
+                else{
+                    int_bool = false;
+                }
+            }
+            
+            if(int_bool){
+                return [new NCell('Int', null, [x - 1])];
+            }
+            else {
+                return [new NCell('IntI', null, [x])];
+            }
+            
         }
-        else {
-            id = 'IntI';
-        }
-    return [new NCell(id, temp_coordinates)];
     }
     else{
         return [];
     }
 }
+*/
 
 Diagram.prototype.test_pull_through = function(drag) {
 
-    if(drag.directions.length != 2){
-        return [];   
-    }
-    
     var id;
-    var temp_coordinates
-    var interchanger;
     var x = drag.coordinates.last(); 
-    
-    var new_drag = {
-        boundary_type: drag.boundary_type,
-        boundary_depth: drag.boundary_depth,
-        coordinates: [this.nCells[drag.coordinates.last()].coordinates.last()],//drag.coordinates.slice(0, drag.coordinates.length),
-        directions: drag.directions.slice(1, drag.directions.length)
-    };
-    
-    if(drag.directions.last() === 1){
-        if(drag.directions[0] === 1){
-            
-            if(x + this.target_size(x) >= this.nCells.length){
-                return [];
-            }
-            
-            /*
-            if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            */
-            if(this.target_size(x) === 0){
-                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            id = id + '-L';
+
+    if(drag.directions[0] === 1){
         
-            
-            temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x + this.target_size(x)].coordinates.slice(0))
-            temp_coordinates.push(drag.coordinates.last());
- 
-                                    
-            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
-            if(!this.interchangerAllowed(interchanger)){
-                return [];
+        if(this.target_size(x) === 0){
+            if(drag.directions.last() === 1){
+                id = 'Int'   
             }
             else{
-                return [interchanger];
-            }
+                id = 'IntI'
+            }       
+        }
+        else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
+            id = this.nCells[drag.coordinates.last() + 1].id; 
         }
         else{
-            /*
-            if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id;
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            */
-            
-            if(this.source_size(x) === 0){
-                new_drag.directions[0] = - new_drag.directions[0]; // HACK
-                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            //id = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag)[0].id;
-            id = id + '-RI'; 
-            
-            //temp_coordinates = this.nCells[drag.coordinates.last() - this.source_size(x)].coordinates.slice(0);
-            
-            if(x - this.source_size(x) < 0){
-                return [];
-            }
-            
-            temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x - this.source_size(x)].coordinates.slice(0))
-            
-            temp_coordinates.push(drag.coordinates.last());
-            temp_coordinates.increment_last(-this.source_size(x));
-            
-            
-
-            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
-            if(!this.interchangerAllowed(interchanger)){
-                return [];
-            }
-            else{
-                return [interchanger];
-            }            
+            console.log("No way to pull through");
+            return [];
         }
+
+        var boolL = this.interchangerAllowed(id + '-L', [x]);
+        var boolR = this.interchangerAllowed(id + '-R', [x]);        
     }
-
-
-    else if (drag.directions.last() === -1){
-        if(drag.directions[0] === 1){
-
-            
-            //drag.coordinates = drag.coordinates.slice(0, drag.coordinates.length - 1)
-            if(this.target_size(x) === 0){
-                var sub_action = this.getSlice(drag.coordinates.last()).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            
-            //id = this.getSlice(drag.coordinates.last()).test_basic(new_drag)[0].id;
-            
-            /*
-            if(drag.coordinates.last() + 1 >= this.nCells.length){
-                      
-            }
-            else if(this.nCells[drag.coordinates.last() + 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() + 1].id;   
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            */
-            
-            id = id + '-R';  
-           
-            if(x + 1 >= this.nCells.length){
-                temp_coordinates = this.nCells[x].coordinates.slice(0);
-                temp_coordinates.increment_last(-1);
-            }
-            else{
-                temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x + 1].coordinates.slice(0))
-            }
+    else{
         
-            temp_coordinates.push(drag.coordinates.last());
-            
-            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
-            if(!this.interchangerAllowed(interchanger)){
-                return [];
+        if(this.source_size(x) === 0){
+            if(drag.directions.last() === 1){
+                id = 'IntI'   
             }
             else{
-                return [interchanger];
+                id = 'Int'
             }
+            
+        }
+        else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
+            id = this.nCells[drag.coordinates.last() - 1].id; 
         }
         else{
-            if(this.source_size(x) === 0){
-                new_drag.directions[0] = - new_drag.directions[0]; // HACK
-                
-                var sub_action = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag);
-                if(sub_action.length === 0){
-                    return [];
-                }else{
-                    id = sub_action[0].id;
-                }
-            }
-            else if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id; 
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            
-            //id = this.getSlice(drag.coordinates.last() + 1).test_basic(new_drag)[0].id;
-
-            
-            /*
-            if(this.nCells[drag.coordinates.last() - 1].id.substr(0, 3) === 'Int'){
-                id = this.nCells[drag.coordinates.last() - 1].id;  
-                
-                // Need to offset the attachment point of the interchanger by the number of inputs of the pulled-through cell
-                //var g = gProject.signature.getGenerator(this.nCells[drag.coordinates.last()].id)
-                //temp_coordinates.increment_last(-g.source.nCells.length);
-            }
-            else{
-                console.log("No way to pull through");
-                return [];
-            }
-            */
-            id = id + '-LI';  
-            
-            //temp_coordinates = this.nCells[drag.coordinates.last()/*Hack?*/].coordinates.slice(0);
-            //temp_coordinates.increment_last(-1);
-            if(x - 1 < 0){
-                temp_coordinates = this.nCells[x].coordinates.slice(0);
-                temp_coordinates.increment_last(-1);
-            }
-            else{
-                temp_coordinates = min_array(this.nCells[x].coordinates.slice(0),
-                                    this.nCells[x - 1].coordinates.slice(0))
-            }
-            temp_coordinates.push(drag.coordinates.last());
-            temp_coordinates.increment_last(-this.source_size(x));
-
-            interchanger = new NCell(id, temp_coordinates, drag.coordinates.last());
-            if(!this.interchangerAllowed(interchanger)){
-                return [];
-            }
-            else{
-                return [interchanger];
-            }
+            console.log("No way to pull through");
+            return [];
         }
+        
+        var boolLI = this.interchangerAllowed(id + '-LI', [x]);
+        var boolRI = this.interchangerAllowed(id + '-RI', [x]);
+    }  
+    
+    var list = new Array();
+    
+    if(boolL){
+        list.push(new NCell(id + '-L', null, [x]));
     }
-    else{
-        return [];
+    if(boolR){
+        list.push(new NCell(id + '-R', null, [x]));
+    }
+    if(boolLI){
+        list.push(new NCell(id + '-LI', null, [x]));
+    }
+    if(boolRI){
+        list.push(new NCell(id + '-RI', null, [x]));
     }
     
-    return [new NCell(id, temp_coordinates)];
-}
+    return list;
+};
 
 
-Diagram.prototype.source_size = function(level) {
+Diagram.prototype.interchangerInverseKey = function(type, key_location) {
 
-    var nCell = this.nCells[level];
+    var x = key_location.last();
 
-    if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerSource(nCell.id, nCell.coordinates, nCell.key_location).length;
+        if(type.tail('Int')){
+            return [x + 1];
+        }
+        
+        else if(type.tail('IntI')){
+            return [x - 1];
+        }
+        else if(type.tail('R')){
+            return [x + this.source_size(x)];
+        }
+        
+        else if(type.tail('L')){
+            return [x + this.source_size(x)];
+        }
+        else if(type.tail('RI')){
+            return [x - this.source_size(x)];
+        }
+        else if(type.tail('LI')){
+            return [x - this.source_size(x)];
+        }
+        else if(type.tail('-1')){
+            return key_location.slice(0);
+        }
+        else if(type.tail('-1I')){
+            return key_location.slice(0);
+        }
+};
+
+Diagram.prototype.interchangerCoordinates = function(type, key_location) {
+    
+    if(key_location.length === 0) return [];
+    
+    var diagram_pointer = this;
+    var key = key_location.last();
+    
+    if(key_location.length === 1) {
+        if(type.tail('Int')){
+            list = this.nCells[key + 1].coordinates.slice(0);
+        }
+        
+        else if(type.tail('IntI')){
+            key--;
+            list = this.nCells[key].coordinates.slice(0);
+        }
+        
+       
+        else if(type.tail('R')){
+            list = this.nCells[key + 1].coordinates.slice(0);
+        }
+        
+        else if(type.tail('L')){
+            list = this.nCells[key].coordinates.slice(0);
+        }
+        else if(type.tail('RI')){
+            key = key - diagram_pointer.source_size(key);
+            list = this.nCells[key].coordinates.slice(0);
+        }
+        else if(type.tail('LI')){
+            list = this.nCells[key - 1].coordinates.slice(0);
+            key = key - diagram_pointer.source_size(key);
+        }
+        
+        else{
+            var list = this.nCells[key].coordinates.slice(0);
+        }
+        
+        return list.concat([key]);    
     }
-    else{
-        return nCell.source_size();
-    }
+    // Possibly generate a new type
+    
+    var new_type = type.slice(0, type.length - 2);
+    
+    return diagram_pointer.getSlice(key).interchangerCoordinates(new_type, key_location.slice(0, key_location.length - 1)).concat([key]);   
 
-}
+};
 
-Diagram.prototype.target_size = function(level) {
-
-    var nCell = this.nCells[level];
-
-    if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).atomicInterchangerTarget(nCell.id, nCell.coordinates, nCell.key_location).length;
-    }
-    else{
-        return nCell.target_size();
-    }
-
-}
