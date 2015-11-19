@@ -28,7 +28,7 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var cell = this.nCells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-    var x = this.getSlice(key.last()).getInverseKey(key.slice(0, key.length - 1)) // key.last();
+    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.coordinates).last() // key.last();
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
@@ -91,7 +91,7 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
         return null;
     }
     console.log(msg);
-    return possible_options[0];
+    return possible_options;
 };
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
@@ -125,6 +125,15 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     if (type.tail('IntI-L-S', 'Int-L-S')) {
         return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
     }
+}
+
+
+Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
+    
+    var x = key.last();
+    var coords = this.getInterchangerCoordinates(type, key);
+    if (type.tail('L-S')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.target_size(x) + 1}])};
+
 }
 
 /*

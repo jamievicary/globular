@@ -181,7 +181,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     
     if (type == 'Int-L')   return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
     if (type == 'IntI-L')  return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'Int-R')   return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'Int-R')   return   d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
     if (type == 'IntI-R')  return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
     if (type == 'Int-LI')  return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
     if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
@@ -215,20 +215,6 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     //////// OLD
     
     var list = [];
-    /*
-    if (type.tail('R')) {
-        list = this.nCells[new_key + 1].coordinates.slice(0);
-    } else if (type.tail('L')) {
-        list = this.nCells[new_key].coordinates.slice(0);
-    } else if (type.tail('RI')) {
-        new_key -= diagram_pointer.source_size(new_key);
-        list = this.nCells[new_key].coordinates.slice(0);
-    } else if (type.tail('LI')) {
-        list = this.nCells[new_key - 1].coordinates.slice(0);
-        new_key -= diagram_pointer.source_size(new_key);
-    }
-    */
-
     return list.concat([new_key]);
 }
 
