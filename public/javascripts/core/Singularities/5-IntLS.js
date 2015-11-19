@@ -7,7 +7,7 @@
 // Data for the Int-L-S family
 // This is naturality for the 4-cell pull-through
 
-/*
+
 RegisterSingularityFamily({
     family: 'IntLS',
     dimension: 5,
@@ -20,7 +20,7 @@ RegisterSingularityFamily({
     'Int-RI-S', 'Int-RI-SI',
     'IntI-RI-S', 'IntI-RI-SI']
 });
-*/
+
 
 Diagram.prototype.getSource.IntLS = function(type, key) {
     
@@ -28,8 +28,8 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var cell = this.nCells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-    var x = key.last();
-    var y = box.min.penultimate();
+    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.coordinates).last() // key.last();
+    var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
@@ -91,7 +91,7 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
         return null;
     }
     console.log(msg);
-    return possible_options[0];
+    return possible_options;
 };
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
@@ -118,13 +118,22 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     
     var diagram_pointer = this;
     var h = key.last();
-    var cell = this.nCells[h];
+    var cell = this.nCells[h - this.source_size(h)];
     var coords = cell.coordinates.slice(0);
-    coords.push(h);
+    coords.push(h - this.source_size(h));
     
     if (type.tail('IntI-L-S', 'Int-L-S')) {
         return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
     }
+}
+
+
+Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
+    
+    var x = key.last();
+    var coords = this.getInterchangerCoordinates(type, key);
+    if (type.tail('L-S')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.target_size(x) + 1}])};
+
 }
 
 /*
