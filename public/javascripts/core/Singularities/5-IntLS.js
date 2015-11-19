@@ -25,7 +25,7 @@ RegisterSingularityFamily({
 Diagram.prototype.getSource.IntLS = function(type, key) {
     
     var coord = this.getInterchangerCoordinates(type, key);
-    var cell = this.nCells[key.last()];
+    var cell = this.cells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
     var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.coordinates).last() // key.last();
@@ -48,7 +48,7 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
 Diagram.prototype.getTarget.IntLS = function(type, key) {
     
     var coord = this.getInterchangerCoordinates(type, key);
-    var cell = this.nCells[key.last()];
+    var cell = this.cells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
     var x = coord.penultimate();
@@ -118,7 +118,7 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     
     var diagram_pointer = this;
     var h = key.last();
-    var cell = this.nCells[h - this.source_size(h)];
+    var cell = this.cells[h - this.source_size(h)];
     var coords = cell.coordinates.slice(0);
     coords.push(h - this.source_size(h));
     
@@ -140,7 +140,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
 Diagram.prototype.getGeometry.IntLS = function(type, key) {
 
     // eg: return [[1,1]]
-    var key_cell = this.nCells[key.last()];
+    var key_cell = this.cells[key.last()];
     if (type != 'Int-L-S') {
         console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
         throw 0;
@@ -158,8 +158,8 @@ Diagram.prototype.getGeometry.IntLS = function(type, key) {
         source_target_width
     } else {
         var source = gProject.signature.getGenerator(key_cell.id).getSource();
-        source_height = source.nCells.length;
-        source_source_width = source.getSourceBoundary().nCells.length;
+        source_height = source.cells.length;
+        source_source_width = source.getSourceBoundary().cells.length;
     }
 }
 
@@ -171,7 +171,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     var top_length = key.last() - c.end(0) + 1;
 
     // eg: return [[1,1]]
-    var key_cell = this.nCells[key.last()];
+    var key_cell = this.cells[key.last()];
     if (type != 'Int-L-S') {
         console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
         return null;
@@ -187,8 +187,8 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
         source_width = bbox[0];
     } else {
         var source = gProject.signature.getGenerator(key_cell.id).getSource();
-        source_height = source.nCells.length;
-        source_width = source.getSourceBoundary().nCells.length;
+        source_height = source.cells.length;
+        source_width = source.getSourceBoundary().cells.length;
     }
     
     var key_slice = this.getSlice(key.last());

@@ -12,7 +12,7 @@ var T = 1;
     construct an empty project. Otherwise, destringify.
 */
 function Project(string) {
-    
+
     if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
@@ -178,7 +178,7 @@ Project.prototype.takeIdentity = function() {
 */
 
 Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target' */ ) {
-    
+
     if (this.diagram == null) {
         this.cacheSourceTarget = null;
         return;
@@ -356,21 +356,21 @@ Project.prototype.selectGenerator = function(id) {
         this.saveState();
         return null;
     }
-    
+
     // If user clicked a 0-cell, do nothing
     if (generator.diagram.getDimension() == 0) {
         alert("0-cells can never be attached");
         return null;
     }
-    
+
     var matched_diagram = generator.diagram.copy();
     var slices_data = MainDisplay.get_current_slice();
-    
+
     if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
         // REWRITE
         if (slices_data.length > 0) {
             var d = this.diagram.getDimension();
-            alert ('Choose suppression level ' + this.diagram.getDimension() - 2 + ' to rewrite diagram.');
+            alert('Choose suppression level ' + this.diagram.getDimension() - 2 + ' to rewrite diagram.');
             return null;
         }
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());
@@ -394,20 +394,20 @@ Project.prototype.selectGenerator = function(id) {
         alert('Cannot apply a ' + matched_diagram.getDimension() + '-cell to a ' + this.diagram.getDimension() + '-dimensional diagram.');
         return null;
     }
-    
+
     // Try attaching to a boundary
     var depth = slices_data.length;
     var attachment_possible = false;
     var cell_dim = generator.diagram.getDimension();
     var matches = [];
-    
+
     // Can we attach by virtue of viewing the entire source or target?
     var slice_pointer = this.diagram;
     var last_slice_max = null;
-    for (var i=0; i<slices_data.length; i++) {
-        if (i == slices_data.length - 1) last_slice_max = slice_pointer.nCells.length;
+    for (var i = 0; i < slices_data.length; i++) {
+        if (i == slices_data.length - 1) last_slice_max = slice_pointer.cells.length;
         slice_pointer = slice_pointer.getSlice(slices_data[i]);
-        slices_counter++;
+        //slices_counter++;
     }
     var visible_slice = slice_pointer;
 
@@ -415,7 +415,7 @@ Project.prototype.selectGenerator = function(id) {
     if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
         matches = this.prepareEnumerationDataNew(visible_slice, matched_diagram.getSourceBoundary(), 0, 't', depth);
     }
-    
+
     // Are we viewing an entire source?
     else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
         matches = this.prepareEnumerationDataNew(visible_slice, matched_diagram.getTargetBoundary(), 0, 's', depth);
@@ -426,7 +426,7 @@ Project.prototype.selectGenerator = function(id) {
         matches = this.prepareEnumerationDataNew(visible_slice.getSourceBoundary(), matched_diagram.getTargetBoundary(), 1, 's', depth);
         matches = matches.concat(this.prepareEnumerationDataNew(visible_slice.getTargetBoundary(), matched_diagram.getSourceBoundary(), 1, 't', depth));
     }
-    
+
     // Can we attach to the apparent ss or tt of the visible diagram?
     else if (cell_dim == this.diagram.getDimension() - depth - 1) {
         matches = this.prepareEnumerationDataNew(visible_slice.getSourceBoundary().getSourceBoundary(), matched_diagram.getTargetBoundary(), 2, 's', depth);
@@ -435,7 +435,7 @@ Project.prototype.selectGenerator = function(id) {
 
     // Nothing possible
     else {
-        alert ('Cannot attach this cell from the current view');
+        alert('Cannot attach this cell from the current view');
         return null;
     }
 
@@ -591,7 +591,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         project.renderDiagram();
     };
     div_detail.appendChild(input_color);
-    
+
     // Add invertibility selector
     if (n > 0 && generator.id.last() != 'I') {
         var label = $('<br><label><input type="checkbox" name="checkbox" value="value">Invertible</label>');
@@ -656,14 +656,15 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
-                        var ncell = new NCell(enumerationData.diagram.nCells[0].id, match.inclusion, null);
-                        project.diagram.attach(ncell, {type: match.boundaryType, depth: match.realBoundaryDepth});
+                        var ncell = new NCell(enumerationData.diagram.cells[0].id, match.inclusion, null);
+                        var boundary = {
+                            type: match.boundaryType,
+                            depth: match.realBoundaryDepth
+                        };
+                        project.diagram.attach(ncell, boundary);
                         $('div.cell-b-sect').empty();
-
-                        //project.renderAll();
                         project.renderDiagram({
-                            boundary_type: match.boundaryType,
-                            boundary_depth: match.realBoundaryDepth
+                            boundary: boundary
                         });
                         project.saveState();
                     });
@@ -771,19 +772,21 @@ Project.prototype.addNCell = function(source, target) {
     // Set the colour
     var colour_array = GlobularColours[d % 3];
     var colour = colour_array[(this.signature.getNCells(d).length - 1) % colour_array.length];
-    generator.display = {colour: colour, rate: 1};
+    generator.display = {
+        colour: colour,
+        rate: 1
+    };
 
-/*
-}
-        else {
-            this.renderGenerator("#ci-" + cell, cell);
+    /*
+    }
+            else {
+                this.renderGenerator("#ci-" + cell, cell);
+            }
         }
     }
-}
-*/
+    */
     // Add the diagram to the menu
     if (gProject != null) this.renderNCell(generator.id);
-    
+
     return generator.id;
 };
-

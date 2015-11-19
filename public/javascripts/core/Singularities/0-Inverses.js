@@ -20,9 +20,9 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
         // Can we cancel this from the bottom?
     };
     
-    if (up && height >= this.nCells.length - 1) return [];
+    if (up && height >= this.cells.length - 1) return [];
     
-    var cell = this.nCells[up ? height : height - 1];
+    var cell = this.cells[up ? height : height - 1];
     var options = this.getDragOptions([cell.id + '-EI'], [up ? height : height - 1]);
 
     // Collect the possible options
@@ -103,7 +103,7 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
     /*
     var slice = this.getSlice(key.last());
     var box = slice.getInterchangerCoordinates(type, )
-    return this.nCells[key.last()].coordinates.slice().concat([key]);
+    return this.cells[key.last()].coordinates.slice().concat([key]);
     */
 }
 
@@ -145,13 +145,13 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     if (type.tail('-E')) return true;
 
     // Can't cancel out an inverse cell if we're at the top of the diagram
-    if (height == this.nCells.length) return false;
+    if (height == this.cells.length) return false;
     
     // Must have at least 2 things to cancel out
-    if (this.nCells.length < 2) return false;
+    if (this.cells.length < 2) return false;
 
-    var cell1 = this.nCells[height];
-    var cell2 = this.nCells[height + 1];
+    var cell1 = this.cells[height];
+    var cell2 = this.cells[height + 1];
     
     // Check coordinates are identical
     if (!cell1.coordinates.vector_equals(cell2.coordinates)) return null;

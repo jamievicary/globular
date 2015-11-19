@@ -33,7 +33,7 @@ function GetSingularityFamily(type) {
 Diagram.prototype.interchangerAllowed = function(type, key) {
     //  try {
     if (key.last() < 0) return false;
-    if (key >= this.nCells.length) return false;
+    if (key >= this.cells.length) return false;
     var family = GetSingularityFamily(type);
     return ((this.interchangerAllowed[family]).bind(this))(type, key);
     //    } catch (e) {
@@ -182,7 +182,7 @@ Diagram.prototype.nCellEquiv = function(cell_one, cell_two) {
 // Compare the list to a subset of the diagram
 Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     
-    var diagram_key_cell = this.nCells[diagram_key.last()];
+    var diagram_key_cell = this.cells[diagram_key.last()];
     var instructions_key_cell = instructions.list[instructions.key];
     
     if (diagram_key_cell.coordinates.length != instructions_key_cell.coordinates.length) return false;
@@ -194,7 +194,7 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
 
     for (var i = 0; i < instructions.list.length; i++) {
         var list_cell = instructions.list[i];
-        var diagram_cell = this.nCells[i + diagram_key.last() - instructions.key];
+        var diagram_cell = this.cells[i + diagram_key.last() - instructions.key];
         var diagram_coord;
         var list_coord;
         if (list_cell.isInterchanger()) {
@@ -223,7 +223,7 @@ Diagram.prototype.source_size = function(level) {
     var bbox = this.getSliceBoundingBox(level);
     return bbox.max.last() - bbox.min.last();
     /*
-    var nCell = this.nCells[level];
+    var nCell = this.cells[level];
     if(nCell.id.substr(0, 3) === 'Int'){
         return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
     }
@@ -234,7 +234,7 @@ Diagram.prototype.source_size = function(level) {
 };
 
 Diagram.prototype.target_size = function(level) {
-    var nCell = this.nCells[level];
+    var nCell = this.cells[level];
     if (nCell.id.is_interchanger()) {
         return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
     } else {

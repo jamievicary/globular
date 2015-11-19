@@ -63,13 +63,13 @@ Diagram.prototype.interchangerAllowed.Int = function (type, key){
     // Sanity check - necessary for degenerate cases
     if(x < 0) return false;
 
-    var c1 = this.nCells[x];
+    var c1 = this.cells[x];
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
     
     if (type === 'Int') {
-        if(x + 1 >= this.nCells.length) return false;
-        var c2 = this.nCells[x + 1];
+        if(x + 1 >= this.cells.length) return false;
+        var c2 = this.cells[x + 1];
         var g2_source = this.source_size(x + 1);
         var g2_target = this.target_size(x + 1);
         return (c1.coordinates.last() >= c2.coordinates.last() + g2_source);
@@ -77,7 +77,7 @@ Diagram.prototype.interchangerAllowed.Int = function (type, key){
 
     if (type.tail('IntI')) {
         if(x - 1 < 0) return false;
-        var c3 = this.nCells[x - 1];
+        var c3 = this.cells[x - 1];
         var g3_source = this.source_size(x - 1);
         var g3_target = this.target_size(x - 1); 
         return (c3.coordinates.last() + g3_target <= c1.coordinates.last());
@@ -87,13 +87,13 @@ Diagram.prototype.interchangerAllowed.Int = function (type, key){
 Diagram.prototype.rewritePasteData.Int = function (type, key){
     var x = key.last();
     if (type.tail('Int')) {
-        var cell1 = this.nCells[x].copy();
-        var cell2 = this.nCells[x+1].copy();
+        var cell1 = this.cells[x].copy();
+        var cell2 = this.cells[x+1].copy();
         return [cell2, cell1.move([{relative: this.target_size(x+1) - this.source_size(x+1)}])];
     }
     if (type.tail('IntI')) {
-        var cell1 = this.nCells[x-1].copy();
-        var cell2 = this.nCells[x].copy();
+        var cell1 = this.cells[x-1].copy();
+        var cell2 = this.cells[x].copy();
         return [cell2.move([{relative: this.source_size(x-1) - this.target_size(x-1)}]), cell1];
     }
 };
@@ -107,16 +107,16 @@ Diagram.prototype.getInterchangerCoordinates.Int = function (type, key){
     
     if(key.length === 1) {
         if(type.tail('Int')){
-            list = this.nCells[x + 1].coordinates.slice(0);
+            list = this.cells[x + 1].coordinates.slice(0);
         }
         
         else if(type.tail('IntI')){
             x--;
-            list = this.nCells[x].coordinates.slice(0);
+            list = this.cells[x].coordinates.slice(0);
         }
 
         else{
-            var list = this.nCells[x].coordinates.slice(0);
+            var list = this.cells[x].coordinates.slice(0);
         }
         
         return list.concat([x]);    
@@ -134,11 +134,11 @@ Diagram.prototype.getInterchangerBoundingBox.Int = function (type, key){
 
     // NEEDS TO BE GENERALIZED TO COPE WITH HIGHER-DIMENSIONAL DIAGRAMS
     if(type.tail('Int')){
-        return {min: position, max: position.slice().move([{ absolute: this.nCells[x].coordinates.last() - position.penultimate() + this.source_size(x)},
+        return {min: position, max: position.slice().move([{ absolute: this.cells[x].coordinates.last() - position.penultimate() + this.source_size(x)},
             {relative: 2}])};
     }
     else if(type.tail('IntI')){
-        return {min: position, max: position.slice().move([{ absolute: this.nCells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x)} , {relative: 2}])};
+        return {min: position, max: position.slice().move([{ absolute: this.cells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x)} , {relative: 2}])};
     }
 };
 

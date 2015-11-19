@@ -26,8 +26,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     for (var i = 0; i < n; i++) {
         final_l += (this.target_size(x + i) - this.source_size(x + i));
     }
-    var b = this.nCells[x].coordinates.last() - y;
-    var a = y + l - this.nCells[x].coordinates.last() - this.source_size(x);
+    var b = this.cells[x].coordinates.last() - y;
+    var a = y + l - this.cells[x].coordinates.last() - this.source_size(x);
     if (type.tail('I')) {
         new_type = type.substr(0, type.length - 3)
     } else {
@@ -53,7 +53,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     } else {
         list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {up: x, across: y, length: l}, n - 1, m));
     }
-
+    
     return list;
 };
 
@@ -102,7 +102,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
 
     var x = key.last();
     var slice = this.getSlice(x);
-    var cell = this.nCells[x];
+    var cell = this.cells[x];
     var coords = cell.coordinates;
     var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
@@ -110,59 +110,59 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
 
     if (type == 'Int-L') {
-        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be deeper
         if (!this.separation([coords.last() + g1_source, key.last()], [key.last()]).below) return false;
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
+        return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'IntI-L') {
-        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         //if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
         if (!this.separation([coords.last() + g1_source, key.last()], [key.last()]).above) return false;
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
+        return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
     }
 
     if (type == 'Int-RI') {
-        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         if (!this.separation([coords.last() + g1_source, key.last()], [key.last()]).above) return false;
         //if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
-        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
+        return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
 
     if (type == 'IntI-RI') {
-        if (slice.nCells.length <= coords.last() + g1_source) return false; // must have something on the right
+        if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         if (!this.separation([coords.last() + g1_source, key.last()], [key.last()]).below) return false;
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be shallower
-        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
+        return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
     
     if (type == 'Int-LI') {
         if (coords.last() == 0) return false; // must have something on the left
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
         if (!this.separation([coords.last() - 1, key.last()], [key.last()]).above) return false;
-        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
+        return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
     if (type == 'IntI-LI') {
         if (coords.last() == 0) return false; // must have something on the left
         if (!this.separation([coords.last() - 1, key.last()], [key.last()]).below) return false;
         //if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() - 1).min.end(0)) return false; // must be shallower
-        return this.instructionsEquiv(this.nCells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
+        return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
     if (type == 'Int-R') {
         if (coords.last() == 0) return false; // must have something on the left
         if (!this.separation([coords.last() - 1, key.last()], [key.last()]).below) return false;
         //if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() - 1).min.end(0)) return false; // must be shallower
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
+        return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
 
     if (type == 'IntI-R') {
         if (coords.last() == 0) return false; // must have something on the left
         if (!this.separation([coords.last() - 1, key.last()], [key.last()]).above) return false;
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
-        return this.instructionsEquiv(this.nCells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
+        return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
     
     return false;
@@ -172,7 +172,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
 
     var x = key.last();
     var h = key.last();
-    var cell = this.nCells[h].copy();
+    var cell = this.cells[h].copy();
     var coords = cell.coordinates.slice(0);
     var heights = this.getInterchangerCoordinates(type, key);
     var d = new Diagram(); // dummy diagram objects for Int expansion
@@ -195,7 +195,7 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     var diagram_pointer = this;
     var new_key = key.last();
     var h = key.last();
-    var cell = this.nCells[h];
+    var cell = this.cells[h];
     var coords = cell.coordinates.slice(0);
     coords.push(h);
     
@@ -211,7 +211,6 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     else if (type.tail('Int-RI', 'IntI-RI')) {
         return coords.move([{relative: -this.source_size(h)}])
     }
-
 }
 
 Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {

@@ -426,8 +426,8 @@ Display.prototype.update_slice_container = function(drag) {
     var slice = this.diagram.copy();
     for (var i = 0; i < remaining_dimensions; i++) {
         var input = this.coordinates[i];
-        input.val(Math.min(input.val(), slice.nCells.length));
-        input.attr('max', slice.nCells.length);
+        input.val(Math.min(input.val(), slice.cells.length));
+        input.attr('max', slice.cells.length);
         slice = slice.getSlice(input.val());
     }
 }

@@ -13,7 +13,7 @@ function Signature(sig) {
     if (sig === undefined) {
         return;
     }
-    this.nCells = {};
+    this.cells = {};
     this.sigma = sig;
     this.k = 0; // Number of n-Cells == nCells.length
     if (sig === null) {
@@ -41,7 +41,7 @@ Signature.prototype.getType = function () {
 Signature.prototype.addGenerator = function (generator) {
     var d = generator.getDimension();
     if (d == this.n) {
-        this.nCells[generator.id] = generator;
+        this.cells[generator.id] = generator;
         this.k++;
     } else {
         this.sigma.addGenerator(generator);
@@ -59,8 +59,8 @@ Signature.prototype.getGenerator = function (id) {
         reverse = true;
     }
     while (sig != null) {
-        if (sig.nCells[id] != null) {
-            var generator = sig.nCells[id];
+        if (sig.cells[id] != null) {
+            var generator = sig.cells[id];
             if (reverse) return generator.copy().swapSourceTarget();
             else return generator;
         }
@@ -111,7 +111,7 @@ Signature.prototype.copy = function () {
     } else {
         tempSig = new Signature(this.sigma.copy());
     }
-    this.nCells.each(function (key, value) { // value is a generator, so we must do a deep copy of it
+    this.cells.each(function (key, value) { // value is a generator, so we must do a deep copy of it
         tempSig.addGenerator(value.copy());
     });
     return tempSig;
@@ -137,5 +137,5 @@ Signature.prototype.getAllCells = function () {
 };
 
 Signature.prototype.getCells = function() {
-    return Object.keys(this.nCells);
+    return Object.keys(this.cells);
 };

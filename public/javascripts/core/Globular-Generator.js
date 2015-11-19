@@ -28,10 +28,10 @@ Generator.prototype.swapSourceTarget = function() {
 
 Generator.prototype.getTargetColour = function() {
     var t = this.target;
-    while (t.nCells.length == 0) {
+    while (t.cells.length == 0) {
         t = t.getTargetBoundary();
     }
-    var id = t.nCells[0].id;
+    var id = t.cells[0].id;
     var colour = gProject.getColour(id);
     return colour;
 }
@@ -70,5 +70,5 @@ Generator.prototype.getBoundingBox = function() {
 
 Generator.prototype.getSourceLengths = function() {
     return this.source.getLengthsAtSource();
-    //return [this.source.nCells.length].concat(this.source.getSourceLengths());
+    //return [this.source.cells.length].concat(this.source.getSourceLengths());
 }
