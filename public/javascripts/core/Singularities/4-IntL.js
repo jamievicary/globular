@@ -212,10 +212,6 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
         return coords.move([{relative: -this.source_size(h)}])
     }
 
-    //////// OLD
-    
-    var list = [];
-    return list.concat([new_key]);
 }
 
 Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {

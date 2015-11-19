@@ -7,22 +7,15 @@
 // Data for the Int-L-T family
 // This naturality for the tangle/untangle
 
+/*
 RegisterSingularityFamily({
     family: 'IntLT',
     dimension: 5,
     members: ['Int-L-T'
-    /*
-    ,'Int-L-TI',
-    'IntI-L-T', 'IntI-L-TI',
-    'Int-LI-T', 'Int-LI-TI',
-    'IntI-LI-T', 'IntI-LI-TI',
-    'Int-R-T', 'Int-R-TI',
-    'IntI-R-T', 'IntI-R-TI',
-    'Int-RI-T', 'Int-RI-TI',
-    'IntI-RI-T', 'IntI-RI-TI'
-    */
+    ,'Int-L-TI','IntI-L-T', 'IntI-L-TI','Int-LI-T', 'Int-LI-TI','IntI-LI-T', 'IntI-LI-TI','Int-R-T', 'Int-R-TI','IntI-R-T', 'IntI-R-TI','Int-RI-T', 'Int-RI-TI','IntI-RI-T', 'IntI-RI-TI'
     ]
 });
+*/
 
 Diagram.prototype.getSource.IntLT = function(type, k) {
     
