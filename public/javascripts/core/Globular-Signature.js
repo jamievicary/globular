@@ -13,7 +13,7 @@ function Signature(sig) {
     if (sig === undefined) {
         return;
     }
-    this.nCells = new Hashtable();
+    this.nCells = {};
     this.sigma = sig;
     this.k = 0; // Number of n-Cells == nCells.length
     if (sig === null) {
@@ -41,7 +41,7 @@ Signature.prototype.getType = function () {
 Signature.prototype.addGenerator = function (generator) {
     var d = generator.getDimension();
     if (d == this.n) {
-        this.nCells.put(generator.id, generator);
+        this.nCells[generator.id] = generator;
         this.k++;
     } else {
         this.sigma.addGenerator(generator);
@@ -59,9 +59,9 @@ Signature.prototype.getGenerator = function (id) {
         reverse = true;
     }
     while (sig != null) {
-        if (sig.nCells.get(id) != null) {
-            var generator = sig.nCells.get(id).copy();
-            if (reverse) return generator.swapSourceTarget();
+        if (sig.nCells[id] != null) {
+            var generator = sig.nCells[id];
+            if (reverse) return generator.copy().swapSourceTarget();
             else return generator;
         }
         sig = sig.sigma;
@@ -127,7 +127,7 @@ Signature.prototype.getNCells = function (level) {
     while (varSig.n != level) {
         varSig = varSig.sigma;
     }
-    return varSig.nCells.keys();
+    return varSig.getCells();
 }
 
 
@@ -137,7 +137,5 @@ Signature.prototype.getAllCells = function () {
 };
 
 Signature.prototype.getCells = function() {
-    return this.nCells.keys();
+    return Object.keys(this.nCells);
 };
-
-Signature.prototype.getNewColour

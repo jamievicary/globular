@@ -16,7 +16,6 @@ function Project(string) {
     if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
-        this.dataList = new Hashtable();
         this.cacheSourceTarget = null;
         return;
     }
@@ -49,30 +48,26 @@ Project.prototype.listGenerators = function() {
 
 // Sets the front-end name of a generator to what the user wants
 Project.prototype.setName = function(id, name) {
-    var tempData = this.dataList.get(id);
-    tempData.name = name;
-    this.dataList.put(id, tempData);
+    this.signature.getGenerator(id).display.name = name;
     this.saveState();
 };
 
 // Gets the front-end name of a generator to what the user wants
 Project.prototype.getName = function(id) {
-    return this.dataList.get(id).name;
+    return this.signature.getGenerator(id).display.name;
 };
 
 // Sets the front-end colour to what the user wants
 Project.prototype.setColour = function(id, colour) {
-    var tempData = this.dataList.get(id);
-    tempData.colour = colour;
-    this.dataList.put(id, tempData);
+    this.signature.getGenerator(id).display.colour = colour;
     this.saveState();
 };
 
 // Gets the front-end colour to what the user wants
 Project.prototype.getColour = function(id) {
-    var generator = this.dataList.get(id);
+    var generator = this.signature.getGenerator(id);
     if (generator == null) return '#555555';
-    return generator.colour;
+    return generator.display.colour;
 };
 
 
@@ -352,24 +347,23 @@ Project.prototype.lift = function() {
 };
 
 Project.prototype.selectGenerator = function(id) {
-    var cell = this.dataList.get(id);
+    var generator = this.signature.getGenerator(id);
+
     // If current diagram is null, just display the generator
     if (this.diagram === null) {
-        // Set this to be a pointer so that the rule gets modified accordingly
-        // Equivalently we could set it to a copy
-        this.diagram = cell.diagram.copy();
+        this.diagram = generator.diagram.copy();
         this.renderDiagram();
         this.saveState();
         return null;
     }
     
     // If user clicked a 0-cell, do nothing
-    if (cell.dimension == 0) {
+    if (generator.diagram.getDimension() == 0) {
         alert("0-cells can never be attached");
         return null;
     }
     
-    var matched_diagram = cell.diagram.copy();
+    var matched_diagram = generator.diagram.copy();
     var slices_data = MainDisplay.get_current_slice();
     
     if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
@@ -404,7 +398,7 @@ Project.prototype.selectGenerator = function(id) {
     // Try attaching to a boundary
     var depth = slices_data.length;
     var attachment_possible = false;
-    var cell_dim = cell.diagram.getDimension();
+    var cell_dim = generator.diagram.getDimension();
     var matches = [];
     
     // Can we attach by virtue of viewing the entire source or target?
@@ -453,59 +447,6 @@ Project.prototype.selectGenerator = function(id) {
     };
     return enumerationData;
 
-    ///////////// OLD
-
-    // Return all the ways to attach the selected cell
-    var boundary_depth = this.diagram.getDimension() - cell.diagram.getDimension();
-    var slices_data = MainDisplay.get_current_slice();
-    var boundary_pointer = this.diagram;
-
-    if (slices_data.length === 0) {
-        while (boundary_pointer.getDimension() > matched_diagram.getDimension()) {
-            boundary_pointer = boundary_pointer.getSourceBoundary();
-        }
-        sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
-        targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
-
-    } else {
-        var slices_counter = 0;
-        var slice_pointer = this.diagram;
-        while (slices_counter < slices_data.length - 1) {
-            //          boundary_pointer = boundary_pointer.getSourceBoundary();
-            slice_pointer = slice_pointer.getSlice(slices_data[slices_counter]);
-            slices_counter++;
-        }
-
-        if (boundary_pointer.getDimension() > matched_diagram.getDimension()) {
-            while (boundary_pointer.getDimension() > matched_diagram.getDimension()) {
-                boundary_pointer = boundary_pointer.getSourceBoundary();
-            }
-
-            sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
-            targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
-        } else {
-            if (slices_data[slices_counter] === slice_pointer.nCells.length || slice_pointer.nCells.length === 0) {
-                // viewing an entire target
-                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
-            } else if (slices_data[slices_counter] === 0) {
-                // viewing an entire source
-                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
-            } else {
-                // which case is this??
-                boundary_pointer = boundary_pointer.getSourceBoundary();
-                sourceMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 's');
-                targetMatches = this.prepareEnumerationData(boundary_pointer, matched_diagram, boundary_depth, 't');
-            }
-        }
-
-    }
-
-    var enumerationData = {
-        attachmentFlag: true,
-        diagram: matched_diagram,
-        matches: sourceMatches.concat(targetMatches)
-    };
-    return enumerationData;
 }
 
 Project.prototype.prepareEnumerationDataNew = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth) {
@@ -554,18 +495,6 @@ Project.prototype.currentString = function() {
 // Returns the current string 
 Project.prototype.addZeroCell = function() {
     this.addNCell(null, null);
-
-    /*
-    var generator = new Generator(null, null);
-    var varSig = this.signature;
-    while (varSig.sigma != null) {
-        varSig = varSig.sigma;
-    }
-    varSig.addGenerator(generator);
-    var temp_diagram = this.signature.createDiagram(generator.identifier);
-    var data = new Data(generator.identifier, '#00b8ff', temp_diagram, temp_diagram.getDimension());
-    this.dataList.put(generator.identifier, data);
-    */
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
@@ -574,12 +503,11 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
 
 // Render a generator
 Project.prototype.renderGenerator = function(div, id) {
-    this.render(div, this.dataList.get(id).diagram);
+    this.render(div, this.signature.getGenerator(id).diagram);
 }
 
 // Render the main diagram
 Project.prototype.renderDiagram = function(boundary_data) {
-
     MainDisplay.set_diagram(this.diagram, boundary_data);
 };
 
@@ -642,6 +570,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_name.className = 'cell-label';
     div_name.id = 'cl-' + generator.id;
     div_name.value = cell_name;
+    $(div_name).on('input', function(event) {
+        var text = $(this).val();
+        gProject.signature.getGenerator(generator.id).display.name = text;
+    })
     div_detail.appendChild(div_name);
 
     // Add color picker
@@ -798,9 +730,6 @@ Project.prototype.renderNCell = function(id) {
         }
     }
 
-    // Delete the old generator if it already exists
-    //$(cell_id).remove();
-
     // Add the new generator
     var cell_group_id = '#cell-group-' + generator.getDimension();
     var entry = this.createGeneratorDOMEntry(generator.id);
@@ -811,28 +740,6 @@ Project.prototype.renderNCell = function(id) {
         $(cell_group_id).append(entry);
     }
     this.renderGenerator('#ci-' + generator.id, generator.id);
-
-    /*
-        // Render the picture of the generator
-        if (n == 3) {
-
-            // Render the source diagram into $("#ci-" + cell)
-            var tempColours = new Hashtable();
-            this.dataList.each(function(key, value) {
-                tempColours.put(key, value.colour)
-            });
-            var overall_diagram = this.dataList.get(cell).diagram;
-            // Source
-            var source_diagram = overall_diagram.getSourceBoundary();
-            this.render("#ci-" + cell, source_diagram);
-
-            // Target
-            var target_diagram = overall_diagram.getTargetBoundary();
-            this.render("#ci1-" + cell, target_diagram);
-
-        }
-        else {
-    */
 }
 
 
@@ -851,20 +758,20 @@ Project.prototype.addNCell = function(source, target) {
         target: target,
         name: "Cell " + (this.signature.getAllCells().length + 1)
     });
-
     var d = generator.getDimension();
+
+    // Make sure the signature has a sufficiently high dimension
     while (this.signature.n < d) {
         this.signature = new Signature(this.signature);
     }
     this.signature.addGenerator(generator);
+    generator = this.signature.getGenerator(generator.id);
+    generator.diagram = this.signature.createDiagram(generator.id);
 
-    // Make the diagram for the generator
-    var temp_diagram = this.signature.createDiagram(generator.id);
-    var d = generator.getDimension();
+    // Set the colour
     var colour_array = GlobularColours[d % 3];
     var colour = colour_array[(this.signature.getNCells(d).length - 1) % colour_array.length];
-    var data = new Data(generator.id, colour, temp_diagram, temp_diagram.getDimension());
-    this.dataList.put(generator.id, data);
+    generator.display = {colour: colour, rate: 1};
 
     // Add the diagram to the menu
     if (gProject != null) this.renderNCell(generator.id);
@@ -872,62 +779,3 @@ Project.prototype.addNCell = function(source, target) {
     return generator.id;
 };
 
-/*
-// Render the n-cells
-Project.prototype.renderNCells = function(n) {
-    var replace;
-    if ($("#cell-group-" + n.toString())[0]) {
-        replace = true;
-    }
-    else {
-        replace = false;
-    }
-    if (replace == false) {
-        var cell_group_html;
-        if (n == 0) {
-            cell_group_html = "<div class = 'mini-opt-links'><span id = 'add-0-cell-opt'>New 0-cell</span></div>";
-        }
-        else {
-            cell_group_html = "";
-        }
-        var cell_group_html = cell_group_html + "<div class = 'cell-group' id = 'cell-group-" + n + "'>" + n + "-Cells</div>";
-        $("#cell-body").append($(cell_group_html));
-    }
-    var cells = this.listGenerators()[n]; //["testCell1", "testCell2", "TESTcell3"];
-    if (cells == undefined) cells = [];
-    $("#cell-group-" + n.toString()).html(n + "-Cells");
-
-    for (var i = 0; i < cells.length; i++) {
-
-        var cell = cells[i];
-
-        // Construct the new generator
-        var entry = this.createGeneratorDOMEntry(n, cell);
-
-        // Add it to the list
-        $("#cell-group-" + n.toString()).append(entry);
-
-        // Render the picture of the generator
-        if (n == 3) {
-
-            // Render the source diagram into $("#ci-" + cell)
-            var tempColours = new Hashtable();
-            this.dataList.each(function(key, value) {
-                tempColours.put(key, value.colour)
-            });
-            var overall_diagram = this.dataList.get(cell).diagram;
-            // Source
-            var source_diagram = overall_diagram.getSourceBoundary();
-            this.render("#ci-" + cell, source_diagram);
-
-            // Target
-            var target_diagram = overall_diagram.getTargetBoundary();
-            this.render("#ci1-" + cell, target_diagram);
-
-        }
-        else {
-            this.renderGenerator("#ci-" + cell, cell);
-        }
-    }
-}
-*/

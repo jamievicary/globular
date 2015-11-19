@@ -98,14 +98,12 @@ Diagram.prototype.interpretDrag = function(drag) {
             coordinates: drag.coordinates.slice(0, drag.coordinates.length - 1),
             directions: (drag.directions == null ? null : drag.directions.slice())
         };
-        //new_drag.coordinates = new_drag.coordinates.slice(0, drag.coordinates.length - 1);
         var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
         for (var i=0; i<actions.length; i++) {
             actions[i].id += '-E';
             if (actions[i].key == null) {
                 actions[i].key = actions[i].coordinates.concat([drag.coordinates.last()]);
             } else {
-                //actions[i].key.push(drag.coordinates.last());
                 actions[i].key.push(drag.coordinates.last());
             }
         }
