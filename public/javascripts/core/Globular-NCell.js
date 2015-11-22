@@ -8,26 +8,33 @@
     Creates an N-Cell of type 'id' whose location in a diagram is specified by coordinate
     This is to allow uniform treatment of interchangers and other cells
 */
-function NCell(id, coordinates, key) {
-
-    this.id = id;
-    this.coordinates = coordinates;
-    this.key = key;
+function NCell(data) {
+    if (data == null) return;
+    this.id = data.id;
+    this.key = data.key.slice();
+    this.box = (data.box == undefined ? undefined : {min: data.box.min.slice(), max: data.box.max.slice()});
 };
+
+NCell.prototype.equals = function(c2) {
+    var c1 = this;
+    if (c1.id != c2.id) return false;
+    if (!c1.key.vector_equals(c2.key)) return false;
+    return true;
+}
 
 NCell.prototype.getType = function() {
     return 'NCell';
 }
 
 NCell.prototype.copy = function() {
-    /*
-    var temp_array = new Array();
-    for (var i = 0; i < this.coordinates.length; i++) {
-        temp_array[i] = this.coordinates[i];
-    }
-    return new NCell(this.id, temp_array);
-    */
-    return new NCell(this.id, this.coordinates.slice(), (this.key == undefined ? undefined : this.key.slice()));
+    return new NCell({
+        id: this.id,
+        key: this.key.slice(),
+        box: (this.box == null ? null : {
+            min: this.box.min.slice(),
+            max: this.box.max.slice()
+        })
+    });
 }
 
 NCell.prototype.isInterchanger = function() {
@@ -51,20 +58,20 @@ NCell.prototype.target_size = function() {
 }
 
 NCell.prototype.move = function(instructions) {
-    if (this.key != undefined) this.key.move(instructions);
-    if (this.coordinates != null) this.coordinates.move(instructions);
+    this.key.move(instructions);
+    this.box = null;
     return this;
 }
 
-NCell.prototype.pad = function(coordinates) {
+NCell.prototype.pad = function(position) {
     if (this.key != null) {
-        for (var i=0; i<this.key.length; i++) {
-            this.key[i] += coordinates[i];
+        for (var i = 0; i < this.key.length; i++) {
+            this.key[i] += position[i];
         }
     }
-    if (this.coordinates != null) {
-        for (var i=0; i<this.coordinates.length; i++) {
-            this.coordinates[i] += coordinates[i];
+    if (this.slices != null) {
+        for (var i = 0; i < this.slices.length; i++) {
+            this.slices[i] += slices[i];
         }
     }
 }

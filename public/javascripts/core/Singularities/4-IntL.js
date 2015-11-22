@@ -26,8 +26,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     for (var i = 0; i < n; i++) {
         final_l += (this.target_size(x + i) - this.source_size(x + i));
     }
-    var b = this.cells[x].coordinates.last() - y;
-    var a = y + l - this.cells[x].coordinates.last() - this.source_size(x);
+    var b = this.cells[x].box.min.last() - y;
+    var a = y + l - this.cells[x].box.min.last() - this.source_size(x);
     if (type.tail('I')) {
         new_type = type.substr(0, type.length - 3)
     } else {
@@ -103,7 +103,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var x = key.last();
     var slice = this.getSlice(x);
     var cell = this.cells[x];
-    var coords = cell.coordinates;
+    var coords = cell.box.min;
     var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
@@ -173,7 +173,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var x = key.last();
     var h = key.last();
     var cell = this.cells[h].copy();
-    var coords = cell.coordinates.slice(0);
+    var coords = cell.box.min.slice(0);
     var heights = this.getInterchangerCoordinates(type, key);
     var d = new Diagram(); // dummy diagram objects for Int expansion
     var s = this.source_size(h);
@@ -181,7 +181,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     
     if (type == 'Int-L')   return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
     if (type == 'IntI-L')  return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'Int-R')   return   d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'Int-R')   return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
     if (type == 'IntI-R')  return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
     if (type == 'Int-LI')  return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
     if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
@@ -196,7 +196,7 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     var new_key = key.last();
     var h = key.last();
     var cell = this.cells[h];
-    var coords = cell.coordinates.slice(0);
+    var coords = cell.box.min.slice(0);
     coords.push(h);
     
     if (type.tail('Int-L', 'IntI-L')) {

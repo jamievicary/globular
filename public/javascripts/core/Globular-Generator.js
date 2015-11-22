@@ -69,6 +69,6 @@ Generator.prototype.getBoundingBox = function() {
 }
 
 Generator.prototype.getSourceLengths = function() {
+    if (this.source == null) return [];
     return this.source.getLengthsAtSource();
-    //return [this.source.cells.length].concat(this.source.getSourceLengths());
 }

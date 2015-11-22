@@ -61,7 +61,9 @@ Signature.prototype.getGenerator = function (id) {
     while (sig != null) {
         if (sig.cells[id] != null) {
             var generator = sig.cells[id];
-            if (reverse) return generator.copy().swapSourceTarget();
+            if (reverse) {
+                return generator.copy().swapSourceTarget();
+            }
             else return generator;
         }
         sig = sig.sigma;
@@ -72,33 +74,10 @@ Signature.prototype.getGenerator = function (id) {
 /* 
     Creates a diagram of a single generator given its name in the signature
 */
-Signature.prototype.createDiagram = function (generatorId) {
-
-    // First we look for the appropriate generator to create a diagram of
-    var generator = this.getGenerator(generatorId);
-
-    // We construct the building blocks of a new MapDiagram one by one
-    var source_boundary = null;
-    if (generator.source != null) {
-        source_boundary = generator.source.copy();
-    }
-    
-    var nCells = new Array();
-    var coordinates = new Array();
-
-    // The generator is not a 0-cell, n-1 zeros are added as its attachment information
-    if (generator.source != null) {
-        var zeros = generator.source.getDimension();
-        while(zeros > 0){
-            coordinates.push(0); 
-            zeros--;
-        }
-    }
-
-    nCells.push(new NCell(generatorId, coordinates));
-    
-    var diagram = new Diagram(source_boundary, nCells);
-    return diagram;
+Signature.prototype.createDiagram = function (id) {
+    var generator = this.getGenerator(id);
+    var key = [].fill(0, generator.source == null ? 0 : generator.source.getDimension());
+    return new Diagram(generator.source, [new NCell({id: id, key: key, box: generator.getBoundingBox()})]);
 }
 
 /* 

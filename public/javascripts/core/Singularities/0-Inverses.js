@@ -17,11 +17,14 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
 
     // Basic tests
     if (!up && height == 0) {
-        // Can we cancel this from the bottom?
+        if (!this.cells[0].id.is_invertible()) return [];
+        // We can cancel this cell from the bottom
+        var cell = this.cells[0];
+        var first = {id: cell.id.toggle_inverse(), key: this.getSourceBoundary().getInverseKey(cell.id, cell.key)};
     };
-    
+
     if (up && height >= this.cells.length - 1) return [];
-    
+
     var cell = this.cells[up ? height : height - 1];
     var options = this.getDragOptions([cell.id + '-EI'], [up ? height : height - 1]);
 
@@ -52,40 +55,21 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j=0; j<matches.length; j++) {
-            //if (matches[j].length == 0) matches[j].push(0);
             if (drag.coordinates.length > 0) {
                 if (matches[j].last() != drag.coordinates[0]) continue;
             }
-            return { id: cells[i], key: null, coordinates: matches[j], possible: true }
+            return { id: cells[i], key: matches[j], possible: true }
         }
+        // What about the target
         var matches = this.enumerate(generator.target);
         for (var j=0; j<matches.length; j++) {
-            //if (matches[j].length == 0) matches[j].push(0);
             if (drag.coordinates.length > 0) {
                 if (matches[j].last() != drag.coordinates[0]) continue;
             }
-            //if (matches[j].last() != drag.coordinates[0]) continue;
-            return { id: cells[i] + 'I', key: null, coordinates: matches[j], possible: true }
+            return { id: cells[i] + 'I', key: matches[j], possible: true }
         }
     }
     return [];
-
-
-    var options = this.getDragOptions([cell.id + '-EI'], [up ? height : height - 1]);
-
-    // Collect the possible options
-    var possible_options = [];
-    for (var i = 0; i < options.length; i++) {
-        if (options[i].possible) {
-            possible_options.push(options[i]);
-        }
-    }
-
-    // Maybe it's already determined what to do
-    if (possible_options.length == 0) {
-        return [];
-    }
-    return [possible_options[0]];
 };
 
 Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
@@ -100,11 +84,6 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
         // need to write this
         debugger;
     }
-    /*
-    var slice = this.getSlice(key.last());
-    var box = slice.getInterchangerCoordinates(type, )
-    return this.cells[key.last()].coordinates.slice().concat([key]);
-    */
 }
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
@@ -120,14 +99,8 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
         box.max.push(key.last() + 2)
     } else {
         var slice = this.getSlice(key.last());
-        var base_coordinates = null;
-        var base_key = null;
-        if (base_type.is_interchanger()) {
-            base_key = key.slice(0, key.length - 1);
-        } else {
-            base_coordinates = key.slice(0, key.length - 1);
-        }
-        box = this.getSlice(key.last()).getBoundingBox({id: base_type, key: base_key, coordinates: base_coordinates});
+        var base_key = key.slice(0, key.length - 1);
+        box = this.getSlice(key.last()).getBoundingBox({id: base_type, key: base_key});
         box.max.push(key.last());
     }
     box.min.push(key.last());
@@ -136,9 +109,9 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
 
 Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     
-    // If this isn't an interchanger, return false
-    if (!type.is_interchanger()) return false;
-    
+    // This procedure only recognizes '-E' or '-EI' type moves
+    if (!type.tail('-EI', '-E')) return false;
+
     var height = key.last();
     
     // If we're inserting from the identity, just assume it's fine
@@ -153,9 +126,10 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     var cell1 = this.cells[height];
     var cell2 = this.cells[height + 1];
     
-    // Check coordinates are identical
-    if (!cell1.coordinates.vector_equals(cell2.coordinates)) return null;
-    
+    // Check keys are correct
+    var reverse_cell1 = this.getSlice(height).getInverseCell(cell1);
+    if (!reverse_cell1.equals(cell2)) return false;
+
     // Check cell ids are consistent
     if (type == cell1.id + '-EI' && cell2.id == cell1.id + 'I') return true;
     if (type == cell1.id + '-EI' && cell1.id == cell2.id + 'I') return true;
@@ -172,14 +146,8 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
     
     // '...-E'-type cells introduce a nontrivial pair
     var base_type = type.substr(0, type.length - 2);
-    if (base_type.is_interchanger()) {
-        var base_key = key.slice(0, key.length - 1);
-        var slice = this.getSlice(key.last());
-        var reverse_key = slice.getInverseKey(base_type, base_key);
-        return [new NCell(base_type, null, base_key), new NCell(base_type.toggle_inverse(), null, reverse_key)];
-    } else {
-        //var coordinate = key.slice(0, key.length - 1);
-        var coordinates = key.slice(0, key.length - 1);
-        return [new NCell(base_type, coordinates, null), new NCell(base_type.toggle_inverse(), coordinates, null)];
-    }
+    var base_key = key.slice(0, key.length - 1);
+    var slice = this.getSlice(key.last());
+    var reverse_key = slice.getInverseKey(base_type, base_key);
+    return [new NCell({id: base_type, key: base_key}), new NCell({id: base_type.toggle_inverse(), key: reverse_key})];
 }

@@ -105,7 +105,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
         for (var i = 0; i < interchangers.length; i++) {
             var interchanger = interchangers[i];
             eventsWithTimes.push({
-                event: interchanger.coordinates,
+                event: interchanger.key,
                 id: interchanger.id,
                 time: timeSampler(interchanger_rate /*/ interchangers.length*/)
             });
@@ -233,25 +233,25 @@ Diagram.prototype.getInterchangers = function() {
     var t0 = performance.now();
     var interchangers = new Array();
     for (var i = 0; i < this.cells.length - 1; i++) {
-        var temp_coordinates = this.cells[i].coordinates.slice(0);
+        var temp_coordinates = this.cells[i].key.slice(0);
         temp_coordinates.push(i);
         if (this.interchangerAllowed({
                 id: 'Int',
-                coordinates: temp_coordinates
+                key: temp_coordinates
             })) {
             interchangers.push({
                 id: "Int",
-                coordinates: temp_coordinates,
+                key: temp_coordinates,
                 tension_change: 0 //this.computeTensionChange(i, i + 1)
             });
         }
         if (this.interchangerAllowed({
                 id: 'IntI',
-                coordinates: temp_coordinates
+                key: temp_coordinates
             })) {
             interchangers.push({
                 id: "IntI",
-                coordinates: temp_coordinates,
+                key: temp_coordinates,
                 tension_change: 0 //this.computeTensionChange(i + 1, i)
             });
         }

@@ -159,6 +159,7 @@ String.prototype.is_interchanger = function() {
 };
 
 String.prototype.is_invertible = function() {
+    if (this.is_interchanger()) return true;
     var checkbox = $('#invertible-' + this);
     if (checkbox.length == 0) return false;
     return checkbox.is(':checked');
@@ -248,3 +249,7 @@ var GlobularColours = [
     [hsl(0, 0, 0) /*black*/ , hsl(265, 100, 30) /*dark blue*/ , hsl(10, 100, 30) /*dark red*/ , hsl(130, 100, 30) /*dark green*/ ]
 ];
 
+function globular_is_array(object) {
+    return (Object.prototype.toString.call(object) === '[object Array]');
+    //return object.constructor.toString().indexOf("Array") > -1;
+}

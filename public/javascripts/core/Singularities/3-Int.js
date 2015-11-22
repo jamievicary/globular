@@ -2,39 +2,39 @@
 /*global RegisterSingularityFamily*/
 /*global Diagram*/
 
-var NewSingularityFamily = {family: 'Int', dimension: 3, members: ['Int', 'IntI']};
+RegisterSingularityFamily({
+    family: 'Int',
+    dimension: 3,
+    members: ['Int', 'IntI']
+});
 
-Diagram.prototype.expand.Int = function (type, x, n, m){
-    
+Diagram.prototype.expand.Int = function(type, x, n, m) {
+
     var list = new Array();
     if (n === 0 || m === 0) {
         return [];
-    }
-    else if (n === 1 && m === 1) {
-        if(type === 'Int'){
-            list.push(new NCell(type, null, [x]));
+    } else if (n === 1 && m === 1) {
+        if (type === 'Int') {
+            list.push(new NCell({id: type, key: [x]}));
+        } else {
+            list.push(new NCell({id: type, key: [x + 1]}));
         }
-        else{
-            list.push(new NCell(type, null, [x + 1]));
-        }
-    }
-    else if (m != 1 && n === 1) {
+    } else if (m != 1 && n === 1) {
         list = this.expand(type, x, 1, 1).concat(this.expand(type, x + 1, 1, m - 1));
-    }
-    else {
+    } else {
         list = this.expand(type, x + n - 1, 1, m).concat(this.expand(type, x, n - 1, m));
     }
-    
+
     return list;
 };
 
-Diagram.prototype.reorganiseCrossings.Int = function (type, x, n, m){
+Diagram.prototype.reorganiseCrossings.Int = function(type, x, n, m) {
 
     var list = new Array();
-    for(var i = 1; i < m; i++){
-        list = list.concat(this.expand(x + i, i*(n - 1), 1));
+    for (var i = 1; i < m; i++) {
+        list = list.concat(this.expand(x + i, i * (n - 1), 1));
     }
-    list = list.concat(this.reorganiseCrossings(type, x + m), n-1, m);
+    list = list.concat(this.reorganiseCrossings(type, x + m), n - 1, m);
     return list;
 }
 
@@ -44,11 +44,27 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
     var r = {};
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {
-        r.left = { id: 'IntI', key: [h + 1], possible: this.interchangerAllowed('IntI', [h + 1]) };
-        r.right = { id: 'Int', key: [h], possible: this.interchangerAllowed('Int', [h]) };
+        r.left = {
+            id: 'IntI',
+            key: [h + 1],
+            possible: this.interchangerAllowed('IntI', [h + 1])
+        };
+        r.right = {
+            id: 'Int',
+            key: [h],
+            possible: this.interchangerAllowed('Int', [h])
+        };
     } else {
-        r.left = { id: 'Int', key: [h - 1], possible: this.interchangerAllowed('Int', [h - 1]) };
-        r.right = { id: 'IntI', key: [h], possible: this.interchangerAllowed('IntI', [h]) };
+        r.left = {
+            id: 'Int',
+            key: [h - 1],
+            possible: this.interchangerAllowed('Int', [h - 1])
+        };
+        r.right = {
+            id: 'IntI',
+            key: [h],
+            possible: this.interchangerAllowed('IntI', [h])
+        };
     }
     // Return the best match in a permissive way
     if (!r.left.possible && !r.right.possible) return [];
@@ -57,101 +73,103 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
     return [r.right];
 }
 
-Diagram.prototype.interchangerAllowed.Int = function (type, key){
-    
-    var x = key.last();
+Diagram.prototype.interchangerAllowed.Int = function(type, key) {
+
     // Sanity check - necessary for degenerate cases
-    if(x < 0) return false;
-
-    var c1 = this.cells[x];
-    var g1_source = this.source_size(x);
-    var g1_target = this.target_size(x);
+    var x = key.last();
+    if (x < 0) return false;
     
+    // Main test
     if (type === 'Int') {
-        if(x + 1 >= this.cells.length) return false;
-        var c2 = this.cells[x + 1];
-        var g2_source = this.source_size(x + 1);
-        var g2_target = this.target_size(x + 1);
-        return (c1.coordinates.last() >= c2.coordinates.last() + g2_source);
+        if (x == this.cells.length - 1) return false;
+        return (this.cells[x].box.min.last() >= this.cells[x + 1].box.min.last() + this.source_size(x + 1));
     }
-
     if (type.tail('IntI')) {
-        if(x - 1 < 0) return false;
-        var c3 = this.cells[x - 1];
-        var g3_source = this.source_size(x - 1);
-        var g3_target = this.target_size(x - 1); 
-        return (c3.coordinates.last() + g3_target <= c1.coordinates.last());
+        if (x == 0) return false;
+        var delta = this.target_size(x - 1) - this.source_size(x - 1);
+        return (this.cells[x - 1].box.min.last() + this.target_size(x - 1) <= this.cells[x].box.min.last());
     }
 }
 
-Diagram.prototype.rewritePasteData.Int = function (type, key){
+Diagram.prototype.rewritePasteData.Int = function(type, key) {
     var x = key.last();
     if (type.tail('Int')) {
         var cell1 = this.cells[x].copy();
-        var cell2 = this.cells[x+1].copy();
-        return [cell2, cell1.move([{relative: this.target_size(x+1) - this.source_size(x+1)}])];
+        var cell2 = this.cells[x + 1].copy();
+        return [cell2, cell1.move([{
+            relative: this.target_size(x + 1) - this.source_size(x + 1)
+        }])];
     }
     if (type.tail('IntI')) {
-        var cell1 = this.cells[x-1].copy();
+        var cell1 = this.cells[x - 1].copy();
         var cell2 = this.cells[x].copy();
-        return [cell2.move([{relative: this.source_size(x-1) - this.target_size(x-1)}]), cell1];
+        return [cell2.move([{
+            relative: this.source_size(x - 1) - this.target_size(x - 1)
+        }]), cell1];
     }
 };
 
-Diagram.prototype.getInterchangerCoordinates.Int = function (type, key){
-    
-    if(key.length === 0) return [];
-    
+Diagram.prototype.getInterchangerCoordinates.Int = function(type, key) {
+
+    if (key.length === 0) return [];
+
     var diagram_pointer = this;
     var x = key.last();
-    
-    if(key.length === 1) {
-        if(type.tail('Int')){
-            list = this.cells[x + 1].coordinates.slice(0);
-        }
-        
-        else if(type.tail('IntI')){
+
+    if (key.length === 1) {
+        if (type.tail('Int')) {
+            list = this.cells[x + 1].box.min.slice(0);
+        } else if (type.tail('IntI')) {
             x--;
-            list = this.cells[x].coordinates.slice(0);
+            list = this.cells[x].box.min.slice(0);
+        } else {
+            var list = this.cells[x].box.min.slice(0);
         }
 
-        else{
-            var list = this.cells[x].coordinates.slice(0);
-        }
-        
-        return list.concat([x]);    
+        return list.concat([x]);
     }
-    
+
     var new_type = type.slice(0, type.length - 2);
-    return diagram_pointer.getSlice(x).getInterchangerCoordinates(new_type, key.slice(0, key.length - 1)).concat([x]);   
+    return diagram_pointer.getSlice(x).getInterchangerCoordinates(new_type, key.slice(0, key.length - 1)).concat([x]);
 
 };
 
-Diagram.prototype.getInterchangerBoundingBox.Int = function (type, key){
+Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
 
     var position = this.getInterchangerCoordinates(type, key);
     var x = key.last();
 
     // NEEDS TO BE GENERALIZED TO COPE WITH HIGHER-DIMENSIONAL DIAGRAMS
-    if(type.tail('Int')){
-        return {min: position, max: position.slice().move([{ absolute: this.cells[x].coordinates.last() - position.penultimate() + this.source_size(x)},
-            {relative: 2}])};
-    }
-    else if(type.tail('IntI')){
-        return {min: position, max: position.slice().move([{ absolute: this.cells[x - 1].coordinates.last() - position.penultimate() + this.source_size(x)} , {relative: 2}])};
+    if (type.tail('Int')) {
+        return this.unionBoundingBoxes(this.getLocationBoundingBox([x]), this.getLocationBoundingBox([x+1]));
+        /*
+        return {
+            min: position,
+            max: position.slice().move([{
+                    absolute: this.cells[x].box.min.last() - position.penultimate() + this.source_size(x)
+                },
+                {
+                    relative: 2
+                }])
+        };
+        */
+    } else if (type.tail('IntI')) {
+        return this.unionBoundingBoxes(this.getLocationBoundingBox([x]), this.getLocationBoundingBox([x-1]));
+        /*
+        return {
+            min: position,
+            max: position.slice().move([{
+                absolute: this.cells[x - 1].box.min.last() - position.penultimate() + this.source_size(x)
+            }, {
+                relative: 2
+            }])
+        };
+        */
     }
 };
 
-Diagram.prototype.getInverseKey.Int = function (type, key){
-
-    var x = key.last();
-    
-    if(type.tail('Int')){
-        return [x + 1];
-    }
-    else if(type.tail('IntI')){
-        return [x - 1];
-    }
+Diagram.prototype.getInverseKey.Int = function(type, key) {
+    if (type.tail('Int')) return [key.last() + 1];
+    else if (type.tail('IntI')) return [key.last() - 1];
 };
 
-RegisterSingularityFamily(NewSingularityFamily);

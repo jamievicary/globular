@@ -1,6 +1,7 @@
 "use strict";
 
 var T = 1;
+var d;
 
 /*
     Project class
@@ -67,6 +68,7 @@ Project.prototype.setColour = function(id, colour) {
 Project.prototype.getColour = function(id) {
     var generator = this.signature.getGenerator(id);
     if (generator == null) return '#555555';
+    if (generator.display == null) return '#555555';
     return generator.display.colour;
 };
 
@@ -125,28 +127,6 @@ Project.prototype.limitMatches = function(matches, elements) {
         }
     }
 };
-
-/*
-    Takes a diagram that we want to attach, the path to the attachment boundary as arguments
-    Updates this diagram to be the result of the attachment
-*/
-Project.prototype.attach = function(cell, boundary_path) {
-    if (boundary_path.length > 0) {
-        this.diagram.attach(cell, boundary_path);
-    } else {
-        this.diagram.rewrite(cell);
-    }
-    /*
-    if (attachmentFlag) {
-        this.diagram.attach(cell, boundary_path//, bounds
-        );
-    } else {
-        var rewriteCell = new NCell(cell.id, bounds);
-        this.diagram.rewrite(rewriteCell);
-    }
-    */
-};
-
 
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
@@ -218,12 +198,12 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
     var targetOfSource = source.getTargetBoundary();
     var targetOfTarget = target.getTargetBoundary();
     if (source.getDimension() != 0) { // globularity trivially satisfied for 0-diagrams
-        if (!sourceOfSource.diagramBijection(sourceOfTarget)) {
+        if (!sourceOfSource.equals(sourceOfTarget)) {
             alert("Source of source does not match source of target");
             this.cacheSourceTarget[boundary] = null;
             return true;
         }
-        if (!targetOfSource.diagramBijection(targetOfTarget)) {
+        if (!targetOfSource.equals(targetOfTarget)) {
             alert("Target of source does not match target of target");
             this.cacheSourceTarget[boundary] = null;
             return true;
@@ -288,24 +268,13 @@ Project.prototype.dragCell = function(drag) {
     if (options.length === 0) {
         console.log("No interchanger applies");
         return;
-
-    } else if (options.length > 1) {
-        console.log(options.length.toString() + " options available; should make user choose");
-        //return;
-    } else {
-        // Display a dialog box, return user's choice
     }
 
-    var action = new NCell(options[0].id, options[0].coordinates, options[0].key);
-
-    // This is necessary to attach one level higher than the boundary itself
-    // ??????????????????????? this isn't doing anything...
-    var boundary_path = new String();
-    for (var i = 0; i < drag.boundary_depth - 1; i++) {
-        boundary_path += 's';
-    }
-
-    this.diagram.attach(action, drag.boundary, true);
+    // Should really prompt the user to choose between the valid options
+    var option = options[0];
+    
+    this.diagram.attach(new NCell({id: option.id, key: option.key}), drag.boundary, true);
+    d = this.diagram;
     /*
     if (drag.boundary_depth === 0) {
         action.coordinates = this.diagram.getInterchangerCoordinates(action.id, action.key);
@@ -397,8 +366,7 @@ Project.prototype.selectGenerator = function(id) {
 
     // Try attaching to a boundary
     var depth = slices_data.length;
-    var attachment_possible = false;
-    var cell_dim = generator.diagram.getDimension();
+    var d = generator.diagram.getDimension();
     var matches = [];
 
     // Can we attach by virtue of viewing the entire source or target?
@@ -413,24 +381,24 @@ Project.prototype.selectGenerator = function(id) {
 
     // Are we viewing an entire target?
     if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationDataNew(visible_slice, matched_diagram.getSourceBoundary(), 0, 't', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth);
     }
 
     // Are we viewing an entire source?
     else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationDataNew(visible_slice, matched_diagram.getTargetBoundary(), 0, 's', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth);
     }
 
     // Can we attach to the apparent s or t of the visible diagram?
-    else if (cell_dim == this.diagram.getDimension() - depth) {
-        matches = this.prepareEnumerationDataNew(visible_slice.getSourceBoundary(), matched_diagram.getTargetBoundary(), 1, 's', depth);
-        matches = matches.concat(this.prepareEnumerationDataNew(visible_slice.getTargetBoundary(), matched_diagram.getSourceBoundary(), 1, 't', depth));
+    else if (d == this.diagram.getDimension() - depth) {
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth));
     }
 
     // Can we attach to the apparent ss or tt of the visible diagram?
-    else if (cell_dim == this.diagram.getDimension() - depth - 1) {
-        matches = this.prepareEnumerationDataNew(visible_slice.getSourceBoundary().getSourceBoundary(), matched_diagram.getTargetBoundary(), 2, 's', depth);
-        matches = matches.concat(this.prepareEnumerationDataNew(visible_slice.getSourceBoundary().getTargetBoundary(), matched_diagram.getSourceBoundary(), 2, 't', depth));
+    else if (d == this.diagram.getDimension() - depth - 1) {
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth));
     }
 
     // Nothing possible
@@ -449,11 +417,10 @@ Project.prototype.selectGenerator = function(id) {
 
 }
 
-Project.prototype.prepareEnumerationDataNew = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth) {
+Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth) {
     var matches = subject_diagram.enumerate(matched_diagram);
     for (var i = 0; i < matches.length; i++) {
         matches[i] = {
-            //boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join(boundary_boolean)),
             visibleBoundaryDepth: visible_boundary_depth,
             realBoundaryDepth: visible_boundary_depth + slice_depth,
             boundaryType: boundary_type,
@@ -463,29 +430,6 @@ Project.prototype.prepareEnumerationDataNew = function(subject_diagram, matched_
     }
     return matches;
 };
-
-Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, boundary_depth, boundary_boolean) {
-    var pattern_diagram;
-    var matched_diagram_boundary;
-    if (boundary_boolean === 's') {
-        pattern_diagram = subject_diagram.getSourceBoundary();
-        matched_diagram_boundary = matched_diagram.getTargetBoundary();
-    } else {
-        pattern_diagram = subject_diagram.getTargetBoundary();
-        matched_diagram_boundary = matched_diagram.getSourceBoundary();
-    }
-    var matched_size = matched_diagram_boundary.getFullDimensions();
-    var matches = pattern_diagram.enumerate(matched_diagram_boundary);
-    for (var i = 0; i < matches.length; i++) {
-        matches[i] = {
-            boundaryPath: (boundary_depth < 0 ? "" : Array(boundary_depth + 2).join(boundary_boolean)),
-            inclusion: matches[i],
-            size: matched_size
-        };
-    }
-    return matches;
-};
-
 
 // Returns the current string 
 Project.prototype.currentString = function() {
@@ -656,12 +600,14 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
-                        var ncell = new NCell(enumerationData.diagram.cells[0].id, match.inclusion, null);
+                        var ncell = new NCell({id: enumerationData.diagram.cells[0].id, key: match.inclusion});
                         var boundary = {
                             type: match.boundaryType,
                             depth: match.realBoundaryDepth
                         };
+                        if (boundary.type == 's') ncell.id = ncell.id.toggle_inverse();
                         project.diagram.attach(ncell, boundary);
+                        d = project.diagram;
                         $('div.cell-b-sect').empty();
                         project.renderDiagram({
                             boundary: boundary

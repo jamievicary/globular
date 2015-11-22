@@ -19,7 +19,7 @@ function Display(container, diagram) {
     this.active = null;
     this.select_zone = null;
     this.suppress_input = null;
-    this.coordinates = [];
+    this.slices = [];
     var self = this;
     $(container).mousedown(function(event) {
         self.mousedown(event)
@@ -114,12 +114,12 @@ Display.prototype.gridToLogical = function(grid_coord) {
         var vertex = this.data.vertices[i];
         var dx = grid_coord.x - vertex.x;
         var dy = grid_coord.y - vertex.y;
-        if (dx * dx + dy * dy > 0.1 * 0.1) continue;
+        if (dx * dx + dy * dy > 0.15 * 0.15) continue;
 
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
         console.log("Click on vertex at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded, true);
+        var position = this.diagram.getBoundaryCoordinates(padded, false);
         position.dimension = this.diagram.getDimension();
         return position;
     }
@@ -162,92 +162,10 @@ Display.prototype.gridToLogical = function(grid_coord) {
 }
 
 Display.prototype.mouseup = function(event) {
-
     if (this.select_grid == null) return;
-
-    // User has clicked on the diagram
     var position = this.gridToLogical(this.select_grid);
     position.directions = null;
     gProject.dragCell(position);
-
-    /*
-    var click_dimension = position.coordinates.length;
-    if (position.boundary != null) click_dimension += position.boundary.depth;
-    var direction_length = this.diagram.getDimension()
-    
-    var direction_length = position.coordi
-    if (position.coordinates.length = )
-
-    var z = new Object(this.select_zone);
-    this.select_zone = null;
-    var position = this.diagram.getBoundaryCoordinate(z.logical);
-
-    // What layer has the user clicked on?
-    var height = this.select_logical.y;
-    var select_logical = this.select_logical;
-    this.select_logical = null;
-
-    // Has the user clicked on a vertex?
-    for (var i = 0; i < this.data.vertices.length; i++) {
-        var vertex = this.data.vertices[i];
-        var dx = grid_coord.x - vertex.x;
-        var dy = grid_coord.y - vertex.y;
-        if (dx * dx + dy * dy > 0.1 * 0.1) continue;
-
-        // User has selected this vertex
-        var padded = this.padCoordinates([vertex.level]);
-        return this.diagram.getBoundaryCoordinates(padded);
-    }
-
-    // Has the user clicked on an edge?
-    for (var i = 0; i < this.data.edges.length; i++) {
-        var edge = this.data.edges[i];
-        if (edge.start_height > height) continue;
-        if (edge.finish_height < height) continue;
-        if (Math.abs(edge.x - this.select_logical.x) > 0.1) continue;
-
-        // User has clicked on this edge
-        var slice_height = edge.attachment_height;
-        var padded = this.padCoordinates([Math.floor(height + 0.5), slice_height]);
-        console.log("Click on edge at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded);
-        var data = {
-            coordinates: position.coordinates,
-            boundary: position.boundary,
-            directions: [0, 0]
-        };
-        gProject.dragCell(data);
-        return;
-    }
-
-    // Has the user clicked on a region?
-    var best_edge_index = -1;
-    var best_edge_distance = Number.MAX_VALUE;
-    var slice_height = -1;
-    for (var i = 0; i < this.data.edges.length; i++) {
-        edge = this.data.edges[i];
-        if (edge.start_height > height) continue;
-        if (edge.finish_height < height) continue;
-        // How close is this edge?
-        var d = this.select_logical.x - edge.x;
-        // If the edge is to the right, ignore it
-        if (d < 0) continue;
-        if (d < best_edge_distance) {
-            best_edge_distance = d;
-            best_edge_index = i;
-        }
-    }
-    var slice_height = (best_edge_index < 0 ? 0 : this.data.edges[best_edge_index].attachment_height + 1);
-    var padded = this.padCoordinates([Math.floor(height + 0.5), slice_height, 0]);
-    console.log("Click on region at coordinates " + JSON.stringify(padded));
-    var position = this.diagram.getBoundaryCoordinate(padded);
-    var data = {
-        coordinates: position.coordinates,
-        boundary: position.boundary,
-        directions: [0, 0]
-    };
-    gProject.dragCell(data);
-    */
 }
 
 Display.prototype.pixelsToGrid = function(event) {
@@ -286,7 +204,7 @@ Display.prototype.has_controls = function() {
     return ($(this.container).children('div.control').length > 0);
 }
 
-// Make sure all the coordinates and suppressions make sense, bearing mind
+// Make sure all the coordinates and suppressions make sense, bearing in mind
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
 Display.prototype.update_controls = function(boundary) {
@@ -362,17 +280,17 @@ Display.prototype.create_controls = function() {
     this.slice_div = $('<div>').addClass('slice_container');
     this.slice_div.append(document.createTextNode('Slice '));
     this.control.append(this.slice_div);
-    this.coordinates = [];
+    this.slices = [];
 }
 
 Display.prototype.update_slice_container = function(drag) {
 
     // If the diagram is null, we shouldn't have any slice controls
     if (this.diagram == null) {
-        for (var i = 0; i < this.coordinates.length; i++) {
-            this.coordinates[i].remove();
+        for (var i = 0; i < this.slices.length; i++) {
+            this.slices[i].remove();
         }
-        this.coordinates = [];
+        this.slices = [];
         return;
     }
 
@@ -381,22 +299,27 @@ Display.prototype.update_slice_container = function(drag) {
     if (remaining_dimensions < 0) remaining_dimensions = 0;
 
     // Remove any superfluous slice controls
-    while (this.coordinates.length > remaining_dimensions) {
-        this.coordinates.last().remove();
-        this.coordinates.pop();
+    while (this.slices.length > remaining_dimensions) {
+        this.slices.last().remove();
+        this.slices.pop();
     }
 
     // If a particular boundary has been requested, make sure it is within view
     if (drag != null) {
         if (drag.boundary == null) {
-            var x = 0;
+            // Rewrite in the interior, so advance the last slider
+            if (this.slices.length > 0) {
+                var counter = this.slices.last();
+                var current = Number(counter.val());
+                counter.val(current + 1);
+            }
         } else {
             if (drag.boundary.depth > 0) {
                 var slice_index = drag.boundary.depth - 1;
                 if (drag.boundary.type == 't') {
-                    if (slice_index < this.coordinates.length) {
-                        var current = this.coordinates[slice_index].val();
-                        this.coordinates[slice_index].val(current + 1);
+                    if (slice_index < this.slices.length) {
+                        var current = Number(this.slices[slice_index].val());
+                        this.slices[slice_index].val(current + 1);
                     }
                 }
             }
@@ -405,8 +328,8 @@ Display.prototype.update_slice_container = function(drag) {
 
     // Add any additional slice controls with a dimension of zero
     var self = this;
-    for (var i = this.coordinates.length; i < remaining_dimensions; i++) {
-        this.coordinates[i] =
+    for (var i = this.slices.length; i < remaining_dimensions; i++) {
+        this.slices[i] =
             $('<input>')
             .addClass('control')
             .addClass('slice')
@@ -419,13 +342,13 @@ Display.prototype.update_slice_container = function(drag) {
             .mouseover(function() {
                 this.focus();
             });
-        this.slice_div.append(this.coordinates[i]);
+        this.slice_div.append(this.slices[i]);
     }
 
     // Ensure the slice coordinates are valid
     var slice = this.diagram.copy();
     for (var i = 0; i < remaining_dimensions; i++) {
-        var input = this.coordinates[i];
+        var input = this.slices[i];
         input.val(Math.min(input.val(), slice.cells.length));
         input.attr('max', slice.cells.length);
         slice = slice.getSlice(input.val());
@@ -444,38 +367,24 @@ Display.prototype.set_diagram = function(diagram, boundary) {
 }
 
 Display.prototype.get_current_slice = function() {
-    var coordinates = [];
-    for (var i = 0; i < this.coordinates.length; i++) {
-        coordinates.push(Number(this.coordinates[i].val()));
+    var position = [];
+    for (var i = 0; i < this.slices.length; i++) {
+        position.push(Number(this.slices[i].val()));
     }
-    return coordinates;
+    return position;
 }
 
 Display.prototype.render = function() {
-
-    // Slice the diagram appropriately
+    var t = performance.now();
     var slice = this.diagram.copy();
-    for (var i = 0; i < this.coordinates.length; i++) {
-        slice = slice.getSlice(this.coordinates[i].val());
+    for (var i = 0; i < this.slices.length; i++) {
+        slice = slice.getSlice(this.slices[i].val());
     }
     this.visible_diagram = slice;
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
+    console.log("Display.render: time " + Math.floor(performance.now() - t) + 'ms');
     if (data == null) return;
-
-    //this.active = data.active;
     this.data = data.data;
-
-
-    /*
-    // Store layout data
-    this.layout = data.layout;
-
-    // Pad active zone coordinates
-    for (var i = 0; i < this.active.length; i++) {
-        this.padLocation(this.active[i]);
-    }
-    */
-
 }
 
 // Pads an object with 'boundary_depth' and 'logical' properties
@@ -484,18 +393,18 @@ Display.prototype.padLocation = function(location) {
         location.boundary_depth += coordinates.length;
     }
     var pad_coordinates = [];
-    for (var i = 0; i < this.coordinates.length; i++) {
-        pad_coordinates[i] = Number(this.coordinates[i].val());
+    for (var i = 0; i < this.slices.length; i++) {
+        pad_coordinates[i] = Number(this.slices[i].val());
     }
     location.logical = pad_coordinates.concat(location.logical);
 }
 
 // Pads a coordinate array with the slider coordinates
-Display.prototype.padCoordinates = function(coordinates) {
-    var pad_coordinates = [];
-    for (var i = 0; i < this.coordinates.length; i++) {
-        pad_coordinates[i] = Number(this.coordinates[i].val());
+Display.prototype.padCoordinates = function(position) {
+    var pad_position = [];
+    for (var i = 0; i < this.slices.length; i++) {
+        pad_position[i] = Number(this.slices[i].val());
     }
-    coordinates = pad_coordinates.concat(coordinates);
-    return coordinates;
+    position = pad_position.concat(position);
+    return position;
 }

@@ -27,18 +27,15 @@ function RegisterSingularityFamily(data) {
 
 function GetSingularityFamily(type) {
     if (type.tail('-E', '-EI')) return 'Inverses';
+    if (gProject.signature.getGenerator(type.getBaseType())) return 'Signature';
     return SingularityFamilies[type];
 }
 
 Diagram.prototype.interchangerAllowed = function(type, key) {
-    //  try {
     if (key.last() < 0) return false;
     if (key >= this.cells.length) return false;
     var family = GetSingularityFamily(type);
     return ((this.interchangerAllowed[family]).bind(this))(type, key);
-    //    } catch (e) {
-    //        return false;
-    //    }
 }
 
 Diagram.prototype.getSource = function(type, key) {
@@ -86,6 +83,7 @@ Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
 
 Diagram.prototype.getInverseKey = function(type, key) {
     var family = GetSingularityFamily(type);
+    if (family == 'Signature') return key;
     return ((this.getInverseKey[family]).bind(this))(type, key);
 }
 
@@ -101,11 +99,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
         for (var i=0; i<actions.length; i++) {
             actions[i].id += '-E';
-            if (actions[i].key == null) {
-                actions[i].key = actions[i].coordinates.concat([drag.coordinates.last()]);
-            } else {
-                actions[i].key.push(drag.coordinates.last());
-            }
+            actions[i].key.push(drag.coordinates.last());
         }
         return actions;
     }
@@ -132,7 +126,9 @@ Diagram.prototype.interpretDrag = function(drag) {
         if (this.getDimension() < data.dimension - 1) continue;
 
         // See if this family can interpret the drag
+        var t = performance.now();
         var r = ((this.interpretDrag[family]).bind(this))(drag);
+        console.log('interpretDrag[' + family + '] time: ' + (performance.now() - t) + 'ms');
         var msg = "interpretDrag." + family + ": allowed ";
         var found_possibilities = false;
         for (var i=0; i<r.length; i++) {
@@ -185,32 +181,24 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     var diagram_key_cell = this.cells[diagram_key.last()];
     var instructions_key_cell = instructions.list[instructions.key];
     
-    if (diagram_key_cell.coordinates.length != instructions_key_cell.coordinates.length) return false;
+    if (diagram_key_cell.key.length != instructions_key_cell.key.length) return false;
     var offset_array = [];
     
-    for (var i = 0; i < diagram_key_cell.coordinates.length; i++) {
-        var offset_array = diagram_key_cell.coordinates[i] - instructions_key_cell.coordinates[i];
+    for (var i = 0; i < diagram_key_cell.key.length; i++) {
+        var offset_array = diagram_key_cell.key[i] - instructions_key_cell.key[i];
     }
 
+    // Check the instructions match
     for (var i = 0; i < instructions.list.length; i++) {
         var list_cell = instructions.list[i];
         var diagram_cell = this.cells[i + diagram_key.last() - instructions.key];
-        var diagram_coord;
-        var list_coord;
-        if (list_cell.isInterchanger()) {
-            diagram_coord = diagram_cell.key;
-            list_coord = list_cell.key;
-        } else {
-            diagram_coord = diagram_cell.coordinates;
-            list_coord = list_cell.coordinates;
-        }
-
+        
         // Is it the right thing?
         if (list_cell.id != diagram_cell.id) return false;
 
         // Is it at the right position?
         for (var j = 0; j < offset_array.length; j++) {
-            if (diagram_coord[j] != list_coord[j] + offset_array[j]) return false;
+            if (diagram_cell.key[j] != list_cell.key[j] + offset_array[j]) return false;
         }
     }
 
