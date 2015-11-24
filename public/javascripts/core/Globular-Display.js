@@ -34,39 +34,15 @@ function Display(container, diagram) {
 }
 
 Display.prototype.mousedown = function(event) {
-
-    /*
-    if (this.active == null) return;
-    if (this.active.length == 0) return;
-    var closest_zone = null;
-    var shortest_sq_dist = Number.MAX_VALUE;
-    */
-
-    // Ignore clicks outside the diagram region
     var b = $(this.container)[0].bounds;
+    if (b == undefined) return;
     var logical = this.pixelsToGrid(event);
+    if (logical == undefined) return;
     if (logical.x < b.left) return;
     if (logical.x > b.right) return;
     if (logical.y < b.bottom) return;
     if (logical.y > b.top) return;
     this.select_grid = this.pixelsToGrid(event);
-
-    /*
-    //console.log("Detected click: " + JSON.stringify(logical));
-    for (var i = 0; i < this.active.length; i++) {
-        var zone = this.active[i];
-        var dx = logical.x - zone.x;
-        var dy = logical.y - zone.y;
-        var sq_dist = dx * dx + dy * dy;
-        if (sq_dist < shortest_sq_dist) {
-            closest_zone = zone;
-            shortest_sq_dist = sq_dist;
-        }
-        this.select_zone = closest_zone;
-        this.select_logical = logical;
-    }
-    */
-    //console.log("Detected mousedown: " + JSON.stringify(this.select_zone));
 }
 
 var min_drag = 0.25;
@@ -230,6 +206,7 @@ Display.prototype.update_sliders = function() {
 }
 
 Display.prototype.control_change = function() {
+    gProject.clearThumbnails();
     this.update_controls();
     this.render();
 }
@@ -260,13 +237,13 @@ Display.prototype.create_controls = function() {
     this.container.append(this.control);
 
     // Construct the suppress control
-    this.control.append(document.createTextNode('Suppress '));
+    this.control.append(document.createTextNode('Projection '));
     this.suppress_input =
         $('<input>')
         .attr('type', 'number')
         .addClass('control')
         .attr('min', 0)
-        .val(0)
+        .val(this.diagram == null ? 0 : Math.max(0, this.diagram.getDimension() - 2))
         .mouseover(function() {
             this.focus();
         });

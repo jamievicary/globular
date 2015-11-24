@@ -128,9 +128,13 @@ Project.prototype.limitMatches = function(matches, elements) {
     }
 };
 
+// Clear thumbnails
+Project.prototype.clearThumbnails = function() {
+    $('div.cell-b-sect').empty();
+}
+
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
-    $('div.cell-b-sect').empty();
     this.diagram = null;
     this.renderDiagram();
     this.saveState();
@@ -234,7 +238,7 @@ Project.prototype.storeTheorem = function() {
 
 Project.prototype.dragCell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
-    
+
     // Get a pointer to the subdiagram in which the drag took place
     var diagram_pointer = this.diagram;
     if (drag.boundary != null) {
@@ -261,10 +265,16 @@ Project.prototype.dragCell = function(drag) {
     // Perform a preattachment if necessary
     if (option.preattachment != null) {
         option.preattachment.boundary.depth += (drag.boundary == null ? 0 : drag.boundary.depth);
-        this.diagram.attach(new NCell({id: option.preattachment.id, key: option.preattachment.key}), option.preattachment.boundary);
+        this.diagram.attach(new NCell({
+            id: option.preattachment.id,
+            key: option.preattachment.key
+        }), option.preattachment.boundary);
     }
-    
-    this.diagram.attach(new NCell({id: option.id, key: option.key}), drag.boundary, true);
+
+    this.diagram.attach(new NCell({
+        id: option.id,
+        key: option.key
+    }), drag.boundary, true);
 
     // Useful shortcut to the diagram for console manipulation
     d = this.diagram;
@@ -272,7 +282,7 @@ Project.prototype.dragCell = function(drag) {
     // Finish up and render the result
     this.selected_cell = null;
     this.saveState();
-    $('div.cell-b-sect').empty();
+    this.clearThumbnails();
     this.renderDiagram(drag);
 
 }
@@ -494,6 +504,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         var text = $(this).val();
         gProject.signature.getGenerator(generator.id).display.name = text;
     })
+    $(div_name).keypress(function(e) {e.stopPropagation()});
     div_detail.appendChild(div_name);
 
     // Add color picker
@@ -514,10 +525,14 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
     // Add invertibility selector
     if (n > 0 && generator.id.last() != 'I') {
-        var label = $('<br><label><input type="checkbox" name="checkbox" value="value">Invertible</label>');
+        var label = $('<br><label><input type="checkbox" name="checkbox">Invertible</label>');
         var input = label.find('input');
-        input.attr('id', 'invertible-' + generator.id);
+        input.attr('id', 'invertible-' + generator.id).prop('checked', generator.invertible);
         $(div_detail).append(label);
+        input.change(function() {
+            var g = gProject.signature.getGenerator(generator.id);
+            g.invertible = !g.invertible;
+        });
     }
 
 
@@ -568,7 +583,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
             var match_array = enumerationData.matches;
 
             // Display a list of all the attachment possibilities
-            $('div.cell-b-sect').empty();
+            project.clearThumbnails();
             for (var i = 0; i < match_array.length; i++) {
                 var div_match = document.createElement('div');
                 $(div_match).addClass('preview-icon');
@@ -576,7 +591,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
-                        var ncell = new NCell({id: enumerationData.diagram.cells[0].id, key: match.inclusion});
+                        var ncell = new NCell({
+                            id: enumerationData.diagram.cells[0].id,
+                            key: match.inclusion
+                        });
                         var boundary = {
                             type: match.boundaryType,
                             depth: match.realBoundaryDepth
@@ -584,7 +602,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                         if (boundary.type == 's') ncell.id = ncell.id.toggle_inverse();
                         project.diagram.attach(ncell, boundary);
                         d = project.diagram;
-                        $('div.cell-b-sect').empty();
+                        this.clearThumbnails();
                         project.renderDiagram({
                             boundary: boundary
                         });
@@ -679,7 +697,8 @@ Project.prototype.addNCell = function(source, target) {
     var generator = new Generator({
         source: source,
         target: target,
-        name: "Cell " + (this.signature.getAllCells().length + 1)
+        name: "Cell " + (this.signature.getAllCells().length + 1),
+        invertible: false
     });
     var d = generator.getDimension();
 
@@ -699,14 +718,6 @@ Project.prototype.addNCell = function(source, target) {
         rate: 1
     };
 
-    /*
-    }
-            else {
-                this.renderGenerator("#ci-" + cell, cell);
-            }
-        }
-    }
-    */
     // Add the diagram to the menu
     if (gProject != null) this.renderNCell(generator.id);
 

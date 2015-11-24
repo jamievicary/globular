@@ -14,6 +14,7 @@ function Generator(data) {
     this.source = data.source;
     this.target = data.target;
     this.id = data.id;
+    this.invertible = data.invertible;
     if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
     this.name = data.name;
     return this;
