@@ -160,7 +160,7 @@ String.prototype.is_interchanger = function() {
 
 String.prototype.is_invertible = function() {
     if (this.is_interchanger()) return true;
-    var checkbox = $('#invertible-' + this);
+    var checkbox = $('#invertible-' + this.getBaseType());
     if (checkbox.length == 0) return false;
     return checkbox.is(':checked');
 }

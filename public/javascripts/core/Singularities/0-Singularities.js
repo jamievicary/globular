@@ -98,8 +98,13 @@ Diagram.prototype.interpretDrag = function(drag) {
         };
         var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
         for (var i=0; i<actions.length; i++) {
-            actions[i].id += '-E';
-            actions[i].key.push(drag.coordinates.last());
+            var action = actions[i];
+            action.id += '-E';
+            action.key.push(drag.coordinates.last());
+            var pre = action.preattachment;
+            if (pre != null) {
+                pre.boundary.depth ++;
+            }
         }
         return actions;
     }
@@ -108,12 +113,8 @@ Diagram.prototype.interpretDrag = function(drag) {
 
     // Check for the case that we can cancel inverse cells
 
-   // var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
-    //if (inverse_action != null) options.push(inverse_action);
-    
     var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
     options = options.concat(inverse_action);
-
 
     // Check other singularity types
     for (var family in SingularityData) {

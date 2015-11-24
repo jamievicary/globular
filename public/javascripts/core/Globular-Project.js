@@ -234,35 +234,20 @@ Project.prototype.storeTheorem = function() {
 
 Project.prototype.dragCell = function(drag) {
     console.log("Detected drag: " + JSON.stringify(drag));
-
-    //var action = interpret_drag(drag, this.diagram.getBoundary(drag.boundary_path));
-
-    // Actually perform the action!
-
-    // If the original drag object was in the 0-boundary of the diagram,
-    // use action to rewrite the diagram. Otherwise attach.
-
-    // var slice_pointer = this.diagram;
+    
+    // Get a pointer to the subdiagram in which the drag took place
     var diagram_pointer = this.diagram;
-
-    var temp_drag_data = new Array();
-
     if (drag.boundary != null) {
         for (var i = 0; i < drag.boundary.depth - 1; i++) {
-            //slice_pointer = slice_pointer.getSlice();
             diagram_pointer = diagram_pointer.getSourceBoundary();
         }
-
-        // May need to look at slices instead - to be considered
-        if (drag.boundary.type === 's') {
-            diagram_pointer = diagram_pointer.getSourceBoundary();
-        } else {
-            diagram_pointer = diagram_pointer.getTargetBoundary();
-        }
+        diagram_pointer = (drag.boundary.type == 's' ? diagram_pointer.getSourceBoundary() : diagram_pointer.getTargetBoundary());
     }
 
+    // Reverse the coordinates, since the display code uses the opposite system
     drag.coordinates = drag.coordinates.reverse();
 
+    // Find how we can interpret this drag in terms of an algebraic move
     var options = diagram_pointer.interpretDrag(drag);
 
     if (options.length === 0) {
@@ -272,26 +257,17 @@ Project.prototype.dragCell = function(drag) {
 
     // Should really prompt the user to choose between the valid options
     var option = options[0];
+
+    // Perform a preattachment if necessary
+    if (option.preattachment != null) {
+        option.preattachment.boundary.depth += (drag.boundary == null ? 0 : drag.boundary.depth);
+        this.diagram.attach(new NCell({id: option.preattachment.id, key: option.preattachment.key}), option.preattachment.boundary);
+    }
     
     this.diagram.attach(new NCell({id: option.id, key: option.key}), drag.boundary, true);
-    d = this.diagram;
-    /*
-    if (drag.boundary_depth === 0) {
-        action.coordinates = this.diagram.getInterchangerCoordinates(action.id, action.key);
-        this.diagram.rewrite(action, false);
-    } else {
-        boundary_path += drag.boundary_type;
-        this.diagram.attach(action, boundary_path);
-    }
-    */
 
-    /*
-    If the original drag object was in the 0-boundary of the diagram,
-    use action to rewrite the diagram
-    
-    If the original drag object was in a proper boundary of the diagram,
-    use action to attach to the diagram
-    */
+    // Useful shortcut to the diagram for console manipulation
+    d = this.diagram;
 
     // Finish up and render the result
     this.selected_cell = null;

@@ -100,7 +100,7 @@ Diagram.prototype.rewrite = function(cell, reverse) {
 
     // Prepare the target cells and insert them
     var slice = this.getSlice(insert_position);
-    if (this.sliceCache == null) this.sliceCache = [];
+    if (this.sliceCache == null) this.initializeSliceCache();
     else {
         for (var i=insert_position+1; i<this.sliceCache.length; i++) {
             this.sliceCache[i] = null;
@@ -108,7 +108,7 @@ Diagram.prototype.rewrite = function(cell, reverse) {
     }
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
-        if (!cell.id.is_invertible()) new_cell.pad(cell.key);
+        if (!cell.id.is_interchanger()) new_cell.pad(cell.key);
         new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
         this.cells.splice(insert_position + i, 0, target.cells[i]);
         this.sliceCache[i + insert_position + 1] = null;
@@ -449,7 +449,7 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
             type: boundary.type,
             depth: boundary.depth - 1
         });
-        this.sliceCache = null;
+        this.initializeSliceCache();
         return;
     }
 
@@ -460,7 +460,7 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
         this.source.rewrite(cell);
         this.cells.unshift(inverse_cell);
         cell_index = 0;
-        this.sliceCache = null;
+        this.initializeSliceCache();
     } else {
         this.cells.push(cell);
         cell_index = this.cells.length - 1;
@@ -477,7 +477,7 @@ Diagram.prototype.boost = function() {
     var diagram_copy = this.copy();
     this.source = diagram_copy;
     this.cells = [];
-    this.sliceCache = null;
+    this.initializeSliceCache();
     this.dimension++;
 };
 
@@ -767,7 +767,7 @@ Diagram.prototype.getSlice = function(location) {
     
     // Check whether the cache contains the slice
     if (this.sliceCache == null) {
-        this.sliceCache = [];
+        this.initializeSliceCache();
     }
     else {
         if (this.sliceCache[height] != undefined) {
@@ -786,3 +786,8 @@ Diagram.prototype.getSlice = function(location) {
     return slice;
     */
 };
+
+Diagram.prototype.initializeSliceCache = function() {
+    this.sliceCache = [];
+    this.sliceCache.ignore = true;
+}

@@ -58,6 +58,7 @@ function globular_raw(object) {
     for (var name in object) {
         if (!object.hasOwnProperty(name)) continue;
         var value = object[name];
+        if (value != null) { if (value.ignore) continue };
         if (typeof value === 'function') continue;
         raw[name] = globular_raw(value);
     }
