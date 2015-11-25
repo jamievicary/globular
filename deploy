@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ssh nodejs@globular.science "cd Globular; git fetch; git merge --ff-only; pm2 restart globular; pm2 show globular"
