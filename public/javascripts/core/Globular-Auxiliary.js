@@ -97,6 +97,15 @@ function diff_array(t1, t2) {
     return tab;
 }
 
+Array.prototype.tail = function(t) {
+    if (t.length > this.length) return false;
+    var start = this.length - t.length;
+    for (var i=0; i<t.length; i++) {
+        if (this[i + start] != t[i]) return false;
+    }
+    return true;
+}
+
 Array.prototype.end = function(n) {
     return this[this.length - 1 - n];
 }
@@ -253,3 +262,4 @@ function globular_is_array(object) {
     return (Object.prototype.toString.call(object) === '[object Array]');
     //return object.constructor.toString().indexOf("Array") > -1;
 }
+

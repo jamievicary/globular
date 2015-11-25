@@ -26,6 +26,7 @@ function Project(string) {
         if (!new_project.hasOwnProperty(name)) continue;
         this[name] = new_project[name];
     }
+    
 };
 
 Project.prototype.getType = function() {
@@ -49,13 +50,13 @@ Project.prototype.listGenerators = function() {
 
 // Sets the front-end name of a generator to what the user wants
 Project.prototype.setName = function(id, name) {
-    this.signature.getGenerator(id).display.name = name;
+    this.signature.getGenerator(id).name = name;
     this.saveState();
 };
 
 // Gets the front-end name of a generator to what the user wants
 Project.prototype.getName = function(id) {
-    return this.signature.getGenerator(id).display.name;
+    return this.signature.getGenerator(id).name;
 };
 
 // Sets the front-end colour to what the user wants
@@ -214,7 +215,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
         }
     }
 
-    this.addNCell(source, target);
+    this.addNCell({source: source, target: target});
 
     // Re-render and save the new state
 
@@ -226,10 +227,9 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 };
 
 Project.prototype.storeTheorem = function() {
-    var theorem_id = this.addNCell(this.diagram.getSourceBoundary(), this.diagram.getTargetBoundary());
+    var theorem_id = this.addNCell({source: this.diagram.getSourceBoundary(), target: this.diagram.getTargetBoundary()});
     var theorem_diagram = this.signature.createDiagram(theorem_id);
-    this.addNCell(theorem_diagram, this.diagram);
-    this.addNCell(this.diagram, theorem_diagram);
+    this.addNCell({source: theorem_diagram, target: this.diagram, invertible: true});
     this.clearDiagram();
     //this.renderAll();
     this.saveState();
@@ -306,19 +306,19 @@ Project.prototype.selectGenerator = function(id) {
 
     // If current diagram is null, just display the generator
     if (this.diagram === null) {
-        this.diagram = generator.diagram.copy();
+        this.diagram = generator.getDiagram();
         this.renderDiagram();
         this.saveState();
         return null;
     }
 
     // If user clicked a 0-cell, do nothing
-    if (generator.diagram.getDimension() == 0) {
+    if (generator.getDimension() == 0) {
         alert("0-cells can never be attached");
         return null;
     }
 
-    var matched_diagram = generator.diagram.copy();
+    var matched_diagram = generator.getDiagram();
     var slices_data = MainDisplay.get_current_slice();
 
     if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
@@ -352,7 +352,7 @@ Project.prototype.selectGenerator = function(id) {
 
     // Try attaching to a boundary
     var depth = slices_data.length;
-    var d = generator.diagram.getDimension();
+    var d = generator.getDimension();
     var matches = [];
 
     // Can we attach by virtue of viewing the entire source or target?
@@ -424,7 +424,7 @@ Project.prototype.currentString = function() {
 
 // Returns the current string 
 Project.prototype.addZeroCell = function() {
-    this.addNCell(null, null);
+    this.addNCell({source: null, target: null});
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
@@ -433,7 +433,8 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
 
 // Render a generator
 Project.prototype.renderGenerator = function(div, id) {
-    this.render(div, this.signature.getGenerator(id).diagram);
+    var generator = this.signature.getGenerator(id);
+    this.render(div, generator.diagram);
 }
 
 // Render the main diagram
@@ -502,9 +503,11 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_name.value = cell_name;
     $(div_name).on('input', function(event) {
         var text = $(this).val();
-        gProject.signature.getGenerator(generator.id).display.name = text;
+        //var generator = gProject.signature.getGenerator(generator.id);
+        generator.name = text;
     })
     $(div_name).keypress(function(e) {e.stopPropagation()});
+
     div_detail.appendChild(div_name);
 
     // Add color picker
@@ -568,11 +571,6 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_extra.className = 'cell-b-sect';
     div_main.appendChild(div_extra);
 
-    // Add to body and animate
-    $(div_name).blur(function() {
-        project.setName(generator.id, cell_name);
-    });
-
     (function(project) {
         $(div_icon).click(function() {
 
@@ -602,7 +600,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                         if (boundary.type == 's') ncell.id = ncell.id.toggle_inverse();
                         project.diagram.attach(ncell, boundary);
                         d = project.diagram;
-                        this.clearThumbnails();
+                        project.clearThumbnails();
                         project.renderDiagram({
                             boundary: boundary
                         });
@@ -692,13 +690,13 @@ Project.prototype.redrawAllCells = function() {
     }
 }
 
-Project.prototype.addNCell = function(source, target) {
+Project.prototype.addNCell = function(data) {
 
     var generator = new Generator({
-        source: source,
-        target: target,
+        source: data.source,
+        target: data.target,
         name: "Cell " + (this.signature.getAllCells().length + 1),
-        invertible: false
+        invertible: (data.invertible == undefined ? false : data.invertible)
     });
     var d = generator.getDimension();
 
@@ -708,7 +706,7 @@ Project.prototype.addNCell = function(source, target) {
     }
     this.signature.addGenerator(generator);
     generator = this.signature.getGenerator(generator.id);
-    generator.diagram = this.signature.createDiagram(generator.id);
+    generator.setDiagram(this.signature.createDiagram(generator.id));
 
     // Set the colour
     var colour_array = GlobularColours[d % 3];

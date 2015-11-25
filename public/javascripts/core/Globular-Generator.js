@@ -20,6 +20,17 @@ function Generator(data) {
     return this;
 };
 
+Generator.prototype.setDiagram = function(diagram) {
+    this.diagram = diagram;
+    this.diagram.ignore = true;
+}
+
+Generator.prototype.getDiagram = function() {
+    var copy = this.diagram.copy();
+    delete copy.ignore;
+    return copy;
+}
+
 Generator.prototype.swapSourceTarget = function() {
     var temp = this.source;
     this.source = this.target;

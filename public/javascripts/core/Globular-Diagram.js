@@ -650,7 +650,7 @@ Diagram.prototype.separation = function(c1, c2) {
         } else {
             // interact
             min = Math.min(min, h_bbox.min.last());
-            max = Math.max(max + delta, h_bbox.min.last() + h_slice.target_size(h));
+            max = Math.max(max + delta, h_bbox.min.last() + slice.target_size(h));
         }
     }
 };
@@ -731,6 +731,7 @@ Diagram.prototype.getBoundingBox = function(cell) {
     };
     var generator_box = gProject.signature.getGenerator(cell.id).getBoundingBox();
     box.max = box.min.vector_add(generator_box.max);
+    box.ignore = true; // don't store bounding boxes to file
     return box;
 };
 
@@ -741,7 +742,8 @@ Diagram.prototype.getSliceBoundingBox = function(location) {
     var slice = this.getSlice(location);
     if (slice.getDimension() == 0) return {
         min: [],
-        max: []
+        max: [],
+        ignore: true
     };
     return slice.getSlice(height).getBoundingBox(slice.cells[height]);
 }
@@ -790,4 +792,13 @@ Diagram.prototype.getSlice = function(location) {
 Diagram.prototype.initializeSliceCache = function() {
     this.sliceCache = [];
     this.sliceCache.ignore = true;
+}
+
+Diagram.prototype.prepareBoxes = function() {
+    if (this.source != null) this.source.prepareBoxes();
+    for (var i=0; i<this.cells.length; i++) {
+        var cell = this.cells[i];
+        if (cell.box != undefined) continue;
+        cell.box = this.getSliceBoundingBox(i);
+    }
 }

@@ -12,7 +12,13 @@ function NCell(data) {
     if (data == null) return;
     this.id = data.id;
     this.key = data.key.slice();
-    this.box = (data.box == undefined ? undefined : {min: data.box.min.slice(), max: data.box.max.slice()});
+    if (data.box != undefined) {
+        this.box = {
+            min: data.box.min.slice(),
+            max: data.box.max.slice(),
+            ignore: true
+        };
+    }
 };
 
 NCell.prototype.equals = function(c2) {

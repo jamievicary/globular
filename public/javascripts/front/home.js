@@ -1,6 +1,6 @@
 
 // Global project object
-var gProject = {};
+var gProject = {initialized: false};
 var MainDisplay = null;
 var global_p_id = "null";
 var timeout = null;
@@ -164,16 +164,15 @@ $(document).ready(function() {
         if (state === "out") {
             $("div.enable_if-in").hide();
             $("div.enable_if-out").show();
-
         }
         else {
             $("div.enable_if-in").show();
             $("div.enable_if-out").hide();
         }
-        if (window.location.pathname.length < 3) {
+        //if (window.location.pathname.length < 3) {
+        if (!gProject.initialized) {
             render_project_front('');
             $("#diagram-title").val("New Project");
-
         }
     }
 
@@ -280,6 +279,9 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
+        gProject.signature.prepareBoxes();
+        if (gProject.diagram != null) gProject.diagram.prepareBoxes();
+        gProject.initialized = true;
         if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
 
         // Render main diagram

@@ -48,9 +48,7 @@ Signature.prototype.addGenerator = function (generator) {
     }
 };
 
-/*
-    Returns a generator with a given id, regardless of the level of where this generator is
-*/
+// Returns a generator with a given id, regardless of the level of where this generator is
 Signature.prototype.getGenerator = function (id) {
     var sig = this;
     var reverse = false;
@@ -118,3 +116,13 @@ Signature.prototype.getAllCells = function () {
 Signature.prototype.getCells = function() {
     return Object.keys(this.cells);
 };
+
+Signature.prototype.prepareBoxes = function() {
+    var cell_names = this.getCells();
+    if (this.sigma != null) this.sigma.prepareBoxes();
+    for (var i=0; i<cell_names.length; i++) {
+        var generator = this.cells[cell_names[i]];
+        generator.diagram = this.createDiagram(generator.id);
+        //this.cells[cell_names[i]].diagram.prepareBoxes();
+    }
+}

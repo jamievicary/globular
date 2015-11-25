@@ -11,6 +11,7 @@
 Diagram.prototype.interpretDrag.Inverses = function(drag) {
 
     if (drag.directions == null) return this.interpretClickInverses(drag);
+    if (drag.coordinates.length > 1) return [];
 
     var up = drag.directions[0] > 0;
     var height = drag.coordinates[0];
@@ -83,9 +84,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
-            if (drag.coordinates.length > 0) {
-                if (matches[j].last() != drag.coordinates[0]) continue;
-            }
+            if (!matches[j].tail(drag.coordinates)) continue;
             return {
                 id: cells[i],
                 key: matches[j],
@@ -95,9 +94,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         // What about the target
         var matches = this.enumerate(generator.target);
         for (var j = 0; j < matches.length; j++) {
-            if (drag.coordinates.length > 0) {
-                if (matches[j].last() != drag.coordinates[0]) continue;
-            }
+            if (!matches[j].tail(drag.coordinates)) continue;
             return {
                 id: cells[i] + 'I',
                 key: matches[j],

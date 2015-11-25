@@ -90,15 +90,16 @@ Diagram.prototype.getInverseKey = function(type, key) {
 Diagram.prototype.interpretDrag = function(drag) {
 
     // Recursively handle a drag in a subdiagram
+    var options = [];
     if (drag.coordinates.length > 1) {
         var new_drag = {
             boundary: drag.boundary,
             coordinates: drag.coordinates.slice(0, drag.coordinates.length - 1),
             directions: (drag.directions == null ? null : drag.directions.slice())
         };
-        var actions = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
-        for (var i=0; i<actions.length; i++) {
-            var action = actions[i];
+        options = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
+        for (var i=0; i<options.length; i++) {
+            var action = options[i];
             action.id += '-E';
             action.key.push(drag.coordinates.last());
             var pre = action.preattachment;
@@ -106,10 +107,7 @@ Diagram.prototype.interpretDrag = function(drag) {
                 pre.boundary.depth ++;
             }
         }
-        return actions;
     }
-
-    var options = [];
 
     // Check for the case that we can cancel inverse cells
 
