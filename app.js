@@ -46,8 +46,6 @@ app.use(session({
   cookie: { secure: true }
 }));
 
-
-
 // user will ask for '/private/casparwylie@gmail.com/projects/%EH^%YJERTHE/string.json'
 app.use('/private', function(req, res) {
 	if(req.session.user_id==undefined) return false;
