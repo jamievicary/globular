@@ -176,7 +176,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var cell = this.cells[h].copy();
     var coords = cell.box.min.slice(0);
     var heights = this.getInterchangerCoordinates(type, key);
-    var d = new Diagram(); // dummy diagram objects for Int expansion
+    var d = new Diagram(); // dummy diagram object for Int expansion
     var s = this.source_size(h);
     var t = this.target_size(h);
     
@@ -188,7 +188,6 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
     if (type == 'Int-RI')  return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), 1, t));
     if (type == 'IntI-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI', coords.last(), 1, t));
-    
 }
 
 Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {

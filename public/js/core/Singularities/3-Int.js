@@ -140,7 +140,6 @@ Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
     var position = this.getInterchangerCoordinates(type, key);
     var x = key.last();
 
-    // NEEDS TO BE GENERALIZED TO COPE WITH HIGHER-DIMENSIONAL DIAGRAMS
     if (type.tail('Int')) {
         return this.unionBoundingBoxes(this.getLocationBoundingBox([x]), this.getLocationBoundingBox([x+1]));
         /*
