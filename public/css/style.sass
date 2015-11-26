@@ -1,0 +1,605 @@
+@import 'compass'
+@import url(https://fonts.googleapis.com/css?family=Open+Sans)
+
+//$cell_background: #273c61
+$blue: #00b8ff
+$lightgrey: #ccc
+$midgrey: #aaa
+$darkgrey: #888
+$main_font: 'Open Sans', sans-serif 
+$top-menu-height: 20px 
+$border_radius: 2px
+$spacing: 7px
+$icon_size: 60px
+$control_width: 270px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
+$header_height: 70px
+
+// SET COLOURS OF DIFFERENT STRUCTURES
+$cell_group_background: $midgrey
+$cell_background: $darkgrey
+
+//styles
+body, html
+	height: 100%
+	width: 100%
+	margin: 0px
+	font-family: $main_font 
+	overflow: hidden
+	
+#header
+	height: $header_height
+	width: 100%
+	background-color: $lightgrey
+
+#main-body
+	position: absolute
+	top: 70px
+	left: 0px
+	height: calc(100% - 70px)
+	width: 100%
+	background-color: $lightgrey
+
+#site-logo
+	padding: 10px
+	letter-spacing: 4px
+	width: 300px
+	text-align: center
+	display: inline-block
+
+#logo-image
+	height: 60px
+	width: 100px
+	position: absolute
+	float: left
+	top: 5px
+	left: 10px
+	margin-left: -20px
+	margin-right: -20px
+	
+#logo-text
+	font-size: 40px
+	margin-left: 65px
+	position: absolute
+	top: 5px
+
+#main-menu
+	cursor: pointer
+	float: center
+	display: inline-block
+	width: auto
+	position: fixed
+
+#main-menu>div
+	float: right
+	text-align: center
+	display: inline-block
+	height: 20px
+	padding-top: calc((#{$header_height} - 20px) / 2)
+	padding-bottom: calc((#{$header_height} - 20px) / 2)
+	padding-left: 20px
+	padding-right: 20px
+	vertical-align: middle
+
+#main-menu>div a
+	text-decoration: none
+	color: black
+	
+#main-menu>div:hover
+	background-color: lightblue
+	color: white
+	
+#control-body
+	height: calc(100% - 35px)
+	width: $control_width
+	float: left
+	padding: $spacing
+	overflow-y: auto
+	overflow-x: none
+	
+#cell-body
+	margin-top: 30px
+	
+#diagram-canvas
+	draggable: false
+	//border: 1px solid grey
+
+#diagram-body
+	overflow: hidden
+	white-space: nowrap
+	background-color: $lightgrey
+	user-select: none
+	
+//#diagram-body>svg
+//	width: 100%
+//	height: 100%
+	
+#project-menu
+	cursor: pointer
+	bottom: 0px
+	height: $top-menu-height
+	list-style: none
+	position: relative
+	float: right
+	margin-right: 10px
+	z-index: 1000000
+	top: calc($header_height - 40px)
+
+#project-menu li
+	margin-top: 7px
+
+.button-style-3
+	background-color: grey
+	color: white
+	border-radius: $border_radius
+	width: 100px
+	text-align: center
+	height: 17px
+	letter-spacing: 1px
+	padding: 7px
+	cursor: pointer
+	font-size: 60%
+	
+#main-menu li 
+	float: left
+	list-style: none
+	width: 70px
+	cursor: pointer
+	padding: 10px
+//	margin-top: 5px
+	margin-left: 5px
+	
+div.cell-group
+	color: black
+	background-color: $midgrey
+	border-radius: $border_radius
+	//width: calc(#{$control_width} - (8 * #{$spacing}))
+	height: auto
+	padding: $spacing
+	margin-bottom: $spacing
+
+div.cell-opt
+	background-color: $cell_background
+	color: #ffffff
+	border-radius: $border_radius
+	position: relative
+	padding: $spacing
+	//width: calc(#{$control_width} - (3 * #{$spacing}))
+	width: auto
+	overflow: hidden
+	//height: #{$icon_size}
+	height: auto
+	margin-top: $spacing
+	padding-right: 0px
+	//height: 70px
+	
+div.cell-icon>canvas
+	border-radius: $border_radius
+
+div.cell-icon
+	height: $icon_size
+	width: $icon_size
+	margin-top: 0px
+	//border-radius: $border_radius
+	border-radius: $border_radius
+	background-color: $lightgrey
+	float: left
+	
+// MAKE THIS THE MAIN ICON CLASS
+div.preview-icon
+	height: $icon_size
+	width: $icon_size
+	float: left
+	margin-top: $spacing
+	margin-right: $spacing
+
+div.preview-icon>canvas
+	border-radius: $border_radius
+	
+div.preview-icon>svg
+	border-radius: $border_radius
+	
+.cell-b-sect
+	//border-top: 1px solid grey
+	//height: 65px
+	//margin-top: 5px
+	//display: none
+	text-align: center
+	top: 70px
+
+.cell-detail
+	margin-left: 75px
+	height: $icon_size
+	
+.match-cell-icon
+	height: $icon_size
+	width: $icon_size
+	border: 2px dashed black
+	background-color: lightgrey
+	float: left
+	//margin: 5px
+	
+.cell-icon1
+	height: $icon_size
+	border: 2px dashed black
+	width: $icon_size
+	margin-left: 100px
+	//top: 5px
+	position: absolute
+	background-color: lightgrey
+
+.cell-label
+	width: 80px
+	border: none
+	outline-width: 0px
+	letter-spacing: 1px
+	position: absolute
+	//left: $icon_size + $spacing
+	//margin-top: 5px
+	margin-left: 5px
+	height: 15px
+	border-radius: $border_radius
+
+.stochastic-rate
+	width: 50px
+	outline-width: 0px
+	letter-spacing: 1px
+	display: none
+	border: none
+	//left: $icon_size + $spacing
+	margin-left: 5px
+	margin-top: 40px
+	border-radius: $border_radius
+	height: 15px
+	
+.color-picker
+	width: 80px
+	letter-spacing: 1px
+	margin-top: 21px
+	margin-left: 5px
+	border: none
+	border-radius: $border_radius
+	height: 15px
+	
+.target-rule-arrow
+	position: absolute
+	margin-left: 65px
+	top: 30px
+
+.button-style-1
+	background-color: $blue
+	color: white
+	border-radius: 3px 3px 0px 0px
+	width: 110px
+	text-align: center
+	letter-spacing: 1px
+	float: left
+	margin: 1px
+	cursor: pointer
+	font-size: 110%
+	border-bottom: 2px solid #00b8ff
+//	padding: 5px
+	
+.button-style-2
+	padding: 5px
+	background-color: $blue
+	color: white
+	border-radius: 3px
+	width: 130px
+	text-align: center
+	letter-spacing: 1px
+	float: left
+	margin: 1px
+	cursor: pointer
+	font-size: 110%
+
+
+#view-p-desc
+	background-color: grey
+	color: white
+	position: absolute
+	margin-left: 235px
+	border-radius: $border_radius
+	width: 100px
+	margin-top: -265px
+	text-align: center
+	height: 30px
+	letter-spacing: 1px
+	padding: 7px
+	cursor: pointer
+	font-size: 70%
+
+#view-desc-plate
+	margin-left: 50px
+	background-color: grey
+	height: 210px
+	width: 500px
+	padding: 10px
+	
+#view-desc-body
+	width: 300px
+	float: right
+	top: calc(100%)
+	left: calc(50% - 300px)
+	position: absolute
+	
+#text-p-desc
+	height: 200px
+	resize: none
+	width: 99%
+	margin-top: 5px
+	color: #44bbbb
+	border: none
+	border-radius: 3px
+	font-size: 90%
+	letter-spacing: 1px
+
+#site-controller-body
+	border: 3px solid grey
+	height: 200px
+
+.text-field-style-1
+	border: none
+	outline-width: 0px
+	border-radius: 3px
+	font-family: $main_font
+	width: 260px
+	padding: 4px
+
+.text-area-style-1
+	border: none
+	outline-width: 0px
+	resize: none
+	border-radius: 3px
+	font-family: $main_font
+	width: calc( 100% - 20px )
+//	padding: 4px
+	height: 70px
+	
+.submit-field-style-1
+	width: 70px
+	border: none
+	margin-top: 7px
+	background-color: #d9d9d9
+	border-radius: 3px
+	font-family: $main_font
+
+.box
+	display: none
+	background-color: $blue
+	border-radius: 1px
+	padding: 10px
+	color: #ffffff
+	width: 265px
+	top: 200px
+	z-index: 10000
+	height: auto
+	text-align: center
+	position: absolute
+	box-shadow: 0px 0px 5px dimgrey
+	//border: 1px dashed grey
+	left: calc( 50% - 125px )
+
+.grand-box
+	width: 800px
+	height: 500px 
+	left: calc( 50% - 400px )
+	top: 100px
+	box-shadow: 0px 0px 20px dimgrey
+	
+.zindex-error
+	z-index: 100000000
+
+#change-pass-form
+	padding: 3px
+	border-radius: 2px	
+	margin: 0
+
+.cp-textfields
+	width: 80%
+	
+#site-cont-header-loggedin
+	padding-bottom: 20px
+	
+.msg-close-opt
+	font-size: 70%
+	color: salmon
+	cursor: pointer
+	float: right
+
+#add-project-opt
+	background-color: grey
+	cursor: pointer
+	height: 20px
+	padding: 5px
+	overflow: hidden
+	border-radius: $border_radius
+
+
+	
+#save-project-opt
+	background-color: #4cd2bb
+	
+#save-project-opt:hover
+	background-color: lightblue	
+	
+#diagram-title
+	color: black
+	height: 30px
+	font-size: 25px
+	background-color: #9BDCC4
+	border: none
+	width: $control_width - 2px
+	position: absolute
+	outline-width: 0px
+	left: $spacing
+	margin-bottom: $spacing
+
+
+.select-project
+	cursor: pointer
+	
+#ajax-loading
+	background-image: url('../../images/loading-icon.gif')
+	background-size: 60%
+	height: 55px
+	width: 55px
+	position: absolute
+	z-index: 10000
+	background-repeat: no-repeat
+
+#no-projects-open-e
+	font-size: 200%
+	text-align: center
+	margin-top: 30%
+
+.mini-opt-links
+	color: #ffffff
+	letter-spacing: 2px
+	font-size: 70%
+	padding: 5px
+	float: right
+	cursor: pointer
+
+#add-0-cell-opt
+	margin-left: -112px
+	position: absolute
+	padding: 5px
+	
+.del-project
+	color: salmon
+	display: inline-block
+	cursor: pointer
+	text-decoration: underline
+
+.del-confirm-field
+	border: none
+	border-radius: 2px
+	width: 1px
+	font-size: 115%
+	padding: 3px
+	outline-width: 0px
+	border: 1px dashed grey
+	margin-top: -5px
+	background-color: #84c9b6
+	color: salmon
+
+.cancel-del
+	cursor: pointer
+	color: salmon
+	margin-top: -25px
+	margin-left: 110px
+	position: absolute
+
+.cc-opt
+	cursor: pointer
+	position: absolute
+	top: 30px
+	color: salmon
+	left: 80px
+	
+#no-cell-m-f
+	color: dimgrey
+	width: 200px
+	margin-left: 40px
+	padding-top: 20px
+
+#slider
+	top: $header_height
+	right: 10px
+	width: 100px
+	position: absolute
+	
+	
+#process-form
+	text-align: left
+	padding: 10px
+
+div.control.inline
+	position: absolute
+	right: 150px
+	top: 10px
+	
+input.control
+	width: 30px
+
+#gallery-box
+	overflow: auto
+	background: #b0e0e6
+	
+.gallery-pcomp
+	width: 97%
+	cursor: pointer
+	font-size: 85%
+	background-color: #84c9b6
+	margin-top: 10px
+	color: white
+	padding: 10px
+
+#gg-title
+	background-color: #b0e0e6
+	color: #e88d8f
+	padding: 5px
+	font-size: 110%
+	margin-top: -10px
+	position: fixed
+
+.pp-opts
+	width: 400px
+	height: 20px
+	padding-bottom: 5px
+	
+.publish-project
+	cursor: pointer
+	float: left
+	color: dimgrey
+	margin-left: 10px
+	text-decoration: underline
+
+.share-project-opt
+	cursor: pointer
+	float: left
+	margin-left: 10px
+	color: dimgrey
+	text-decoration: underline	
+
+.delete-container
+	float: left
+	margin-left: 10px
+	
+.button-style-3:hover
+	background-color: lightblue
+
+.pl-selects
+	border: none
+	outline-width: 0px
+	font-size: 100%
+	letter-spacing: 2px
+	width: 100px
+
+#pl-title
+	color: grey
+	font-size: 120%
+	margin-top: -5px
+	position: fixed
+	padding: 8px
+	background-color: #b0e0e6
+	z-index: 100
+
+#change-list-type
+	width: 140px
+	
+#plist
+	padding-top: 10px
+
+#pl-addnew
+	width: 200px
+	margin-left: 550px
+	position: absolute
+	
+
+.AV-select
+	color: #fd7f70
+	position: absolute
+	margin-top: 2px
+	margin-left: 15px
+	font-weight: bold

@@ -1,0 +1,72 @@
+This text file contains a description of all the core procedures interfacing with the front end. All the code has been removed for simplicity and accessability,
+however the procedure names and input is kept to give a more complete overview of different functionalities. Comments include a description of what the procedure
+does (where possible described from the perspective of the front-end). This will be further updated as the project progresses.
+
+
+// Takes a string as an argument and re-creates a project object encoded in that string, an empty string denotes that a new project should be created
+function Project(s) {};
+
+// Returns a composite object containing the name set by the user (if any), the colour set by the user and a diagram all corresponding to the given id
+Project.prototype.getData = function (id) {
+This has three self-explanatory attributes: 'name', 'colour', 'diagram', 'dimension', 'id'
+};
+
+// Returns how many different categories of cells there are in the signature () (i.e. how many DIVs to create in the menu)
+Project.prototype.getN = function () {};
+
+// Takes an integer n as input and returns the number of n-cells (i.e. how many sub-DIVs to create in each n-cell DIV)
+Project.prototype.getK = function (n) {};
+
+// Takes an integer n and returns the array of IDs of n-cells (this array has the same length as the result of calling the method 'getK')
+Project.prototype.listGenerators = function (n) {};
+
+// Sets the front-end name of a generator to what the user wants
+Project.prototype.setName = function (id, name) {};
+
+// Sets the front-end colour to what the user wants
+Project.prototype.setColour = function (id, colour) {};
+
+// This method returns the diagram currently associated with this project, this allows to call the 'render' function on the diagram to create pictures
+Project.prototype.getDiagram = function () {};
+
+// This method returns the signature currently associated with this project
+Project.prototype.getSignature = function () {};
+
+// Turns this object into a string
+Project.prototype.stringify = function () {};
+
+/* 
+Takes a rule (generator) and a string describing how to get to an appropriate boundary of this diagram as arguments
+Returns the list of all possible inclusion functions of the source of this generator into the diagram
+*/
+Project.prototype.matches = function (matchedDiagram, boundaryPath) {};
+
+/* 
+Takes two arrays - an array of pre-computed matches between some matched diagram and this diagram, also an array of elements of this diagram
+Only keeps the matches for which at least one value appears in the arrray of selected elements
+*/
+Project.prototype.limitMatches = function (matches, elements) {};
+
+/*
+Takes a diagram that we want to attach, the path to the attachement boundary as arguments
+Updates this diagram to be the result of the attachment
+*/
+Project.prototype.attach = function (attachedDiagram, inclusionFunction, boundaryPath) {};
+
+// Saves the source of a rule (a MapDiagram), to be used later in creating a rule, only can be used if a target has not already been saved.
+// Returns null if this is the first source/target to be selected, otherwise returns id of new generator.
+Project.prototype.saveRuleSource = function () {};
+
+// Saves the target of a rule (a MapDiagram), to be used later in creating a rule, only can be used if a source has not already been saved
+// Returns null if this is the first source/target to be selected, otherwise returns id of new generator.
+Project.prototype.saveRuleTarget = function () {};
+
+/* 
+Depending on whether a source or a target have been already stored in memory, this procedure completes the rule with the diagram currently in workspace.
+If the dimensions match, an appropriate generator is added an an appropriate level (the second part handled internally by the Signature class)
+If none have been saved, it adds a 0-generator. For all these possible generators the internal name will be automatically added when the generator is created 
+*/
+Project.prototype.addRule = function () {};
+
+// Makes this signature an empty signature of level (n+1)
+Project.prototype.lift = function (target) {};
