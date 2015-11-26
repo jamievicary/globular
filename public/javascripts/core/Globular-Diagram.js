@@ -541,13 +541,18 @@ Diagram.prototype.getBoundaryCoordinates = function(internal, fakeheight) {
     return sub;
 }
 
-// Find the first colour that appears in the diagram
-Diagram.prototype.getFirstColour = function() {
+// Find the ID of the first cell that appears in the diagram
+Diagram.prototype.getFirstId = function() {
     var d = this;
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
-    var id = d.cells[0].id;
+    return d.cells[0].id;
+}
+
+// Find the colour of the first cell that appears in the diagram
+Diagram.prototype.getFirstColour = function() {
+    var id = this.getFirstId();
     return gProject.getColour(id);
 }
 

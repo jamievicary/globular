@@ -16,7 +16,6 @@ var click_radius = 0.25;
 function Display(container, diagram) {
     this.container = container;
     this.diagram = diagram;
-    this.active = null;
     this.select_zone = null;
     this.suppress_input = null;
     this.slices = [];
@@ -68,20 +67,74 @@ Display.prototype.mousemove = function(event) {
     var data = this.gridToLogical(this.select_grid);
     this.select_grid = null;
 
-    if (data.dimension == this.diagram.getDimension() - 1) {
-        // Clicking on an edge
-        if (Math.abs(dx) < 0.25) return;
+    // Clicking a 2d picture
+    if (this.data.dimension == 2) {
+        if (data.dimension == this.diagram.getDimension() - 1) {
+            // Clicking on an edge
+            if (Math.abs(dx) < 0.25) return;
+            data.directions = [dx > 0 ? +1 : -1];
+        } else if (data.dimension == this.diagram.getDimension()) {
+            // Clicking on a vertex
+            if (Math.abs(dy) < 0.25) return;
+            data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
+        }
+    
+    // Clicking a 1d picture
+    } else if (this.data.dimension == 1) {
         data.directions = [dx > 0 ? +1 : -1];
-    } else if (data.dimension == this.diagram.getDimension()) {
-        // Clicking on a vertex
-        if (Math.abs(dy) < 0.25) return;
-        data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
     }
 
     gProject.dragCell(data);
 };
 
 Display.prototype.gridToLogical = function(grid_coord) {
+    if (this.data.dimension == 0) return this.gridToLogical_0(grid_coord);
+    if (this.data.dimension == 1) return this.gridToLogical_1(grid_coord);
+    if (this.data.dimension == 2) return this.gridToLogical_2(grid_coord);
+}
+
+Display.prototype.gridToLogical_1 = function(grid_coord) {
+
+    // Has the user clicked on a vertex?
+    for (var i = 0; i < this.data.vertices.length; i++) {
+        var vertex = this.data.vertices[i];
+        var dx = grid_coord.x - vertex.x;
+        var dy = grid_coord.y - vertex.y;
+        if (dx * dx + dy * dy > 0.15 * 0.15) continue;
+
+        // User has selected this vertex
+        var padded = this.padCoordinates([vertex.level]);
+        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        console.log("Click on vertex at coordinates " + JSON.stringify(padded));
+        var position = this.diagram.getBoundaryCoordinates(padded, false);
+        position.dimension = this.diagram.getDimension();
+        return position;
+    }
+
+    // Has the user clicked on an edge?
+    for (var i = 0; i < this.data.edges.length; i++) {
+        var edge = this.data.edges[i];
+        if (edge.start_x > grid_coord.x) continue;
+        if (edge.finish_x < grid_coord.x) continue;
+        // How close is this edge?
+        var d = grid_coord.y - edge.y;
+        if (Math.abs(d) > 0.2) continue;
+
+        // User has clicked on this edge
+        var padded = this.padCoordinates([edge.level, 0]);
+        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        console.log("Click on edge at coordinates " + JSON.stringify(padded));
+        var position = this.diagram.getBoundaryCoordinates(padded, true);
+        position.dimension = this.diagram.getDimension() - 1;
+        return position;
+    }
+    
+    // Clicked on nothing
+    return null;
+
+}
+
+Display.prototype.gridToLogical_2 = function(grid_coord) {
 
     var height = grid_coord.y;
 
@@ -143,6 +196,10 @@ Display.prototype.gridToLogical = function(grid_coord) {
 Display.prototype.mouseup = function(event) {
     if (this.select_grid == null) return;
     var position = this.gridToLogical(this.select_grid);
+    if (position == null) {
+        this.select_grid = null;
+        return;
+    }
     position.directions = null;
     gProject.dragCell(position);
 }
@@ -202,10 +259,6 @@ Display.prototype.update_controls = function(boundary) {
 
     // Update the slice controls
     this.update_slice_container(boundary);
-}
-
-Display.prototype.update_sliders = function() {
-
 }
 
 Display.prototype.control_change = function() {
@@ -364,7 +417,7 @@ Display.prototype.render = function() {
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
     console.log("Display.render: time " + Math.floor(performance.now() - t) + 'ms');
     if (data == null) return;
-    this.data = data.data;
+    this.data = data;
 }
 
 // Pads an object with 'boundary_depth' and 'logical' properties
