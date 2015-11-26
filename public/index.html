@@ -1,10 +1,9 @@
-<!doctype html>
+<doctype html>
 
 <html lang="en">
 
 <head>
 	<meta charset="utf-8">
-
 	<title>Globular</title>
 	<link rel="stylesheet" type="text/css" href="/all_stylesheets/stylesheets/style.css">
 	<script src="/javascripts/libs/jquery.js"></script>
@@ -22,7 +21,7 @@
 	<script src="/javascripts/core/Globular-Stringify.js"></script>
 	<!--<script src="/javascripts/core/Globular-Stochastic.js"></script>-->
 	<script src="/javascripts/core/Globular-Render.js"></script>
-	<script src="/javascripts/core/Globular-Render-THREE.js"></script>
+	<!--<script src="/javascripts/core/Globular-Render-THREE.js"></script>-->
 	<script src="/javascripts/core/Globular-Render-SVG.js"></script>
 	<script src="/javascripts/core/Globular-Auxiliary.js"></script>
 	<script src="/javascripts/core/Globular-Display.js"></script>
@@ -34,8 +33,6 @@
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 	<script src="/javascripts/libs/OrbitControls-Ortho.js"></script>
 	<script src="/javascripts/libs/jquery.mousewheel.min.js"></script>
-
-
 </head>
 
 <body>
@@ -44,7 +41,6 @@
 			<img src='/images/logo.png' id='logo-image'>
 			<div id='logo-text'>LOBULAR</div>
 		</div>
-
 		<div id="main-menu">
 			<div id='mm-help'>HELP</div>
 			<div id='mm-about'>ABOUT</div>
@@ -60,18 +56,12 @@
 		<div id="control-body">
 			<div id="cell-body"></div>
 		</div>
-
 		<div id="diagram-body">
-
 			<input type="text" id="diagram-title" style="display: none">
-
-			<div id="view-desc-body">
-				<div id="view-desc-plate">
-					<textarea id='text-p-desc'></textarea>
-				</div>
-				<div id="view-p-desc" style='width:130px;'>^^Project Abstract</div>
+			<div id = "view-desc-body">
+				<div id = "view-desc-plate"><textarea id = 'text-p-desc'></textarea></div>
+				<div id="view-p-desc" style = 'width:130px;'>Project Abstract</div>
 			</div>
-
 			<div id="project-menu" style="display:none">
 				<li id="save-project-opt" class="button-style-3" p_id="">Save</li>
 				<li id="clear-project-opt" class="button-style-3"><u>C</u>lear</li>
@@ -85,9 +75,7 @@
 					<input type="checkbox" id="stochastic-cb">
 				</li>
 				-->
-
 				<div id="ajax-loading" style=""></div>
-
 			</div>
 			<div id="diagram-canvas" style="display: none;">
 			</div>
@@ -162,18 +150,21 @@
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="help-box">
 		<p></p>
 		<div id="msg-close-opt-help" class="msg-close-opt">
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="about-box">
 		<p></p>
 		<div id="msg-close-opt-about" class="msg-close-opt">
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="gallery-box">
 		<div id="msg-close-opt-gallery" class="msg-close-opt">
 			Close
@@ -183,6 +174,7 @@
 		<br>
 		<div id="plist"></div>
 	</div>
+
 	<div class="box" id="run-proc-box">
 		<div id='process-form'>
 			<div style="width: 150px; float:left">Process dimension:</div>

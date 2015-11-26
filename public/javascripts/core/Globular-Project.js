@@ -137,6 +137,7 @@ Project.prototype.clearThumbnails = function() {
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
     this.diagram = null;
+    this.clearThumbnails();
     this.renderDiagram();
     this.saveState();
 }
@@ -538,19 +539,15 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         });
     }
 
-
+    /*
     if (n != 0) {
-
         var sto_rate_text = document.createElement('input');
         sto_rate_text.className = 'stochastic-rate';
         sto_rate_text.id = 'sr-' + generator.id;
         sto_rate_text.type = 'text';
         sto_rate_text.placeholder = 'Rate';
-
         div_detail.appendChild(sto_rate_text);
-
     }
-
     $("#stochastic-cb").change(function() {
         if ($(this).is(':checked')) {
             $(".stochastic-rate").slideDown();
@@ -559,12 +556,12 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
             $(".stochastic-rate").slideUp();
         }
     });
-
     $(sto_rate_text).blur(function() {
         var cid = $(this).attr("id").substring(3);
         var rate = $(this).val();
         project.set_rate(generator.id, rate);
     });
+    */
 
     // Add extra section
     var div_extra = document.createElement('div');
