@@ -25,8 +25,8 @@ exports.get_project_list = function(req, res) {
 			fs.readFile('database/users/' + user_id + '/data.json', 'utf8', function(err, result) {
 				console.log(result);
 				result = JSON.parse(result);
-
 				var ids = result.published_projects;
+				if (ids === undefined) ids = [];
 				res.send({
 					project_ids: ids
 				});
@@ -208,6 +208,7 @@ exports.publish_project = function(req, res) {
 
 			var userData = fs.readFileSync('database/users/' + user_id + '/data.json');
 			userData = JSON.parse(userData);
+			if (userData.published_projects == undefined) userData.published_projects = [];
 			userData.published_projects.push(dateName + "." + pcount);
 
 			var data = JSON.stringify({
