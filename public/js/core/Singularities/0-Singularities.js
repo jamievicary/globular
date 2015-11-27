@@ -21,7 +21,8 @@ function RegisterSingularityFamily(data) {
         SingularityFamilies[data.members[index]] = data.family;
     }
     SingularityData[data.family] = {
-        dimension: data.dimension
+        dimension: data.dimension,
+        friendly: data.friendly
     };
 }
 

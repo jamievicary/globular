@@ -5,7 +5,8 @@
 RegisterSingularityFamily({
     family: 'Int',
     dimension: 3,
-    members: ['Int', 'IntI']
+    members: ['Int', 'IntI'],
+    friendly: {'Int': 'Interchanger'}
 });
 
 Diagram.prototype.expand.Int = function(type, x, n, m) {

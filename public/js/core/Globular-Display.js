@@ -123,7 +123,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
         // User has clicked on this edge
         var padded = this.padCoordinates([edge.level, 0]);
         if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-        console.log("Click on edge at coordinates " + JSON.stringify(padded));
+        //console.log("Click on edge at coordinates " + JSON.stringify(padded));
         var position = this.diagram.getBoundaryCoordinates(padded, true);
         position.dimension = this.diagram.getDimension() - 1;
         return position;
@@ -148,7 +148,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
         if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-        console.log("Click on vertex at coordinates " + JSON.stringify(padded));
+        //console.log("Click on vertex at coordinates " + JSON.stringify(padded));
         var position = this.diagram.getBoundaryCoordinates(padded, false);
         position.dimension = this.diagram.getDimension();
         return position;
@@ -178,7 +178,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     if (Math.abs(best_edge_distance) < 0.1) {
         var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left - 1]);
         if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-        console.log("Click on edge at coordinates " + JSON.stringify(padded));
+        //console.log("Click on edge at coordinates " + JSON.stringify(padded));
         var position = this.diagram.getBoundaryCoordinates(padded, true);
         position.dimension = this.diagram.getDimension() - 1;
         return position;
@@ -187,7 +187,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     // The user has clicked on a region
     var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left, 0]);
     if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-    console.log("Click on region at coordinates " + JSON.stringify(padded));
+    //console.log("Click on region at coordinates " + JSON.stringify(padded));
     var position = this.diagram.getBoundaryCoordinates(padded, true);
     position.dimension = this.diagram.getDimension() - 2;
     return position;

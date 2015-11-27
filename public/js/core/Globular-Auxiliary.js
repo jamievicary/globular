@@ -192,6 +192,29 @@ String.prototype.repeat = function(n) {
     return result;
 }
 
+String.prototype.getFriendlyName = function() {
+    
+    // Is it a cancellation?
+    if (this.tail('-EI')) return this.substr(0, this.length - 3).getFriendlyName() + ", cancel";
+    
+    // Is it an inverse cancellation?
+    if (this.tail('-E')) return this.substr(0, this.length - 2).getFriendlyName() + ", introduce";
+    
+    // Is it an inverse?
+    if (this.tail('I')) return this.substr(0, this.length - 1).getFriendlyName() + " inverse";
+
+    // Is it a generator?
+    var generator = gProject.signature.getGenerator(this);
+    if (generator != null) return generator.name;
+    
+    // Is it a named singularity?
+    var family = GetSingularityFamily(this);
+    if (family != undefined) return SingularityData[family].friendly[this];
+    
+    // Can't understand this
+    return 'UNKNOWN';
+}
+
 Array.prototype.move = function(instructions) {
     for (var i = 0; i < instructions.length; i++) {
         if (i == this.length) return;

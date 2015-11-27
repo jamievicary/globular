@@ -26,7 +26,7 @@ function Project(string) {
         if (!new_project.hasOwnProperty(name)) continue;
         this[name] = new_project[name];
     }
-    
+
 };
 
 Project.prototype.getType = function() {
@@ -216,7 +216,10 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
         }
     }
 
-    this.addNCell({source: source, target: target});
+    this.addNCell({
+        source: source,
+        target: target
+    });
 
     // Re-render and save the new state
 
@@ -228,9 +231,16 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 };
 
 Project.prototype.storeTheorem = function() {
-    var theorem_id = this.addNCell({source: this.diagram.getSourceBoundary(), target: this.diagram.getTargetBoundary()});
+    var theorem_id = this.addNCell({
+        source: this.diagram.getSourceBoundary(),
+        target: this.diagram.getTargetBoundary()
+    });
     var theorem_diagram = this.signature.createDiagram(theorem_id);
-    this.addNCell({source: theorem_diagram, target: this.diagram, invertible: true});
+    this.addNCell({
+        source: theorem_diagram,
+        target: this.diagram,
+        invertible: true
+    });
     this.clearDiagram();
     //this.renderAll();
     this.saveState();
@@ -238,7 +248,7 @@ Project.prototype.storeTheorem = function() {
 
 
 Project.prototype.dragCell = function(drag) {
-    console.log("Detected drag: " + JSON.stringify(drag));
+    //console.log("Detected drag: " + JSON.stringify(drag));
 
     // Get a pointer to the subdiagram in which the drag took place
     var diagram_pointer = this.diagram;
@@ -261,7 +271,29 @@ Project.prototype.dragCell = function(drag) {
     }
 
     // Should really prompt the user to choose between the valid options
-    var option = options[0];
+    if (options.length == 1) {
+        this.performAction(options[0], drag);
+        return;
+    }
+
+    var list = $('#options-list').empty();
+    for (var i = 0; i < options.length; i++) {
+        var description = options[i].id.getFriendlyName();
+        var item = $('<li>').html(description);
+        list.append(item);
+        
+        // Use a closure to specify the behaviour on selection
+        (function(action) {
+            item.click(function() {
+                $("#options-box").fadeOut();
+                gProject.performAction(action, drag);
+            });
+        })(options[i]);
+    }
+    $("#options-box").fadeIn();
+};
+
+Project.prototype.performAction = function(option, drag) {
 
     // Perform a preattachment if necessary
     if (option.preattachment != null) {
@@ -270,12 +302,14 @@ Project.prototype.dragCell = function(drag) {
             id: option.preattachment.id,
             key: option.preattachment.key
         }), option.preattachment.boundary);
+        console.log("Preattachment " + option.preattachment.id.getFriendlyName());
     }
 
     this.diagram.attach(new NCell({
         id: option.id,
         key: option.key
     }), drag.boundary, true);
+    console.log("Attachment " + option.id.getFriendlyName());
 
     // Useful shortcut to the diagram for console manipulation
     d = this.diagram;
@@ -285,7 +319,6 @@ Project.prototype.dragCell = function(drag) {
     this.saveState();
     this.clearThumbnails();
     this.renderDiagram(drag);
-
 }
 
 Project.prototype.saveState = function() {
@@ -425,7 +458,10 @@ Project.prototype.currentString = function() {
 
 // Returns the current string 
 Project.prototype.addZeroCell = function() {
-    this.addNCell({source: null, target: null});
+    this.addNCell({
+        source: null,
+        target: null
+    });
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
@@ -507,7 +543,9 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         //var generator = gProject.signature.getGenerator(generator.id);
         generator.name = text;
     })
-    $(div_name).keypress(function(e) {e.stopPropagation()});
+    $(div_name).keypress(function(e) {
+        e.stopPropagation()
+    });
 
     div_detail.appendChild(div_name);
 

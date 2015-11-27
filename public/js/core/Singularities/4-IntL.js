@@ -10,15 +10,21 @@
 RegisterSingularityFamily({
     family: 'IntL',
     dimension: 4,
-    members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI']
+    members: ['Int-L', 'Int-LI', 'IntI-L', 'IntI-LI', 'Int-R', 'Int-RI', 'IntI-R', 'IntI-RI'],
+    friendly: {
+        'Int-L': 'Pull-through interchanger above',
+        'IntI-L': 'Pull-through interchanger underneath',
+        'Int-R': 'Pull-through inverse interchanger underneath',
+        'IntI-R': 'Pull-through inverse interchanger above'
+    }
 });
 
 Diagram.prototype.expand.IntL = function(type, data, n, m) {
-    
+
     var x = data.up;
     var y = data.across;
     var l = data.length;
-    
+
     var list = new Array();
     var new_type;
     var new_l = l + (this.target_size(x) - this.source_size(x));
@@ -44,16 +50,32 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             }
         } else {
             list = this.expand(new_type, x, 1, a * m).concat(
-                this.expand(type, {up: x + a * m, across: y + a, length: this.source_size(x)}, 1, 1)).concat(
+                this.expand(type, {
+                    up: x + a * m,
+                    across: y + a,
+                    length: this.source_size(x)
+                }, 1, 1)).concat(
                 this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
         }
     } else if (m != 1 && n === 1) {
-        list = this.expand(type, {up: x, across: y, length: l}, 1, 1).concat(
-            this.expand(type, {up: x + a + b + this.source_size(x), across: y + 1, up: new_l}, 1, m - 1));
+        list = this.expand(type, {
+            up: x,
+            across: y,
+            length: l
+        }, 1, 1).concat(
+            this.expand(type, {
+                up: x + a + b + this.source_size(x),
+                across: y + 1,
+                up: new_l
+            }, 1, m - 1));
     } else {
-        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {up: x, across: y, length: l}, n - 1, m));
+        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {
+            up: x,
+            across: y,
+            length: l
+        }, n - 1, m));
     }
-    
+
     return list;
 };
 
@@ -137,7 +159,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
-    
+
     if (type == 'Int-LI') {
         if (coords.last() == 0) return false; // must have something on the left
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
@@ -165,7 +187,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
         //if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
         return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
-    
+
     return false;
 }
 
@@ -179,15 +201,31 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var d = new Diagram(); // dummy diagram object for Int expansion
     var s = this.source_size(h);
     var t = this.target_size(h);
-    
-    if (type == 'Int-L')   return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'IntI-L')  return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'Int-R')   return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
-    if (type == 'IntI-R')  return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
-    if (type == 'Int-LI')  return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
-    if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
-    if (type == 'Int-RI')  return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), 1, t));
-    if (type == 'IntI-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI', coords.last(), 1, t));
+
+    if (type == 'Int-L') return d.expand('Int', coords.last(), s, 1).concat([cell.move([{
+        relative: 1
+    }])]);
+    if (type == 'IntI-L') return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{
+        relative: 1
+    }])]);
+    if (type == 'Int-R') return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{
+        relative: -1
+    }])]);
+    if (type == 'IntI-R') return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{
+        relative: -1
+    }])]);
+    if (type == 'Int-LI') return [cell.move([{
+        relative: -1
+    }])].concat(d.expand('Int', coords.last() - 1, t, 1));
+    if (type == 'IntI-LI') return [cell.move([{
+        relative: -1
+    }])].concat(d.expand('IntI', coords.last() - 1, t, 1));
+    if (type == 'Int-RI') return [cell.move([{
+        relative: 1
+    }])].concat(d.expand('Int', coords.last(), 1, t));
+    if (type == 'IntI-RI') return [cell.move([{
+        relative: 1
+    }])].concat(d.expand('IntI', coords.last(), 1, t));
 }
 
 Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
@@ -198,26 +236,47 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     var cell = this.cells[h];
     var coords = cell.box.min.slice(0);
     coords.push(h);
-    
+
     if (type.tail('Int-L', 'IntI-L')) {
         return coords;
-    }
-    else if (type.tail('Int-LI', 'IntI-LI')) {
-        return coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
-    }
-    else if (type.tail('Int-R', 'IntI-R')) {
-        return coords.move([{relative: -1}, {relative: 0}]);
-    }
-    else if (type.tail('Int-RI', 'IntI-RI')) {
-        return coords.move([{relative: -this.source_size(h)}])
+    } else if (type.tail('Int-LI', 'IntI-LI')) {
+        return coords.move([{
+            relative: -1
+        }, {
+            relative: -this.source_size(h)
+        }]);
+    } else if (type.tail('Int-R', 'IntI-R')) {
+        return coords.move([{
+            relative: -1
+        }, {
+            relative: 0
+        }]);
+    } else if (type.tail('Int-RI', 'IntI-RI')) {
+        return coords.move([{
+            relative: -this.source_size(h)
+        }])
     }
 }
 
 Diagram.prototype.getInterchangerBoundingBox.IntL = function(type, key) {
     var x = key.last();
     var coords = this.getInterchangerCoordinates(type, key);
-    if (type.tail('R', 'L')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.target_size(x) + 1}])};
-    if (type.tail('RI', 'LI')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.source_size(x) + 1}])};
+    if (type.tail('R', 'L')) return {
+        min: coords,
+        max: coords.slice().move([{
+            relative: this.source_size(x) + 1
+        }, {
+            relative: this.target_size(x) + 1
+        }])
+    };
+    if (type.tail('RI', 'LI')) return {
+        min: coords,
+        max: coords.slice().move([{
+            relative: this.source_size(x) + 1
+        }, {
+            relative: this.source_size(x) + 1
+        }])
+    };
     debugger;
 }
 

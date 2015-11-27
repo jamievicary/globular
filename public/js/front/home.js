@@ -57,7 +57,9 @@ $(document).ready(function() {
     $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
     });
-
+    $("#msg-close-opt-cell").click(function() {
+        $("#options-box").fadeOut();
+    });
     $("#mm-signup").click(function() {
         $("#signup-box").fadeIn();
     });
