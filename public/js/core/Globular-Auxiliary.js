@@ -198,7 +198,7 @@ String.prototype.getFriendlyName = function() {
     if (this.tail('-EI')) return this.substr(0, this.length - 3).getFriendlyName() + ", cancel";
     
     // Is it an inverse cancellation?
-    if (this.tail('-E')) return this.substr(0, this.length - 2).getFriendlyName() + ", introduce";
+    if (this.tail('-E')) return this.substr(0, this.length - 2).getFriendlyName() + ", insert";
     
     // Is it an inverse?
     if (this.tail('I')) return this.substr(0, this.length - 1).getFriendlyName() + " inverse";

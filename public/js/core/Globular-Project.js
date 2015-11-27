@@ -235,7 +235,8 @@ Project.prototype.storeTheorem = function() {
         source: this.diagram.getSourceBoundary(),
         target: this.diagram.getTargetBoundary()
     });
-    var theorem_diagram = this.signature.createDiagram(theorem_id);
+    //var theorem_diagram = this.signature.createDiagram(theorem_id);
+    var theorem_diagram = this.signature.getGenerator(theorem_id).getDiagram();
     this.addNCell({
         source: theorem_diagram,
         target: this.diagram,

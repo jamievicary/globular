@@ -78,8 +78,8 @@ Display.prototype.mousemove = function(event) {
             if (Math.abs(dy) < 0.25) return;
             data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
         }
-    
-    // Clicking a 1d picture
+
+        // Clicking a 1d picture
     } else if (this.data.dimension == 1) {
         data.directions = [dx > 0 ? +1 : -1];
     }
@@ -104,12 +104,22 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
 
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
-        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
         console.log("Click on vertex at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded, false);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags()
+        });
         position.dimension = this.diagram.getDimension();
         return position;
     }
+
+    // Get boundary distance
+    var b = $(this.container)[0].bounds;
+    var allow_s = Math.abs(grid_coord.x - b.left) < 0.25;
+    var allow_t = Math.abs(grid_coord.x - b.right) < 0.25;
+    //var boundary_distance = Math.min(Math.abs(grid_coord.x - b.left), Math.abs(grid_coord.x - b.right));
+    //var allow_boundary = Math.abs(boundary_distance) < 0.25;
 
     // Has the user clicked on an edge?
     for (var i = 0; i < this.data.edges.length; i++) {
@@ -122,13 +132,19 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
 
         // User has clicked on this edge
         var padded = this.padCoordinates([edge.level, 0]);
-        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
         //console.log("Click on edge at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded, true);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s,
+                target: allow_t
+            }])
+        });
         position.dimension = this.diagram.getDimension() - 1;
         return position;
     }
-    
+
     // Clicked on nothing
     return null;
 
@@ -137,6 +153,13 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
 Display.prototype.gridToLogical_2 = function(grid_coord) {
 
     var height = grid_coord.y;
+
+    // Get boundary distance
+    var b = $(this.container)[0].bounds;
+    var allow_s1 = Math.abs(grid_coord.y - b.bottom) < 0.25;
+    var allow_t1 = Math.abs(grid_coord.y - b.top) < 0.25;
+    var allow_s2 = Math.abs(grid_coord.x - b.left) < 0.25;
+    var allow_t2 = Math.abs(grid_coord.x - b.right) < 0.25;
 
     // Has the user clicked on a vertex?
     for (var i = 0; i < this.data.vertices.length; i++) {
@@ -147,9 +170,10 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
 
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
-        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-        //console.log("Click on vertex at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded, false);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags()
+        });
         position.dimension = this.diagram.getDimension();
         return position;
     }
@@ -167,28 +191,43 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
         var d = grid_coord.x - edge.x;
         // If the edge is to the right, ignore it
         if (d < -0.1) continue;
-        edges_to_left ++;
+        edges_to_left++;
         if (d < best_edge_distance) {
             best_edge_distance = d;
             best_edge_index = i;
         }
     }
-    
+
     // Has the user clicked on an edge?
     if (Math.abs(best_edge_distance) < 0.1) {
         var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left - 1]);
-        if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
         //console.log("Click on edge at coordinates " + JSON.stringify(padded));
-        var position = this.diagram.getBoundaryCoordinates(padded, true);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s1,
+                target: allow_t1
+            }])
+        });
         position.dimension = this.diagram.getDimension() - 1;
         return position;
     }
 
     // The user has clicked on a region
     var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left, 0]);
-    if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+    //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
     //console.log("Click on region at coordinates " + JSON.stringify(padded));
-    var position = this.diagram.getBoundaryCoordinates(padded, true);
+    var position = this.diagram.getBoundaryCoordinates({
+        coordinates: padded,
+        allow_boundary: this.getBoundaryFlags().concat([{
+            source: allow_s1,
+            target: allow_t1
+        }, {
+            source: allow_s2,
+            target: allow_t2
+        }])
+    });
     position.dimension = this.diagram.getDimension() - 2;
     return position;
 }
@@ -370,6 +409,7 @@ Display.prototype.update_slice_container = function(drag) {
             .attr('min', 0)
             .val(0)
             .on('input', function(event) {
+            //.change(function(event) {
                 self.control_change(event)
             })
             .mouseover(function() {
@@ -382,8 +422,9 @@ Display.prototype.update_slice_container = function(drag) {
     var slice = this.diagram.copy();
     for (var i = 0; i < remaining_dimensions; i++) {
         var input = this.slices[i];
-        input.val(Math.min(input.val(), slice.cells.length));
-        input.attr('max', slice.cells.length);
+        var val = input.val();
+        input.val(Math.min(val, Math.max(slice.cells.length, 1)));
+        input.attr('max', Math.max(1, slice.cells.length));
         slice = slice.getSlice(input.val());
     }
 }
@@ -440,4 +481,16 @@ Display.prototype.padCoordinates = function(position) {
     }
     position = pad_position.concat(position);
     return position;
+}
+
+Display.prototype.getBoundaryFlags = function() {
+    var flags = [];
+    for (var i = 0; i < this.slices.length; i++) {
+        var flag = {};
+        var s = this.slices[i];
+        flag.source = (s.val() == s.attr('min'));
+        flag.target = (s.val() == s.attr('max'));
+        flags.push(flag);
+    }
+    return flags;
 }

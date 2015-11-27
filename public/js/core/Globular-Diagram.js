@@ -81,7 +81,7 @@ Diagram.prototype.rewrite = function(cell, reverse) {
     var target;
     if (cell.id.is_interchanger()) {
         target = new Diagram(null, this.rewritePasteData(cell.id, cell.key)); // WHY DOES THIS HAVE TO BE A DIAGRAM OBJECT?
-        var bounding_box = (cell.box != null ? cell.box: this.getBoundingBox(cell));
+        var bounding_box = (cell.box != null ? cell.box : this.getBoundingBox(cell));
         insert_position = bounding_box.min.last();
         source_size = bounding_box.max.last() - bounding_box.min.last();
     } else {
@@ -102,7 +102,7 @@ Diagram.prototype.rewrite = function(cell, reverse) {
     var slice = this.getSlice(insert_position);
     if (this.sliceCache == null) this.initializeSliceCache();
     else {
-        for (var i=insert_position+1; i<this.sliceCache.length; i++) {
+        for (var i = insert_position + 1; i < this.sliceCache.length; i++) {
             this.sliceCache[i] = null;
         }
     }
@@ -505,21 +505,31 @@ Diagram.prototype.getFullDimensions = function() {
 // Convert an internal coordinate to {boundary: {type, depth}, coordinates}, by identifying
 // coordinates in slices adjacent to the boundary as being in that boundary.
 // ASSUMES COORDINATES ARE FIRST-INDEX-FIRST
-Diagram.prototype.getBoundaryCoordinates = function(internal, fakeheight) {
-    if (fakeheight == undefined) fakeheight = false;
+Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheight*/ ) {
+    if (params.allow_boundary == undefined) params.allow_boundary = [];
+    var allow_boundary = params.allow_boundary.length == 0 ? {
+        source: false,
+        target: false
+    } : params.allow_boundary[0];
+    var c = params.coordinates;
     var sub;
-    if (internal.length == 1) {
+    if (c.length == 1) {
         sub = {
             boundary: null,
             coordinates: []
         };
     } else {
-        var slice = this.getSlice(internal[0]);
-        var sub = slice.getBoundaryCoordinates(internal.slice(1));
+        var slice = this.getSlice(c[0]);
+        var new_allow_boundary = params.allow_boundary.length == 0 ? [] : params.allow_boundary.slice(1);
+        sub = slice.getBoundaryCoordinates({
+            coordinates: params.coordinates.slice(1),
+            allow_boundary: new_allow_boundary
+        });
     }
 
-    var in_source = internal.length > 1 && internal[0] == 0;
-    var in_target = internal.length > 1 && internal[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
+    var in_source = allow_boundary.source && c.length > 1 && c[0] == 0;
+    //var in_target = c.length > 1 && c[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
+    var in_target = allow_boundary.target && c.length > 1 && c[0] == Math.max(1, this.cells.length);
     if (sub.boundary != null) {
         sub.boundary.depth++;
     } else if (in_target) {
@@ -536,10 +546,10 @@ Diagram.prototype.getBoundaryCoordinates = function(internal, fakeheight) {
         };
     } else {
         // Not in the source or the target, previously in the interior
-        sub.coordinates.unshift(internal[0]);
+        sub.coordinates.unshift(c[0]);
     }
     return sub;
-}
+};
 
 // Find the ID of the first cell that appears in the diagram
 Diagram.prototype.getFirstId = function() {
@@ -769,14 +779,13 @@ Diagram.prototype.getSlice = function(location) {
         // Handle request for slice 1 of identity diagram gracefully
         return this.source.copy(); // Not returning a copy, beware...
     } else if (height > this.cells.length) debugger;
-    
+
     if (height == 0) return this.source.copy();
-    
+
     // Check whether the cache contains the slice
     if (this.sliceCache == null) {
         this.initializeSliceCache();
-    }
-    else {
+    } else {
         if (this.sliceCache[height] != undefined) {
             return this.sliceCache[height].copy();
         }
@@ -801,7 +810,7 @@ Diagram.prototype.initializeSliceCache = function() {
 
 Diagram.prototype.prepare = function() {
     if (this.source != null) this.source.prepare();
-    for (var i=0; i<this.cells.length; i++) {
+    for (var i = 0; i < this.cells.length; i++) {
         var cell = this.cells[i];
         if (cell.box != undefined) continue;
         cell.box = this.getSliceBoundingBox(i);

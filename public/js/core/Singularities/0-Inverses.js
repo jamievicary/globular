@@ -123,7 +123,12 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
 }
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
-    return key;
+    if (type.tail('E')) return [key.last()];
+    if (type.tail('EI')) {
+        var box = this.getBoundingBox({id: type, key: key});
+        return box.min.slice();
+        //return [box.min[0]].concat(key);
+    }
 }
 
 Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
