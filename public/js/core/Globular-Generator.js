@@ -17,11 +17,13 @@ function Generator(data) {
     this.invertible = data.invertible;
     if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
     this.name = data.name;
+    this.prepareDiagram();
     return this;
 };
 
-Generator.prototype.setDiagram = function(diagram) {
-    this.diagram = diagram;
+Generator.prototype.prepareDiagram = function() {
+    var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
+    this.diagram = new Diagram(this.source, [new NCell({id: this.id, key: key, box: this.getBoundingBox()})]);
     this.diagram.ignore = true;
 }
 

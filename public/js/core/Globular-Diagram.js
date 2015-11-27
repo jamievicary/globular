@@ -799,8 +799,8 @@ Diagram.prototype.initializeSliceCache = function() {
     this.sliceCache.ignore = true;
 }
 
-Diagram.prototype.prepareBoxes = function() {
-    if (this.source != null) this.source.prepareBoxes();
+Diagram.prototype.prepare = function() {
+    if (this.source != null) this.source.prepare();
     for (var i=0; i<this.cells.length; i++) {
         var cell = this.cells[i];
         if (cell.box != undefined) continue;

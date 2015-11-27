@@ -70,15 +70,6 @@ Signature.prototype.getGenerator = function (id) {
 };
 
 /* 
-    Creates a diagram of a single generator given its name in the signature
-*/
-Signature.prototype.createDiagram = function (id) {
-    var generator = this.getGenerator(id);
-    var key = [].fill(0, generator.source == null ? 0 : generator.source.getDimension());
-    return new Diagram(generator.source, [new NCell({id: id, key: key, box: generator.getBoundingBox()})]);
-}
-
-/* 
     Returns a deep copy of this signature
 */
 Signature.prototype.copy = function () {
@@ -117,12 +108,13 @@ Signature.prototype.getCells = function() {
     return Object.keys(this.cells);
 };
 
-Signature.prototype.prepareBoxes = function() {
+Signature.prototype.prepare = function() {
     var cell_names = this.getCells();
-    if (this.sigma != null) this.sigma.prepareBoxes();
+    if (this.sigma != null) this.sigma.prepare();
     for (var i=0; i<cell_names.length; i++) {
         var generator = this.cells[cell_names[i]];
-        generator.diagram = this.createDiagram(generator.id);
-        //this.cells[cell_names[i]].diagram.prepareBoxes();
+        if (generator.source != null) generator.source.prepare();
+        if (generator.target != null) generator.target.prepare();
+        generator.prepareDiagram();
     }
 }

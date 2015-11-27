@@ -703,7 +703,6 @@ Project.prototype.addNCell = function(data) {
     }
     this.signature.addGenerator(generator);
     generator = this.signature.getGenerator(generator.id);
-    generator.setDiagram(this.signature.createDiagram(generator.id));
 
     // Set the colour
     var colour_array = GlobularColours[d % 3];

@@ -272,8 +272,8 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
-        gProject.signature.prepareBoxes();
-        if (gProject.diagram != null) gProject.diagram.prepareBoxes();
+        gProject.signature.prepare();
+        if (gProject.diagram != null) gProject.diagram.prepare();
         gProject.initialized = true;
         if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
 
@@ -788,7 +788,7 @@ $(document).ready(function() {
                         } else {
                             main_string = JSON.parse(main_string);
                         }
-                        render_project_front(JSON.parse(main_string));
+                        render_project_front(main_string);
                         $("#text-p-desc").val(p_desc);
                         $("#diagram-title").val(p_name);
                         gProject.saveState();
