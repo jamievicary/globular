@@ -65,17 +65,10 @@ Diagram.prototype.render = function(div, highlight) {
     globular_render(div, this, highlight);
 }
 
-/*
-    Rewrites a subdiagram of this diagram, to a diagram over the same singature. The function takes as input an
-    entry in the list of nCells - this contains two parameters, id: the name of the rewrite cell in the signature and 
-    coordinates: an array with information on how to attach the given cell. In this context, id tells us what rewrite to apply
-    and coordinate tells us which exact part of the diagram to apply the rewrite to.
-*/
-Diagram.prototype.rewrite = function(cell, reverse) {
+// Rewrites a subdiagram of this diagram
+Diagram.prototype.rewrite = function(cell) {
 
-    if (reverse === undefined) reverse = false;
-
-    // Special code to deal with interchangers
+    // Identify the portion to be cut out, and the cells to be spliced in
     var source_size;
     var insert_position;
     var target;
@@ -88,7 +81,7 @@ Diagram.prototype.rewrite = function(cell, reverse) {
         // Info on the source and the target of the rewrite is retrieved from the signature here
         var rewrite = gProject.signature.getGenerator(cell.id.getBaseType());
         source_size = (cell.id.last() == 'I' ? rewrite.target.cells.length : rewrite.source.cells.length);
-        target = (cell.id.last() == 'I' ? rewrite.source : rewrite.target);
+        target = (cell.id.last() == 'I' ? rewrite.source.copy() : rewrite.target.copy());
         insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
     }
 
@@ -100,18 +93,12 @@ Diagram.prototype.rewrite = function(cell, reverse) {
 
     // Prepare the target cells and insert them
     var slice = this.getSlice(insert_position);
-    if (this.sliceCache == null) this.initializeSliceCache();
-    else {
-        for (var i = insert_position + 1; i < this.sliceCache.length; i++) {
-            this.sliceCache[i] = null;
-        }
-    }
+    this.initializeSliceCache();
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
         if (!cell.id.is_interchanger()) new_cell.pad(cell.key);
         new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
         this.cells.splice(insert_position + i, 0, target.cells[i]);
-        this.sliceCache[i + insert_position + 1] = null;
         if (i < target.cells.length - 1) slice.rewrite(new_cell);
     }
 

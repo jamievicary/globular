@@ -76,6 +76,11 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
 }
 
 Diagram.prototype.interchangerAllowed.Int = function(type, key) {
+    
+    if (key.length != 1) {
+        debugger;
+        return false;
+    }
 
     // Sanity check - necessary for degenerate cases
     var x = key.last();
@@ -94,6 +99,7 @@ Diagram.prototype.interchangerAllowed.Int = function(type, key) {
 }
 
 Diagram.prototype.rewritePasteData.Int = function(type, key) {
+    if (key.length != 1) debugger;
     var x = key.last();
     if (type.tail('Int')) {
         var cell1 = this.cells[x].copy();
@@ -113,7 +119,8 @@ Diagram.prototype.rewritePasteData.Int = function(type, key) {
 
 Diagram.prototype.getInterchangerCoordinates.Int = function(type, key) {
 
-    if (key.length === 0) return [];
+    //if (key.length === 0) return [];
+    if (key.length != 1) debugger;
 
     var diagram_pointer = this;
     var x = key.last();
@@ -137,6 +144,7 @@ Diagram.prototype.getInterchangerCoordinates.Int = function(type, key) {
 };
 
 Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
+    if (key.length != 1) debugger;
 
     var position = this.getInterchangerCoordinates(type, key);
     var x = key.last();
@@ -170,6 +178,7 @@ Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
 };
 
 Diagram.prototype.getInverseKey.Int = function(type, key) {
+    if (key.length != 1) debugger
     if (type.tail('Int')) return [key.last() + 1];
     else if (type.tail('IntI')) return [key.last() - 1];
 };

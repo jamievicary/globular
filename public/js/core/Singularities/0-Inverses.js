@@ -77,6 +77,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
 
     var cells = gProject.signature.getNCells(this.getDimension() + 1);
     if (this.getDimension() == 0) drag.coordinates = [];
+    var results = [];
     for (var i = 0; i < cells.length; i++) {
         // Does the source of this cell match at this location?
         var generator = gProject.signature.getGenerator(cells[i]);
@@ -85,24 +86,24 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
             if (!matches[j].tail(drag.coordinates)) continue;
-            return {
+            results.push({
                 id: cells[i],
                 key: matches[j],
                 possible: true
-            }
+            });
         }
         // What about the target
         var matches = this.enumerate(generator.target);
         for (var j = 0; j < matches.length; j++) {
             if (!matches[j].tail(drag.coordinates)) continue;
-            return {
+            results.push({
                 id: cells[i] + 'I',
                 key: matches[j],
                 possible: true
-            }
+            });
         }
     }
-    return [];
+    return results;
 };
 
 Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
@@ -167,14 +168,15 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     // Must have at least 2 things to cancel out
     if (this.cells.length < 2) return false;
 
+    // Get the two things that are supposed to be inverse
     var cell1 = this.cells[height];
     var cell2 = this.cells[height + 1];
 
-    // Check keys are correct
-    var reverse_cell1 = this.getSlice(height).getInverseCell(cell1);
-    if (!reverse_cell1.equals(cell2)) return false;
+    // Check they are actually inverse
+    var inverse_cell1 = this.getSlice(height).getInverseCell(cell1);
+    if (!inverse_cell1.equals(cell2)) return false;
 
-    // Check cell ids are consistent
+    // Check cell ids are consistent with the type we've been passed
     if (type == cell1.id + '-EI' && cell2.id == cell1.id + 'I') return true;
     if (type == cell1.id + '-EI' && cell1.id == cell2.id + 'I') return true;
 
