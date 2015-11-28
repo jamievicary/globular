@@ -279,8 +279,14 @@ Project.prototype.dragCell = function(drag) {
 
     var list = $('#options-list').empty();
     for (var i = 0; i < options.length; i++) {
-        var description = options[i].id.getFriendlyName();
-        var item = $('<li>').html(description);
+        var option = options[i];
+        var id = option.id;
+        if (drag.boundary != null) {
+            if (drag.boundary.depth > 0 && drag.boundary.type == 's') {
+                id = id.toggle_inverse();
+            }
+        }
+        var item = $('<li>').html(id.getFriendlyName());
         list.append(item);
         
         // Use a closure to specify the behaviour on selection
