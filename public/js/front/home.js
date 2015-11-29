@@ -360,7 +360,6 @@ $(document).ready(function() {
 
     $("#use-t-opt").click(function() {
         gProject.saveSourceTarget('target');
-
     });
 
     $("#use-s-opt").click(function() {
@@ -374,8 +373,6 @@ $(document).ready(function() {
     $("#clear-project-opt").click(function() {
         gProject.clearDiagram();
     });
-
-
 
     /*
         var main_string;
@@ -753,26 +750,6 @@ $(document).ready(function() {
     $("#mm-projects").click(function() {
 
         function controlAddP() {
-            var apOptClicked = 0;
-            $("#addp-title").click(function() {
-                if (apOptClicked % 2 == 0) {
-                    $("#add-project-opt").animate({
-                        height: "230px",
-                        width: "400px",
-                        marginLeft: "-=200px"
-                    }, 500);
-                    $("#add-project-opt").css("box-shadow", "0px 0px 10px grey");
-                } else {
-                    $("#add-project-opt").animate({
-                        height: "20px",
-                        width: "200px",
-                        marginLeft: "+=200px"
-                    }, 500);
-                    $("#add-project-opt").css("box-shadow", "0px 0px 0px");
-
-                }
-                apOptClicked = apOptClicked + 1;
-            });
 
             $("#add-project-submit").click(function() {
                 var p_name = $("#ap-name").val();
@@ -790,6 +767,7 @@ $(document).ready(function() {
                         } else {
                             main_string = JSON.parse(main_string);
                         }
+                        global_p_id = result.p_id;
                         render_project_front(main_string);
                         $("#text-p-desc").val(p_desc);
                         $("#diagram-title").val(p_name);

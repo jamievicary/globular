@@ -96,7 +96,12 @@ Diagram.prototype.rewrite = function(cell) {
     this.initializeSliceCache();
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
-        if (!cell.id.is_interchanger()) new_cell.pad(cell.key);
+        if (!cell.id.is_interchanger()) {
+            if (new_cell.id.substr(0, 3) == 'Int') {
+                var z = 1;
+            }
+            new_cell.pad(cell.key.slice(0, cell.key.length - 1));
+        }
         new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
         this.cells.splice(insert_position + i, 0, target.cells[i]);
         if (i < target.cells.length - 1) slice.rewrite(new_cell);

@@ -72,7 +72,7 @@ NCell.prototype.move = function(instructions) {
 NCell.prototype.pad = function(position) {
     if (this.key != null) {
         for (var i = 0; i < this.key.length; i++) {
-            this.key[i] += position[i];
+            this.key[this.key.length - 1 - i] += position[position.length - 1 - i];
         }
     }
     if (this.slices != null) {
