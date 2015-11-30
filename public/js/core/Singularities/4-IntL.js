@@ -192,6 +192,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
 }
 
 Diagram.prototype.rewritePasteData.IntL = function(type, key) {
+    if (key.length != 1) debugger;
 
     var x = key.last();
     var h = key.last();
@@ -201,7 +202,33 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var d = new Diagram(); // dummy diagram object for Int expansion
     var s = this.source_size(h);
     var t = this.target_size(h);
+    var slice = this.getSlice(h);
+    var basic_type = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
 
+    // Compute how the coordinates of the key cell should be modified. Falls
+    // into two classes, dependingon whether the cell is moving 'right' or 'left.'
+    var move_right = type.tail('Int-L', 'IntI-L', 'Int-RI', 'IntI-RI');
+    var behind = type.tail('Int-R', 'Int-RI', 'IntI-L', 'IntI-LI');
+    var q = move_right ? cell.key.last() + s : cell.key.last() - 1;
+    var movement = [{
+            relative: behind ? 0 : ((move_right ? 1 : -1) * (slice.target_size(q) - slice.source_size(q)))
+        }, {
+            relative: (move_right ? 1 : -1)
+        }
+    ];
+
+    // Return the target of the rewrite
+    if (type.tail('Int-L', 'IntI-L')) return d.expand(basic_type, coords.last(), s, 1).concat([cell.move(movement)]);
+    if (type.tail('Int-RI', 'IntI-RI')) return [cell.move(movement)].concat(d.expand(basic_type, coords.last(), 1, t));
+    if (type.tail('Int-R', 'IntI-R')) return d.expand(basic_type, coords.last() - 1, 1, s).concat([cell.move(movement)]);
+    if (type.tail('Int-LI', 'IntI-LI')) return [cell.move(movement)].concat(d.expand(basic_type, coords.last() - 1, t, 1));
+    
+    // Should never fall through to here
+    debugger;
+    
+
+    /*
+    ///////////// OLD
     if (type == 'Int-L') return d.expand('Int', coords.last(), s, 1).concat([cell.move([{
         relative: 1
     }])]);
@@ -220,12 +247,14 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     if (type == 'IntI-LI') return [cell.move([{
         relative: -1
     }])].concat(d.expand('IntI', coords.last() - 1, t, 1));
-    if (type == 'Int-RI') return [cell.move([{
-        relative: 1
-    }])].concat(d.expand('Int', coords.last(), 1, t));
-    if (type == 'IntI-RI') return [cell.move([{
-        relative: 1
-    }])].concat(d.expand('IntI', coords.last(), 1, t));
+    if (type.tail('Int-RI', 'IntI-RI')) {
+        return [cell.move([{
+            relative: slice.target_size(q) - slice.source_size(q)
+        }, {
+            relative: 1
+        }])].concat(d.expand(basic_type, coords.last(), 1, t));
+    }
+    */
 }
 
 Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {

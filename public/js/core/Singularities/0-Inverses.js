@@ -124,12 +124,12 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
 }
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
+    
+    // '-E' cells require a key of length 1
     if (type.tail('E')) return [key.last()];
-    if (type.tail('EI')) {
-        var box = this.getBoundingBox({id: type, key: key});
-        return box.min.slice();
-        //return [box.min[0]].concat(key);
-    }
+    
+    // '-EI' cells require a key of length > 1
+    if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
 }
 
 Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {

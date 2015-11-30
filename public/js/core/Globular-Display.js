@@ -376,6 +376,26 @@ Display.prototype.update_slice_container = function(drag) {
         this.slices.pop();
     }
 
+    // Add any additional slice controls with a dimension of zero
+    var self = this;
+    for (var i = this.slices.length; i < remaining_dimensions; i++) {
+        this.slices[i] =
+            $('<input>')
+            .addClass('control')
+            .addClass('slice')
+            .attr('type', 'number')
+            .attr('min', 0)
+            .val(0)
+            .on('input', function(event) {
+            //.change(function(event) {
+                self.control_change(event)
+            })
+            .mouseover(function() {
+                this.focus();
+            });
+        this.slice_div.append(this.slices[i]);
+    }
+
     // If a particular boundary has been requested, make sure it is within view
     if (drag != null) {
         if (drag.boundary == null) {
@@ -398,26 +418,6 @@ Display.prototype.update_slice_container = function(drag) {
         }
     }
 
-    // Add any additional slice controls with a dimension of zero
-    var self = this;
-    for (var i = this.slices.length; i < remaining_dimensions; i++) {
-        this.slices[i] =
-            $('<input>')
-            .addClass('control')
-            .addClass('slice')
-            .attr('type', 'number')
-            .attr('min', 0)
-            .val(0)
-            .on('input', function(event) {
-            //.change(function(event) {
-                self.control_change(event)
-            })
-            .mouseover(function() {
-                this.focus();
-            });
-        this.slice_div.append(this.slices[i]);
-    }
-
     // Ensure the slice coordinates are valid
     var slice = this.diagram.copy();
     for (var i = 0; i < remaining_dimensions; i++) {
@@ -427,6 +427,7 @@ Display.prototype.update_slice_container = function(drag) {
         input.attr('max', Math.max(1, slice.cells.length));
         slice = slice.getSlice(input.val());
     }
+
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary

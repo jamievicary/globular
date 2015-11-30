@@ -144,6 +144,7 @@ Project.prototype.clearDiagram = function() {
 
 // Take the identity on the main diagram
 Project.prototype.takeIdentity = function() {
+    this.clearThumbnails();
     if (this.diagram == null) return;
 
     /*
@@ -153,7 +154,7 @@ Project.prototype.takeIdentity = function() {
     }
     */
     this.diagram.boost();
-    this.renderDiagram();
+    this.renderDiagram({boundary: {type : 't', depth: 1}});
 }
 
 /* 
@@ -400,7 +401,7 @@ Project.prototype.selectGenerator = function(id) {
     var slice_pointer = this.diagram;
     var last_slice_max = null;
     for (var i = 0; i < slices_data.length; i++) {
-        if (i == slices_data.length - 1) last_slice_max = slice_pointer.cells.length;
+        if (i == slices_data.length - 1) last_slice_max = Math.max(1, slice_pointer.cells.length);
         slice_pointer = slice_pointer.getSlice(slices_data[i]);
         //slices_counter++;
     }
