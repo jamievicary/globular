@@ -10,8 +10,6 @@
         - control: div for controls
 */
 
-var click_radius = 0.25;
-
 // Constructor
 function Display(container, diagram) {
     this.container = container;
@@ -32,6 +30,16 @@ function Display(container, diagram) {
     this.create_controls();
 }
 
+// Disable mouse interaction
+Display.prototype.disableMouse = function() {
+    this.container.css('pointer-events', 'none');
+}
+
+// Enable mouse interaction
+Display.prototype.enableMouse = function() {
+    this.container.css('pointer-events', 'all');
+}
+
 Display.prototype.mousedown = function(event) {
     var b = $(this.container)[0].bounds;
     if (b == undefined) return;
@@ -47,13 +55,21 @@ Display.prototype.mousedown = function(event) {
 var min_drag = 0.25;
 Display.prototype.mousemove = function(event) {
 
+    var new_grid = this.pixelsToGrid(event);
+    this.updatePopup({
+        logical: this.gridToLogical(new_grid),
+        pixels: {
+            x: event.offsetX,
+            y: event.offsetY
+        }
+    });
+
     if (this.select_grid == null) return;
     if (!detectLeftButton(event)) {
         this.select_grid = null;
         return;
     }
 
-    var new_grid = this.pixelsToGrid(event);
     var dx = new_grid.x - this.select_grid.x;
     var dy = new_grid.y - this.select_grid.y;
 
@@ -87,10 +103,35 @@ Display.prototype.mousemove = function(event) {
     gProject.dragCell(data);
 };
 
-Display.prototype.gridToLogical = function(grid_coord) {
-    if (this.data.dimension == 0) return this.gridToLogical_0(grid_coord);
-    if (this.data.dimension == 1) return this.gridToLogical_1(grid_coord);
-    if (this.data.dimension == 2) return this.gridToLogical_2(grid_coord);
+Display.prototype.updatePopup = function(data) {
+    var popup = $('#diagram-popup');
+    if (this.update_in_progress || data.logical == null) {
+        popup.remove();
+        return;
+    }
+
+    // Create popup if necessary
+    if (popup.length == 0) {
+        popup = $('<div>').attr('id', 'diagram-popup').appendTo('#diagram-canvas');
+    }
+
+    var boundary = this.diagram.getBoundary(data.logical.boundary);
+    var cell = boundary.getCell(data.logical.coordinates.reverse());
+    var description = cell.id.getFriendlyName();
+    var pos = $('#diagram-canvas').position();
+    popup.html(description)
+        .css({
+            left: 5 + pos.left + data.pixels.x,
+            top: data.pixels.y - 15,
+            position: 'absolute'
+        });
+}
+
+Display.prototype.gridToLogical = function(grid) {
+    if (grid == null) return null;
+    if (this.data.dimension == 0) return this.gridToLogical_0(grid);
+    if (this.data.dimension == 1) return this.gridToLogical_1(grid);
+    if (this.data.dimension == 2) return this.gridToLogical_2(grid);
 }
 
 Display.prototype.gridToLogical_1 = function(grid_coord) {
@@ -100,7 +141,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
         var vertex = this.data.vertices[i];
         var dx = grid_coord.x - vertex.x;
         var dy = grid_coord.y - vertex.y;
-        if (dx * dx + dy * dy > 0.15 * 0.15) continue;
+        if (dx * dx + dy * dy > 0.1 * 0.1) continue;
 
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
@@ -128,7 +169,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
         if (edge.finish_x < grid_coord.x) continue;
         // How close is this edge?
         var d = grid_coord.y - edge.y;
-        if (Math.abs(d) > 0.2) continue;
+        if (Math.abs(d) > 0.05) continue;
 
         // User has clicked on this edge
         var padded = this.padCoordinates([edge.level, 0]);
@@ -154,8 +195,14 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
 
     var height = grid_coord.y;
 
-    // Get boundary distance
+    // Make sure we're within the diagram bounds
     var b = $(this.container)[0].bounds;
+    if (grid_coord.x < b.left) return null;
+    if (grid_coord.x > b.right) return null;
+    if (grid_coord.y < b.bottom) return null;
+    if (grid_coord.y > b.top) return null;
+
+    // Get boundary distance
     var allow_s1 = Math.abs(grid_coord.y - b.bottom) < 0.25;
     var allow_t1 = Math.abs(grid_coord.y - b.top) < 0.25;
     var allow_s2 = Math.abs(grid_coord.x - b.left) < 0.25;
@@ -166,7 +213,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
         var vertex = this.data.vertices[i];
         var dx = grid_coord.x - vertex.x;
         var dy = grid_coord.y - vertex.y;
-        if (dx * dx + dy * dy > 0.15 * 0.15) continue;
+        if (dx * dx + dy * dy > 0.1 * 0.1) continue;
 
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
@@ -199,8 +246,8 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     }
 
     // Has the user clicked on an edge?
-    if (Math.abs(best_edge_distance) < 0.1) {
-        var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left - 1]);
+    if (Math.abs(best_edge_distance) < 0.05) {
+        var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left - 1]);
         //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
         //console.log("Click on edge at coordinates " + JSON.stringify(padded));
         var position = this.diagram.getBoundaryCoordinates({
@@ -215,7 +262,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     }
 
     // The user has clicked on a region
-    var padded = this.padCoordinates([Math.floor(height + 0.5), edges_to_left, 0]);
+    var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, 0]);
     //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
     //console.log("Click on region at coordinates " + JSON.stringify(padded));
     var position = this.diagram.getBoundaryCoordinates({
@@ -387,7 +434,7 @@ Display.prototype.update_slice_container = function(drag) {
             .attr('min', 0)
             .val(0)
             .on('input', function(event) {
-            //.change(function(event) {
+                //.change(function(event) {
                 self.control_change(event)
             })
             .mouseover(function() {
@@ -432,10 +479,13 @@ Display.prototype.update_slice_container = function(drag) {
 
 // Attach the given diagram to the window, showing at least the specified boundary
 Display.prototype.set_diagram = function(diagram, boundary) {
-    this.diagram = diagram;
-    if (this.diagram == null) {
+    console.log("Set new diagram");
+    if (diagram == null) {
+        this.diagram = null;
+        this.data = null;
         this.container.empty();
     } else {
+        this.diagram = diagram.copy();
         this.update_controls(boundary);
         this.render();
     }

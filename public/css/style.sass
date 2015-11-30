@@ -1,4 +1,5 @@
 @import 'compass'
+//@import "compass/css3"
 @import url(https://fonts.googleapis.com/css?family=Open+Sans)
 
 //$cell_background: #273c61
@@ -20,12 +21,13 @@ $cell_background: $darkgrey
 
 //styles
 body, html
+	@include user-select(none)
 	height: 100%
 	width: 100%
 	margin: 0px
 	font-family: $main_font 
 	overflow: hidden
-	
+
 #header
 	height: $header_height
 	width: 100%
@@ -603,3 +605,9 @@ input.control
 	margin-top: 2px
 	margin-left: 15px
 	font-weight: bold
+
+#diagram-popup
+	//user-select(none)
+	@include user-select(none)
+	pointer-events: none
+	background-color: white

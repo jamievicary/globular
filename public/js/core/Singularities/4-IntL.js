@@ -257,6 +257,10 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     */
 }
 
+Diagram.prototype.tidyKey.IntL = function(type, key) {
+    return [key.last()];
+}
+
 Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
 
     var diagram_pointer = this;

@@ -75,6 +75,10 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
     return [r.right];
 }
 
+Diagram.prototype.tidyKey.Int = function(type, key) {
+    return [key.last()];
+}
+
 Diagram.prototype.interchangerAllowed.Int = function(type, key) {
     
     if (key.length != 1) {

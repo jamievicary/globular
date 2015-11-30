@@ -54,6 +54,15 @@ Diagram.prototype.rewritePasteData = function(type, key) {
     return ((this.rewritePasteData[family]).bind(this))(type, key);
 }
 
+Diagram.prototype.tidyKey = function(type, key) {
+    var family = GetSingularityFamily(type);
+    return ((this.tidyKey[family]).bind(this))(type, key);
+}
+
+Diagram.prototype.tidyKey.Signature = function(type, key) {
+    return key;
+}
+
 Diagram.prototype.expand = function(type, start, n, m) {
     var family = GetSingularityFamily(type);
     return ((this.expand[family]).bind(this))(type, start, n, m);

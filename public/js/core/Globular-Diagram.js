@@ -671,9 +671,17 @@ Diagram.prototype.getInverseCell = function(cell) {
 };
 
 Diagram.prototype.getBoundary = function(path) {
-    if (path.length > 1) return this.source.getBoundary(path.slice(1, path.length));
-    if (path == 's') return this.getSourceBoundary();
-    if (path == 't') return this.getTargetBoundary();
+    if (path == null) return this;
+    var boundary = {};
+    if (typeof path == 'string') {
+        boundary.type = path.last();
+        boundary.depth = path.length;
+    } else {
+        boundary = path;
+    }
+    if (boundary.depth > 1) return this.source.getBoundary({depth: boundary.depth - 1, type: boundary.type});
+    if (boundary.type == 's') return this.getSourceBoundary();
+    if (boundary.type == 't') return this.getTargetBoundary();
 }
 
 // Take the union of two bounding boxes on (projections of) this diagram
@@ -717,6 +725,13 @@ Diagram.prototype.pullBackMinMax = function(top_height, bottom_height, min, max)
         max: max
     };
 };
+
+// Get the cell at a particular location in the diagram
+Diagram.prototype.getCell = function(location) {
+    var level = location.shift();
+    var slice = this.getSlice(location);
+    return slice.cells[level];
+}
 
 // Get the bounding box surrounding a object
 Diagram.prototype.getLocationBoundingBox = function(location) {

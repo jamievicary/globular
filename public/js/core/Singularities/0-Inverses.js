@@ -108,19 +108,6 @@ Diagram.prototype.interpretClickInverses = function(drag) {
 
 Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
-
-    if (type.tail('-E')) {
-        var base_type = type.substr(0, type.length - 2);
-        var box = this.getSlice(key.last()).getBoundingBox({
-            id: base_type,
-            key: key.slice(0, key.length - 1)
-        });
-        box.min.push(key.last());
-        return box.min;
-    } else if (type.tail('-EI')) {
-        // need to write this
-        debugger;
-    }
 }
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
@@ -129,7 +116,8 @@ Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     if (type.tail('E')) return [key.last()];
     
     // '-EI' cells require a key of length > 1
-    if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
+    //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
+    if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min;
 }
 
 Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
@@ -141,7 +129,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
         box.max.push(key.last() + 2)
     } else {
         var slice = this.getSlice(key.last());
-        var base_key = key.slice(0, key.length - 1);
+        var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
         box = this.getSlice(key.last()).getBoundingBox({
             id: base_type,
             key: base_key
@@ -192,8 +180,8 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
 
     // '...-E'-type cells introduce a nontrivial pair
     var base_type = type.substr(0, type.length - 2);
-    var base_key = key.slice(0, key.length - 1);
     var slice = this.getSlice(key.last());
+    var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
     var reverse_key = slice.getInverseKey(base_type, base_key);
     return [new NCell({
         id: base_type,
@@ -202,4 +190,10 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
         id: base_type.toggle_inverse(),
         key: reverse_key
     })];
+}
+
+Diagram.prototype.tidyKey.Inverses = function(type, key) {
+    if (type.tail('-EI') && key.length != 1) debugger;
+    if (type.tail('-E') && key.length != this.getDimension()) debugger;
+    return key;
 }

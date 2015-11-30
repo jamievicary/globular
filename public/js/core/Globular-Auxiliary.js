@@ -132,7 +132,6 @@ Array.prototype.reverse = function() {
     for (var i = 0; i < this.length; i++) {
         t2.push(this[this.length - 1 - i]);
     }
-
     return t2;
 };
 

@@ -201,7 +201,17 @@ function globular_render_2d(container, diagram, subdiagram) {
             fill: gProject.getColour(diagram.source.source.cells[0].id)
         }));
         $(container).append(d.svg);
-        return;
+        $(container)[0].bounds = {
+            left: -0.5,
+            right: 0.5,
+            top: 0.5,
+            bottom: -0.5
+        };
+        return {
+            dimension: 2,
+            edges: [],
+            vertices: []
+        };
     }
 
     var data = SVG_prepare(diagram);
