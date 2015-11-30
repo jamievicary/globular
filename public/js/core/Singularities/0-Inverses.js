@@ -19,7 +19,7 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
     // Can we cancel an invertible cell at the bottom?
     if (!up && height == 0) {
         var cell = this.cells[height];
-        if (!cell.id.is_invertible()) return [];
+        //if (!cell.id.is_invertible()) return [];
         var preattachment = {
             boundary: {
                 type: 's',
@@ -38,7 +38,7 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
     // Can we cancel an invertible cell at the top?
     if (up && height == this.cells.length - 1) {
         var cell = this.cells[height];
-        if (!cell.id.is_invertible()) return [];
+        //if (!cell.id.is_invertible()) return [];
         var preattachment = {
             boundary: {
                 type: 't',
@@ -81,8 +81,8 @@ Diagram.prototype.interpretClickInverses = function(drag) {
     for (var i = 0; i < cells.length; i++) {
         // Does the source of this cell match at this location?
         var generator = gProject.signature.getGenerator(cells[i]);
-        var checkbox = $('#invertible-' + generator.id);
-        if (!checkbox.is(':checked')) continue;
+        //var checkbox = $('#invertible-' + generator.id);
+        //if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
             
@@ -93,7 +93,8 @@ Diagram.prototype.interpretClickInverses = function(drag) {
                 that are not local to the click (e.g. applying 'rho^ inverse')
             */
             
-            if (!matches[j].vector_equals(drag.coordinates)) continue;
+            if (!matches[j].tail(drag.coordinates)) continue;
+            //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
                 id: cells[i],
                 key: matches[j],
@@ -103,8 +104,8 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         // What about the target
         var matches = this.enumerate(generator.target);
         for (var j = 0; j < matches.length; j++) {
-            //if (!matches[j].tail(drag.coordinates)) continue;
-            if (!matches[j].vector_equals(drag.coordinates)) continue;
+            if (!matches[j].tail(drag.coordinates)) continue;
+            //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
                 id: cells[i] + 'I',
                 key: matches[j],

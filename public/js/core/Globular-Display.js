@@ -16,6 +16,7 @@ function Display(container, diagram) {
     this.diagram = diagram;
     this.select_zone = null;
     this.suppress_input = null;
+    this.view_input = null;
     this.slices = [];
     var self = this;
     $(container).mousedown(function(event) {
@@ -135,6 +136,20 @@ Display.prototype.gridToLogical = function(grid) {
     if (this.data.dimension == 2) return this.gridToLogical_2(grid);
 }
 
+Display.prototype.gridToLogical_0 = function(grid_coord) {
+    var vertex = this.data.vertex;
+    var dx = grid_coord.x - vertex.x;
+    var dy = grid_coord.y - vertex.y;
+    if (dx * dx + dy * dy > 0.1 * 0.1) return null;
+    var padded = this.padCoordinates([0]);
+    var position = this.diagram.getBoundaryCoordinates({
+        coordinates: padded,
+        allow_boundary: this.getBoundaryFlags()
+    });
+    position.dimension = this.diagram.getDimension();
+    return position;
+}
+
 Display.prototype.gridToLogical_1 = function(grid_coord) {
 
     // Has the user clicked on a vertex?
@@ -147,7 +162,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
         // User has selected this vertex
         var padded = this.padCoordinates([vertex.level]);
         //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
-        console.log("Click on vertex at coordinates " + JSON.stringify(padded));
+        //console.log("Click on vertex at coordinates " + JSON.stringify(padded));
         var position = this.diagram.getBoundaryCoordinates({
             coordinates: padded,
             allow_boundary: this.getBoundaryFlags()
@@ -340,9 +355,18 @@ Display.prototype.update_controls = function(boundary) {
 
     // Update the suppression input
     var new_suppress = this.suppress_input.val();
-    new_suppress = Math.min(new_suppress, this.diagram.getDimension() - 1);
+    new_suppress = Math.min(new_suppress, this.diagram.getDimension());
     if (new_suppress < 0) new_suppress = 0;
     this.suppress_input.val(new_suppress);
+    
+    // Update the view dimension input
+    var new_view = Number(this.view_input.val());
+    if (boundary != undefined) {
+        if (boundary.boost) new_view++;
+    }
+    new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
+    //if (new_suppress < 0) new_suppress = 0;
+    this.view_input.val(new_view);
 
     // Update the slice controls
     this.update_slice_container(boundary);
@@ -378,9 +402,9 @@ Display.prototype.create_controls = function() {
             e.stopPropagation()
         });
     this.container.append(this.control);
-
-    // Construct the suppress control
-    this.control.append(document.createTextNode('Projection '));
+    
+    // Construct the project control
+    this.control.append(document.createTextNode('Project '));
     this.suppress_input =
         $('<input>')
         .attr('type', 'number')
@@ -395,6 +419,23 @@ Display.prototype.create_controls = function() {
         self.control_change(event)
     });
     this.control.append(this.suppress_input);
+
+    // Construct the dimension control
+    this.control.append(document.createElement('br'));
+    this.control.append(document.createTextNode('View '));
+    this.view_input =
+        $('<input>')
+        .attr('type', 'number')
+        .addClass('control')
+        .attr('min', 0)
+        .val(this.diagram == null ? 0 : Math.min(2, this.diagram.getDimension()))
+        .mouseover(function() {
+            this.focus();
+        });
+    this.view_input.on('input', function(event) {
+        self.control_change(event)
+    });
+    this.control.append(this.view_input);
 
     // Construct the container for the slice controls
     this.slice_div = $('<div>').addClass('slice_container');
@@ -415,7 +456,7 @@ Display.prototype.update_slice_container = function(drag) {
     }
 
     // Calculate the desired number of slice controls
-    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2;
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - this.view_input.val();
     if (remaining_dimensions < 0) remaining_dimensions = 0;
 
     // Remove any superfluous slice controls

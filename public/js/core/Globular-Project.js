@@ -154,7 +154,7 @@ Project.prototype.takeIdentity = function() {
     }
     */
     this.diagram.boost();
-    this.renderDiagram({boundary: {type : 't', depth: 1}});
+    this.renderDiagram({boundary: {type : 't', depth: 1}, boost: true});
 }
 
 /* 
@@ -266,6 +266,11 @@ Project.prototype.dragCell = function(drag) {
 
     // Find how we can interpret this drag in terms of an algebraic move
     var options = diagram_pointer.interpretDrag(drag);
+    
+    // Delete those options which require invertibility of noninvertible cells
+    for (var i=options.length-1; i>=0; i--) {
+        if (!this.actionAllowed(options[i], drag)) options.splice(i, 1);
+    }
 
     if (options.length === 0) {
         console.log("No interchanger applies");
@@ -300,6 +305,36 @@ Project.prototype.dragCell = function(drag) {
     }
     $("#options-box").fadeIn();
 };
+
+Project.prototype.actionAllowed = function(option, drag) {
+
+    if (option.preattachment != null) {
+        
+        // If the base type is invertible, there's no problem
+        if (option.preattachment.id.getBaseType().is_invertible()) return true;
+
+        // If we're just cancelling at the top or bottom, there's no problem            
+        if (option.preattachment.boundary.depth + (drag.boundary == null ? 0 : drag.boundary.depth) <= 1) return true;
+
+        // Not allowed
+        return false;
+    }
+    
+    // If the base type we're attaching is invertible, there's no problem
+    var signature_id = option.id.getSignatureType();
+    if (signature_id == null) return true;
+    if (signature_id.is_invertible()) return true;
+
+    // If we're attaching to a target, can only apply a base type
+    if (drag.boundary == null || drag.boundary.type == 't') {
+        return (option.id == signature_id);
+    }
+    
+    // If we're attaching to a source, can only apply an inverse type
+    if (drag.boundary.type == 's') {
+        return (option.id == signature_id.toggle_inverse());
+    }
+}
 
 Project.prototype.performAction = function(option, drag) {
 
@@ -763,3 +798,36 @@ Project.prototype.addNCell = function(data) {
 
     return generator.id;
 };
+
+Project.prototype.restrict = function() {
+    this.diagram = MainDisplay.visible_diagram.copy();
+    this.renderDiagram();
+}
+
+Project.prototype.export = function() {
+    var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
+    show_msg(msg, false, 3);
+}
+
+Project.prototype.save = function() {
+    var currentString = this.currentString();
+    $.post("/c-loggedin", {
+            valid: true
+        },
+        function(result, status) {
+            if (result.status != "in") {
+                show_msg("Please log in to save this project.", 7000, 3);
+                return;
+            }
+            $.post("/save_project_changes", {
+                string: currentString,
+                p_id: global_p_id,
+                p_name: $("#diagram-title").val(),
+                p_desc: $("#text-p-desc").val()
+            }, function(result, status) {
+                global_p_id = result.p_id;
+                show_msg("Successfully saved changes.", 2000, 2);
+            });
+        }
+    );
+}

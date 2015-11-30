@@ -730,6 +730,10 @@ Diagram.prototype.pullBackMinMax = function(top_height, bottom_height, min, max)
 Diagram.prototype.getCell = function(location) {
     var level = location.shift();
     var slice = this.getSlice(location);
+    while (slice.cells.length == 0) {
+        if (slice == null) return null;
+        slice = slice.getSourceBoundary();
+    }
     return slice.cells[level];
 }
 

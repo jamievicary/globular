@@ -61,14 +61,22 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
 
 function globular_render_0d(container, diagram, subdiagram) {
     var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
+    $(container)[0].bounds = {
+        left: -0.5,
+        right: 0.5,
+        top: 0.5,
+        bottom: -0.5
+    };
     var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttributeNS(null, "cx", 0);
     circle.setAttributeNS(null, "cy", 0);
     circle.setAttributeNS(null, "r", circle_radius);
-    circle.setAttributeNS(null, "fill", gProject.getColour(diagram.cells[0].id));
+    var id = diagram.getFirstId();
+    circle.setAttributeNS(null, "fill", gProject.getColour(id));
     circle.setAttributeNS(null, "stroke", "none");
     d.g.appendChild(circle);
     $(container).append(d.svg);
+    return {vertex: {x: 0, y: 0, id: id}, dimension: 0};
 }
 
 function globular_render_1d(container, diagram, subdiagram) {

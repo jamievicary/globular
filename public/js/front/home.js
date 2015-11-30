@@ -20,6 +20,12 @@ $(document).ready(function() {
             gProject.saveSourceTarget('target');
         } else if (key == 'i') {
             gProject.takeIdentity();
+        } else if (key == 'r') {
+            gProject.restrict();
+        } else if (key == 'e') {
+            gProject.export();
+        } else if (key == 'a') {
+            gProject.save();
         } else if (key == 'c') {
             this.cacheSourceTarget = null;
             gProject.clearDiagram();
@@ -27,9 +33,10 @@ $(document).ready(function() {
             //    gProject.applyStochasticProcess(1);
             //} else if (key == 'z') {
             //    gProject.displayInterchangers();
-        } else if (key == 'q') {
+        } else if (key == 'h') {
             gProject.storeTheorem();
         }
+        
         /*
         else if (key == ' ') {
             if (timeout == null) {
@@ -314,10 +321,6 @@ $(document).ready(function() {
                 }, 1000);
             }, 1000);
         }
-        $("#get-str-opt").click(function() {
-            var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
-            show_msg(msg, false, 3);
-        });
         $("#run-process").click(function() {
             $("#run-proc-box").fadeIn();
         });
@@ -330,26 +333,19 @@ $(document).ready(function() {
     }
 
     $("#save-project-opt").click(function() {
-        var currentString = gProject.currentString();
-        $.post("/c-loggedin", {
-                valid: true
-            },
-            function(result, status) {
-                if (result.status != "in") {
-                    show_msg("Please log in to save this project.", 7000, 3);
-                    return;
-                }
-                $.post("/save_project_changes", {
-                    string: currentString,
-                    p_id: global_p_id,
-                    p_name: $("#diagram-title").val(),
-                    p_desc: $("#text-p-desc").val()
-                }, function(result, status) {
-                    global_p_id = result.p_id;
-                    show_msg("Successfully saved changes.", 2000, 2);
-                });
-            }
-        );
+        gProject.save();
+    });
+
+    $("#restrict-opt").click(function() {
+        gProject.restrict();
+    });
+
+    $("#theorem-opt").click(function() {
+        gProject.storeTheorem();
+    });
+
+    $("#save-project-opt").click(function() {
+        gProject.save();
     });
 
     $("#use-t-opt").click(function() {
@@ -367,6 +363,11 @@ $(document).ready(function() {
     $("#clear-project-opt").click(function() {
         gProject.clearDiagram();
     });
+    
+    $("#get-str-opt").click(function() {
+        gProject.export();
+    });
+
 
     /*
         var main_string;

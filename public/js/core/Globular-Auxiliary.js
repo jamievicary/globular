@@ -173,8 +173,19 @@ String.prototype.is_invertible = function() {
     return checkbox.is(':checked');
 }
 
+String.prototype.is_inverse = function() {
+    return (this[this.length - 1] == 'I');
+}
+
 String.prototype.getBaseType = function() {
     if (this.tail('I')) return this.substr(0, this.length - 1);
+    return this;
+}
+
+String.prototype.getSignatureType = function() {
+    if (this.tail('I')) return this.substr(0, this.length - 1).getSignatureType();
+    if (this.tail('-E')) return this.substr(0, this.length - 2).getSignatureType();
+    if (gProject.signature.getGenerator(this) == null) return null;
     return this;
 }
 
