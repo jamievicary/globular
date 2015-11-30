@@ -3,7 +3,7 @@ var gProject = {
     initialized: false
 };
 var MainDisplay = null;
-var global_p_id = "null";
+var global_p_id = '';
 var timeout = null;
 
 $(document).ready(function() {
@@ -335,25 +335,19 @@ $(document).ready(function() {
                 valid: true
             },
             function(result, status) {
-                if (result.status === "in" && global_p_id == "null") {
-                    global_p_id = "hold";
-                }
-                if (global_p_id == "null") {
+                if (result.status != "in") {
                     show_msg("Please log in to save this project.", 7000, 3);
-                } else {
-                    var name = $("#diagram-title").val();
-                    $.post("/save_project_changes", {
-                        string: currentString,
-                        p_id: global_p_id,
-                        p_name: name,
-                        p_desc: $("#text-p-desc").val()
-                    }, function(result, status) {
-                        if (global_p_id == "hold") {
-                            global_p_id = result.newID;
-                        }
-                        show_msg("Successfully saved changes.", 2000, 2);
-                    });
+                    return;
                 }
+                $.post("/save_project_changes", {
+                    string: currentString,
+                    p_id: global_p_id,
+                    p_name: $("#diagram-title").val(),
+                    p_desc: $("#text-p-desc").val()
+                }, function(result, status) {
+                    global_p_id = result.p_id;
+                    show_msg("Successfully saved changes.", 2000, 2);
+                });
             }
         );
     });

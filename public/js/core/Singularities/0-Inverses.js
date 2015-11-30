@@ -85,7 +85,15 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
+            
+            /*
+                How to select the appropriate matches? If we use
+                    //if (!matches[j].tail(drag.coordinates)) continue;
+                then we are too permissive, and get lots of matches
+                that are not local to the click (e.g. applying 'rho^ inverse')
+            */
+            
+            if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
                 id: cells[i],
                 key: matches[j],
@@ -95,7 +103,8 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         // What about the target
         var matches = this.enumerate(generator.target);
         for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
+            //if (!matches[j].tail(drag.coordinates)) continue;
+            if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
                 id: cells[i] + 'I',
                 key: matches[j],

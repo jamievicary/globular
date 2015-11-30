@@ -129,6 +129,7 @@ Display.prototype.updatePopup = function(data) {
 
 Display.prototype.gridToLogical = function(grid) {
     if (grid == null) return null;
+    if (this.data == null) return null;
     if (this.data.dimension == 0) return this.gridToLogical_0(grid);
     if (this.data.dimension == 1) return this.gridToLogical_1(grid);
     if (this.data.dimension == 2) return this.gridToLogical_2(grid);

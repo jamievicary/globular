@@ -127,7 +127,7 @@ app.get('/logout', function(req, res){
 });
 
 app.post('/save_project_changes', function(req, res){
-	projects.save_p_changes(req,res);	
+	projects.save_project_changes(req,res);	
 });
     
 app.get("/:value", function(req, res){

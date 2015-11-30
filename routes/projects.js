@@ -109,27 +109,54 @@ exports.delete_project = function(req, res) {
 };
 
 
-exports.save_p_changes = function(req, res) {
+exports.save_project_changes = function(req, res) {
 
 	var user_id = req.session.user_id;
 	var p_id = req.body.p_id;
-	var proj_name = req.body.p_name;
-	var new_string = req.body.string;
+	var p_name = req.body.p_name;
+	var p_string = req.body.string;
 	var p_desc = req.body.p_desc;
+
+	// Tidy up project name
+	if (p_name == '') p_name = '(Untitled)';
+
+	// If necessary, get a fresh project ID
+	if (p_id == '') {
+		var data = fs.readdirSync('database/users/' + user_id + '/projects');
+		p_id = (data.length == 0 ? 0 : parseInt(data[data.length - 1]) + 1);
+	}
+	
+	// Collect metadata
+	var p_meta = JSON.stringify({
+		project_name: p_name,
+		project_desc: p_desc
+	});
+
+	// Save data and return success 	
+	fs.mkdir("database/users/" + user_id + "/projects/" + p_id, function() {
+		fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, function() {
+			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/meta.json", p_meta, function() {
+				res.send({
+					success: true,
+					p_id: p_id,
+					msg: "Success"
+				});
+			});
+		});
+	});
+
+	
+/*	
 	//if saving public project, 
 	if (p_id != "hold") {
 		fs.readFile('database/users/' + user_id + '/data.json', 'utf-8', function(err, data) {
 			data = JSON.parse(data);
 			for (var i in data.projects) {
 				if (data.projects[i].id == p_id) {
-					data.projects[i].name = proj_name;
+					data.projects[i].name = p_name;
 				}
 			}
-			var newMeta = JSON.stringify({
-				project_name: proj_name,
-				project_desc: p_desc
-			});
-			fs.writeFile('database/users/' + user_id + '/data.json', JSON.stringify(data), function() {
+			fs.writeFile('database/users/' + user_id + '/data.json', jectJSON.stringify(data), function() {
 				fs.writeFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', new_string, function() {
 					fs.writeFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', newMeta, function() {
 						res.send({
@@ -141,9 +168,6 @@ exports.save_p_changes = function(req, res) {
 		});
 	} else {
 
-		if (proj_name.length == 0) {
-			proj_name = "(No Name)";
-		}
 		var data = fs.readdirSync('database/users/' + user_id + '/projects');
 
 		if (data.length > 0) {
@@ -171,7 +195,7 @@ exports.save_p_changes = function(req, res) {
 		});
 
 	}
-
+*/
 };
 
 exports.publish_project = function(req, res) {
