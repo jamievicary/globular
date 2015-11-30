@@ -742,6 +742,26 @@ $(document).ready(function() {
     $("#mm-projects").click(function() {
 
         function controlAddP() {
+            var apOptClicked = 0;
+            $("#addp-title").click(function() {
+                if (apOptClicked % 2 == 0) {
+                    $("#add-project-opt").animate({
+                        height: "230px",
+                        width: "400px",
+                        marginLeft: "-=200px"
+                    }, 500);
+                    $("#add-project-opt").css("box-shadow", "0px 0px 10px grey");
+                } else {
+                    $("#add-project-opt").animate({
+                        height: "20px",
+                        width: "200px",
+                        marginLeft: "+=200px"
+                    }, 500);
+                    $("#add-project-opt").css("box-shadow", "0px 0px 0px");
+
+                }
+                apOptClicked++;
+            });
 
             $("#add-project-submit").click(function() {
                 var p_name = $("#ap-name").val();
@@ -787,6 +807,17 @@ $(document).ready(function() {
             "<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>" +
             "</div>";
         $("#pl-addnew").html(addNewProjectHTML);
+    
+        $("#ap-name").keypress(function(e) {
+            e.stopPropagation()
+        });
+        $("#ap-string").keypress(function(e) {
+            e.stopPropagation()
+        });
+        $("#proj_desc").keypress(function(e) {
+            e.stopPropagation()
+        });
+    
         controlAddP();
 
         $("#change-list-type").change(function() {
