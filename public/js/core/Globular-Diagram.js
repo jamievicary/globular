@@ -617,7 +617,7 @@ Diagram.prototype.separation = function(c1, c2) {
 
     // Find the 'future cone' of c2bbox in slice
     var start_height, final_height, min, max, target_min, target_max;
-    if (c2bbox.min.last() < c1coord) {
+    if (c2bbox.min.last() <= c1coord) {
         // Starting from the bbox
         min = c2bbox.min[0];
         max = c2bbox.max[0];

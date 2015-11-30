@@ -6,6 +6,41 @@ var MainDisplay = null;
 var global_p_id = '';
 var timeout = null;
 
+//function for producing all pop ups/errors
+var original_msg_html = '<br><div id="msg-close-opt-err" class="msg-close-opt">Close</div>';
+function show_msg(value, dur, type) {
+    var color = "";
+    switch (type) {
+        case 1:
+            //error msg
+            color = "salmon";
+            break;
+
+        case 2:
+            //success msg
+            color = "#4cd2bb";
+            break;
+
+        case 3:
+            //standard msg
+            color = "";
+            break;
+    }
+    $("#errors").css("background-color", color);
+    $("#errors").html(value + original_msg_html);
+    $("#errors").fadeIn();
+
+    if (dur != false) {
+        setTimeout(function() {
+            $("#errors").fadeOut();
+        }, dur);
+    }
+
+    $("#msg-close-opt-err").click(function() {
+        $("#errors").fadeOut();
+    });
+}
+
 $(document).ready(function() {
 
     globular_prepare_renderer();
@@ -79,7 +114,6 @@ $(document).ready(function() {
         gProject.renderDiagram();
     });
 
-    var original_msg_html = $("#errors").html();
     $(".box").draggable({
         containment: "document",
         cursor: "crosshair"
@@ -124,39 +158,6 @@ $(document).ready(function() {
         }
     };
 
-    //function for producing all pop ups/errors
-    function show_msg(value, dur, type) {
-        var color = "";
-        switch (type) {
-            case 1:
-                //error msg
-                color = "salmon";
-                break;
-
-            case 2:
-                //success msg
-                color = "#4cd2bb";
-                break;
-
-            case 3:
-                //standard msg
-                color = "";
-                break;
-        }
-        $("#errors").css("background-color", color);
-        $("#errors").html(value + original_msg_html);
-        $("#errors").fadeIn();
-
-        if (dur != false) {
-            setTimeout(function() {
-                $("#errors").fadeOut();
-            }, dur);
-        }
-
-        $("#msg-close-opt-err").click(function() {
-            $("#errors").fadeOut();
-        });
-    }
 
     //renders buffering wheel
     $(document).ajaxStart(function() {
@@ -331,10 +332,6 @@ $(document).ready(function() {
             gProject.renderDiagram();
         });
     }
-
-    $("#save-project-opt").click(function() {
-        gProject.save();
-    });
 
     $("#restrict-opt").click(function() {
         gProject.restrict();

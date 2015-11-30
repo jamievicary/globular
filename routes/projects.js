@@ -123,7 +123,15 @@ exports.save_project_changes = function(req, res) {
 	// If necessary, get a fresh project ID
 	if (p_id == '') {
 		var data = fs.readdirSync('database/users/' + user_id + '/projects');
-		p_id = (data.length == 0 ? 0 : parseInt(data[data.length - 1]) + 1);
+		p_id = -1;
+		for (var i=0; i<data.length; i++) {
+			p_id = Math.max(p_id, Number(data[i]));
+		}
+		if (p_id < 0) {
+			p_id = 0;
+		} else {
+			p_id ++;
+		}
 	}
 	
 	// Collect metadata
