@@ -360,14 +360,15 @@ Display.prototype.update_controls = function(boundary) {
     this.suppress_input.val(new_suppress);
     
     // Update the view dimension input
-    var new_view = Number(this.view_input.val());
-    if (boundary != undefined) {
-        if (boundary.boost) new_view++;
+    if (this.view_input != null) {
+        var new_view = Number(this.view_input.val());
+        if (boundary != undefined) {
+            if (boundary.boost) new_view++;
+        }
+        new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
+        this.view_input.val(new_view);
     }
-    new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
-    //if (new_suppress < 0) new_suppress = 0;
-    this.view_input.val(new_view);
-
+    
     // Update the slice controls
     this.update_slice_container(boundary);
 }
@@ -404,6 +405,7 @@ Display.prototype.create_controls = function() {
         });
     this.container.append(this.control);
     
+    /*
     // Construct the dimension control
     this.control.append(document.createTextNode('Viewer dimension '));
     this.view_input =
@@ -420,11 +422,11 @@ Display.prototype.create_controls = function() {
         self.control_change(event)
     });
     this.control.append(this.view_input);
-
+    this.control.append(document.createElement('br'));
+    */
     
     // Construct the project control
-    this.control.append(document.createElement('br'));
-    this.control.append(document.createTextNode('Project dimensions '));
+    this.control.append(document.createTextNode('Project '));
     this.suppress_input =
         $('<input>')
         .attr('type', 'number')
@@ -461,7 +463,7 @@ Display.prototype.update_slice_container = function(drag) {
     }
 
     // Calculate the desired number of slice controls
-    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - this.view_input.val();
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2 /*this.view_input.val()*/;
     if (remaining_dimensions < 0) remaining_dimensions = 0;
 
     // Remove any superfluous slice controls

@@ -100,7 +100,7 @@ function diff_array(t1, t2) {
 Array.prototype.tail = function(t) {
     if (t.length > this.length) return false;
     var start = this.length - t.length;
-    for (var i=0; i<t.length; i++) {
+    for (var i = 0; i < t.length; i++) {
         if (this[i + start] != t[i]) return false;
     }
     return true;
@@ -203,24 +203,24 @@ String.prototype.repeat = function(n) {
 }
 
 String.prototype.getFriendlyName = function() {
-    
+
     // Is it a cancellation?
     if (this.tail('-EI')) return this.substr(0, this.length - 3).getFriendlyName() + ", cancel";
-    
+
     // Is it an inverse cancellation?
     if (this.tail('-E')) return this.substr(0, this.length - 2).getFriendlyName() + ", insert";
-    
+
     // Is it an inverse?
     if (this.tail('I')) return this.substr(0, this.length - 1).getFriendlyName() + " inverse";
 
     // Is it a generator?
     var generator = gProject.signature.getGenerator(this);
     if (generator != null) return generator.name;
-    
+
     // Is it a named singularity?
     var family = GetSingularityFamily(this);
     if (family != undefined) return SingularityData[family].friendly[this];
-    
+
     // Can't understand this
     return 'UNKNOWN';
 }
@@ -296,3 +296,9 @@ function globular_is_array(object) {
     //return object.constructor.toString().indexOf("Array") > -1;
 }
 
+function bounding_box_slice(a, b) {
+    return {
+        min: box.min.slice(a, b),
+        max: box.max.slice(a, b)
+    }
+}

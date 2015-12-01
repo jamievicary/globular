@@ -305,9 +305,6 @@ $(document).ready(function() {
     function render_project_front(s) {
         $("#cell-body").html("");
         $("#my-projects-box").fadeOut();
-        // Make sure diagram canvas has the right size
-        $('#diagram-canvas').css('width', window.innerWidth - 300);
-        $('#diagram-canvas').css('height', window.innerHeight - 20);
 
         // Construct new project
         gProject = new Project(s);

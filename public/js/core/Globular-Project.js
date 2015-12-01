@@ -154,7 +154,13 @@ Project.prototype.takeIdentity = function() {
     }
     */
     this.diagram.boost();
-    this.renderDiagram({boundary: {type : 't', depth: 1}, boost: true});
+    this.renderDiagram({
+        boundary: {
+            type: 't',
+            depth: 1
+        },
+        boost: true
+    });
 }
 
 /* 
@@ -173,7 +179,9 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     // If we haven't stored any source/target data yet, then just save this
     if (this.cacheSourceTarget == null) {
-        this.cacheSourceTarget = {ignore: true};
+        this.cacheSourceTarget = {
+            ignore: true
+        };
         this.cacheSourceTarget[boundary] = this.diagram;
         this.clearDiagram();
         return;
@@ -266,9 +274,9 @@ Project.prototype.dragCell = function(drag) {
 
     // Find how we can interpret this drag in terms of an algebraic move
     var options = diagram_pointer.interpretDrag(drag);
-    
+
     // Delete those options which require invertibility of noninvertible cells
-    for (var i=options.length-1; i>=0; i--) {
+    for (var i = options.length - 1; i >= 0; i--) {
         if (!this.actionAllowed(options[i], drag)) options.splice(i, 1);
     }
 
@@ -294,7 +302,7 @@ Project.prototype.dragCell = function(drag) {
         }
         var item = $('<li>').html(id.getFriendlyName());
         list.append(item);
-        
+
         // Use a closure to specify the behaviour on selection
         (function(action) {
             item.click(function() {
@@ -309,7 +317,7 @@ Project.prototype.dragCell = function(drag) {
 Project.prototype.actionAllowed = function(option, drag) {
 
     if (option.preattachment != null) {
-        
+
         // If the base type is invertible, there's no problem
         if (option.preattachment.id.getBaseType().is_invertible()) return true;
 
@@ -319,7 +327,7 @@ Project.prototype.actionAllowed = function(option, drag) {
         // Not allowed
         return false;
     }
-    
+
     // If the base type we're attaching is invertible, there's no problem
     var signature_id = option.id.getSignatureType();
     if (signature_id == null) return true;
@@ -329,7 +337,7 @@ Project.prototype.actionAllowed = function(option, drag) {
     if (drag.boundary == null || drag.boundary.type == 't') {
         return (option.id == signature_id);
     }
-    
+
     // If we're attaching to a source, can only apply an inverse type
     if (drag.boundary.type == 's') {
         return (option.id == signature_id.toggle_inverse());
@@ -589,8 +597,14 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     $(div_name).keypress(function(e) {
         e.stopPropagation()
     });
-
     div_detail.appendChild(div_name);
+
+    // Add delete button
+    var div_delete = $('<div>').addClass('delete_button').html('X');
+    div_delete.click(function() {
+        gProject.removeCell(id);
+    });
+    div_detail.appendChild(div_delete[0]);
 
     // Add color picker
     var project = this;
@@ -703,6 +717,37 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     })(this);
 
     return div_main;
+}
+
+Project.prototype.removeCell = function(id) {
+    var relatedCells = this.relatedCells(id);
+    
+    // Remove the main diagram if it uses any related cells
+    for (var i=0; i<relatedCells.length; i++) {
+        if (this.diagram == null) break;
+        var cell = relatedCells[i];
+        if (this.diagram.usesCell(cell)) this.clearDiagram();
+    }
+    
+    // Remove the related cells
+    for (var i=0; i<relatedCells.length; i++) {
+        this.signature.removeCell(relatedCells[i]);
+        $('#cell-opt-' + relatedCells[i]).remove();
+    }
+}
+
+Project.prototype.relatedCells = function(id) {
+    var related_cells = [id];
+    var cells = this.signature.getAllCells();
+    for (var i = 0; i < cells.length; i++) {
+        var cell = cells[i];
+        var generator = this.signature.getGenerator(cell);
+        if (generator.usesCell(id)) {
+            related_cells.push(cell);
+            related_cells = related_cells.concat(this.relatedCells(cell));
+        }
+    }
+    return related_cells;
 }
 
 // Render n-cells and main diagram
