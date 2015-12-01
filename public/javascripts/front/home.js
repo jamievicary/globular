@@ -60,12 +60,21 @@ $(document).ready(function() {
     $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
     });
+    
+    $("#msg-close-opt-fp").click(function() {
+        $("#forgot-pass-box").fadeOut();
+    });
 
     $("#mm-signup").click(function() {
         $("#signup-box").fadeIn();
     });
     $("#msg-close-opt-su").click(function() {
         $("#signup-box").fadeOut();
+    });
+    
+    $("#forgot-pass-opt").click(function(){
+         $("#forgot-pass-box").fadeIn();
+         $("#login-box").fadeOut();
     });
 
     // Create the slider
@@ -84,6 +93,7 @@ $(document).ready(function() {
     $("#view-p-desc").click(function() {
 
         if (dbltoggle % 2 == 0) {
+            $("#view-desc-body").show();
             $("#view-desc-body").animate({
                 marginTop: "-=225px"
             }, 500);
@@ -92,7 +102,9 @@ $(document).ready(function() {
         else {
             $("#view-desc-body").animate({
                 marginTop: "+=225px"
-            }, 500);
+            }, 500, function(){
+                $("#view-desc-body").hide();
+            });
 
         }
         dbltoggle = dbltoggle + 1;
@@ -211,6 +223,22 @@ $(document).ready(function() {
             else {
                 show_msg("Could not connect to server, please try again later.", 3000, 1);
             }
+        });
+    });
+    
+    //forgot password trigger
+    $("#fp-button").click(function(){
+        var email = $("#fp-email").val();
+        $.post('/forgot_pass', {email:email}, function(result){
+            var color;
+            if(result.success==false){
+                color = 1;
+            }else{
+                color = 2;
+            }
+            
+            show_msg(result.msg, 3000, color);
+            
         });
     });
 
@@ -624,7 +652,7 @@ $(document).ready(function() {
                                         proj_id: p_id
                                     }, function(result, status) {
                                         if (result.success == true) {
-                                            $("#gallery-box").fadeOut();
+                                            $("#"+p_id).fadeOut();
                                             show_msg("Successfully deleted.", 2000, 2);
                                         }
                                     });

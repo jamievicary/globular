@@ -31,7 +31,7 @@
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 	<script src="/javascripts/libs/OrbitControls-Ortho.js"></script>
 	<script src="/javascripts/libs/jquery.mousewheel.min.js"></script>
-
+	
 </head>
 
 <body>
@@ -103,8 +103,20 @@
 			<br>
 			<input type="password" id="login_pass" name="login_password" class="text-field-style-1" placeholder="Password" value="test">
 			<input type="button" class="submit-field-style-1" id="login-button" value="Login">
+			<span id = 'forgot-pass-opt'>Forgot password?</span>
 		</form>
 		<div id="msg-close-opt-log" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+	
+	<div class="box" id="forgot-pass-box">
+		FORGOT PASSWORD
+		<form class="site-options-form-body enable_if-out" method="POST">
+			<input type="text" id="fp-email" name="fp-email" class="text-field-style-1" style="margin-top:20px" placeholder="Email...">
+			<input type="button" class="submit-field-style-1" id="fp-button" value="Send Me New Password" style = "width:150px">
+		</form>
+		<div id="msg-close-opt-fp" class="msg-close-opt">
 			Close
 		</div>
 	</div>

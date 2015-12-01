@@ -714,3 +714,10 @@ input.control {
   margin-left: 15px;
   font-weight: bold;
 }
+
+/* line 606, ../sass/style.sass */
+#forgot-pass-opt {
+  font-size: 70%;
+  color: lightblue;
+  cursor: pointer;
+}

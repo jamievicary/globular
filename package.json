@@ -17,7 +17,9 @@
     "mongodb":"*",
     "monk":"*",
     "express-session":"*",
-    "bcrypt-nodejs":"*"
+    "bcrypt-nodejs":"*",
+    "nodemailer":"*",
+    "mailgun-js":"*"
   },
   "devDependencies": {
     "nodemon": "*"

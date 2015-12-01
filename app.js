@@ -84,6 +84,7 @@ app.post('/c-loggedin', function(req, res){
 			status: "out"
 		});
 	}	
+	console.log("s:"+req.session.fpcc);
 }); 
 
 app.post('/change-pass', function(req, res){
@@ -91,6 +92,7 @@ app.post('/change-pass', function(req, res){
 	users.change_pass(req,res);
 	
 });
+
 
 app.post('/get_project_list', function(req,res){
 	projects.get_project_list(req,res);	
@@ -131,7 +133,7 @@ app.get('/logout', function(req, res){
 app.post('/save_project_changes', function(req, res){
 	projects.save_p_changes(req,res);	
 });
-    
+
 app.get("/:value", function(req, res){
 	res.sendfile("public/index.html");
 });
@@ -156,5 +158,14 @@ app.post('/add_version_pp', function(req,res){
 
 app.post('/share_project',function(req,res){
 	projects.share_project(req,res);
+});
+
+
+app.post('/forgot_pass',function(req,res){
+	users.forgot_pass(req,res);
+});
+
+app.get("/fpcc/:concode/:email", function(req, res){
+	users.activate_pass(req,res);
 });
 console.log('Express server listening on port ' + app.get('port'));
