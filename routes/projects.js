@@ -1,8 +1,16 @@
 var fs = require('fs');
 
+function get_new_private_project_id(email) {
+	var data = fs.readdirSync('database/users/' + email + '/projects');
+	var new_id = 0;
+	for (var i = 0; i < data.length; i++) {
+		new_id = Math.max(new_id, Number(data[i]) + 1);
+	}
+	return new_id;
+}
+
 exports.get_projects = function(req, res) {
 	var user_id = req.session.user_id;
-
 }
 
 exports.get_project_list = function(req, res) {
@@ -64,13 +72,8 @@ exports.add_new_project = function(req, res) {
 	var p_desc = req.body.p_desc;
 	var string = req.body.string;
 	var user_id = req.session.user_id;
-	var data = fs.readdirSync('database/users/' + user_id + '/projects');
+	var newID = get_new_private_project_id(user_id);
 
-	if (data.length > 0) {
-		var newID = parseInt(data[data.length - 1]) + 1;
-	} else {
-		var newID = 0;
-	}
 	//data.projects.push({"id":newID, "name":p_name});
 	//	data.projects_count = data.projects_count + 1;
 	var metaData = JSON.stringify({
@@ -121,19 +124,8 @@ exports.save_project_changes = function(req, res) {
 	if (p_name == '') p_name = '(Untitled)';
 
 	// If necessary, get a fresh project ID
-	if (p_id == '') {
-		var data = fs.readdirSync('database/users/' + user_id + '/projects');
-		p_id = -1;
-		for (var i=0; i<data.length; i++) {
-			p_id = Math.max(p_id, Number(data[i]));
-		}
-		if (p_id < 0) {
-			p_id = 0;
-		} else {
-			p_id ++;
-		}
-	}
-	
+	if (p_id == '') p_id = get_new_private_project_id(user_id);
+
 	// Collect metadata
 	var p_meta = JSON.stringify({
 		project_name: p_name,
@@ -153,57 +145,7 @@ exports.save_project_changes = function(req, res) {
 		});
 	});
 
-	
-/*	
-	//if saving public project, 
-	if (p_id != "hold") {
-		fs.readFile('database/users/' + user_id + '/data.json', 'utf-8', function(err, data) {
-			data = JSON.parse(data);
-			for (var i in data.projects) {
-				if (data.projects[i].id == p_id) {
-					data.projects[i].name = p_name;
-				}
-			}
-			fs.writeFile('database/users/' + user_id + '/data.json', jectJSON.stringify(data), function() {
-				fs.writeFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', new_string, function() {
-					fs.writeFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', newMeta, function() {
-						res.send({
-							success: true
-						});
-					});
-				});
-			});
-		});
-	} else {
 
-		var data = fs.readdirSync('database/users/' + user_id + '/projects');
-
-		if (data.length > 0) {
-			var newID = parseInt(data[data.length - 1]) + 1;
-		} else {
-			var newID = 0;
-		}
-		//data.projects.push({"id":newID, "name":proj_name});
-		//data.projects_count = data.projects_count + 1;
-		var metaData = JSON.stringify({
-			project_name: proj_name,
-			project_desc: p_desc
-		});
-
-		fs.mkdir("database/users/" + user_id + "/projects/" + newID, function() {
-			fs.writeFile('database/users/' + user_id + "/projects/" + newID + "/string.json", new_string, function() {
-				fs.writeFile('database/users/' + user_id + "/projects/" + newID + "/meta.json", metaData, function() {
-					res.send({
-						success: true,
-						p_id: newID,
-						msg: "Success"
-					});
-				});
-			});
-		});
-
-	}
-*/
 };
 
 exports.publish_project = function(req, res) {
@@ -351,11 +293,10 @@ exports.share_project = function(req, res) {
 	}
 
 	if (emails.length == 0) {
-		errors = errors + "You must supply atleast one email. ";
+		errors = errors + "You must supply at least one email. ";
 	}
 	if (invalid_emails.length > 0) {
 		errors = errors + "The following emails are invalid or are not registered: " + invalid_emails.join(",");
-
 		res.send({
 			successcolor: 1,
 			msg: errors
@@ -366,13 +307,7 @@ exports.share_project = function(req, res) {
 			fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', 'utf8', function(err, string) {
 				fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', 'utf8', function(err, meta) {
 					console.log(err);
-					var existing_ids = fs.readdirSync('database/users/' + email + '/projects');
-					if (existing_ids.length > 0) {
-						var new_id = parseInt(existing_ids[existing_ids.length - 1]) + 1;
-					} else {
-						var new_id = 0;
-					}
-
+					var new_id = get_new_private_project_id(email);
 					meta = JSON.parse(meta);
 					meta.project_name = meta.project_name + " (shared by " + user_id + ")";
 					meta = JSON.stringify(meta);

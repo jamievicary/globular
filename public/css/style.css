@@ -473,17 +473,27 @@ div.preview-icon > svg {
   border-radius: 2px;
 }
 
-/* line 421, style.sass */
+/* line 420, style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 424, style.sass */
+/* line 423, style.sass */
 #save-project-opt:hover {
   background-color: lightblue;
 }
 
-/* line 427, style.sass */
+/* line 426, style.sass */
+#get-str-opt {
+  background-color: #4cd2bb;
+}
+
+/* line 429, style.sass */
+#get-str-opt:hover {
+  background-color: lightblue;
+}
+
+/* line 432, style.sass */
 #diagram-title {
   color: black;
   height: 30px;
@@ -497,12 +507,12 @@ div.preview-icon > svg {
   margin-bottom: 7px;
 }
 
-/* line 440, style.sass */
+/* line 445, style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 443, style.sass */
+/* line 448, style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -513,14 +523,14 @@ div.preview-icon > svg {
   background-repeat: no-repeat;
 }
 
-/* line 452, style.sass */
+/* line 457, style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 457, style.sass */
+/* line 462, style.sass */
 .mini-opt-links {
   color: #ffffff;
   letter-spacing: 2px;
@@ -530,14 +540,14 @@ div.preview-icon > svg {
   cursor: pointer;
 }
 
-/* line 465, style.sass */
+/* line 470, style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 470, style.sass */
+/* line 475, style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -545,7 +555,7 @@ div.preview-icon > svg {
   text-decoration: underline;
 }
 
-/* line 476, style.sass */
+/* line 481, style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -559,7 +569,7 @@ div.preview-icon > svg {
   color: salmon;
 }
 
-/* line 488, style.sass */
+/* line 493, style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -568,7 +578,7 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 495, style.sass */
+/* line 500, style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -577,7 +587,7 @@ div.preview-icon > svg {
   left: 80px;
 }
 
-/* line 502, style.sass */
+/* line 507, style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -585,7 +595,7 @@ div.preview-icon > svg {
   padding-top: 20px;
 }
 
-/* line 508, style.sass */
+/* line 513, style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -593,31 +603,31 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 515, style.sass */
+/* line 520, style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 519, style.sass */
+/* line 524, style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 524, style.sass */
+/* line 529, style.sass */
 input.control {
   width: 30px;
 }
 
-/* line 527, style.sass */
+/* line 532, style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 531, style.sass */
+/* line 536, style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -628,7 +638,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 540, style.sass */
+/* line 545, style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -638,14 +648,14 @@ input.control {
   position: fixed;
 }
 
-/* line 548, style.sass */
+/* line 553, style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 553, style.sass */
+/* line 558, style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -654,7 +664,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 560, style.sass */
+/* line 565, style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -663,18 +673,18 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 567, style.sass */
+/* line 572, style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 571, style.sass */
+/* line 576, style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
 
-/* line 574, style.sass */
+/* line 579, style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -683,7 +693,7 @@ input.control {
   width: 100px;
 }
 
-/* line 581, style.sass */
+/* line 586, style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -694,24 +704,24 @@ input.control {
   z-index: 100;
 }
 
-/* line 590, style.sass */
+/* line 595, style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 593, style.sass */
+/* line 598, style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 596, style.sass */
+/* line 601, style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 602, style.sass */
+/* line 607, style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -720,7 +730,7 @@ input.control {
   font-weight: bold;
 }
 
-/* line 609, style.sass */
+/* line 614, style.sass */
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;

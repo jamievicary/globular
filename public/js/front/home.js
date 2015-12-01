@@ -656,6 +656,10 @@ $(document).ready(function() {
                     $(".share-project-opt").click(function() {
                         var p_id = $(this).attr("id").substring(7);
                         show_msg("Enter user emails: <input type = 'text' id = 'share-p-emails' class = 'text-field-style-1' placeholder = 'email@example.com, test@example.com, etc'><input type = 'button' id = 'share-p' value = 'Share' class = 'submit-field-style-1'>", 40000, 3);
+                        $('#share-p-emails').keypress(function(e) {
+                            e.stopPropagation()
+                        });
+
                         $("#share-p").click(function() {
 
                             var emails = $("#share-p-emails").val();
