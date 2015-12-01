@@ -173,7 +173,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     // If we haven't stored any source/target data yet, then just save this
     if (this.cacheSourceTarget == null) {
-        this.cacheSourceTarget = {};
+        this.cacheSourceTarget = {ignore: true};
         this.cacheSourceTarget[boundary] = this.diagram;
         this.clearDiagram();
         return;

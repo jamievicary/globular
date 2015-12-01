@@ -282,6 +282,7 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
+        gProject.cacheSourceTarget = null;
         gProject.signature.prepare();
         if (gProject.diagram != null) gProject.diagram.prepare();
         gProject.initialized = true;
