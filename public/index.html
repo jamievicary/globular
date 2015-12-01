@@ -1,37 +1,40 @@
-<!doctype html>
+<doctype html>
 
 <html lang="en">
 
 <head>
 	<meta charset="utf-8">
-
 	<title>Globular</title>
-	<link rel="stylesheet" type="text/css" href="/all_stylesheets/stylesheets/style.css">
-	<script src="/javascripts/libs/jquery.js"></script>
-	<script src="/javascripts/libs/Fraction.js"></script>
-	<script src="/javascripts/libs/jscolor/jscolor.js"></script>
-	<script src="/javascripts/front/home.js"></script>
-	<script src="/javascripts/libs/three.min.js"></script>
-	<script src="/javascripts/core/Globular-Project.js"></script>
-	<script src="/javascripts/core/Globular-NCell.js"></script>
-	<script src="/javascripts/core/Globular-Diagram.js"></script>
-	<script src="/javascripts/core/Globular-Interchangers.js"></script>
-	<script src="/javascripts/core/Globular-Data.js"></script>
-	<script src="/javascripts/core/Globular-Generator.js"></script>
-	<script src="/javascripts/core/Globular-Hashtable.js"></script>
-	<script src="/javascripts/core/Globular-Signature.js"></script>
-	<script src="/javascripts/core/Globular-Stringify.js"></script>
-	<script src="/javascripts/core/Globular-Stochastic.js"></script>
-	<script src="/javascripts/core/Globular-Render.js"></script>
-	<script src="/javascripts/core/Globular-Render-THREE.js"></script>
-	<script src="/javascripts/core/Globular-Render-SVG.js"></script>
-	<script src="/javascripts/core/Globular-Auxiliary.js"></script>
-	<script src="/javascripts/core/Globular-Complex.js"></script>
-	<script src="/javascripts/core/Globular-Display.js"></script>
+	<link rel="stylesheet" type="text/css" href="/css/style.css">
+	<script src="/js/libs/jquery.js"></script>
+	<script src="/js/libs/Fraction.js"></script>
+	<script src="/js/libs/jscolor/jscolor.js"></script>
+	<script src="/js/libs/husl.min.js"></script>
+	<script src="/js/front/home.js"></script>
+	<script src="/js/libs/three.min.js"></script>
+	<script src="/js/core/Globular-Project.js"></script>
+	<script src="/js/core/Globular-NCell.js"></script>
+	<script src="/js/core/Globular-Diagram.js"></script>
+	<script src="/js/core/Globular-Generator.js"></script>
+	<script src="/js/core/Globular-Hashtable.js"></script>
+	<script src="/js/core/Globular-Signature.js"></script>
+	<script src="/js/core/Globular-Stringify.js"></script>
+	<!--<script src="/js/core/Globular-Stochastic.js"></script>-->
+	<script src="/js/core/Globular-Render.js"></script>
+	<!--<script src="/js/core/Globular-Render-THREE.js"></script>-->
+	<script src="/js/core/Globular-Render-SVG.js"></script>
+	<script src="/js/core/Globular-Auxiliary.js"></script>
+	<script src="/js/core/Globular-Display.js"></script>
+	<script src="/js/core/Singularities/0-Singularities.js"></script>
+	<script src="/js/core/Singularities/0-Inverses.js"></script>
+	<script src="/js/core/Singularities/3-Int.js"></script>
+	<script src="/js/core/Singularities/4-IntL.js"></script>
+	<script src="/js/core/Singularities/5-IntLS.js"></script>
 	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
-	<script src="/javascripts/libs/OrbitControls-Ortho.js"></script>
-	<script src="/javascripts/libs/jquery.mousewheel.min.js"></script>
-	
+
+	<script src="/js/libs/OrbitControls-Ortho.js"></script>
+	<script src="/js/libs/jquery.mousewheel.min.js"></script>
+
 </head>
 
 <body>
@@ -40,7 +43,6 @@
 			<img src='/images/logo.png' id='logo-image'>
 			<div id='logo-text'>LOBULAR</div>
 		</div>
-		
 		<div id="main-menu">
 			<div id='mm-help'>HELP</div>
 			<div id='mm-about'>ABOUT</div>
@@ -56,32 +58,28 @@
 		<div id="control-body">
 			<div id="cell-body"></div>
 		</div>
-
 		<div id="diagram-body">
-			
 			<input type="text" id="diagram-title" style="display: none">
-			
-			
-				<div id = "view-desc-body">
-					<div id = "view-desc-plate"><textarea id = 'text-p-desc'></textarea></div>
-					<div id="view-p-desc" style = 'width:130px;'>^^Project Abstract</div>
-				</div>
-			
-			
+			<div id = "view-desc-body">
+				<div id = "view-desc-plate"><textarea id = 'text-p-desc'></textarea></div>
+				<div id="view-p-desc" style = 'width:130px;'>Project Abstract</div>
+			</div>
 			<div id="project-menu" style="display:none">
-				<li id="save-project-opt" class="button-style-3" p_id="">Save</li>
+				<li id="save-project-opt" class="button-style-3" p_id="">S<u>a</u>ve</li>
+				<li id="get-str-opt" class="button-style-3"><u>E</u>xport</li>
 				<li id="clear-project-opt" class="button-style-3"><u>C</u>lear</li>
-				<li id="get-str-opt" class="button-style-3">Export</li>
 				<li id="use-id-opt" class="button-style-3"><u>I</u>dentity</li>
 				<li id="use-s-opt" class="button-style-3"><u>S</u>ource</li>
 				<li id="use-t-opt" class="button-style-3"><u>T</u>arget</li>
+				<li id="restrict-opt" class="button-style-3"><u>R</u>estrict</li>
+				<li id="theorem-opt" class="button-style-3">T<u>h</u>eorem</li>
+				<!-- disabling stochastic code for now
 				<li id="run-process" class="button-style-3">Run Process</li>
 				<li id='sto-form' class="button-style-3">Stochastic
 					<input type="checkbox" id="stochastic-cb">
 				</li>
-				
+				-->
 				<div id="ajax-loading" style=""></div>
-
 			</div>
 			<div id="diagram-canvas" style="display: none;">
 			</div>
@@ -89,19 +87,14 @@
 	</div>
 
 	<div id="errors" class="box zindex-error">
-		<br>
-		<div id="msg-close-opt-err" class="msg-close-opt">
-			Close
-		</div>
-
 	</div>
 
 	<div class="box" id="login-box">
 		LOG IN
 		<form class="site-options-form-body enable_if-out" method="POST">
-			<input type="text" id="login_email" name="login_email" class="text-field-style-1" style="margin-top:20px" placeholder="Email" value="testuser1@test.com">
-			<br>
-			<input type="password" id="login_pass" name="login_password" class="text-field-style-1" placeholder="Password" value="test">
+			
+			<input type="text" id="login_email" name="login_email" class="text-field-style-1" style="margin-top:20px" placeholder="Email" value="">
+			<input type="password" id="login_pass" name="login_password" class="text-field-style-1" placeholder="Password" value="">
 			<input type="button" class="submit-field-style-1" id="login-button" value="Login">
 			<span id = 'forgot-pass-opt'>Forgot password?</span>
 		</form>
@@ -117,6 +110,15 @@
 			<input type="button" class="submit-field-style-1" id="fp-button" value="Send Me New Password" style = "width:150px">
 		</form>
 		<div id="msg-close-opt-fp" class="msg-close-opt">
+			Close
+		</div>
+	</div>
+
+	<div class="box" id="options-box">
+		CHOOSE CELL
+		<ol id="options-list">
+		</ol>
+		<div id="msg-close-opt-cell" class="msg-close-opt">
 			Close
 		</div>
 	</div>
@@ -160,31 +162,31 @@
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="help-box">
 		<p></p>
 		<div id="msg-close-opt-help" class="msg-close-opt">
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="about-box">
 		<p></p>
 		<div id="msg-close-opt-about" class="msg-close-opt">
 			Close
 		</div>
 	</div>
+
 	<div class="box grand-box" id="gallery-box">
 		<div id="msg-close-opt-gallery" class="msg-close-opt">
 			Close
 		</div>
-		<div id = 'pl-title'>
-		
-		</div>
-		<div id = 'pl-addnew'>
-			
-		</div>
+		<div id='pl-title'></div>
+		<div id='pl-addnew'></div>
 		<br>
-		<div id = "plist"></div>
+		<div id="plist"></div>
 	</div>
+
 	<div class="box" id="run-proc-box">
 		<div id='process-form'>
 			<div style="width: 150px; float:left">Process dimension:</div>
@@ -203,5 +205,4 @@
 		</div>
 	</div>
 </body>
-
 </html>

@@ -46,8 +46,6 @@ app.use(session({
   cookie: { secure: true }
 }));
 
-
-
 // user will ask for '/private/casparwylie@gmail.com/projects/%EH^%YJERTHE/string.json'
 app.use('/private', function(req, res) {
 	if(req.session.user_id==undefined) return false;
@@ -131,7 +129,7 @@ app.get('/logout', function(req, res){
 });
 
 app.post('/save_project_changes', function(req, res){
-	projects.save_p_changes(req,res);	
+	projects.save_project_changes(req,res);	
 });
 
 app.get("/:value", function(req, res){
