@@ -390,6 +390,7 @@ Display.prototype.create_controls = function() {
 
     // Construct the main control div
     this.control = $('<div>')
+        .attr('id', 'main_view_control')
         .addClass('control')
         .addClass(popout ? 'popout' : 'inline')
         .mousedown(function(e) {
@@ -403,8 +404,27 @@ Display.prototype.create_controls = function() {
         });
     this.container.append(this.control);
     
+    // Construct the dimension control
+    this.control.append(document.createTextNode('Viewer dimension '));
+    this.view_input =
+        $('<input>')
+        .attr('type', 'number')
+        .addClass('control')
+        .attr('min', 0)
+        .attr('id', 'view_input')
+        .val(this.diagram == null ? 0 : Math.min(2, this.diagram.getDimension()))
+        .mouseover(function() {
+            this.focus();
+        });
+    this.view_input.on('input', function(event) {
+        self.control_change(event)
+    });
+    this.control.append(this.view_input);
+
+    
     // Construct the project control
-    this.control.append(document.createTextNode('Project '));
+    this.control.append(document.createElement('br'));
+    this.control.append(document.createTextNode('Project dimensions '));
     this.suppress_input =
         $('<input>')
         .attr('type', 'number')
@@ -416,26 +436,11 @@ Display.prototype.create_controls = function() {
         });
     var self = this;
     this.suppress_input.on('input', function(event) {
+        $('#view_input').val(10);
         self.control_change(event)
     });
     this.control.append(this.suppress_input);
 
-    // Construct the dimension control
-    this.control.append(document.createElement('br'));
-    this.control.append(document.createTextNode('View '));
-    this.view_input =
-        $('<input>')
-        .attr('type', 'number')
-        .addClass('control')
-        .attr('min', 0)
-        .val(this.diagram == null ? 0 : Math.min(2, this.diagram.getDimension()))
-        .mouseover(function() {
-            this.focus();
-        });
-    this.view_input.on('input', function(event) {
-        self.control_change(event)
-    });
-    this.control.append(this.view_input);
 
     // Construct the container for the slice controls
     this.slice_div = $('<div>').addClass('slice_container');

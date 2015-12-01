@@ -152,7 +152,7 @@ $(document).ready(function() {
             // do nothing
         } else if (event.state === "") {
             render_project_front(null);
-            $("#diagram-title").val("New Project");
+            $("#diagram-title").val("My workspace");
         } else {
             render_project_front(JSON.parse(event.state.string));
         }
@@ -179,7 +179,7 @@ $(document).ready(function() {
         //if (window.location.pathname.length < 3) {
         if (!gProject.initialized) {
             render_project_front('');
-            $("#diagram-title").val("New Project");
+            $("#diagram-title").val("My workspace");
         }
     }
 
@@ -478,10 +478,10 @@ $(document).ready(function() {
                         var projectNo = pID.substring(5);
 
                         pIDu = dateName + "_" + projectNo;
-                        datePubHTML = "Date Published: <span id = 'date" + pIDu + "'></span><br>";
+                        datePubHTML = "Date published: <span id = 'date" + pIDu + "'></span><br>";
                         authHTML = "Authors: <span id = 'authors" + pIDu + "'></span><br>";
                         if (listType != 1) {
-                            versionOptionsHTML = "View Different Versions: <span id = 'version-list" + pIDu + "'></span>";
+                            versionOptionsHTML = "View version: <span id = 'version-list" + pIDu + "'></span>";
 
                         } else if (projectData.substring(0, 2) == "av" && listType == 2) {
                             addVersionSelectOptHTML = "<span id = 'AV-select" + pIDu + "' class = 'AV-select'>SELECT</span>";
@@ -529,7 +529,7 @@ $(document).ready(function() {
                             $.get('/private/' + user_id + '/projects/' + pID + '/meta.json', function(meta) {
                                 $("#title" + pID).html(meta.project_name);
                                 if (meta.project_desc == "") {
-                                    meta.project_desc = "No Abstract Supplied";
+                                    meta.project_desc = "No abstract";
                                 }
                                 $("#desc" + pID).html(meta.project_desc);
                             });
@@ -544,7 +544,7 @@ $(document).ready(function() {
                             $.get('/public/' + dateName + '/' + projectNo + '/versions/' + latestVersion + '/meta.json', function(meta) {
                                 $("#title" + pIDu).html(meta.project_name);
                                 if (meta.project_desc == "") {
-                                    meta.project_desc = "No Abstract Supplied";
+                                    meta.project_desc = "No abstract";
                                 }
                                 $("#desc" + pIDu).html(meta.project_desc);
                             });
@@ -633,21 +633,21 @@ $(document).ready(function() {
                     //specific project is requested to be published
                     $(".publish-project").click(function() {
                         var p_id = $(this).attr("id").substring(3);
-                        show_msg("Would you like to publish this project as " +
-                            "a new version of an existing public project?" +
+                        show_msg("Would you like to publish this workspace as " +
+                            "a new version of an existing public workspace?" +
                             "<div id = 'publish-opt-no' class = 'button-style-3'>No</div><div class = 'button-style-3' style = 'float:right;margin-top: -31px;' id = 'publish-opt-yes'>Yes</div>", 20000, 3);
                         $("#publish-opt-no").click(function() {
                             $.post('/publish_project', {
                                 pid: p_id
                             }, function(result) {
-                                show_msg("Successfully published your new project. View it here: <a href = '" + window.location.href + result.projectURL + "'>" + window.location.href + result.projectURL + "</a>", 4000, 2);
+                                show_msg("Successfully published your workspace. View it here: <a href = '" + window.location.href + result.projectURL + "'>" + window.location.href + result.projectURL + "</a>", 4000, 2);
                             });
                         });
                         $("#publish-opt-yes").click(function() {
                             $("#errors").animate({
                                 marginTop: "-160px"
                             }, 1200);
-                            show_msg("Please select which public project you would like to add this version to...", 20000, 3);
+                            show_msg("Please select which public workspace you would like to add this version to...", 20000, 3);
 
                             $("#change-list-type").val("3").change();
                             render_project_list(2, "av" + p_id);
@@ -659,9 +659,7 @@ $(document).ready(function() {
                         $('#share-p-emails').keypress(function(e) {
                             e.stopPropagation()
                         });
-
                         $("#share-p").click(function() {
-
                             var emails = $("#share-p-emails").val();
                             $.post('share_project', {
                                 p_id: p_id,
@@ -670,7 +668,6 @@ $(document).ready(function() {
                                 show_msg(result.msg, 5000, result.successcolor);
                             });
                         });
-
                     });
                 } else if (listType == 3 || listType == 2) {
                     $(".gallery-comp-title").click(function() {
@@ -743,9 +740,8 @@ $(document).ready(function() {
         });
     });
 
-    //renders user project list
+    // renders user project list
     $("#mm-projects").click(function() {
-
         function controlAddP() {
             var apOptClicked = 0;
             $("#addp-title").click(function() {
@@ -763,11 +759,10 @@ $(document).ready(function() {
                         marginLeft: "+=200px"
                     }, 500);
                     $("#add-project-opt").css("box-shadow", "0px 0px 0px");
-
                 }
                 apOptClicked++;
             });
-
+            
             $("#add-project-submit").click(function() {
                 var p_name = $("#ap-name").val();
                 var p_desc = $("#proj_desc").val();
@@ -802,13 +797,13 @@ $(document).ready(function() {
             });
         }
 
-        $("#pl-title").html("Your <select id = 'change-list-type' class = 'pl-selects'><option value = '1'>Private</option><option value = '2'>Published</option></select> Projects ");
+        $("#pl-title").html("Your <select id = 'change-list-type' class = 'pl-selects'><option value = '1'>Private</option><option value = '2'>Published</option></select> Workspaces ");
         render_project_list(1, "");
         var addNewProjectHTML = "<div id='add-project-opt'>" +
-            "<div id = 'addp-title'>Create Project +</div>" +
-            "<input type='text' placeholder='Project Name...' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>" +
-            "<textarea id='ap-string' class='text-area-style-1' placeholder='Default String...(optional)'  style='width: 90%;margin-top:10px;'></textarea>" +
-            "<textarea id='proj_desc' class='text-area-style-1' placeholder='Description...(optional)'  style='width: 90%;height: 80px;'></textarea>" +
+            "<div id = 'addp-title'>New workspace +</div>" +
+            "<input type='text' placeholder='Workspace name' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>" +
+            "<textarea id='ap-string' class='text-area-style-1' placeholder='Default string (optional)'  style='width: 90%;margin-top:10px;'></textarea>" +
+            "<textarea id='proj_desc' class='text-area-style-1' placeholder='Description (optional)'  style='width: 90%;height: 80px;'></textarea>" +
             "<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>" +
             "</div>";
         $("#pl-addnew").html(addNewProjectHTML);
@@ -822,9 +817,7 @@ $(document).ready(function() {
         $("#proj_desc").keypress(function(e) {
             e.stopPropagation()
         });
-    
         controlAddP();
-
         $("#change-list-type").change(function() {
             if ($(this).val() == "1") {
                 $("#pl-addnew").html(addNewProjectHTML);
@@ -835,7 +828,6 @@ $(document).ready(function() {
                 render_project_list($(this).val(), "");
                 controlAddP();
             }
-
         });
     });
 });
