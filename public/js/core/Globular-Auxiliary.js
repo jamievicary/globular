@@ -189,6 +189,35 @@ String.prototype.getSignatureType = function() {
     return this;
 }
 
+String.prototype.analyze_id = function() {
+    if (this.tail('I')) {
+        var r = this.substr(0, this.length - 1).analyze_id();
+        if (r == null) return null;
+        r.inverse = true;
+        return r;
+    }
+    if (this.tail('-E')) {
+        var r = this.substr(0, this.length - 2).analyze_id();
+        if (r == null) return null;
+        r.dimension ++;
+        return r;
+    }
+    var generator = gProject.signature.getGenerator(this);
+    if (generator == null) return {
+        base_id: this,
+        signature: false,
+        inverse: false,
+        dimension: 0
+    }
+    return {
+        base_id: this,
+        signature: true,
+        inverse: false,
+        dimension: generator.getDimension(),
+        generator: generator
+    }
+}
+
 String.prototype.toggle_inverse = function() {
     if (this.tail('I')) return this.substr(0, this.length - 1);
     return this + 'I';

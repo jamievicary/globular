@@ -71,12 +71,19 @@ function globular_render_0d(container, diagram, subdiagram) {
     circle.setAttributeNS(null, "cx", 0);
     circle.setAttributeNS(null, "cy", 0);
     circle.setAttributeNS(null, "r", circle_radius);
-    var id = diagram.getFirstId();
-    circle.setAttributeNS(null, "fill", gProject.getColour(id));
+    var id_data = diagram.getFirstId();
+    circle.setAttributeNS(null, "fill", gProject.getColour(id_data));
     circle.setAttributeNS(null, "stroke", "none");
     d.g.appendChild(circle);
     $(container).append(d.svg);
-    return {vertex: {x: 0, y: 0, id: id}, dimension: 0};
+    return {
+        vertex: {
+            x: 0,
+            y: 0,
+            id: id_data.id
+        },
+        dimension: 0
+    };
 }
 
 function globular_render_1d(container, diagram, subdiagram) {
@@ -124,7 +131,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     var start_x = length - 0.5 - (diagram.cells.length == 0 ? 0.5 : 0);
     var finish_x = length;
     //var id = diagram.getTargetBoundary().cells[0].id;
-    var id = diagram.getTargetBoundary().getFirstId();
+    var id_data = diagram.getTargetBoundary().getFirstId();
     d.g.appendChild(SVG_create_path({
         string: SVG_move_to({
             x: start_x,
@@ -133,20 +140,24 @@ function globular_render_1d(container, diagram, subdiagram) {
             x: finish_x,
             y: 0
         }),
-        stroke: gProject.getColour(id),
+        stroke: gProject.getColour(id_data),
     }));
     data.edges.push({
         start_x: start_x,
         finish_x: finish_x,
         y: 0,
-        id: id,
+        id: id_data.id,
         level: diagram.cells.length
     });
 
     // Draw vertices
+    var dimension = diagram.getDimension();
     for (var i = 0; i < diagram.cells.length; i++) {
         var id = diagram.cells[i].id;
-        var colour = gProject.getColour(id);
+        var colour = gProject.getColour({
+            id: id,
+            dimension: dimension
+        });
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         var x = i + 0.5;
         var y = 0;
@@ -206,7 +217,8 @@ function globular_render_2d(container, diagram, subdiagram) {
         var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
         d.g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
-            fill: gProject.getColour(diagram.source.source.cells[0].id)
+            //fill: gProject.getColour(diagram.source.source.cells[0].id)
+            fill: diagram.getFirstColour()
         }));
         $(container).append(d.svg);
         $(container)[0].bounds = {
@@ -432,7 +444,10 @@ function globular_render_2d(container, diagram, subdiagram) {
         // Add the path to the SVG object
         if (drawn_something) {
             path.setAttributeNS(null, "d", path_s);
-            path.setAttributeNS(null, "stroke", gProject.getColour(edge.type));
+            path.setAttributeNS(null, "stroke", gProject.getColour({
+                id: edge.type,
+                dimension: diagram.getDimension() - 1
+            }));
             path.setAttributeNS(null, "stroke-width", 0.1);
             path.setAttributeNS(null, "fill", "none");
             d.g.appendChild(path);
@@ -440,7 +455,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
 
     // Draw the vertices
-    var epsilon = 0.01;
+    var epsilon = 0.0;
     for (var i = 0; i < data.vertices.length; i++) {
 
         var vertex = data.vertices[i];
@@ -458,8 +473,14 @@ function globular_render_2d(container, diagram, subdiagram) {
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
 
-            var lower_colour = gProject.getColour(e1_bot.type);
-            var upper_colour = gProject.getColour(e2_bot.type);
+            var lower_colour = gProject.getColour({
+                id: e1_bot.type,
+                dimension: diagram.getDimension() - 1
+            });
+            var upper_colour = gProject.getColour({
+                id: e2_bot.type,
+                dimension: diagram.getDimension() - 1
+            });
 
             // Prepare the upper path
             var top_str = SVG_move_to({
@@ -541,7 +562,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             circle.setAttributeNS(null, "cx", vertex.x);
             circle.setAttributeNS(null, "cy", vertex.y);
             circle.setAttributeNS(null, "r", circle_radius);
-            circle.setAttributeNS(null, "fill", gProject.getColour(vertex.type));
+            circle.setAttributeNS(null, "fill", gProject.getColour({id: vertex.type, dimension: diagram.getDimension()}));
             circle.setAttributeNS(null, "stroke", "none");
             d.g.appendChild(circle);
 

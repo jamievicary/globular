@@ -251,7 +251,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
                 }
 
                 if (adjustment_needed) {
-                /*
                     if (matches_found == 0 && adjustments.length == 0) {
                         // Never adjust on the first rung
                         current_match = null;
@@ -288,7 +287,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
                         current_match = null;
                         break;
                     }
-                */
                 } else {
                     // We found a bona-fide match
                     matches_found++;
@@ -553,7 +551,10 @@ Diagram.prototype.getFirstId = function() {
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
-    return d.cells[0].id;
+    return {
+        id: d.cells[0].id,
+        dimension: d.getDimension()
+    };
 }
 
 // Find the colour of the first cell that appears in the diagram
@@ -752,7 +753,7 @@ Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
             max: [high]
         };
     }
-    
+
     // Recursive case: evaluate on the once-projected subdiagram
     var new_box = this.intersectBoundingBoxes({
         min: b1.min.slice(1),
@@ -761,7 +762,7 @@ Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
         min: b2.min.slice(1),
         max: b2.max.slice(1)
     });
-    
+
     // If the result of the recursion is empty, then the intersection is empty
     if (new_box == null) return null;
 
@@ -791,26 +792,26 @@ Diagram.prototype.pullUpMinMax = function(top_height, bottom_height, min, max) {
 
 // Check that the bounding boxes can slide past each other
 Diagram.prototype.boundingBoxesSlideDownOnRight = function(lower, upper) {
-    
+
     // Make sure they are adjacent in height correctly
     if (lower.max.last() != upper.min.last()) return false;
-    
+
     // Find the top face of the lower bounding box
     var pull_up = pullUpMinMax(upper.min.last(), lower.max.last(), lower.min.penultimate(), lower.max.penultimate());
-    
+
     // Check the upper box is on the right
     return upper.min.penultimate() >= pull_up.max;
 }
 
 // Check that the bounding boxes can slide past each other
 Diagram.prototype.boundingBoxesSlideDownOnLeft = function(lower, upper) {
-    
+
     // Make sure they are adjacent in height correctly
     if (lower.max.last() != upper.min.last()) return false;
-    
+
     // Find the top face of the lower bounding box
     var pull_up = pullUpMinMax(upper.min.last(), lower.max.last(), lower.min.penultimate(), lower.max.penultimate());
-    
+
     // Check the upper box is on the left
     return upper.max.penultimate() <= pull_up.min;
 }
@@ -919,19 +920,19 @@ Diagram.prototype.prepare = function() {
 
 // Check if the specified id is used at all in this diagram
 Diagram.prototype.usesCell = function(id) {
-    
+
     // Check all the cells
-    for (var i=0; i<this.cells.length; i++) {
+    for (var i = 0; i < this.cells.length; i++) {
         if (this.cells[i].id == id) return true;
     }
-    
+
     // Check all the slices
-    for (var i=0; i<this.cells.length + 1; i++) {
+    for (var i = 0; i < this.cells.length + 1; i++) {
         var slice = this.getSlice(i);
         if (slice != null) {
             if (slice.usesCell(id)) return true;
         }
     }
-    
+
     return false;
 }

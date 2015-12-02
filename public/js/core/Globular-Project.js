@@ -66,11 +66,26 @@ Project.prototype.setColour = function(id, colour) {
 };
 
 // Gets the front-end colour to what the user wants
-Project.prototype.getColour = function(id) {
+var lightnesses = [30, 50, 70];
+Project.prototype.getColour = function(data) {
+    if (data.dimension == undefined) debugger;
+    /*
     var generator = this.signature.getGenerator(id);
-    if (generator == null) return '#555555';
-    if (generator.display == null) return '#555555';
-    return generator.display.colour;
+    if (generator != null) return generator.display.colour;
+    */
+    var analysis = data.id.analyze_id();
+
+    // Case that the id derives from the signature
+    if (analysis.signature) {
+        if (data.id == analysis.base_id) return analysis.generator.display.colour;
+        var husl = $.husl.fromHex(analysis.generator.display.colour);
+        return $.husl.toHex(husl[0], husl[1], lightnesses[analysis.dimension % 3])
+    }
+
+    // Case that the id derives from an interchanger
+    else {
+        return $.husl.toHex(0, 0, lightnesses[data.dimension % 3]);
+    }
 };
 
 
@@ -610,10 +625,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     var project = this;
     var input_color = document.createElement('input');
     input_color.className = 'color-picker';
-    input_color.value = this.getColour(generator.id);
+    input_color.value = generator.display.colour;
     var color_widget = new jscolor.color(input_color);
     color_widget.pickerClosable = true;
-    color_widget.fromString(this.getColour(generator.id));
+    color_widget.fromString(generator.display.colour);
     color_widget.onImmediateChange = function() {
         project.setColour(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
@@ -721,16 +736,16 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
 Project.prototype.removeCell = function(id) {
     var relatedCells = this.relatedCells(id);
-    
+
     // Remove the main diagram if it uses any related cells
-    for (var i=0; i<relatedCells.length; i++) {
+    for (var i = 0; i < relatedCells.length; i++) {
         if (this.diagram == null) break;
         var cell = relatedCells[i];
         if (this.diagram.usesCell(cell)) this.clearDiagram();
     }
-    
+
     // Remove the related cells
-    for (var i=0; i<relatedCells.length; i++) {
+    for (var i = 0; i < relatedCells.length; i++) {
         this.signature.removeCell(relatedCells[i]);
         $('#cell-opt-' + relatedCells[i]).remove();
     }
