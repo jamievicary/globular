@@ -67,6 +67,7 @@ Diagram.prototype.render = function(div, highlight) {
 
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
+    if (cell == undefined) debugger;
 
     // Identify the portion to be cut out, and the cells to be spliced in
     var source_size;
@@ -546,20 +547,20 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
 };
 
 // Find the ID of the first cell that appears in the diagram
-Diagram.prototype.getFirstId = function() {
+Diagram.prototype.getLastId = function() {
     var d = this;
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
     return {
-        id: d.cells[0].id,
+        id: d.cells[d.cells.length - 1].id,
         dimension: d.getDimension()
     };
 }
 
 // Find the colour of the first cell that appears in the diagram
-Diagram.prototype.getFirstColour = function() {
-    var id = this.getFirstId();
+Diagram.prototype.getLastColour = function() {
+    var id = this.getLastId();
     return gProject.getColour(id);
 }
 
@@ -797,7 +798,7 @@ Diagram.prototype.boundingBoxesSlideDownOnRight = function(lower, upper) {
     if (lower.max.last() != upper.min.last()) return false;
 
     // Find the top face of the lower bounding box
-    var pull_up = pullUpMinMax(upper.min.last(), lower.max.last(), lower.min.penultimate(), lower.max.penultimate());
+    var pull_up = this.pullUpMinMax(upper.min.last(), lower.min.last(), lower.min.penultimate(), lower.max.penultimate());
 
     // Check the upper box is on the right
     return upper.min.penultimate() >= pull_up.max;
@@ -810,7 +811,7 @@ Diagram.prototype.boundingBoxesSlideDownOnLeft = function(lower, upper) {
     if (lower.max.last() != upper.min.last()) return false;
 
     // Find the top face of the lower bounding box
-    var pull_up = pullUpMinMax(upper.min.last(), lower.max.last(), lower.min.penultimate(), lower.max.penultimate());
+    var pull_up = this.pullUpMinMax(upper.min.last(), lower.min.last(), lower.min.penultimate(), lower.max.penultimate());
 
     // Check the upper box is on the left
     return upper.max.penultimate() <= pull_up.min;
@@ -829,6 +830,8 @@ Diagram.prototype.getCell = function(location) {
 
 // Get the bounding box surrounding a object
 Diagram.prototype.getLocationBoundingBox = function(location) {
+    if (!globular_is_array(location)) location = [location];
+    else location = location.slice();
     if (location.length == 0) debugger;
     var box = this.getSliceBoundingBox(location);
     var extra = (location.length > this.getDimension() ? location.slice(1) : location);

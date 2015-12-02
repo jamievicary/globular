@@ -68,6 +68,7 @@ Project.prototype.setColour = function(id, colour) {
 // Gets the front-end colour to what the user wants
 var lightnesses = [30, 50, 70];
 Project.prototype.getColour = function(data) {
+    if (data.id === undefined) data.id = data.type;
     if (data.dimension == undefined) debugger;
     /*
     var generator = this.signature.getGenerator(id);

@@ -427,11 +427,7 @@ $(document).ready(function() {
         $("#gallery-box").fadeOut();
     });
     $("#mm-help").click(function() {
-        $("#help-box").fadeIn();
-    });
-
-    $("#mm-about").click(function() {
-        $("#about-box").fadeIn();
+        window.open('http://ncatlab.org/nlab/show/Globular' ,'_blank');
     });
 
     var pathName = window.location.pathname;

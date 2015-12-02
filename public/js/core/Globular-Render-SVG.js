@@ -71,7 +71,7 @@ function globular_render_0d(container, diagram, subdiagram) {
     circle.setAttributeNS(null, "cx", 0);
     circle.setAttributeNS(null, "cy", 0);
     circle.setAttributeNS(null, "r", circle_radius);
-    var id_data = diagram.getFirstId();
+    var id_data = diagram.getLastId();
     circle.setAttributeNS(null, "fill", gProject.getColour(id_data));
     circle.setAttributeNS(null, "stroke", "none");
     d.g.appendChild(circle);
@@ -102,7 +102,6 @@ function globular_render_1d(container, diagram, subdiagram) {
         dimension: 1
     };
 
-
     // Draw line segments except last
     for (var i = 0; i < diagram.cells.length; i++) {
         var start_x = (i == 0 ? 0 : i - 0.5);
@@ -116,13 +115,13 @@ function globular_render_1d(container, diagram, subdiagram) {
         });
         d.g.appendChild(SVG_create_path({
             string: path_string,
-            stroke: diagram.getSlice(i).getFirstColour()
+            stroke: diagram.getSlice(i).getLastColour()
         }));
         data.edges.push({
             start_x: start_x,
             finish_x: finish_x,
             y: 0,
-            id: diagram.getSlice(i).getFirstId(),
+            id: diagram.getSlice(i).getLastId(),
             level: i
         });
     }
@@ -131,7 +130,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     var start_x = length - 0.5 - (diagram.cells.length == 0 ? 0.5 : 0);
     var finish_x = length;
     //var id = diagram.getTargetBoundary().cells[0].id;
-    var id_data = diagram.getTargetBoundary().getFirstId();
+    var id_data = diagram.getTargetBoundary().getLastId();
     d.g.appendChild(SVG_create_path({
         string: SVG_move_to({
             x: start_x,
@@ -218,7 +217,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         d.g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
             //fill: gProject.getColour(diagram.source.source.cells[0].id)
-            fill: diagram.getFirstColour()
+            fill: diagram.getLastColour()
         }));
         $(container).append(d.svg);
         $(container)[0].bounds = {
@@ -267,7 +266,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     });
 
     // Determine background colour
-    var color = diagram.source.source.getFirstColour();
+    var color = diagram.source.source.getLastColour();
     d.g.appendChild(SVG_create_path({
         string: path_string,
         //        fill: gProject.getColour(diagram.source.source.cells[0].id)
@@ -341,7 +340,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             var sd = diagram.getSlice(level).getSlice(sublevel + 1);
 
             //var sd = diagram.getSlice(Math.ceil(edge.start_height)).getSlice(edge.attachment_height + 1);
-            colour = sd.getFirstColour();
+            colour = sd.getLastColour();
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();
         }
@@ -459,6 +458,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     for (var i = 0; i < data.vertices.length; i++) {
 
         var vertex = data.vertices[i];
+        vertex.dimension = diagram.getDimension();
 
         if (vertex.type.is_basic_interchanger()) {
 
@@ -557,7 +557,20 @@ function globular_render_2d(container, diagram, subdiagram) {
                 stroke: upper_colour,
                 stroke_width: 0.1
             }));
+
+            // Attach little circles where the path joins its neighbours
+            if (i != 0) {
+                // Draw little circles at the bottom
+                d.g.appendChild(SVG_create_circle({x: e2_bot.x, y: i, fill: upper_colour}));
+                d.g.appendChild(SVG_create_circle({x: e1_bot.x, y: i, fill: lower_colour}));
+            }
+            if (i != data.vertices.length - 1) {
+                // Draw little circles at the top
+                d.g.appendChild(SVG_create_circle({x: e2_top.x, y: i + 1, fill: upper_colour}));
+                d.g.appendChild(SVG_create_circle({x: e1_top.x, y: i + 1, fill: lower_colour}));
+            }
         } else {
+            /*
             var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttributeNS(null, "cx", vertex.x);
             circle.setAttributeNS(null, "cy", vertex.y);
@@ -565,7 +578,10 @@ function globular_render_2d(container, diagram, subdiagram) {
             circle.setAttributeNS(null, "fill", gProject.getColour({id: vertex.type, dimension: diagram.getDimension()}));
             circle.setAttributeNS(null, "stroke", "none");
             d.g.appendChild(circle);
-
+            */
+            vertex.fill = gProject.getColour(vertex);
+            vertex.radius = 0.1;
+            d.g.appendChild(SVG_create_circle(vertex));
         }
     }
 
@@ -791,6 +807,19 @@ function SVG_create_path(data) {
     path.setAttributeNS(null, "fill-opacity", data.fill_opacity);
     if (data.mask != null) path.setAttributeNS(null, "mask", data.mask);
     return path;
+}
+
+function SVG_create_circle(data) {
+    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    if (data.radius == undefined) data.radius = 0.05;
+    circle.setAttributeNS(null, "cx", data.x);
+    circle.setAttributeNS(null, "cy", data.y);
+    circle.setAttributeNS(null, "r", data.radius);
+    circle.setAttributeNS(null, "fill", data.fill);
+    circle.setAttributeNS(null, "stroke", "none");
+    //d.g.appendChild(circle);
+    return circle;
+
 }
 
 function process_instructions(data, i) {
