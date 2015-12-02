@@ -248,7 +248,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     var edges_to_left = 0;
     for (var i = 0; i < this.data.edges.length; i++) {
         var edge = this.data.edges[i];
-        if (edge.start_height > height) continue;
+        if (edge.start_height >= height) continue;
         if (edge.finish_height < height) continue;
         // How close is this edge?
         var d = grid_coord.x - edge.x;
@@ -278,7 +278,9 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     }
 
     // The user has clicked on a region
-    var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, 0]);
+    var depth = this.visible_diagram.getSlice([edges_to_left, Math.floor(height + 0.5 - b.bottom)]).cells.length - 1;
+    if (depth < 0) depth = 0;
+    var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, depth]);
     //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
     //console.log("Click on region at coordinates " + JSON.stringify(padded));
     var position = this.diagram.getBoundaryCoordinates({

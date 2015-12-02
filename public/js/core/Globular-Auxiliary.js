@@ -199,7 +199,7 @@ String.prototype.analyze_id = function() {
     if (this.tail('-E')) {
         var r = this.substr(0, this.length - 2).analyze_id();
         if (r == null) return null;
-        r.dimension ++;
+        r.dimension++;
         return r;
     }
     var generator = gProject.signature.getGenerator(this);
@@ -330,4 +330,92 @@ function bounding_box_slice(a, b) {
         min: box.min.slice(a, b),
         max: box.max.slice(a, b)
     }
+}
+
+// Decompose the geometry of an interchanger vertex
+function bezier_decompose(p, q, r, s, i) {
+    var centre = (p + q) / 2;
+    var a = q - centre;
+    var b = s - centre;
+    var t = bezier_intersect_t(a / b);
+    var bl = bezier_initial_part({
+        P1: [p, i],
+        P2: [p, i + 0.5],
+        P3: [s, i + 0.5],
+        P4: [s, i + 1]
+    }, t);
+    var tr = bezier_initial_part({
+        P1: [s, i + 1],
+        P2: [s, i + 0.5],
+        P3: [p, i + 0.5],
+        P4: [p, i]
+    }, 1 - t);
+    var tl = {
+        P1: [r, i + 1],
+        P2: [2 * centre - tr.P2[0], tr.P2[1]],
+        P3: [2 * centre - tr.P3[0], tr.P3[1]],
+        P4: tr.P4.slice()
+    }
+    var br = {
+        P1: [q, i],
+        P2: [2 * centre - bl.P2[0], bl.P2[1]],
+        P3: [2 * centre - bl.P3[0], bl.P3[1]],
+        P4: bl.P4.slice()
+    }
+
+    return {
+        centre: bl.P4.slice(),
+        bl: bl,
+        br: br,
+        tr: tr,
+        tl: tl
+    }
+}
+
+// Returns an initial part of a bezier using de Casteljau's algorithm
+// See http://stackoverflow.com/questions/11703283/cubic-bezier-curve-segment
+function bezier_initial_part(bezier, t) {
+    var b = bezier;
+    var u = 1 - t;
+    var uu = u * u;
+    var uuu = uu * u;
+    var tt = t * t;
+    var ttt = tt * t;
+    var P1 = b.P1.slice();
+    var P2 = [u * b.P1[0] + t * b.P2[0],
+              u * b.P1[1] + t * b.P2[1]];
+    var P3 = [uu * b.P1[0] + 2 * t * u * b.P2[0] + tt * b.P3[0],
+              uu * b.P1[1] + 2 * t * u * b.P2[1] + tt * b.P3[1]];
+    var P4 = [uuu * b.P1[0] + 3 * t * uu * b.P2[0] + 3 * tt * u * b.P3[0] + ttt * b.P4[0],
+              uuu * b.P1[1] + 3 * t * uu * b.P2[1] + 3 * tt * u * b.P3[1] + ttt * b.P4[1]];
+    return {
+        P1: P1,
+        P2: P2,
+        P3: P3,
+        P4: P4
+    };
+}
+
+var PI = 3.141592654;
+
+// Working this out took me about 6 fucking hours
+function bezier_intersect_t(r) {
+    //var X = 0.5 + Math.sin((PI/6) - (2/3) * Math.atan(1/Math.sqrt(r)));
+    return 0.5 + Math.sin((PI / 6) - (2 / 3) * Math.atan(1 / Math.sqrt(r)));
+    var t = 0.5 + ((1 + r) / (2 * X)) + (X / (2 * (1 + r)));
+    return t;
+}
+
+
+// Working this out took me
+function bezier_intersect_X(r) {
+    return
+    /*
+    var rr = r * r;
+    var rrr = rr * r;
+    var rrrr = rrr * r;
+    var rrrrr = rrrr * r;
+    var X = Math.cbrt(1 + r - rr - rrr + 2 * Math.sqrt(-r - 4 * rr - 6 * rrr - 4 * rrrr - 5 * rrrrr));
+    return X;
+    */
 }
