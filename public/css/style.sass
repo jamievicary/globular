@@ -11,8 +11,8 @@ $main_font: 'Open Sans', sans-serif
 $top-menu-height: 20px 
 $border_radius: 2px
 $spacing: 7px
-$icon_size: 60px
-$control_width: 270px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
+$icon_size: 70px
+$control_width: 300px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
 $header_height: 70px
 
 // SET COLOURS OF DIFFERENT STRUCTURES
@@ -174,18 +174,6 @@ div.cell-opt
 	padding-right: 0px
 	//height: 70px
 	
-div.cell-icon>canvas
-	border-radius: $border_radius
-
-div.cell-icon
-	height: $icon_size
-	width: $icon_size
-	margin-top: 0px
-	//border-radius: $border_radius
-	border-radius: $border_radius
-	background-color: $lightgrey
-	float: left
-	
 // MAKE THIS THE MAIN ICON CLASS
 div.preview-icon
 	height: $icon_size
@@ -201,17 +189,9 @@ div.preview-icon>svg
 	border-radius: $border_radius
 	
 .cell-b-sect
-	//border-top: 1px solid grey
-	//height: 65px
-	//margin-top: 5px
-	//display: none
 	text-align: center
 	top: 70px
 
-.cell-detail
-	margin-left: 63px
-	height: $icon_size
-	
 .match-cell-icon
 	height: $icon_size
 	width: $icon_size
@@ -220,27 +200,69 @@ div.preview-icon>svg
 	float: left
 	//margin: 5px
 	
-.cell-icon1
-	height: $icon_size
-	border: 2px dashed black
-	width: $icon_size
-	margin-left: 100px
-	//top: 5px
-	position: absolute
-	background-color: lightgrey
+div.cell-icon-group
+	float: left
 
+div.cell-detail
+	overflow: hidden
+	height: $icon_size
+	padding-left: 2px
+	font-family: $main_font
+	font-size: 13px
+	
+div.cell-detail>label
+	//display: block
+	//padding-left: 15px
+	//text-indent: -15px
+    
+input[type=checkbox]
+	//width: 13px
+	//height: 13px
+	//padding: 0
+	//margin: 0
+	vertical-align: bottom
+	position: relative
+	bottom: -2px
+	//*overflow: hidden
+    
 .cell-label
-	width: 160px
+	width: calc(100% - 23px)
 	border: none
 	outline-width: 0px
-	letter-spacing: 1px
-	position: absolute
-	//left: $icon_size + $spacing
-	//margin-top: 5px
 	margin-left: 5px
 	height: 15px
 	border-radius: $border_radius
+	padding-top: 0px
+	padding-bottom: 0px
+	font-size: 13px
 
+.color-picker
+	width: calc(100% - 23px)
+	margin-top: 4px
+	margin-left: 5px
+	border: none
+	border-radius: $border_radius
+	height: 15px
+	padding-top: 0px
+	padding-bottom: 0px
+	margin-bottom: 2px
+	font-size: 13px
+	
+div.cell-icon>canvas
+	border-radius: $border_radius
+
+div.cell-icon
+	height: $icon_size
+	width: $icon_size
+	margin-top: 0px
+	//border-radius: $border_radius
+	border-radius: $border_radius
+	background-color: $lightgrey
+	float: left
+	
+div.cell-icon:nth-child(2) 
+	margin-left: 7px
+	
 .stochastic-rate
 	width: 50px
 	outline-width: 0px
@@ -250,15 +272,6 @@ div.preview-icon>svg
 	//left: $icon_size + $spacing
 	margin-left: 5px
 	margin-top: 40px
-	border-radius: $border_radius
-	height: 15px
-	
-.color-picker
-	width: 80px
-	letter-spacing: 1px
-	margin-top: 21px
-	margin-left: 5px
-	border: none
 	border-radius: $border_radius
 	height: 15px
 	
@@ -419,7 +432,7 @@ div.preview-icon>svg
 div .delete_button
 	position: absolute
 	right: 5px
-	top: 2px
+	top: 4px
 	color: red
 
 #main_view_control

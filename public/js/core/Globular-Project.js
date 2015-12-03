@@ -573,13 +573,26 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.id = 'cell-opt-' + generator.id;
     div_main.c_type = n;
 
+    // Create icon group
+    var icon_group = $('<div>')
+        .addClass('cell-icon-group')
+        .appendTo($(div_main));
+
     // Add icon
     var div_icon = document.createElement('div');
     div_icon.className = 'cell-icon';
     div_icon.id = 'ci-' + generator.id;
-    div_main.appendChild(div_icon);
+    icon_group.append(div_icon);
 
     // Add second icon if necessary
+    if (n > 0 && !generator.single_thumbnail) {
+        var div_icon_2 = document.createElement('div');
+        div_icon_2.className = 'cell-icon';
+        div_icon_2.id = 'ci-second-' + generator.id;
+        //div_main.appendChild(div_icon_2);
+        icon_group.append(div_icon_2);
+    }
+
     /*
     if (n == 3) {
         var span_arrow = document.createElement('div');
@@ -654,6 +667,19 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
         input.change(function() {
             var g = gProject.signature.getGenerator(generator.id);
             g.invertible = !g.invertible;
+        });
+    }
+
+    // Add separate source/target selector
+    if (n > 0) {
+        var label = $('<br><label><input type="checkbox" name="checkbox"/>Single image</label>');
+        var input = label.find('input');
+        input.attr('id', 'single-thumbnail-' + generator.id).prop('checked', generator.single_thumbnail);
+        $(div_detail).append(label);
+        input.change(function() {
+            var g = gProject.signature.getGenerator(generator.id);
+            g.single_thumbnail = !g.single_thumbnail;
+            gProject.renderNCell(generator.id);
         });
     }
 
@@ -817,6 +843,11 @@ Project.prototype.renderNCell = function(id) {
         }
     }
 
+    // Set default single thumbnail behaviour if undefined
+    if (generator.single_thumbnail == undefined) {
+        generator.single_thumbnail = (generator.getDimension() <= 2);
+    }
+    
     // Add the new generator
     var cell_group_id = '#cell-group-' + generator.getDimension();
     var entry = this.createGeneratorDOMEntry(generator.id);
@@ -826,7 +857,14 @@ Project.prototype.renderNCell = function(id) {
     } else {
         $(cell_group_id).append(entry);
     }
-    this.renderGenerator('#ci-' + generator.id, generator.id);
+    
+    // Render the thumbnails
+    if (generator.single_thumbnail) {
+        this.renderGenerator('#ci-' + generator.id, generator.id);
+    } else if (generator.getDimension() > 0) {
+        generator.source.render('#ci-' + generator.id);
+        generator.target.render('#ci-second-' + generator.id);
+    }
 }
 
 
