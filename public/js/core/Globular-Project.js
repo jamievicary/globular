@@ -385,7 +385,9 @@ Project.prototype.performAction = function(option, drag) {
     this.selected_cell = null;
     this.saveState();
     this.clearThumbnails();
-    this.renderDiagram(drag);
+    this.renderDiagram({
+        drag: drag
+    });
 }
 
 Project.prototype.saveState = function() {
@@ -520,6 +522,10 @@ Project.prototype.prepareEnumerationData = function(subject_diagram, matched_dia
 
 // Returns the current string 
 Project.prototype.currentString = function() {
+
+    // Store the viewbox controls
+    this.view_controls = MainDisplay.getControls();
+
     return globular_stringify(this);
 }
 
@@ -542,8 +548,8 @@ Project.prototype.renderGenerator = function(div, id) {
 }
 
 // Render the main diagram
-Project.prototype.renderDiagram = function(boundary_data) {
-    MainDisplay.set_diagram(this.diagram, boundary_data);
+Project.prototype.renderDiagram = function(data) {
+    MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
 // Need to write this code
@@ -710,7 +716,9 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                         d = project.diagram;
                         project.clearThumbnails();
                         project.renderDiagram({
-                            boundary: boundary
+                            drag: {
+                                boundary: boundary
+                            }
                         });
                         project.saveState();
                     });

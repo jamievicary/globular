@@ -328,7 +328,8 @@ $(document).ready(function() {
         
         // Render main diagram
         $('#diagram-canvas').empty();
-        gProject.renderDiagram();
+        //MainDisplay.setControls(gProject.view_controls);
+        gProject.renderDiagram({controls: gProject.view_controls});
 
         gProject.redrawAllCells();
 
