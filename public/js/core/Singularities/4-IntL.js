@@ -226,35 +226,6 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     // Should never fall through to here
     debugger;
     
-
-    /*
-    ///////////// OLD
-    if (type == 'Int-L') return d.expand('Int', coords.last(), s, 1).concat([cell.move([{
-        relative: 1
-    }])]);
-    if (type == 'IntI-L') return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{
-        relative: 1
-    }])]);
-    if (type == 'Int-R') return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{
-        relative: -1
-    }])]);
-    if (type == 'IntI-R') return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{
-        relative: -1
-    }])]);
-    if (type == 'Int-LI') return [cell.move([{
-        relative: -1
-    }])].concat(d.expand('Int', coords.last() - 1, t, 1));
-    if (type == 'IntI-LI') return [cell.move([{
-        relative: -1
-    }])].concat(d.expand('IntI', coords.last() - 1, t, 1));
-    if (type.tail('Int-RI', 'IntI-RI')) {
-        return [cell.move([{
-            relative: slice.target_size(q) - slice.source_size(q)
-        }, {
-            relative: 1
-        }])].concat(d.expand(basic_type, coords.last(), 1, t));
-    }
-    */
 }
 
 Diagram.prototype.tidyKey.IntL = function(type, key) {
