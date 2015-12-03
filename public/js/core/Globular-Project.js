@@ -426,7 +426,7 @@ Project.prototype.selectGenerator = function(id) {
         // REWRITE
         if (slices_data.length > 0) {
             var d = this.diagram.getDimension();
-            alert('Choose suppression level ' + this.diagram.getDimension() - 2 + ' to rewrite diagram.');
+            alert('Choose projection level ' + (this.diagram.getDimension() - 2) + ' to rewrite diagram.');
             return null;
         }
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());

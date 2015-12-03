@@ -122,12 +122,19 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     
-    // '-E' cells require a key of length 1
-    if (type.tail('E')) return [key.last()];
+    // '-EI' cells require a key of length 1
+    if (type.tail('E')) {
+        //if (key.length != this.getDimension()) debugger;
+        return [key.last()];
+    }
     
-    // '-EI' cells require a key of length > 1
+    // '-E' cells require a key of length > 1
     //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
-    if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min;
+    //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min;
+    if (type.tail('EI')) {
+        if (key.length != 1) debugger;
+        return this.cells[key[0]].key.slice().concat(key);
+    }
 }
 
 Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
@@ -139,7 +146,8 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
         box.max.push(key.last() + 2)
     } else {
         var slice = this.getSlice(key.last());
-        var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
+        //var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
+        var base_key = key.slice(0, key.length - 1);
         box = this.getSlice(key.last()).getBoundingBox({
             id: base_type,
             key: base_key
@@ -191,7 +199,8 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
     // '...-E'-type cells introduce a nontrivial pair
     var base_type = type.substr(0, type.length - 2);
     var slice = this.getSlice(key.last());
-    var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
+    //var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
+    var base_key = key.slice(0, key.length - 1);
     var reverse_key = slice.getInverseKey(base_type, base_key);
     return [new NCell({
         id: base_type,
