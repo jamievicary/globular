@@ -662,6 +662,11 @@ div.control.inline {
   top: 10px;
 }
 
+/* line 564, style.sass */
+input.control {
+  max-width: 35px;
+}
+
 /* line 571, style.sass */
 #gallery-box {
   overflow: auto;
