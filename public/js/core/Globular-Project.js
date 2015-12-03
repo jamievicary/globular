@@ -549,6 +549,7 @@ Project.prototype.renderGenerator = function(div, id) {
 
 // Render the main diagram
 Project.prototype.renderDiagram = function(data) {
+    if (data == undefined) data = {};
     MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
