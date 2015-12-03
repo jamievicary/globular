@@ -585,6 +585,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     icon_group.append(div_icon);
 
     // Add second icon if necessary
+    var div_icon_2 = null;
     if (n > 0 && !generator.single_thumbnail) {
         var div_icon_2 = document.createElement('div');
         div_icon_2.className = 'cell-icon';
@@ -660,7 +661,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
     // Add invertibility selector
     if (n > 0 && generator.id.last() != 'I') {
-        var label = $('<br><label><input type="checkbox" name="checkbox">Invertible</label>');
+        var label = $('<br><label class="cell-invertible"><input type="checkbox" name="checkbox">Invertible</label>');
         var input = label.find('input');
         input.attr('id', 'invertible-' + generator.id).prop('checked', generator.invertible);
         $(div_detail).append(label);
@@ -672,7 +673,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
     // Add separate source/target selector
     if (n > 0) {
-        var label = $('<br><label><input type="checkbox" name="checkbox"/>Single image</label>');
+        var label = $('<br><label class="cell-single-thumbnail"><input type="checkbox" name="checkbox"/>Single image</label>');
         var input = label.find('input');
         input.attr('id', 'single-thumbnail-' + generator.id).prop('checked', generator.single_thumbnail);
         $(div_detail).append(label);
@@ -713,9 +714,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.appendChild(div_extra);
 
     (function(project) {
-        $(div_icon).click(function() {
+        $(div_icon).add($(div_icon_2)).click(function() {
 
-            var cid = $(this).attr("id").substring(3);
+            //var cid = $(this).attr("id").substring(3);
+            var cid = generator.id;
 
             var enumerationData = project.selectGenerator(cid);
             if (enumerationData == null) return;

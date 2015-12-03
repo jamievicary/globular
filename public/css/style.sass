@@ -11,7 +11,7 @@ $main_font: 'Open Sans', sans-serif
 $top-menu-height: 20px 
 $border_radius: 2px
 $spacing: 7px
-$icon_size: 70px
+$icon_size: 67px
 $control_width: 300px //calc((#{$icon_size} * 3) + (#{$spacing} * 6))
 $header_height: 70px
 
@@ -214,15 +214,28 @@ div.cell-detail>label
 	//display: block
 	//padding-left: 15px
 	//text-indent: -15px
+	//margin-top: -40px
+	position: absolute
+	height: 13px
+	
+label.cell-invertible
+	top: 41px
+	
+label.cell-single-thumbnail
+	top: 57px
+
     
 input[type=checkbox]
 	//width: 13px
-	//height: 13px
+	height: 13px
 	//padding: 0
 	//margin: 0
+	//margin-top: -4px
+	//padding-top: -2px
 	vertical-align: bottom
 	position: relative
-	bottom: -2px
+	bottom: -1px
+	padding-bottom: -5px
 	//*overflow: hidden
     
 .cell-label
@@ -245,7 +258,7 @@ input[type=checkbox]
 	height: 15px
 	padding-top: 0px
 	padding-bottom: 0px
-	margin-bottom: 2px
+	margin-bottom: 0px
 	font-size: 13px
 	
 div.cell-icon>canvas
@@ -550,6 +563,10 @@ div.control.inline
 	
 input.control
 	width: 30px
+	//overflow: hidden
+	//max-width: 200px
+	//float: left
+	//overflow: visible
 
 #gallery-box
 	overflow: auto
