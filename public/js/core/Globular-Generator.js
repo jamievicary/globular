@@ -86,3 +86,12 @@ Generator.prototype.getSourceLengths = function() {
     if (this.source == null) return [];
     return this.source.getLengthsAtSource();
 }
+
+
+Generator.prototype.usesCell = function(id) {
+    if (this.source != null) {
+        if (this.source.usesCell(id)) return true;
+        if (this.target.usesCell(id)) return true;
+    }
+    return false;
+}

@@ -111,7 +111,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         for (var i=0; i<options.length; i++) {
             var action = options[i];
             action.id += '-E';
-            action.key.push(drag.coordinates.last());
+            action.key.push(Math.min(drag.coordinates.last(), this.cells.length));
             var pre = action.preattachment;
             if (pre != null) {
                 pre.boundary.depth ++;

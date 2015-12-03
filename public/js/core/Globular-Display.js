@@ -248,7 +248,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     var edges_to_left = 0;
     for (var i = 0; i < this.data.edges.length; i++) {
         var edge = this.data.edges[i];
-        if (edge.start_height > height) continue;
+        if (edge.start_height >= height) continue;
         if (edge.finish_height < height) continue;
         // How close is this edge?
         var d = grid_coord.x - edge.x;
@@ -278,7 +278,9 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     }
 
     // The user has clicked on a region
-    var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, 0]);
+    var depth = this.visible_diagram.getSlice([edges_to_left, Math.floor(height + 0.5 - b.bottom)]).cells.length - 1;
+    if (depth < 0) depth = 0;
+    var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, depth]);
     //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
     //console.log("Click on region at coordinates " + JSON.stringify(padded));
     var position = this.diagram.getBoundaryCoordinates({
@@ -360,14 +362,15 @@ Display.prototype.update_controls = function(boundary) {
     this.suppress_input.val(new_suppress);
     
     // Update the view dimension input
-    var new_view = Number(this.view_input.val());
-    if (boundary != undefined) {
-        if (boundary.boost) new_view++;
+    if (this.view_input != null) {
+        var new_view = Number(this.view_input.val());
+        if (boundary != undefined) {
+            if (boundary.boost) new_view++;
+        }
+        new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
+        this.view_input.val(new_view);
     }
-    new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
-    //if (new_suppress < 0) new_suppress = 0;
-    this.view_input.val(new_view);
-
+    
     // Update the slice controls
     this.update_slice_container(boundary);
 }
@@ -404,6 +407,7 @@ Display.prototype.create_controls = function() {
         });
     this.container.append(this.control);
     
+    /*
     // Construct the dimension control
     this.control.append(document.createTextNode('Viewer dimension '));
     this.view_input =
@@ -420,11 +424,11 @@ Display.prototype.create_controls = function() {
         self.control_change(event)
     });
     this.control.append(this.view_input);
-
+    this.control.append(document.createElement('br'));
+    */
     
     // Construct the project control
-    this.control.append(document.createElement('br'));
-    this.control.append(document.createTextNode('Project dimensions '));
+    this.control.append(document.createTextNode('Project '));
     this.suppress_input =
         $('<input>')
         .attr('type', 'number')
@@ -461,7 +465,7 @@ Display.prototype.update_slice_container = function(drag) {
     }
 
     // Calculate the desired number of slice controls
-    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - this.view_input.val();
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2 /*this.view_input.val()*/;
     if (remaining_dimensions < 0) remaining_dimensions = 0;
 
     // Remove any superfluous slice controls

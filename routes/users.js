@@ -1,5 +1,25 @@
 var crypto = require('crypto');
 var fs = require('fs');
+var Mailgun = require('mailgun-js');
+
+
+var mailGunKey = 'key-b78a23d2476ddc0ec839ed917499dfa0';
+
+var mailGunDomain = 'globular.sceince';
+
+var mailGunFrom = 'postmaster@globular.science';
+
+
+
+/*var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'casparwylie@gmail.com',
+        pass: 'test'
+    }
+});*/
+
 
 encrypt_hash = function (string){
 	var hash_sha512 = crypto.createHash("sha512");
@@ -14,6 +34,10 @@ exports.login_user = function(req, res){
 	if(fs.existsSync('database/users/'+login_email)){
   		fs.readFile('database/users/'+login_email+"/data.json",'utf-8', function(err,data){
   			data = JSON.parse(data);
+  			if(data.temp_fp_password){
+	  			delete data.temp_fp_password;
+	  			fs.writeFileSync('database/users/'+login_email+"/data.json", JSON.stringify(data));
+	  		}
   			if(data.user_password == encrypt_hash(login_pass)){
   				req.session.user_id  = login_email;
 				req.session.cookie.secure = false;
@@ -77,7 +101,8 @@ exports.register_user = function(req,res){
 	var enPass = encrypt_hash(pass);
 	var errors = "";
 	var email_chars = email.split("");
-	if((email_chars.indexOf('@') === -1)||(email_chars.indexOf('.') === -1)){
+	
+	if(!email.match(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)){
 		errors = errors + "<br>You have supplied an invalid email address.";
 	}
 	if(pass!=vpass){
@@ -86,12 +111,10 @@ exports.register_user = function(req,res){
 	if(pass.length<4){
 		errors = errors + "<br>Your password is too short.";
 	}
-	
-	
   	if(fs.existsSync('database/users/'+email)){
   		errors = errors + "<br>Your email is already being used.";
   	}
-	
+  	
 	if(errors===""){
 		
 		var jsonFileStr = JSON.stringify({user_password : enPass, full_name:"Test Name", published_projects:[]});
@@ -116,4 +139,71 @@ exports.register_user = function(req,res){
 		});
 	}
 	
-}
+};
+
+exports.forgot_pass = function(req,res){
+	var email = req.body.email;
+	var error = "";
+	
+	if(!fs.existsSync('database/users/'+email)&&email!==""){
+		error = "There is no existing account with this email.";
+	}
+	
+	if(error===""){
+		var new_pass =encrypt_hash("43vdji8t"+email+"IUbyV45v7Uytvi").substring(0,8);
+		
+		fs.readFile('database/users/'+email+"/data.json",'utf-8', function(err,data){
+			data = JSON.parse(data);
+			data.temp_fp_password = new_pass;
+			data = JSON.stringify(data);
+			fs.writeFile("database/users/"+email + "/data.json", data, function (err) {
+				req.session.fpcc = encrypt_hash(new_pass+"fhBIb76");
+				req.session.cookie.secure = false;
+				var cclink = "https://globular-casparwylie.c9.io/fpcc/"+req.session.fpcc+"/"+email;
+				
+				
+				var mailgun = new Mailgun({apiKey: mailGunKey, domain: mailGunDomain});
+				
+				var mailOptions = {
+				    from: 'Globular.Science <support@globular.science>', 
+				    to: email, 
+				    subject: 'New Password Request', // Subject line
+				    html: "Hello,<br>Your new password for Globular is: <b>"+new_pass+"</b><br>Please click <a href = '"+cclink+"'>here</a> to activate it. <br> We suggest you login now and change it to something easier to remember!"
+				};
+				transporter.sendMail(mailOptions, function(error, info){
+				    if(error){
+				        console.log(error);
+				    }
+				    res.send({success:true,msg:"Successfully sent new password! Please check your emails."});
+				});
+				
+				
+			});
+		});
+		
+	}else{
+		res.send({success:false,msg:error});
+	}
+};
+
+exports.activate_pass = function(req,res){
+	var url_conf_code = req.params.concode;
+	var email = req.params.email;
+	var fpcc = req.session.fpcc;//forgot password confirmation code session
+	
+	if(url_conf_code==fpcc){
+		fs.readFile('database/users/'+email+"/data.json",'utf-8', function(err,data){
+			data = JSON.parse(data);
+			data.user_password = encrypt_hash(data.temp_fp_password);
+			delete data.temp_fp_password;
+			delete req.session.fpcc;
+			data = JSON.stringify(data);
+			fs.writeFile("database/users/"+email + "/data.json", data, function (err) {
+				res.redirect("/");
+			});
+		});	
+	}else{
+			res.redirect("/");
+	}
+	
+};
