@@ -153,6 +153,7 @@ Project.prototype.clearThumbnails = function() {
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
     this.diagram = null;
+    //this.saveSourceTarget = null;
     this.clearThumbnails();
     this.renderDiagram();
     this.saveState();
@@ -198,20 +199,20 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
         this.cacheSourceTarget = {
             ignore: true
         };
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Store the source and target information
-    this.cacheSourceTarget[boundary] = this.diagram;
+    this.cacheSourceTarget[boundary] = this.diagram.copy();
 
     var source = this.cacheSourceTarget.source;
     var target = this.cacheSourceTarget.target;
@@ -385,7 +386,9 @@ Project.prototype.performAction = function(option, drag) {
     this.selected_cell = null;
     this.saveState();
     this.clearThumbnails();
-    this.renderDiagram(drag);
+    this.renderDiagram({
+        drag: drag
+    });
 }
 
 Project.prototype.saveState = function() {
@@ -520,6 +523,10 @@ Project.prototype.prepareEnumerationData = function(subject_diagram, matched_dia
 
 // Returns the current string 
 Project.prototype.currentString = function() {
+
+    // Store the viewbox controls
+    this.view_controls = MainDisplay.getControls();
+
     return globular_stringify(this);
 }
 
@@ -542,8 +549,9 @@ Project.prototype.renderGenerator = function(div, id) {
 }
 
 // Render the main diagram
-Project.prototype.renderDiagram = function(boundary_data) {
-    MainDisplay.set_diagram(this.diagram, boundary_data);
+Project.prototype.renderDiagram = function(data) {
+    if (data == undefined) data = {};
+    MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
 // Need to write this code
@@ -566,13 +574,27 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.id = 'cell-opt-' + generator.id;
     div_main.c_type = n;
 
+    // Create icon group
+    var icon_group = $('<div>')
+        .addClass('cell-icon-group')
+        .appendTo($(div_main));
+
     // Add icon
     var div_icon = document.createElement('div');
     div_icon.className = 'cell-icon';
     div_icon.id = 'ci-' + generator.id;
-    div_main.appendChild(div_icon);
+    icon_group.append(div_icon);
 
     // Add second icon if necessary
+    var div_icon_2 = null;
+    if (n > 0 && !generator.single_thumbnail) {
+        var div_icon_2 = document.createElement('div');
+        div_icon_2.className = 'cell-icon';
+        div_icon_2.id = 'ci-second-' + generator.id;
+        //div_main.appendChild(div_icon_2);
+        icon_group.append(div_icon_2);
+    }
+
     /*
     if (n == 3) {
         var span_arrow = document.createElement('div');
@@ -640,13 +662,26 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
     // Add invertibility selector
     if (n > 0 && generator.id.last() != 'I') {
-        var label = $('<br><label><input type="checkbox" name="checkbox">Invertible</label>');
+        var label = $('<br><label class="cell-invertible"><input type="checkbox" name="checkbox">Invertible</label>');
         var input = label.find('input');
         input.attr('id', 'invertible-' + generator.id).prop('checked', generator.invertible);
         $(div_detail).append(label);
         input.change(function() {
             var g = gProject.signature.getGenerator(generator.id);
             g.invertible = !g.invertible;
+        });
+    }
+
+    // Add separate source/target selector
+    if (n > 0) {
+        var label = $('<br><label class="cell-single-thumbnail"><input type="checkbox" name="checkbox"/>Single image</label>');
+        var input = label.find('input');
+        input.attr('id', 'single-thumbnail-' + generator.id).prop('checked', generator.single_thumbnail);
+        $(div_detail).append(label);
+        input.change(function() {
+            var g = gProject.signature.getGenerator(generator.id);
+            g.single_thumbnail = !g.single_thumbnail;
+            gProject.renderNCell(generator.id);
         });
     }
 
@@ -680,9 +715,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.appendChild(div_extra);
 
     (function(project) {
-        $(div_icon).click(function() {
+        $(div_icon).add($(div_icon_2)).click(function() {
 
-            var cid = $(this).attr("id").substring(3);
+            //var cid = $(this).attr("id").substring(3);
+            var cid = generator.id;
 
             var enumerationData = project.selectGenerator(cid);
             if (enumerationData == null) return;
@@ -710,7 +746,9 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                         d = project.diagram;
                         project.clearThumbnails();
                         project.renderDiagram({
-                            boundary: boundary
+                            drag: {
+                                boundary: boundary
+                            }
                         });
                         project.saveState();
                     });
@@ -808,6 +846,11 @@ Project.prototype.renderNCell = function(id) {
         }
     }
 
+    // Set default single thumbnail behaviour if undefined
+    if (generator.single_thumbnail == undefined) {
+        generator.single_thumbnail = (generator.getDimension() <= 2);
+    }
+    
     // Add the new generator
     var cell_group_id = '#cell-group-' + generator.getDimension();
     var entry = this.createGeneratorDOMEntry(generator.id);
@@ -817,7 +860,14 @@ Project.prototype.renderNCell = function(id) {
     } else {
         $(cell_group_id).append(entry);
     }
-    this.renderGenerator('#ci-' + generator.id, generator.id);
+    
+    // Render the thumbnails
+    if (generator.single_thumbnail) {
+        this.renderGenerator('#ci-' + generator.id, generator.id);
+    } else if (generator.getDimension() > 0) {
+        generator.source.render('#ci-' + generator.id);
+        generator.target.render('#ci-second-' + generator.id);
+    }
 }
 
 

@@ -347,7 +347,7 @@ Display.prototype.has_controls = function() {
 // Make sure all the coordinates and suppressions make sense, bearing in mind
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
-Display.prototype.update_controls = function(boundary) {
+Display.prototype.update_controls = function(boundary, controls) {
 
     // If there's no diagram, nothing to do
     if (this.diagram == null) return;
@@ -357,10 +357,11 @@ Display.prototype.update_controls = function(boundary) {
 
     // Update the suppression input
     var new_suppress = this.suppress_input.val();
+    if (controls != null) new_suppress = controls.project;
     new_suppress = Math.min(new_suppress, this.diagram.getDimension());
     if (new_suppress < 0) new_suppress = 0;
     this.suppress_input.val(new_suppress);
-    
+
     // Update the view dimension input
     if (this.view_input != null) {
         var new_view = Number(this.view_input.val());
@@ -370,9 +371,9 @@ Display.prototype.update_controls = function(boundary) {
         new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
         this.view_input.val(new_view);
     }
-    
+
     // Update the slice controls
-    this.update_slice_container(boundary);
+    this.update_slice_container(boundary, controls);
 }
 
 Display.prototype.control_change = function() {
@@ -406,7 +407,7 @@ Display.prototype.create_controls = function() {
             e.stopPropagation()
         });
     this.container.append(this.control);
-    
+
     /*
     // Construct the dimension control
     this.control.append(document.createTextNode('Viewer dimension '));
@@ -426,7 +427,7 @@ Display.prototype.create_controls = function() {
     this.control.append(this.view_input);
     this.control.append(document.createElement('br'));
     */
-    
+
     // Construct the project control
     this.control.append(document.createTextNode('Project '));
     this.suppress_input =
@@ -453,7 +454,7 @@ Display.prototype.create_controls = function() {
     this.slices = [];
 }
 
-Display.prototype.update_slice_container = function(drag) {
+Display.prototype.update_slice_container = function(drag, controls) {
 
     // If the diagram is null, we shouldn't have any slice controls
     if (this.diagram == null) {
@@ -465,7 +466,7 @@ Display.prototype.update_slice_container = function(drag) {
     }
 
     // Calculate the desired number of slice controls
-    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2 /*this.view_input.val()*/;
+    var remaining_dimensions = this.diagram.getDimension() - $(this.suppress_input).val() - 2 /*this.view_input.val()*/ ;
     if (remaining_dimensions < 0) remaining_dimensions = 0;
 
     // Remove any superfluous slice controls
@@ -493,7 +494,7 @@ Display.prototype.update_slice_container = function(drag) {
             });
         this.slice_div.append(this.slices[i]);
     }
-
+    
     // If a particular boundary has been requested, make sure it is within view
     if (drag != null) {
         if (drag.boundary == null) {
@@ -521,6 +522,11 @@ Display.prototype.update_slice_container = function(drag) {
     for (var i = 0; i < remaining_dimensions; i++) {
         var input = this.slices[i];
         var val = input.val();
+        if (controls != null) {
+            if (controls.slices[i] != null) {
+                val = controls.slices[i];
+            }
+        }
         input.val(Math.min(val, Math.max(slice.cells.length, 1)));
         input.attr('max', Math.max(1, slice.cells.length));
         slice = slice.getSlice(input.val());
@@ -529,7 +535,7 @@ Display.prototype.update_slice_container = function(drag) {
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
-Display.prototype.set_diagram = function(diagram, boundary) {
+Display.prototype.set_diagram = function(diagram, boundary, controls) {
     console.log("Set new diagram");
     if (diagram == null) {
         this.diagram = null;
@@ -537,7 +543,7 @@ Display.prototype.set_diagram = function(diagram, boundary) {
         this.container.empty();
     } else {
         this.diagram = diagram.copy();
-        this.update_controls(boundary);
+        this.update_controls(boundary, controls);
         this.render();
     }
 }
@@ -595,4 +601,25 @@ Display.prototype.getBoundaryFlags = function() {
         flags.push(flag);
     }
     return flags;
+}
+
+Display.prototype.getControls = function() {
+    return {
+        project: this.suppress_input == null ? null : Number(this.suppress_input.val()),
+        slices: this.slices == null ? null : this.padCoordinates([])
+    }
+}
+
+Display.prototype.setControls = function(controls) {
+    if (controls == null) return;
+    if (this.suppress_input != null && controls.project != null) {
+        this.suppress_input.val(controls.project);
+    }
+    if (this.slices != null && controls.slices != null) {
+        for (var i=0; i<controls.slices.length; i++) {
+            if (this.slices[i] != undefined) {
+                this.slices[i].val(controls.slices(i));
+            }
+        }
+    }
 }

@@ -15,8 +15,11 @@ function Generator(data) {
     this.target = data.target;
     this.id = data.id;
     this.invertible = data.invertible;
+    this.separate_source_target = data.separate_source_target;
     if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
     this.name = data.name;
+    if (data.single_thumbnail == undefined) data.single_thumbnail = (this.getDimension() <= 2);
+    this.single_thumbnail = data.single_thumbnail;
     this.prepareDiagram();
     return this;
 };
@@ -86,7 +89,6 @@ Generator.prototype.getSourceLengths = function() {
     if (this.source == null) return [];
     return this.source.getLengthsAtSource();
 }
-
 
 Generator.prototype.usesCell = function(id) {
     if (this.source != null) {

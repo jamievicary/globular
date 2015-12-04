@@ -19,7 +19,7 @@ function globular_render(container, diagram, subdiagram, suppress) {
     if (suppress == undefined) suppress = 0;
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
-
+    diagram = diagram.copy();
     if (diagram.getDimension() - suppress == 0) {
         return globular_render_0d(container, diagram, subdiagram);
     } else if (diagram.getDimension() - suppress == 1) {
