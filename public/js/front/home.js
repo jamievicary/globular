@@ -497,7 +497,9 @@ $(document).ready(function() {
                         versionOptionsHTML +
                         "</div>";
                     $("#plist").append($(listComponents));
-
+                    $("#dct-" + pID).keypress(function(e) {
+                        e.stopPropagation()
+                    });
                 }
 
                 for (var i = 0; i <= project_ids.length - 1; i++) {

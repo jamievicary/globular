@@ -153,6 +153,7 @@ Project.prototype.clearThumbnails = function() {
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
     this.diagram = null;
+    //this.saveSourceTarget = null;
     this.clearThumbnails();
     this.renderDiagram();
     this.saveState();
@@ -198,20 +199,20 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
         this.cacheSourceTarget = {
             ignore: true
         };
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Store the source and target information
-    this.cacheSourceTarget[boundary] = this.diagram;
+    this.cacheSourceTarget[boundary] = this.diagram.copy();
 
     var source = this.cacheSourceTarget.source;
     var target = this.cacheSourceTarget.target;
