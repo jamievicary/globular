@@ -225,10 +225,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     
     // Should never fall through to here
     debugger;
-<<<<<<< HEAD
-    
-=======
->>>>>>> 282a4e3075753a2096c5414c8c9551fb28991f73
+
 }
 
 Diagram.prototype.tidyKey.IntL = function(type, key) {

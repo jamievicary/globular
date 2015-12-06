@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 var fs = require('fs');
+/*
 var Mailgun = require('mailgun-js');
 
 
@@ -8,7 +9,7 @@ var mailGunKey = 'key-b78a23d2476ddc0ec839ed917499dfa0';
 var mailGunDomain = 'globular.sceince';
 
 var mailGunFrom = 'postmaster@globular.science';
-
+*/
 
 
 /*var nodemailer = require('nodemailer');
@@ -141,6 +142,7 @@ exports.register_user = function(req,res){
 	
 };
 
+/*
 exports.forgot_pass = function(req,res){
 	var email = req.body.email;
 	var error = "";
@@ -185,6 +187,8 @@ exports.forgot_pass = function(req,res){
 		res.send({success:false,msg:error});
 	}
 };
+
+*/
 
 exports.activate_pass = function(req,res){
 	var url_conf_code = req.params.concode;
