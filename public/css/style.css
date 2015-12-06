@@ -542,18 +542,19 @@ div.preview-icon > svg {
   letter-spacing: 2px;
   font-size: 70%;
   padding: 5px;
+  position: block;
   float: right;
   cursor: pointer;
 }
 
-/* line 473, style.sass */
+/* line 474, style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 478, style.sass */
+/* line 479, style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -561,7 +562,7 @@ div.preview-icon > svg {
   text-decoration: underline;
 }
 
-/* line 484, style.sass */
+/* line 485, style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -575,7 +576,7 @@ div.preview-icon > svg {
   color: salmon;
 }
 
-/* line 496, style.sass */
+/* line 497, style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -584,7 +585,7 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 503, style.sass */
+/* line 504, style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -593,7 +594,7 @@ div.preview-icon > svg {
   left: 80px;
 }
 
-/* line 510, style.sass */
+/* line 511, style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -601,7 +602,7 @@ div.preview-icon > svg {
   padding-top: 20px;
 }
 
-/* line 516, style.sass */
+/* line 517, style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -609,31 +610,31 @@ div.preview-icon > svg {
   position: absolute;
 }
 
-/* line 523, style.sass */
+/* line 524, style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 527, style.sass */
+/* line 528, style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 532, style.sass */
+/* line 533, style.sass */
 input.control {
   width: 30px;
 }
 
-/* line 535, style.sass */
+/* line 536, style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 539, style.sass */
+/* line 540, style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -644,7 +645,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 548, style.sass */
+/* line 549, style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -654,14 +655,14 @@ input.control {
   position: fixed;
 }
 
-/* line 556, style.sass */
+/* line 557, style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 561, style.sass */
+/* line 562, style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -670,7 +671,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 568, style.sass */
+/* line 569, style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -679,18 +680,18 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 575, style.sass */
+/* line 576, style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 579, style.sass */
+/* line 580, style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
 
-/* line 582, style.sass */
+/* line 583, style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -699,7 +700,7 @@ input.control {
   width: 100px;
 }
 
-/* line 589, style.sass */
+/* line 590, style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -710,24 +711,24 @@ input.control {
   z-index: 100;
 }
 
-/* line 598, style.sass */
+/* line 599, style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 601, style.sass */
+/* line 602, style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 604, style.sass */
+/* line 605, style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 610, style.sass */
+/* line 611, style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -736,14 +737,14 @@ input.control {
   font-weight: bold;
 }
 
-/* line 617, style.sass */
+/* line 618, style.sass */
 #forgot-pass-opt {
   font-size: 70%;
   color: lightblue;
   cursor: pointer;
 }
 
-/* line 622, style.sass */
+/* line 623, style.sass */
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;

@@ -44,7 +44,7 @@ exports.get_project_list = function(req, res) {
 
 			//get all public projects - as list of  public project IDS e,g (1510.001, 1508.004)
 			var dateName = req.body.projectData;
-			console.log(dateName);
+			
 			fs.readdir('database/projects/' + dateName, function(err, files) {
 				var pp_addresses = [];
 				if (files != undefined) {

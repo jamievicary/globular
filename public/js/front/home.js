@@ -512,7 +512,8 @@ $(document).ready(function() {
                         if (listType != 1) {
                             versionOptionsHTML = "View version: <span id = 'version-list" + pIDu + "'></span>";
 
-                        } else if (projectData.substring(0, 2) == "av" && listType == 2) {
+                        }
+                        if (projectData.substring(0, 2) == "av" && listType == 2) {
                             addVersionSelectOptHTML = "<span id = 'AV-select" + pIDu + "' class = 'AV-select'>SELECT</span>";
                             $(".AV-select").animate({
                                 letterSpacing: "3px"
