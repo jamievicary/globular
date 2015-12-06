@@ -582,18 +582,27 @@ div .delete_button {
   letter-spacing: 2px;
   font-size: 70%;
   padding: 5px;
+  position: block;
   float: right;
   cursor: pointer;
 }
 
+<<<<<<< HEAD
+/* line 474, style.sass */
+=======
 /* line 505, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
+<<<<<<< HEAD
+/* line 479, style.sass */
+=======
 /* line 510, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .del-project {
   color: salmon;
   display: inline-block;
@@ -601,7 +610,11 @@ div .delete_button {
   text-decoration: underline;
 }
 
+<<<<<<< HEAD
+/* line 485, style.sass */
+=======
 /* line 516, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -615,7 +628,11 @@ div .delete_button {
   color: salmon;
 }
 
+<<<<<<< HEAD
+/* line 497, style.sass */
+=======
 /* line 528, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -624,7 +641,11 @@ div .delete_button {
   position: absolute;
 }
 
+<<<<<<< HEAD
+/* line 504, style.sass */
+=======
 /* line 535, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -633,7 +654,11 @@ div .delete_button {
   left: 80px;
 }
 
+<<<<<<< HEAD
+/* line 511, style.sass */
+=======
 /* line 542, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -641,7 +666,11 @@ div .delete_button {
   padding-top: 20px;
 }
 
+<<<<<<< HEAD
+/* line 517, style.sass */
+=======
 /* line 548, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #slider {
   top: 70px;
   right: 10px;
@@ -649,31 +678,51 @@ div .delete_button {
   position: absolute;
 }
 
+<<<<<<< HEAD
+/* line 524, style.sass */
+=======
 /* line 555, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
+<<<<<<< HEAD
+/* line 528, style.sass */
+=======
 /* line 559, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
+<<<<<<< HEAD
+/* line 533, style.sass */
+=======
 /* line 564, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 input.control {
   max-width: 35px;
 }
 
+<<<<<<< HEAD
+/* line 536, style.sass */
+=======
 /* line 571, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
+<<<<<<< HEAD
+/* line 540, style.sass */
+=======
 /* line 575, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -684,7 +733,11 @@ input.control {
   padding: 10px;
 }
 
+<<<<<<< HEAD
+/* line 549, style.sass */
+=======
 /* line 584, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -694,14 +747,22 @@ input.control {
   position: fixed;
 }
 
+<<<<<<< HEAD
+/* line 557, style.sass */
+=======
 /* line 592, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
+<<<<<<< HEAD
+/* line 562, style.sass */
+=======
 /* line 597, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .publish-project {
   cursor: pointer;
   float: left;
@@ -710,7 +771,11 @@ input.control {
   text-decoration: underline;
 }
 
+<<<<<<< HEAD
+/* line 569, style.sass */
+=======
 /* line 604, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -719,18 +784,30 @@ input.control {
   text-decoration: underline;
 }
 
+<<<<<<< HEAD
+/* line 576, style.sass */
+=======
 /* line 611, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
+<<<<<<< HEAD
+/* line 580, style.sass */
+=======
 /* line 615, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .button-style-3:hover {
   background-color: lightblue;
 }
 
+<<<<<<< HEAD
+/* line 583, style.sass */
+=======
 /* line 618, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -739,7 +816,11 @@ input.control {
   width: 100px;
 }
 
+<<<<<<< HEAD
+/* line 590, style.sass */
+=======
 /* line 625, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -750,24 +831,40 @@ input.control {
   z-index: 100;
 }
 
+<<<<<<< HEAD
+/* line 599, style.sass */
+=======
 /* line 634, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #change-list-type {
   width: 140px;
 }
 
+<<<<<<< HEAD
+/* line 602, style.sass */
+=======
 /* line 637, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #plist {
   padding-top: 10px;
 }
 
+<<<<<<< HEAD
+/* line 605, style.sass */
+=======
 /* line 640, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
+<<<<<<< HEAD
+/* line 611, style.sass */
+=======
 /* line 646, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -776,14 +873,22 @@ input.control {
   font-weight: bold;
 }
 
+<<<<<<< HEAD
+/* line 618, style.sass */
+=======
 /* line 653, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #forgot-pass-opt {
   font-size: 70%;
   color: lightblue;
   cursor: pointer;
 }
 
+<<<<<<< HEAD
+/* line 623, style.sass */
+=======
 /* line 658, style.sass */
+>>>>>>> cf46beb614dfd1a9a96c8e7601a5126e2e212b34
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;
