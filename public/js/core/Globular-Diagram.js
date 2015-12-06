@@ -67,6 +67,7 @@ Diagram.prototype.render = function(div, highlight) {
 
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
+    if (cell == undefined) debugger;
 
     // Identify the portion to be cut out, and the cells to be spliced in
     var source_size;
@@ -337,6 +338,7 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
         intermediate_boundary.rewrite(this.cells[i]);
     }
 
+    /*
     // For a 2-diagram, record data about match locations to enable suppression of equivalent rewrites.
     // Only applies for 2-diagrams, when the matched diagram is an identity.
     if ((this.getDimension() == 2) && (matched_diagram.cells.length == 0)) {
@@ -406,6 +408,7 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             }
         }
     }
+    */
 
     return matches;
 };
@@ -544,17 +547,20 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
 };
 
 // Find the ID of the first cell that appears in the diagram
-Diagram.prototype.getFirstId = function() {
+Diagram.prototype.getLastId = function() {
     var d = this;
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
-    return d.cells[0].id;
+    return {
+        id: d.cells[d.cells.length - 1].id,
+        dimension: d.getDimension()
+    };
 }
 
 // Find the colour of the first cell that appears in the diagram
-Diagram.prototype.getFirstColour = function() {
-    var id = this.getFirstId();
+Diagram.prototype.getLastColour = function() {
+    var id = this.getLastId();
     return gProject.getColour(id);
 }
 
@@ -679,7 +685,10 @@ Diagram.prototype.getBoundary = function(path) {
     } else {
         boundary = path;
     }
-    if (boundary.depth > 1) return this.source.getBoundary({depth: boundary.depth - 1, type: boundary.type});
+    if (boundary.depth > 1) return this.source.getBoundary({
+        depth: boundary.depth - 1,
+        type: boundary.type
+    });
     if (boundary.type == 's') return this.getSourceBoundary();
     if (boundary.type == 't') return this.getTargetBoundary();
 }
@@ -687,13 +696,17 @@ Diagram.prototype.getBoundary = function(path) {
 // Take the union of two bounding boxes on (projections of) this diagram
 Diagram.prototype.unionBoundingBoxes = function(b1, b2) {
 
+    // Deal with the case that one of the boxes is empty
+    if (b1 == null) return b2;
+    if (b2 == null) return b1;
+
     // Base case
     if (b1.min.length == 1) return {
         min: [Math.min(b1.min[0], b2.min[0])],
         max: [Math.max(b1.max[0], b2.max[0])]
     };
 
-    // Recursive case - first evaluate on the once-projected subdiagram
+    // Recursive case: evaluate on the once-projected subdiagram
     var new_box = this.unionBoundingBoxes({
         min: b1.min.slice(1),
         max: b1.max.slice(1)
@@ -703,7 +716,7 @@ Diagram.prototype.unionBoundingBoxes = function(b1, b2) {
     });
 
     // Now new_box holds the correct data, except the first entries of the
-    // min and max arrays are missing, and must be computed.
+    // min and max arrays are missing.
     var b1slice = this.getSlice(b1.min.slice(2));
     var mm1 = b1slice.pullBackMinMax(b1.min[1], new_box.min[0], b1.min[0], b1.max[0]);
     var b2slice = this.getSlice(b2.min.slice(2));
@@ -726,6 +739,84 @@ Diagram.prototype.pullBackMinMax = function(top_height, bottom_height, min, max)
     };
 };
 
+Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
+
+    // Deal with the case that one of the boxes is empty
+    if (b1 == null || b2 == null) return null;
+
+    // Base case
+    if (b1.min.length == 1) {
+        var low = Math.max(b1.min.last(), b2.min.last());
+        var high = Math.min(b1.max.last(), b2.max.last());
+        if (high < low) return null;
+        return {
+            min: [low],
+            max: [high]
+        };
+    }
+
+    // Recursive case: evaluate on the once-projected subdiagram
+    var new_box = this.intersectBoundingBoxes({
+        min: b1.min.slice(1),
+        max: b1.max.slice(1)
+    }, {
+        min: b2.min.slice(1),
+        max: b2.max.slice(1)
+    });
+
+    // If the result of the recursion is empty, then the intersection is empty
+    if (new_box == null) return null;
+
+    // Now new_box holds the correct data, except the first entries of the
+    // min and max arrays are missing.
+    var b1slice = this.getSlice(b1.min.slice(2));
+    var mm1 = b1slice.pullUpMinMax(new_box.min[0], b1.min[1], b1.min[0], b1.max[0]);
+    var b2slice = this.getSlice(b2.min.slice(2));
+    var mm2 = b2slice.pullUpMinMax(new_box.min[0], b2.min[1], b2.min[0], b2.max[0]);
+    new_box.min.unshift(Math.max(mm1.min, mm2.min));
+    new_box.max.unshift(Math.min(mm1.max, mm2.max));
+    return new_box;
+}
+
+Diagram.prototype.pullUpMinMax = function(top_height, bottom_height, min, max) {
+    for (var i = bottom_height; i < top_height; i++) {
+        var box = this.cells[i].box;
+        var delta = this.target_size(i) - this.source_size(i);
+        max = Math.max(max + delta, box.max.last() + delta);
+        min = Math.min(min, box.min.last());
+    }
+    return {
+        min: min,
+        max: max
+    };
+};
+
+// Check that the bounding boxes can slide past each other
+Diagram.prototype.boundingBoxesSlideDownOnRight = function(lower, upper) {
+
+    // Make sure they are adjacent in height correctly
+    if (lower.max.last() != upper.min.last()) return false;
+
+    // Find the top face of the lower bounding box
+    var pull_up = this.pullUpMinMax(upper.min.last(), lower.min.last(), lower.min.penultimate(), lower.max.penultimate());
+
+    // Check the upper box is on the right
+    return upper.min.penultimate() >= pull_up.max;
+}
+
+// Check that the bounding boxes can slide past each other
+Diagram.prototype.boundingBoxesSlideDownOnLeft = function(lower, upper) {
+
+    // Make sure they are adjacent in height correctly
+    if (lower.max.last() != upper.min.last()) return false;
+
+    // Find the top face of the lower bounding box
+    var pull_up = this.pullUpMinMax(upper.min.last(), lower.min.last(), lower.min.penultimate(), lower.max.penultimate());
+
+    // Check the upper box is on the left
+    return upper.max.penultimate() <= pull_up.min;
+}
+
 // Get the cell at a particular location in the diagram
 Diagram.prototype.getCell = function(location) {
     var level = location.shift();
@@ -739,6 +830,8 @@ Diagram.prototype.getCell = function(location) {
 
 // Get the bounding box surrounding a object
 Diagram.prototype.getLocationBoundingBox = function(location) {
+    if (!globular_is_array(location)) location = [location];
+    else location = location.slice();
     if (location.length == 0) debugger;
     var box = this.getSliceBoundingBox(location);
     var extra = (location.length > this.getDimension() ? location.slice(1) : location);
@@ -826,4 +919,23 @@ Diagram.prototype.prepare = function() {
         if (cell.box != undefined) continue;
         cell.box = this.getSliceBoundingBox(i);
     }
+}
+
+// Check if the specified id is used at all in this diagram
+Diagram.prototype.usesCell = function(id) {
+
+    // Check all the cells
+    for (var i = 0; i < this.cells.length; i++) {
+        if (this.cells[i].id == id) return true;
+    }
+
+    // Check all the slices
+    for (var i = 0; i < this.cells.length + 1; i++) {
+        var slice = this.getSlice(i);
+        if (slice != null) {
+            if (slice.usesCell(id)) return true;
+        }
+    }
+
+    return false;
 }

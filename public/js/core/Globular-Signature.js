@@ -118,3 +118,11 @@ Signature.prototype.prepare = function() {
         generator.prepareDiagram();
     }
 }
+
+Signature.prototype.removeCell = function(id) {
+    if (this.cells[id] != undefined) {
+        delete this.cells[id];
+        this.k --;
+    }
+    if (this.sigma != null) this.sigma.removeCell(id);
+}

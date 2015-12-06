@@ -191,6 +191,7 @@ $(document).ready(function() {
         }
         //if (window.location.pathname.length < 3) {
         if (!gProject.initialized) {
+            console.log('Rendering uninitialized workspace');
             render_project_front('');
             $("#diagram-title").val("My workspace");
         }
@@ -209,7 +210,6 @@ $(document).ready(function() {
         });
     }
 
-    render_page();
 
     //login trigger
     $("#login-button").click(function() {
@@ -305,9 +305,6 @@ $(document).ready(function() {
     function render_project_front(s) {
         $("#cell-body").html("");
         $("#my-projects-box").fadeOut();
-        // Make sure diagram canvas has the right size
-        $('#diagram-canvas').css('width', window.innerWidth - 300);
-        $('#diagram-canvas').css('height', window.innerHeight - 20);
 
         // Construct new project
         gProject = new Project(s);
@@ -316,9 +313,6 @@ $(document).ready(function() {
         if (gProject.diagram != null) gProject.diagram.prepare();
         gProject.initialized = true;
         if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
-
-        // Render main diagram
-        gProject.renderDiagram();
 
         // Bind resizing to the correct rendering function		
         $(window).unbind('resize');
@@ -330,6 +324,12 @@ $(document).ready(function() {
         })
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
+        globular_set_viewbox();
+        
+        // Render main diagram
+        $('#diagram-canvas').empty();
+        //MainDisplay.setControls(gProject.view_controls);
+        gProject.renderDiagram({controls: gProject.view_controls});
 
         gProject.redrawAllCells();
 
@@ -395,27 +395,18 @@ $(document).ready(function() {
         gProject.export();
     });
 
-
-    /*
-        var main_string;
-        var client = new XMLHttpRequest();
-        client.open('GET', 'javascripts/front/Example-Project');
-        client.onreadystatechange = function () {
-            main_string = client.responseText;
-        }
-        client.send();
-    */
-
-
     $("#msg-close-opt-profile").click(function() {
         $("#profile-box").fadeOut();
     });
+
     $("#msg-close-opt-cc").click(function() {
         $("#cc-box").fadeOut();
     });
+
     $("#msg-close-opt-projects").click(function() {
         $("#my-projects-box").fadeOut();
     });
+
     $("#r-p-cc").click(function() {
         $("#run-proc-box").fadeOut();
     });
@@ -430,48 +421,9 @@ $(document).ready(function() {
         $("#gallery-box").fadeOut();
     });
     $("#mm-help").click(function() {
-        $("#help-box").fadeIn();
+        window.open('http://ncatlab.org/nlab/show/Globular' ,'_blank');
     });
 
-    $("#mm-about").click(function() {
-        $("#about-box").fadeIn();
-    });
-
-    var pathName = window.location.pathname;
-    pathName = pathName.substring(1);
-    var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
-    if (regexResult == 0) {
-
-        var dateName = pathName.substring(0, 4);
-
-        var posVersion = pathName.search(/([v])/);
-        var version;
-        var projectNo;
-        if (posVersion == -1) {
-            version = "v1";
-            projectNo = pathName.substring(5);
-        } else {
-            version = pathName.substring(posVersion);
-            projectNo = pathName.substring(5, posVersion);
-        }
-        $.post('/get_public_project', {
-            dateName: dateName,
-            version: version,
-            projectNo: projectNo
-
-        }, function(result) {
-            if (result.string == "") {
-                result.string = null;
-            } else {
-                result.string = JSON.parse(result.string);
-            }
-            render_project_front(result.string, result.meta.project_name, pathName);
-            $("#text-p-desc").val(result.meta.project_desc);
-            $("#diagram-title").val(result.meta.project_name);
-        });
-    } else {
-
-    }
 
     var addingVersion = false;
 
@@ -546,7 +498,9 @@ $(document).ready(function() {
                         versionOptionsHTML +
                         "</div>";
                     $("#plist").append($(listComponents));
-
+                    $("#dct-" + pID).keypress(function(e) {
+                        e.stopPropagation()
+                    });
                 }
 
                 for (var i = 0; i <= project_ids.length - 1; i++) {
@@ -860,4 +814,45 @@ $(document).ready(function() {
             }
         });
     });
+    
+    var pathName = window.location.pathname;
+    pathName = pathName.substring(1);
+    var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
+    if (regexResult != 0) {
+        
+        // Public project not requested, so start with a blank page
+        render_page();
+
+    } else {
+        
+        // Public project requested
+        var dateName = pathName.substring(0, 4);
+        var posVersion = pathName.search(/([v])/);
+        var version;
+        var projectNo;
+        if (posVersion == -1) {
+            version = "v1";
+            projectNo = pathName.substring(5);
+        } else {
+            version = pathName.substring(posVersion);
+            projectNo = pathName.substring(5, posVersion);
+        }
+        console.log("Getting public project " + dateName + "." + projectNo);
+        $.post('/get_public_project', {
+            dateName: dateName,
+            version: version,
+            projectNo: projectNo
+        }, function(result) {
+            if (result.string == "") {
+                result.string = null;
+            } else {
+                result.string = JSON.parse(result.string);
+            }
+            console.log('Rendering public workspace');
+            render_project_front(result.string);
+            $("#text-p-desc").val(result.meta.project_desc);
+            $("#diagram-title").val(result.meta.project_name);
+        });
+    }
+
 });

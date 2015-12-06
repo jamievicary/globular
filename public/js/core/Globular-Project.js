@@ -66,11 +66,27 @@ Project.prototype.setColour = function(id, colour) {
 };
 
 // Gets the front-end colour to what the user wants
-Project.prototype.getColour = function(id) {
+var lightnesses = [30, 50, 70];
+Project.prototype.getColour = function(data) {
+    if (data.id === undefined) data.id = data.type;
+    if (data.dimension == undefined) debugger;
+    /*
     var generator = this.signature.getGenerator(id);
-    if (generator == null) return '#555555';
-    if (generator.display == null) return '#555555';
-    return generator.display.colour;
+    if (generator != null) return generator.display.colour;
+    */
+    var analysis = data.id.analyze_id();
+
+    // Case that the id derives from the signature
+    if (analysis.signature) {
+        if (data.id == analysis.base_id) return analysis.generator.display.colour;
+        var husl = $.husl.fromHex(analysis.generator.display.colour);
+        return $.husl.toHex(husl[0], husl[1], lightnesses[analysis.dimension % 3])
+    }
+
+    // Case that the id derives from an interchanger
+    else {
+        return $.husl.toHex(0, 0, lightnesses[data.dimension % 3]);
+    }
 };
 
 
@@ -137,6 +153,7 @@ Project.prototype.clearThumbnails = function() {
 // Clear the main diagram
 Project.prototype.clearDiagram = function() {
     this.diagram = null;
+    //this.saveSourceTarget = null;
     this.clearThumbnails();
     this.renderDiagram();
     this.saveState();
@@ -154,7 +171,13 @@ Project.prototype.takeIdentity = function() {
     }
     */
     this.diagram.boost();
-    this.renderDiagram({boundary: {type : 't', depth: 1}, boost: true});
+    this.renderDiagram({
+        boundary: {
+            type: 't',
+            depth: 1
+        },
+        boost: true
+    });
 }
 
 /* 
@@ -173,21 +196,23 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     // If we haven't stored any source/target data yet, then just save this
     if (this.cacheSourceTarget == null) {
-        this.cacheSourceTarget = {ignore: true};
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget = {
+            ignore: true
+        };
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
-        this.cacheSourceTarget[boundary] = this.diagram;
+        this.cacheSourceTarget[boundary] = this.diagram.copy();
         this.clearDiagram();
         return;
     }
 
     // Store the source and target information
-    this.cacheSourceTarget[boundary] = this.diagram;
+    this.cacheSourceTarget[boundary] = this.diagram.copy();
 
     var source = this.cacheSourceTarget.source;
     var target = this.cacheSourceTarget.target;
@@ -266,9 +291,9 @@ Project.prototype.dragCell = function(drag) {
 
     // Find how we can interpret this drag in terms of an algebraic move
     var options = diagram_pointer.interpretDrag(drag);
-    
+
     // Delete those options which require invertibility of noninvertible cells
-    for (var i=options.length-1; i>=0; i--) {
+    for (var i = options.length - 1; i >= 0; i--) {
         if (!this.actionAllowed(options[i], drag)) options.splice(i, 1);
     }
 
@@ -294,7 +319,7 @@ Project.prototype.dragCell = function(drag) {
         }
         var item = $('<li>').html(id.getFriendlyName());
         list.append(item);
-        
+
         // Use a closure to specify the behaviour on selection
         (function(action) {
             item.click(function() {
@@ -309,7 +334,7 @@ Project.prototype.dragCell = function(drag) {
 Project.prototype.actionAllowed = function(option, drag) {
 
     if (option.preattachment != null) {
-        
+
         // If the base type is invertible, there's no problem
         if (option.preattachment.id.getBaseType().is_invertible()) return true;
 
@@ -319,7 +344,7 @@ Project.prototype.actionAllowed = function(option, drag) {
         // Not allowed
         return false;
     }
-    
+
     // If the base type we're attaching is invertible, there's no problem
     var signature_id = option.id.getSignatureType();
     if (signature_id == null) return true;
@@ -329,7 +354,7 @@ Project.prototype.actionAllowed = function(option, drag) {
     if (drag.boundary == null || drag.boundary.type == 't') {
         return (option.id == signature_id);
     }
-    
+
     // If we're attaching to a source, can only apply an inverse type
     if (drag.boundary.type == 's') {
         return (option.id == signature_id.toggle_inverse());
@@ -361,7 +386,9 @@ Project.prototype.performAction = function(option, drag) {
     this.selected_cell = null;
     this.saveState();
     this.clearThumbnails();
-    this.renderDiagram(drag);
+    this.renderDiagram({
+        drag: drag
+    });
 }
 
 Project.prototype.saveState = function() {
@@ -402,7 +429,7 @@ Project.prototype.selectGenerator = function(id) {
         // REWRITE
         if (slices_data.length > 0) {
             var d = this.diagram.getDimension();
-            alert('Choose suppression level ' + this.diagram.getDimension() - 2 + ' to rewrite diagram.');
+            alert('Choose projection level ' + (this.diagram.getDimension() - 2) + ' to rewrite diagram.');
             return null;
         }
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());
@@ -496,6 +523,10 @@ Project.prototype.prepareEnumerationData = function(subject_diagram, matched_dia
 
 // Returns the current string 
 Project.prototype.currentString = function() {
+
+    // Store the viewbox controls
+    this.view_controls = MainDisplay.getControls();
+
     return globular_stringify(this);
 }
 
@@ -518,8 +549,9 @@ Project.prototype.renderGenerator = function(div, id) {
 }
 
 // Render the main diagram
-Project.prototype.renderDiagram = function(boundary_data) {
-    MainDisplay.set_diagram(this.diagram, boundary_data);
+Project.prototype.renderDiagram = function(data) {
+    if (data == undefined) data = {};
+    MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
 // Need to write this code
@@ -542,13 +574,27 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.id = 'cell-opt-' + generator.id;
     div_main.c_type = n;
 
+    // Create icon group
+    var icon_group = $('<div>')
+        .addClass('cell-icon-group')
+        .appendTo($(div_main));
+
     // Add icon
     var div_icon = document.createElement('div');
     div_icon.className = 'cell-icon';
     div_icon.id = 'ci-' + generator.id;
-    div_main.appendChild(div_icon);
+    icon_group.append(div_icon);
 
     // Add second icon if necessary
+    var div_icon_2 = null;
+    if (n > 0 && !generator.single_thumbnail) {
+        var div_icon_2 = document.createElement('div');
+        div_icon_2.className = 'cell-icon';
+        div_icon_2.id = 'ci-second-' + generator.id;
+        //div_main.appendChild(div_icon_2);
+        icon_group.append(div_icon_2);
+    }
+
     /*
     if (n == 3) {
         var span_arrow = document.createElement('div');
@@ -589,17 +635,23 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     $(div_name).keypress(function(e) {
         e.stopPropagation()
     });
-
     div_detail.appendChild(div_name);
+
+    // Add delete button
+    var div_delete = $('<div>').addClass('delete_button').html('X');
+    div_delete.click(function() {
+        gProject.removeCell(id);
+    });
+    div_detail.appendChild(div_delete[0]);
 
     // Add color picker
     var project = this;
     var input_color = document.createElement('input');
     input_color.className = 'color-picker';
-    input_color.value = this.getColour(generator.id);
+    input_color.value = generator.display.colour;
     var color_widget = new jscolor.color(input_color);
     color_widget.pickerClosable = true;
-    color_widget.fromString(this.getColour(generator.id));
+    color_widget.fromString(generator.display.colour);
     color_widget.onImmediateChange = function() {
         project.setColour(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
@@ -610,13 +662,26 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 
     // Add invertibility selector
     if (n > 0 && generator.id.last() != 'I') {
-        var label = $('<br><label><input type="checkbox" name="checkbox">Invertible</label>');
+        var label = $('<br><label class="cell-invertible"><input type="checkbox" name="checkbox">Invertible</label>');
         var input = label.find('input');
         input.attr('id', 'invertible-' + generator.id).prop('checked', generator.invertible);
         $(div_detail).append(label);
         input.change(function() {
             var g = gProject.signature.getGenerator(generator.id);
             g.invertible = !g.invertible;
+        });
+    }
+
+    // Add separate source/target selector
+    if (n > 0) {
+        var label = $('<br><label class="cell-single-thumbnail"><input type="checkbox" name="checkbox"/>Single image</label>');
+        var input = label.find('input');
+        input.attr('id', 'single-thumbnail-' + generator.id).prop('checked', generator.single_thumbnail);
+        $(div_detail).append(label);
+        input.change(function() {
+            var g = gProject.signature.getGenerator(generator.id);
+            g.single_thumbnail = !g.single_thumbnail;
+            gProject.renderNCell(generator.id);
         });
     }
 
@@ -650,9 +715,10 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_main.appendChild(div_extra);
 
     (function(project) {
-        $(div_icon).click(function() {
+        $(div_icon).add($(div_icon_2)).click(function() {
 
-            var cid = $(this).attr("id").substring(3);
+            //var cid = $(this).attr("id").substring(3);
+            var cid = generator.id;
 
             var enumerationData = project.selectGenerator(cid);
             if (enumerationData == null) return;
@@ -680,7 +746,9 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                         d = project.diagram;
                         project.clearThumbnails();
                         project.renderDiagram({
-                            boundary: boundary
+                            drag: {
+                                boundary: boundary
+                            }
                         });
                         project.saveState();
                     });
@@ -703,6 +771,37 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     })(this);
 
     return div_main;
+}
+
+Project.prototype.removeCell = function(id) {
+    var relatedCells = this.relatedCells(id);
+
+    // Remove the main diagram if it uses any related cells
+    for (var i = 0; i < relatedCells.length; i++) {
+        if (this.diagram == null) break;
+        var cell = relatedCells[i];
+        if (this.diagram.usesCell(cell)) this.clearDiagram();
+    }
+
+    // Remove the related cells
+    for (var i = 0; i < relatedCells.length; i++) {
+        this.signature.removeCell(relatedCells[i]);
+        $('#cell-opt-' + relatedCells[i]).remove();
+    }
+}
+
+Project.prototype.relatedCells = function(id) {
+    var related_cells = [id];
+    var cells = this.signature.getAllCells();
+    for (var i = 0; i < cells.length; i++) {
+        var cell = cells[i];
+        var generator = this.signature.getGenerator(cell);
+        if (generator.usesCell(id)) {
+            related_cells.push(cell);
+            related_cells = related_cells.concat(this.relatedCells(cell));
+        }
+    }
+    return related_cells;
 }
 
 // Render n-cells and main diagram
@@ -747,6 +846,11 @@ Project.prototype.renderNCell = function(id) {
         }
     }
 
+    // Set default single thumbnail behaviour if undefined
+    if (generator.single_thumbnail == undefined) {
+        generator.single_thumbnail = (generator.getDimension() <= 2);
+    }
+    
     // Add the new generator
     var cell_group_id = '#cell-group-' + generator.getDimension();
     var entry = this.createGeneratorDOMEntry(generator.id);
@@ -756,7 +860,14 @@ Project.prototype.renderNCell = function(id) {
     } else {
         $(cell_group_id).append(entry);
     }
-    this.renderGenerator('#ci-' + generator.id, generator.id);
+    
+    // Render the thumbnails
+    if (generator.single_thumbnail) {
+        this.renderGenerator('#ci-' + generator.id, generator.id);
+    } else if (generator.getDimension() > 0) {
+        generator.source.render('#ci-' + generator.id);
+        generator.target.render('#ci-second-' + generator.id);
+    }
 }
 
 
