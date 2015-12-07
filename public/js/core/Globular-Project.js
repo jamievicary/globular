@@ -49,9 +49,9 @@ Project.prototype.listGenerators = function() {
 };
 
 // Sets the front-end name of a generator to what the user wants
-Project.prototype.setName = function(id, name) {
+Project.prototype.setNameUI = function(id, name) {
     this.signature.getGenerator(id).name = name;
-    this.saveState();
+    // too trivial to save state
 };
 
 // Gets the front-end name of a generator to what the user wants
@@ -60,7 +60,7 @@ Project.prototype.getName = function(id) {
 };
 
 // Sets the front-end colour to what the user wants
-Project.prototype.setColour = function(id, colour) {
+Project.prototype.setColourUI = function(id, colour) {
     this.signature.getGenerator(id).display.colour = colour;
     this.saveState();
 };
@@ -150,18 +150,21 @@ Project.prototype.clearThumbnails = function() {
     $('div.cell-b-sect').empty();
 }
 
-// Clear the main diagram
-Project.prototype.clearDiagram = function() {
-    this.diagram = null;
-    //this.saveSourceTarget = null;
-    this.clearThumbnails();
-    this.renderDiagram();
+// Clear the main diagram, UI function
+Project.prototype.clearDiagramUI = function() {
+    this.clearDiagram();
     this.saveState();
 }
 
-// Take the identity on the main diagram
-Project.prototype.takeIdentity = function() {
+// Clear the main diagram, internal function
+Project.prototype.clearDiagram = function() {
+    this.diagram = null;
     this.clearThumbnails();
+    this.renderDiagram();
+}
+
+// Take the identity on the main diagram
+Project.prototype.takeIdentityUI = function() {
     if (this.diagram == null) return;
 
     /*
@@ -178,17 +181,24 @@ Project.prototype.takeIdentity = function() {
         },
         boost: true
     });
+    this.clearThumbnails();
+    this.saveState();
 }
 
-/* 
-    Depending on whether a source or a target have been already stored in memory, this procedure completes the rule with the diagram currently in workspace.
-    If the dimensions match, an appropriate generator is added an an appropriate level (the second part handled internally by the Signature class).
-    If none have been saved, it adds a 0-generator. For all these possible nCells the internal name will be automatically added when the generator is created.
-    Return true to indicate n-cells should be re-rendered.
-*/
+Project.prototype.clearSourceTargetPreview = function() {
+    this.cacheSourceTarget = null;
+    $('#source-target-window').fadeOut(100);
+}
 
-Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target' */ ) {
+Project.prototype.showSourceTargetPreview = function(diagram, boundary) {
+    $('#source-target-title').html(boundary == 'source' ? 'Saved Source' : 'Saved Target');
+    diagram.render('#source-target-diagram');
+    $('#source-target-window').fadeIn(100);
+}
 
+// Store a source or target, or build a new generator
+Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'target' */ ) {
+    
     if (this.diagram == null) {
         this.cacheSourceTarget = null;
         return;
@@ -196,18 +206,20 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     // If we haven't stored any source/target data yet, then just save this
     if (this.cacheSourceTarget == null) {
-        this.cacheSourceTarget = {
-            ignore: true
-        };
+        this.cacheSourceTarget = {};
         this.cacheSourceTarget[boundary] = this.diagram.copy();
+        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
         this.clearDiagram();
+        this.saveState();
         return;
     }
 
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
         this.cacheSourceTarget[boundary] = this.diagram.copy();
+        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
         this.clearDiagram();
+        this.saveState();
         return;
     }
 
@@ -219,7 +231,7 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
 
     // Test dimensions
     if (source.getDimension() != target.getDimension()) {
-        alert("Source and target must be the same dimension");
+        alert("Source has dimension " + source.getDimension() + ", but target has dimension " + target.getDimension());
         this.cacheSourceTarget[boundary] = null;
         return true;
     }
@@ -242,26 +254,22 @@ Project.prototype.saveSourceTarget = function(boundary /* = 'source' or 'target'
         }
     }
 
+    // Construct and render the new generator
     this.addNCell({
         source: source,
         target: target
     });
 
-    // Re-render and save the new state
-
-    //this.renderNCells(source.getDimension() + 1);
-    this.clearDiagram();
-
-    this.cacheSourceTarget = null;
-    this.saveState();
+    // Finish up
+    this.clearSourceTargetPreview();
+    this.clearDiagramUI();
 };
 
-Project.prototype.storeTheorem = function() {
+Project.prototype.storeTheoremUI = function() {
     var theorem_id = this.addNCell({
         source: this.diagram.getSourceBoundary(),
         target: this.diagram.getTargetBoundary()
     });
-    //var theorem_diagram = this.signature.createDiagram(theorem_id);
     var theorem_diagram = this.signature.getGenerator(theorem_id).getDiagram();
     this.addNCell({
         source: theorem_diagram,
@@ -269,12 +277,11 @@ Project.prototype.storeTheorem = function() {
         invertible: true
     });
     this.clearDiagram();
-    //this.renderAll();
     this.saveState();
 };
 
 
-Project.prototype.dragCell = function(drag) {
+Project.prototype.dragCellUI = function(drag) {
     //console.log("Detected drag: " + JSON.stringify(drag));
 
     // Get a pointer to the subdiagram in which the drag took place
@@ -304,7 +311,7 @@ Project.prototype.dragCell = function(drag) {
 
     // Should really prompt the user to choose between the valid options
     if (options.length == 1) {
-        this.performAction(options[0], drag);
+        this.performActionUI(options[0], drag);
         return;
     }
 
@@ -323,12 +330,12 @@ Project.prototype.dragCell = function(drag) {
         // Use a closure to specify the behaviour on selection
         (function(action) {
             item.click(function() {
-                $("#options-box").fadeOut();
-                gProject.performAction(action, drag);
+                $("#options-box").fadeOut(100);
+                gProject.performActionUI(action, drag);
             });
         })(options[i]);
     }
-    $("#options-box").fadeIn();
+    $("#options-box").fadeIn(100);
 };
 
 Project.prototype.actionAllowed = function(option, drag) {
@@ -361,7 +368,7 @@ Project.prototype.actionAllowed = function(option, drag) {
     }
 }
 
-Project.prototype.performAction = function(option, drag) {
+Project.prototype.performActionUI = function(option, drag) {
 
     // Perform a preattachment if necessary
     if (option.preattachment != null) {
@@ -384,11 +391,11 @@ Project.prototype.performAction = function(option, drag) {
 
     // Finish up and render the result
     this.selected_cell = null;
-    this.saveState();
     this.clearThumbnails();
     this.renderDiagram({
         drag: drag
     });
+    this.saveState();
 }
 
 Project.prototype.saveState = function() {
@@ -405,7 +412,7 @@ Project.prototype.lift = function() {
     this.signature = new Signature(this.signature);
 };
 
-Project.prototype.selectGenerator = function(id) {
+Project.prototype.selectGeneratorUI = function(id) {
     var generator = this.signature.getGenerator(id);
 
     // If current diagram is null, just display the generator
@@ -653,7 +660,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     color_widget.pickerClosable = true;
     color_widget.fromString(generator.display.colour);
     color_widget.onImmediateChange = function() {
-        project.setColour(generator.id, '#' + this.toString());
+        project.setColourUI(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
         project.renderCellsAbove(generator.id);
         project.renderDiagram();
@@ -720,7 +727,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
             //var cid = $(this).attr("id").substring(3);
             var cid = generator.id;
 
-            var enumerationData = project.selectGenerator(cid);
+            var enumerationData = project.selectGeneratorUI(cid);
             if (enumerationData == null) return;
             var match_array = enumerationData.matches;
 
@@ -850,7 +857,7 @@ Project.prototype.renderNCell = function(id) {
     if (generator.single_thumbnail == undefined) {
         generator.single_thumbnail = (generator.getDimension() <= 2);
     }
-    
+
     // Add the new generator
     var cell_group_id = '#cell-group-' + generator.getDimension();
     var entry = this.createGeneratorDOMEntry(generator.id);
@@ -860,7 +867,7 @@ Project.prototype.renderNCell = function(id) {
     } else {
         $(cell_group_id).append(entry);
     }
-    
+
     // Render the thumbnails
     if (generator.single_thumbnail) {
         this.renderGenerator('#ci-' + generator.id, generator.id);
@@ -910,12 +917,13 @@ Project.prototype.addNCell = function(data) {
     return generator.id;
 };
 
-Project.prototype.restrict = function() {
+Project.prototype.restrictUI = function() {
     this.diagram = MainDisplay.visible_diagram.copy();
     this.renderDiagram();
+    this.saveState()
 }
 
-Project.prototype.export = function() {
+Project.prototype.exportUI = function() {
     var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
     show_msg(msg, false, 3);
 }

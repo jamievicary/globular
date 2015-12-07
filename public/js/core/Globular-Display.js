@@ -101,7 +101,7 @@ Display.prototype.mousemove = function(event) {
         data.directions = [dx > 0 ? +1 : -1];
     }
 
-    gProject.dragCell(data);
+    gProject.dragCellUI(data);
 };
 
 Display.prototype.updatePopup = function(data) {
@@ -305,7 +305,7 @@ Display.prototype.mouseup = function(event) {
         return;
     }
     position.directions = null;
-    gProject.dragCell(position);
+    gProject.dragCellUI(position);
 }
 
 Display.prototype.pixelsToGrid = function(event) {

@@ -111,7 +111,6 @@ exports.delete_project = function(req, res) {
 
 };
 
-
 exports.save_project_changes = function(req, res) {
 
 	var user_id = req.session.user_id;
@@ -293,35 +292,40 @@ exports.share_project = function(req, res) {
 	}
 
 	if (emails.length == 0) {
-		errors = errors + "You must supply at least one email. ";
-	}
-	if (invalid_emails.length > 0) {
-		errors = errors + "The following emails are invalid or are not registered: " + invalid_emails.join(",");
 		res.send({
 			successcolor: 1,
-			msg: errors
+			msg: "You must supply at least one email address."
 		});
-	} else {
-		for (var i in valid_emails) {
-			var email = valid_emails[i];
-			fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', 'utf8', function(err, string) {
-				fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', 'utf8', function(err, meta) {
-					console.log(err);
-					var new_id = get_new_private_project_id(email);
-					meta = JSON.parse(meta);
-					meta.project_name = meta.project_name + " (shared by " + user_id + ")";
-					meta = JSON.stringify(meta);
-					fs.mkdir('database/users/' + email + '/projects/' + new_id, function(err) {
-						fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/meta.json', meta);
-						fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/string.json', string);
-					});
-					res.send({
-						successcolor: 2,
-						msg: "Successfully shared project."
-					});
-				});
-			});
-		}
+		return;
 	}
+	
+	if (invalid_emails.length > 0) {
+		res.send({
+			successcolor: 1,
+			msg: "The following emails are invalid or are not registered: " + invalid_emails.join(",")
+		});
+		return;
+	}
+
+	fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', 'utf8', function(err, string) {
+		fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', 'utf8', function(err, meta) {
+			meta = JSON.parse(meta);
+			meta.project_name = meta.project_name + " (shared by " + user_id + ")";
+			meta = JSON.stringify(meta);
+			for (var i in valid_emails) {
+				var email = valid_emails[i];
+				//console.log(err);
+				var new_id = get_new_private_project_id(email);
+				fs.mkdir('database/users/' + email + '/projects/' + new_id, function(err) {
+					fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/meta.json', meta);
+					fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/string.json', string);
+				});
+			}
+			res.send({
+				successcolor: 2,
+				msg: "Successfully shared project."
+			});
+		});
+	});
 
 };
