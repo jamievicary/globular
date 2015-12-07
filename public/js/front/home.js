@@ -202,6 +202,7 @@ $(document).ready(function() {
             console.log('Rendering uninitialized workspace');
             render_project_front('');
             $("#diagram-title").val("My workspace");
+            gProject.saveState();
         }
     }
 
@@ -316,7 +317,7 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
-        gProject.cacheSourceTarget = null;
+        //gProject.cacheSourceTarget = null;
         gProject.signature.prepare();
         if (gProject.diagram != null) gProject.diagram.prepare();
         gProject.initialized = true;
@@ -370,7 +371,18 @@ $(document).ready(function() {
             gProject.renderDiagram();
         });
         
-        gProject.saveState();
+        // Display the cached source or target, if one exists
+        var cache = gProject.cacheSourceTarget;
+        if (cache == null) {
+            gProject.clearSourceTargetPreview();
+        } else {
+            var boundary = (cache.hasOwnProperty('source') ? 'source' : cache.hasOwnProperty('target') ? 'target' : null);
+            if (boundary == null) {
+                gProject.clearSourceTargetPreview();
+            } else {
+                gProject.showSourceTargetPreview(cache[boundary], boundary);
+            }
+        }
     }
 
     $("#restrict-opt").click(function() {
@@ -572,6 +584,7 @@ $(document).ready(function() {
                             $.get("/private/" + email + "/projects/" + global_p_id + "/string.json",
                                 function(result, status) {
                                     render_project_front(result);
+                                    gProject.saveState();
                                 });
                             $.get("/private/" + email + "/projects/" + global_p_id + "/meta.json",
                                 function(result) {
@@ -678,6 +691,7 @@ $(document).ready(function() {
                             $("#text-p-desc").val(result.meta.project_desc);
                             $("#diagram-title").val(result.meta.project_name);
                             $("#gallery-box").fadeOut();
+                            gProject.saveState();
                         });
                     });
                     if (listType == 2 && projectData.substring(0, 2) == "av") {
@@ -776,7 +790,7 @@ $(document).ready(function() {
                         $("#text-p-desc").val(p_desc);
                         $("#diagram-title").val(p_name);
                         render_project_front(main_string);
-                        //gProject.saveState();
+                        gProject.saveState();
                         $("#add-project-opt").animate({
                             height: "20px"
                         }, 500);
@@ -861,6 +875,7 @@ $(document).ready(function() {
             render_project_front(result.string);
             $("#text-p-desc").val(result.meta.project_desc);
             $("#diagram-title").val(result.meta.project_name);
+            gProject.saveState();
         });
     }
     
