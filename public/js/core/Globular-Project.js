@@ -918,6 +918,7 @@ Project.prototype.addNCell = function(data) {
 };
 
 Project.prototype.restrictUI = function() {
+    if (MainDisplay.visible_diagram == null) return;
     this.diagram = MainDisplay.visible_diagram.copy();
     this.renderDiagram();
     this.saveState()
@@ -928,7 +929,7 @@ Project.prototype.exportUI = function() {
     show_msg(msg, false, 3);
 }
 
-Project.prototype.save = function() {
+Project.prototype.saveUI = function() {
     var currentString = this.currentString();
     $.post("/c-loggedin", {
             valid: true
