@@ -5,7 +5,7 @@ var Mailgun = require('mailgun-js');
 
 var mailGunKey = 'key-b78a23d2476ddc0ec839ed917499dfa0';
 
-var mailGunDomain = 'globular.sceince';
+var mailGunDomain = 'sandboxfe39079370fe48b5993432b5ab510c8f.mailgun.org';
 
 var mailGunFrom = 'postmaster@globular.science';
 
@@ -163,8 +163,24 @@ exports.forgot_pass = function(req,res){
 				
 				
 				var mailgun = new Mailgun({apiKey: mailGunKey, domain: mailGunDomain});
-				
-				var mailOptions = {
+				 var emailData = {
+			      from: mailGunFrom,
+			      to: email,
+			      subject: 'New Password Request',
+			      html: "Hello,<br>Your new password for Globular is: <b>"+new_pass+"</b><br>Please click <a href = '"+cclink+"'>here</a> to activate it. <br> We suggest you login now and change it to something easier to remember!"
+			    }
+
+			   
+			    mailgun.messages().send(emailData, function (err, body) {
+			        if (err) {
+			            
+			            console.log("got an error: ", err);
+			        }else {
+			            res.send({success:true,msg:"Successfully sent new password! Please check your emails."});
+			        }
+			    });
+
+				/*var mailOptions = {
 				    from: 'Globular.Science <support@globular.science>', 
 				    to: email, 
 				    subject: 'New Password Request', // Subject line
@@ -175,7 +191,7 @@ exports.forgot_pass = function(req,res){
 				        console.log(error);
 				    }
 				    res.send({success:true,msg:"Successfully sent new password! Please check your emails."});
-				});
+				});*/
 				
 				
 			});
