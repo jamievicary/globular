@@ -79,6 +79,19 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     return list;
 };
 
+Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
+    var count = 0;
+    var l = box.max.penultimate() - box.min.penultimate();
+    for(var i = box.min.last(); i < box.max.last(); i++){
+        var left_wires = this.nCells[i].coordinates.last() - box.min.penultimate();
+        var right_wires = box.min.penultimate() + l - this.nCells[i].coordinates.last() - this.source_size(i);
+        count += (left_wires + right_wires + 1) * side_wires;
+        l += (this.target_size(i) - this.source_size(i));
+    }
+    return count;
+};
+
+
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {
     if (drag.directions == null) return [];

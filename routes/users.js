@@ -1,7 +1,6 @@
 var crypto = require('crypto');
 var fs = require('fs');
 
-/*
 var Mailgun = require('mailgun-js');
 
 
@@ -21,7 +20,6 @@ var transporter = nodemailer.createTransport({
         pass: 'test'
     }
 });
-*/
 
 encrypt_hash = function (string){
 	var hash_sha512 = crypto.createHash("sha512");
@@ -143,7 +141,6 @@ exports.register_user = function(req,res){
 	
 };
 
-/*
 exports.forgot_pass = function(req,res){
 	var email = req.body.email;
 	var error = "";
@@ -204,9 +201,6 @@ exports.forgot_pass = function(req,res){
 		res.send({success:false,msg:error});
 	}
 };
-*/
-
-
 
 exports.activate_pass = function(req,res){
 	var url_conf_code = req.params.concode;
