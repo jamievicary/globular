@@ -28,7 +28,7 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var cell = this.cells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
 
-    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.coordinates).last() // key.last();
+    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last() // key.last();
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
@@ -107,12 +107,12 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 }
 
 
-Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
+Diagram.prototype.getInterchanger.IntLS = function(type, key) {
     
     var diagram_pointer = this;
     var h = key.last();
     var cell = this.cells[h - this.source_size(h)];
-    var coords = cell.coordinates.slice(0);
+    var coords = cell.box.min.slice(0);
     coords.push(h - this.source_size(h));
     
     if (type.tail('IntI-L-S', 'Int-L-S')) {
@@ -129,70 +129,41 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
 
 }
 
+
+Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
+
+    var diagram_pointer = this;
+    var new_key = key.last();
+    var h = key.last();
+    var cell = this.cells[h];
+    var coords = cell.box.min.slice(0);
+    coords.push(h);
+
+    return coords;
+    
 /*
-Diagram.prototype.getGeometry.IntLS = function(type, key) {
-
-    // eg: return [[1,1]]
-    var key_cell = this.cells[key.last()];
-    if (type != 'Int-L-S') {
-        console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
-        throw 0;
+    if (type.tail('Int-L-S', 'IntI-L')) {
+        return coords;
+    } else if (type.tail('Int-LI', 'IntI-LI')) {
+        return coords.move([{
+            relative: -1
+        }, {
+            relative: -this.source_size(h)
+        }]);
+    } else if (type.tail('Int-R', 'IntI-R')) {
+        return coords.move([{
+            relative: -1
+        }, {
+            relative: 0
+        }]);
+    } else if (type.tail('Int-RI', 'IntI-RI')) {
+        return coords.move([{
+            relative: -this.source_size(h)
+        }])
     }
-
-    // Assuming type == 'Int-L-S'
-    var source_height;
-    var source_source_width;
-    var source_target_width;
-    if (key_cell.id.isInterchanger()) {
-        var slice = this.getSlice(key.last());
-        var bbox = slice.getInterchangerBoundingBox(type);
-        source_height = bbox[1];
-        source_source_width = bbox[0];
-        source_target_width
-    } else {
-        var source = gProject.signature.getGenerator(key_cell.id).getSource();
-        source_height = source.cells.length;
-        source_source_width = source.getSourceBoundary().cells.length;
-    }
-}
-
-Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
-
-    var c = this.getInterchangerCoordinates(type, key);
-    if (c == null) return null;
-    
-    var top_length = key.last() - c.end(0) + 1;
-
-    // eg: return [[1,1]]
-    var key_cell = this.cells[key.last()];
-    if (type != 'Int-L-S') {
-        console.log("getInterchangerCoordinates: singularity type " + type + " not yet supported");
-        return null;
-    }
-
-    // Assuming type == 'Int-L-S'
-    var source_height;
-    var source_width;
-    if (key_cell.id.isInterchanger()) {
-        var slice = this.getSlice(key.last());
-        var bbox = slice.getInterchangerBoundingBox(type);
-        source_height = bbox[1];
-        source_width = bbox[0];
-    } else {
-        var source = gProject.signature.getGenerator(key_cell.id).getSource();
-        source_height = source.cells.length;
-        source_width = source.getSourceBoundary().cells.length;
-    }
-    
-    var key_slice = this.getSlice(key.last());
-    var rewind_template = key_slice.expand('Int-LI', key_cell.coordinates.last(), [source_width, source_height], 1);
-    if (rewind_template == null) return null;
-    
-    // Return data
-    return [key.penultimate() - 1, key_cell.coordinates.last() - source_width, key.last() - rewind_template.length];
-
-}
 */
+}
+
 
 /* NEEDED FOR 5-CATEGORIES
 Diagram.prototype.expand(type, start, n, m) {

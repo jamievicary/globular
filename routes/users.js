@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 var fs = require('fs');
+
 /*
 var Mailgun = require('mailgun-js');
 
@@ -9,18 +10,18 @@ var mailGunKey = 'key-b78a23d2476ddc0ec839ed917499dfa0';
 var mailGunDomain = 'sandboxfe39079370fe48b5993432b5ab510c8f.mailgun.org';
 
 var mailGunFrom = 'postmaster@globular.science';
-*/
 
 
-/*var nodemailer = require('nodemailer');
+
+var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
         user: 'casparwylie@gmail.com',
         pass: 'test'
     }
-});*/
-
+});
+*/
 
 encrypt_hash = function (string){
 	var hash_sha512 = crypto.createHash("sha512");
@@ -182,7 +183,7 @@ exports.forgot_pass = function(req,res){
 			        }
 			    });
 
-				/*var mailOptions = {
+				var mailOptions = {
 				    from: 'Globular.Science <support@globular.science>', 
 				    to: email, 
 				    subject: 'New Password Request', // Subject line
@@ -193,7 +194,7 @@ exports.forgot_pass = function(req,res){
 				        console.log(error);
 				    }
 				    res.send({success:true,msg:"Successfully sent new password! Please check your emails."});
-				});*/
+				});
 				
 				
 			});
@@ -203,8 +204,9 @@ exports.forgot_pass = function(req,res){
 		res.send({success:false,msg:error});
 	}
 };
-
 */
+
+
 
 exports.activate_pass = function(req,res){
 	var url_conf_code = req.params.concode;
