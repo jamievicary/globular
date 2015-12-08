@@ -800,9 +800,13 @@ input.control {
   user-select: none;
   pointer-events: none;
   background-color: white;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
-/* line 672, style.sass */
+/* line 676, style.sass */
 #source-target-window {
   position: absolute;
   right: 20;
@@ -813,7 +817,7 @@ input.control {
   width: 150px;
 }
 
-/* line 684, style.sass */
+/* line 688, style.sass */
 #source-target-diagram {
   height: 100px;
   width: 100px;
@@ -825,7 +829,7 @@ input.control {
   border-radius: 2px;
 }
 
-/* line 694, style.sass */
+/* line 698, style.sass */
 #source-target-diagram > svg {
   display: block;
   margin: 0 auto;

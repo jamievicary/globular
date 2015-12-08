@@ -123,7 +123,7 @@ Display.prototype.updatePopup = function(data) {
     popup.html(description)
         .css({
             left: 5 + pos.left + data.pixels.x,
-            top: data.pixels.y - 15,
+            top: data.pixels.y - 28,
             position: 'absolute'
         });
 }
