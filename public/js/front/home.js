@@ -50,26 +50,25 @@ $(document).ready(function() {
     $(document).keypress(function(event) {
         var key = String.fromCharCode(event.charCode).toLowerCase();
         if (key == 's') {
-            gProject.saveSourceTarget('source');
+            gProject.saveSourceTargetUI('source');
         } else if (key == 't') {
-            gProject.saveSourceTarget('target');
+            gProject.saveSourceTargetUI('target');
         } else if (key == 'i') {
-            gProject.takeIdentity();
+            gProject.takeIdentityUI();
         } else if (key == 'r') {
-            gProject.restrict();
+            gProject.restrictUI();
         } else if (key == 'e') {
-            gProject.export();
+            gProject.exportUI();
         } else if (key == 'a') {
-            gProject.save();
+            gProject.saveUI();
         } else if (key == 'c') {
-            this.cacheSourceTarget = null;
-            gProject.clearDiagram();
-            //} else if (key == 'p') {
-            //    gProject.applyStochasticProcess(1);
-            //} else if (key == 'z') {
-            //    gProject.displayInterchangers();
+            gProject.clearDiagramUI();
+        //} else if (key == 'p') {
+        //    gProject.applyStochasticProcess(1);
+        //} else if (key == 'z') {
+        //    gProject.displayInterchangers();
         } else if (key == 'h') {
-            gProject.storeTheorem();
+            gProject.storeTheoremUI();
         }
         
         /*
@@ -85,6 +84,15 @@ $(document).ready(function() {
         }
         */
     });
+    
+    // Create the source/target preview div
+    $('<div>').attr('id', 'source-target-window').appendTo(document.body).hide();
+    $('<div>').attr('id', 'source-target-title').appendTo('#source-target-window').html('TITLE');
+    $('<div>').attr('id', 'source-target-clear').appendTo('#source-target-window').html('X').click(function() {
+        gProject.clearSourceTargetPreview();
+    });
+    //$('<br>').appendTo('#source-target-window');
+    $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
 
     $("div.enable_if-in").hide();
     //$("div.enable_if-out").show();
@@ -194,6 +202,7 @@ $(document).ready(function() {
             console.log('Rendering uninitialized workspace');
             render_project_front('');
             $("#diagram-title").val("My workspace");
+            gProject.saveState();
         }
     }
 
@@ -308,7 +317,7 @@ $(document).ready(function() {
 
         // Construct new project
         gProject = new Project(s);
-        gProject.cacheSourceTarget = null;
+        //gProject.cacheSourceTarget = null;
         gProject.signature.prepare();
         if (gProject.diagram != null) gProject.diagram.prepare();
         gProject.initialized = true;
@@ -361,38 +370,51 @@ $(document).ready(function() {
             gProject.applyStochasticProcess(iterations);
             gProject.renderDiagram();
         });
+        
+        // Display the cached source or target, if one exists
+        var cache = gProject.cacheSourceTarget;
+        if (cache == null) {
+            gProject.clearSourceTargetPreview();
+        } else {
+            var boundary = (cache.hasOwnProperty('source') ? 'source' : cache.hasOwnProperty('target') ? 'target' : null);
+            if (boundary == null) {
+                gProject.clearSourceTargetPreview();
+            } else {
+                gProject.showSourceTargetPreview(cache[boundary], boundary);
+            }
+        }
     }
 
     $("#restrict-opt").click(function() {
-        gProject.restrict();
+        gProject.restrictUI();
     });
 
     $("#theorem-opt").click(function() {
-        gProject.storeTheorem();
+        gProject.storeTheoremUI();
     });
 
     $("#save-project-opt").click(function() {
-        gProject.save();
+        gProject.saveUI();
     });
 
     $("#use-t-opt").click(function() {
-        gProject.saveSourceTarget('target');
+        gProject.saveSourceTargetUI('target');
     });
 
     $("#use-s-opt").click(function() {
-        gProject.saveSourceTarget('source');
+        gProject.saveSourceTargetUI('source');
     });
 
     $("#use-id-opt").click(function() {
-        gProject.takeIdentity();
+        gProject.takeIdentityUI();
     });
 
     $("#clear-project-opt").click(function() {
-        gProject.clearDiagram();
+        gProject.clearDiagramUI();
     });
     
     $("#get-str-opt").click(function() {
-        gProject.export();
+        gProject.exportUI();
     });
 
     $("#msg-close-opt-profile").click(function() {
@@ -669,6 +691,7 @@ $(document).ready(function() {
                             $("#text-p-desc").val(result.meta.project_desc);
                             $("#diagram-title").val(result.meta.project_name);
                             $("#gallery-box").fadeOut();
+                            gProject.saveState();
                         });
                     });
                     if (listType == 2 && projectData.substring(0, 2) == "av") {
@@ -764,9 +787,9 @@ $(document).ready(function() {
                             main_string = JSON.parse(main_string);
                         }
                         global_p_id = result.p_id;
-                        render_project_front(main_string);
                         $("#text-p-desc").val(p_desc);
                         $("#diagram-title").val(p_name);
+                        render_project_front(main_string);
                         gProject.saveState();
                         $("#add-project-opt").animate({
                             height: "20px"
@@ -852,7 +875,12 @@ $(document).ready(function() {
             render_project_front(result.string);
             $("#text-p-desc").val(result.meta.project_desc);
             $("#diagram-title").val(result.meta.project_name);
+            gProject.saveState();
         });
     }
-
+    
+    // Display warning popup if the browser is not Chrome
+    if (navigator.userAgent.indexOf("Chrome") == -1 ) {
+        alert('Globular is in the early stages of development, and works best in Chrome. If you encounter problems, consider switching browsers.');
+    }
 });
