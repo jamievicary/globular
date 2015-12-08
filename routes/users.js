@@ -52,6 +52,10 @@ exports.login_user = function(req, res){
  				});
   			}
   		});
+	}else{
+  		res.send({
+ 			success: false
+ 		});
   	}
 }
 
