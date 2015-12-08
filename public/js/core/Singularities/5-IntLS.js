@@ -59,7 +59,8 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     
     if (type == 'Int-L-S') return [cell.move([{relative: -1}, {absolute: coord.penultimate()}])].concat(
         this.getSlice(coord.last()).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
-    if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
+    
+    //if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
 }
@@ -106,7 +107,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     return this.subinstructions(key, this.getSource(type, key));
 }
 
-
+/*
 Diagram.prototype.getInterchanger.IntLS = function(type, key) {
     
     var diagram_pointer = this;
@@ -119,7 +120,7 @@ Diagram.prototype.getInterchanger.IntLS = function(type, key) {
         return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
     }
 }
-
+*/
 
 Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     
