@@ -1558,23 +1558,28 @@ function SVG_prepare(diagram, subdiagram) {
 
     // Calculate the x coordinates for edges and scalars
     while (true) {
-        var problem = false;
-        for (var i = 0; i < edges.length; i++) {
-            var edge = edges[i];
-            for (var j = 0; j < edge.succeeding.length; j++) {
-                var succ = edge.succeeding[j];
-                var succ_edge = edges[succ.index];
-                if (succ_edge.x < edge.x + succ.offset) {
-                    succ_edge.x = edge.x + succ.offset;
-                    problem = true;
-                };
+        var problem;
+        do {
+            problem = false;
+            for (var i = 0; i < edges.length; i++) {
+                var edge = edges[i];
+                for (var j = 0; j < edge.succeeding.length; j++) {
+                    var succ = edge.succeeding[j];
+                    var succ_edge = edges[succ.index];
+                    if (succ_edge.x < edge.x + succ.offset) {
+                        succ_edge.x = edge.x + succ.offset;
+                        problem = true;
+                    };
+                }
             }
-        }
+        } while (problem == true);
 
         // Even up inputs and outputs for vertices
         for (var i = 0; i < vertices.length; i++) {
             var vertex = vertices[i];
             if (!vertex.scalar) {
+                if (vertex.source_edges.length == 0) continue;
+                if (vertex.target_edges.length == 0) continue;
                 var source_mean = 0;
                 for (var j = 0; j < vertex.source_edges.length; j++) {
                     source_mean += edges[vertex.source_edges[j]].x;
@@ -1585,6 +1590,9 @@ function SVG_prepare(diagram, subdiagram) {
                     target_mean += edges[vertex.target_edges[j]].x;
                 }
                 target_mean /= vertex.target_edges.length;
+                // NEW IDEA
+                source_mean = (edges[vertex.source_edges[0]].x + edges[vertex.source_edges.last()].x)/2;
+                target_mean = (edges[vertex.target_edges[0]].x + edges[vertex.target_edges.last()].x)/2;
                 var diff = Math.abs(source_mean - target_mean);
                 if (diff > 0.01) {
                     problem = true;

@@ -182,10 +182,10 @@ div.preview-icon
 	margin-top: $spacing
 	margin-right: $spacing
 
-div.preview-icon>canvas
+div.cell-icon>canvas
 	border-radius: $border_radius
 	
-div.preview-icon>svg
+div.cell-icon>svg
 	border-radius: $border_radius
 	
 .cell-b-sect
@@ -271,6 +271,7 @@ div.cell-icon
 	//border-radius: $border_radius
 	border-radius: $border_radius
 	background-color: $lightgrey
+	//border: 1px
 	float: left
 	
 div.cell-icon:nth-child(2) 
@@ -446,6 +447,12 @@ div .delete_button
 	position: absolute
 	right: 5px
 	top: 4px
+	color: red
+
+#source-target-clear
+	position: absolute
+	right: 5px
+	top: 5px
 	color: red
 
 #main_view_control
@@ -661,3 +668,34 @@ input.control
 	@include user-select(none)
 	pointer-events: none
 	background-color: white
+	padding-left: 5px
+	padding-right: 5px
+	padding-top: 3px
+	padding-bottom: 3px
+
+#source-target-window
+	position: absolute
+	right: 20
+	bottom: 20
+	background-color: $midgrey
+	padding: 5px
+	text-align: center
+	width: 150px
+
+#source-target-title
+	//padding-right: 13px
+
+#source-target-diagram
+	height: 100px
+	width: 100px
+	text-align: center
+	margin-left: 25px
+	margin-bottom: 5px
+	margin-top: 5px
+	background-color: $lightgrey
+	border-radius: $border_radius
+	
+#source-target-diagram>svg
+	display: block
+	margin: 0 auto
+	border-radius: $border_radius

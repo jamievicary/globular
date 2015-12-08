@@ -135,7 +135,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
     if (this.cells.length == 0) return false;
     var space_above = (x < this.cells.length - g1_target);
-    var space_below = (x > g1_source);
+    var space_below = (x >= g1_source);
     var space_left = (coords.last() > 0);
     var space_right = (coords.last() + g1_source < slice.cells.length);
 
