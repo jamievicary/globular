@@ -18,7 +18,6 @@
     "monk":"*",
     "express-session":"*",
     "bcrypt-nodejs":"*",
-    "nodemailer":"*",
     "mailgun-js":"*"
   },
   "devDependencies": {

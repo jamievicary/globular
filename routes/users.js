@@ -11,7 +11,7 @@ var mailGunDomain = 'sandboxfe39079370fe48b5993432b5ab510c8f.mailgun.org';
 var mailGunFrom = 'postmaster@globular.science';
 
 
-
+/*
 var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -20,6 +20,7 @@ var transporter = nodemailer.createTransport({
         pass: 'test'
     }
 });
+*/
 
 encrypt_hash = function (string){
 	var hash_sha512 = crypto.createHash("sha512");
