@@ -45,7 +45,7 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
                 depth: 1
             },
             id: cell.id.toggle_inverse(),
-            key: this.getSlice(height).getInverseKey(cell.id, cell.key)
+            key: this.getSlice(height).getInverseKey(cell.id, cell.key) // no need to copy
         };
         return [{
             preattachment: preattachment,

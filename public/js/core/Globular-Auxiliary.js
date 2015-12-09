@@ -419,3 +419,14 @@ function bezier_intersect_X(r) {
     return X;
     */
 }
+
+
+function Timer(caller) {
+    this.start_time = performance.now();
+    this.caller = caller;
+}
+
+Timer.prototype.Report = function() {
+    var time = Math.floor(performance.now() - this.start_time);
+    console.log("Timing: " + this.caller + ": " + time + "ms");
+}

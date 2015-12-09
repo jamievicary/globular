@@ -56,6 +56,7 @@ Display.prototype.mousedown = function(event) {
 var min_drag = 0.25;
 Display.prototype.mousemove = function(event) {
 
+    var timer = new Timer("Display.mousemove - updating popup")
     var new_grid = this.pixelsToGrid(event);
     this.updatePopup({
         logical: this.gridToLogical(new_grid),
@@ -64,6 +65,7 @@ Display.prototype.mousemove = function(event) {
             y: event.offsetY
         }
     });
+    timer.Report();
 
     if (this.select_grid == null) return;
     if (!detectLeftButton(event)) {
@@ -278,7 +280,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     }
 
     // The user has clicked on a region
-    var depth = this.visible_diagram.getSlice([edges_to_left, Math.floor(height + 0.5 - b.bottom)]).cells.length - 1;
+    var depth = this.visible_diagram.getSlice([edges_to_left, Math.floor(height + 0.5 - b.bottom)]).cells.length - 1; // no need to copy slice
     if (depth < 0) depth = 0;
     var padded = this.padCoordinates([Math.floor(height + 0.5 - b.bottom), edges_to_left, depth]);
     //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
@@ -348,6 +350,8 @@ Display.prototype.has_controls = function() {
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
 Display.prototype.update_controls = function(boundary, controls) {
+    
+    var timer = new Timer("Display.update_controls");
 
     // If there's no diagram, nothing to do
     if (this.diagram == null) return;
@@ -361,6 +365,7 @@ Display.prototype.update_controls = function(boundary, controls) {
     new_suppress = Math.min(new_suppress, this.diagram.getDimension());
     if (new_suppress < 0) new_suppress = 0;
     this.suppress_input.val(new_suppress);
+    update_control_width(this.suppress_input);
 
     // Update the view dimension input
     if (this.view_input != null) {
@@ -370,10 +375,13 @@ Display.prototype.update_controls = function(boundary, controls) {
         }
         new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
         this.view_input.val(new_view);
+        update_control_width(new_view);
     }
 
     // Update the slice controls
     this.update_slice_container(boundary, controls);
+    
+    timer.Report();
 }
 
 Display.prototype.control_change = function() {
@@ -445,6 +453,7 @@ Display.prototype.create_controls = function() {
         self.control_change(event)
     });
     this.control.append(this.suppress_input);
+    update_control_width(this.suppress_input);
 
 
     // Construct the container for the slice controls
@@ -493,6 +502,7 @@ Display.prototype.update_slice_container = function(drag, controls) {
                 this.focus();
             });
         this.slice_div.append(this.slices[i]);
+        update_control_width(this.slices[i]);
     }
     
     // If a particular boundary has been requested, make sure it is within view
@@ -503,6 +513,7 @@ Display.prototype.update_slice_container = function(drag, controls) {
                 var counter = this.slices.last();
                 var current = Number(counter.val());
                 counter.val(current + 1);
+                update_control_width(counter);
             }
         } else {
             if (drag.boundary.depth > 0) {
@@ -511,6 +522,7 @@ Display.prototype.update_slice_container = function(drag, controls) {
                     if (slice_index < this.slices.length) {
                         var current = Number(this.slices[slice_index].val());
                         this.slices[slice_index].val(current + 1);
+                        update_control_width(this.slices[slice_index]);
                     }
                 }
             }
@@ -518,7 +530,7 @@ Display.prototype.update_slice_container = function(drag, controls) {
     }
 
     // Ensure the slice coordinates are valid
-    var slice = this.diagram.copy();
+    var slice = this.diagram; // no need to copy
     for (var i = 0; i < remaining_dimensions; i++) {
         var input = this.slices[i];
         var val = input.val();
@@ -528,10 +540,17 @@ Display.prototype.update_slice_container = function(drag, controls) {
             }
         }
         input.val(Math.min(val, Math.max(slice.cells.length, 1)));
+        update_control_width(input);
         input.attr('max', Math.max(1, slice.cells.length));
-        slice = slice.getSlice(input.val());
+        slice = slice.getSlice(input.val()); // no need to copy slice
     }
 
+}
+
+function update_control_width(input) {
+    var length = String(input.val()).length;
+    var width = 24 + 6 * length;
+    $(input).css('max-width', width + 'px');
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
@@ -557,14 +576,14 @@ Display.prototype.get_current_slice = function() {
 }
 
 Display.prototype.render = function() {
-    var t = performance.now();
-    var slice = this.diagram.copy();
+    var timer = new Timer("Display.render");
+    var slice = this.diagram;
     for (var i = 0; i < this.slices.length; i++) {
-        slice = slice.getSlice(this.slices[i].val());
+        slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
     }
     this.visible_diagram = slice;
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
-    console.log("Display.render: time " + Math.floor(performance.now() - t) + 'ms');
+    timer.Report();
     if (data == null) return;
     this.data = data;
 }

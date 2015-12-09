@@ -4,8 +4,9 @@
     Stringifies and destringifies objects, remembering class structures
 */
 
-function globular_stringify(object) {
-    var raw = globular_raw(object);
+function globular_stringify(object, minimize) {
+    if (minimize == undefined) minimize = false;
+    var raw = globular_raw(object, minimize);
     return JSON.stringify(raw);
 }
 
@@ -41,7 +42,7 @@ function globular_classify(object) {
     }
 }
 
-function globular_raw(object) {
+function globular_raw(object, minimize) {
 
     if (object == null) return object;
     if (typeof object === 'number') return object;
@@ -58,7 +59,7 @@ function globular_raw(object) {
     for (var name in object) {
         if (!object.hasOwnProperty(name)) continue;
         var value = object[name];
-        if (value != null) { if (value.ignore) continue };
+        if (value != null) { if (value.ignore && minimize) continue };
         if (typeof value === 'function') continue;
         raw[name] = globular_raw(value);
     }

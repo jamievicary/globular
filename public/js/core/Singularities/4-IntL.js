@@ -79,7 +79,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     return list;
 };
 
-Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
+/*
+Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     var count = 0;
     var l = box.max.penultimate() - box.min.penultimate();
     for(var i = box.min.last(); i < box.max.last(); i++){
@@ -90,7 +91,7 @@ Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
     }
     return count;
 };
-
+*/
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {

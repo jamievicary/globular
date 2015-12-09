@@ -91,9 +91,13 @@ $(document).ready(function() {
     $('<div>').attr('id', 'source-target-clear').appendTo('#source-target-window').html('X').click(function() {
         gProject.clearSourceTargetPreview();
     });
-    //$('<br>').appendTo('#source-target-window');
     $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
-
+    
+    // Create the 'Allow undo' checkbox
+    $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>')
+        .appendTo($('#project-menu'));
+    $('#allow-undo-checkbox').prop('checked', true);
+ 
     $("div.enable_if-in").hide();
     //$("div.enable_if-out").show();
 

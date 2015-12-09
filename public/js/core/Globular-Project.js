@@ -399,12 +399,11 @@ Project.prototype.performActionUI = function(option, drag) {
 }
 
 Project.prototype.saveState = function() {
-    //return;
-    var t0 = performance.now();
-    history.pushState({
-        string: this.currentString()
-    }, "", "");
-    //console.log("Project.saveState: " + parseInt(performance.now() - t0) + "ms");
+    if ($('#allow-undo-checkbox').is(':checked')) {
+        history.pushState({
+            string: this.currentString()
+        }, "", "");
+    }
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -471,7 +470,7 @@ Project.prototype.selectGeneratorUI = function(id) {
     var last_slice_max = null;
     for (var i = 0; i < slices_data.length; i++) {
         if (i == slices_data.length - 1) last_slice_max = Math.max(1, slice_pointer.cells.length);
-        slice_pointer = slice_pointer.getSlice(slices_data[i]);
+        slice_pointer = slice_pointer.getSlice(slices_data[i]); // no need to copy slice
         //slices_counter++;
     }
     var visible_slice = slice_pointer;
@@ -529,12 +528,17 @@ Project.prototype.prepareEnumerationData = function(subject_diagram, matched_dia
 };
 
 // Returns the current string 
-Project.prototype.currentString = function() {
+Project.prototype.currentString = function(minimize) {
+    if (minimize == undefined) minimize = false;
 
+    var timer = new Timer("Project.currentString");
     // Store the viewbox controls
     this.view_controls = MainDisplay.getControls();
 
-    return globular_stringify(this);
+    var result = globular_stringify(this, minimize);
+    
+    timer.Report();
+    return result;
 }
 
 // Returns the current string 
@@ -930,7 +934,7 @@ Project.prototype.exportUI = function() {
 }
 
 Project.prototype.saveUI = function() {
-    var currentString = this.currentString();
+    var currentString = this.currentString(true);
     $.post("/c-loggedin", {
             valid: true
         },
