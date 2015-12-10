@@ -39,7 +39,7 @@ Diagram.prototype.getSourceBoundary = function() {
 */
 Diagram.prototype.getTargetBoundary = function() {
     return this.getSlice(this.cells.length);
-    
+
     /*
     if (this.source === null) return null;
     var target_boundary = this.source.copy();
@@ -100,16 +100,16 @@ Diagram.prototype.rewrite = function(cell) {
     // Prepare the target cells and insert them
     var slice = this.getSlice(insert_position);
     if (slice != null) slice = slice.copy(); // need to copy
-    
+
     // Update the slice cache
     if (this.sliceCache != null) {
         this.sliceCache.splice(insert_position, source_size);
-        for (var i=0; i<target.cells.length; i++) {
+        for (var i = 0; i < target.cells.length; i++) {
             this.sliceCache.splice(insert_position + i, 0, null);
         }
     }
     //this.initializeSliceCache();
-    
+
     // Insert the target of the rewrite
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
@@ -463,7 +463,17 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
             type: boundary.type,
             depth: boundary.depth - 1
         });
-        this.initializeSliceCache();
+        // Attach to elements of the slice cache
+        if (this.sliceCache != null) {
+            for (var i = 0; i < this.sliceCache.length; i++) {
+                if (this.sliceCache[i] == undefined) continue;
+                this.sliceCache[i].attach(cell, {
+                    type: boundary.type,
+                    depth: boundary.depth - 1
+                });
+            }
+        }
+        //this.initializeSliceCache();
         return;
     }
 
@@ -507,7 +517,7 @@ Diagram.prototype.getFullDimensions = function() {
 
     var full_dimensions = [this.source.getFullDimensions()];
     for (var i = 0; i < this.cells.length; i++) {
-        full_dimensions.push(this.getSlice(i+1).getFullDimensions());
+        full_dimensions.push(this.getSlice(i + 1).getFullDimensions());
     }
     //return [this.cells.length].concat(this.source.getFullDimensions());
     return full_dimensions;
@@ -865,7 +875,8 @@ Diagram.prototype.getLocationBoundingBox = function(location) {
 Diagram.prototype.getEntireBoundingBox = function(cell) {
     var source = this.getSourceBoundary();
     if (source == null) return {
-        min: [], max: []
+        min: [],
+        max: []
     }
     var box = this.getSourceBoundary().getEntireBoundingBox();
     box.min.push(0);
@@ -912,15 +923,18 @@ Diagram.prototype.embedBoundaryBoundingBox = function(box, boundary) {
 
 // Find how the specified boundary and sub-box appears from the specified location
 Diagram.prototype.getLocationBoundaryBox = function(boundary, box, location) {
-    
+
     // If the location is the whole diagram, then the inputs are already correct
     if (location.length == 0) {
-        return {boundary: boundary, box: box};
+        return {
+            boundary: boundary,
+            box: box
+        };
     }
-    
+
     // Pop off the height
     var height = location.pop();
-    
+
     // Interior
     if (boundary == null) {
         /*
@@ -938,7 +952,7 @@ Diagram.prototype.getLocationBoundaryBox = function(boundary, box, location) {
         var slice = this.getSlice(height);
         return slice.getLocationBoundaryBox(null, box, location);
     }
-    
+
     // Shallow boundary
     if (boundary.depth == 1) {
         if (boundary.type == 's') {
@@ -949,10 +963,13 @@ Diagram.prototype.getLocationBoundaryBox = function(boundary, box, location) {
             return this.getTargetBoundary().getLocationBoundaryBox(null, box, location);
         }
     }
-    
+
     // Deep boundary
-    boundary.depth --;
-    return this.getSourceBoundary().getLocationBoundaryBox(boundary, box, location);
+    var new_boundary = boundary == null ? null : {
+        depth: boundary.depth - 1,
+        type: boundary.type
+    };
+    return this.getSourceBoundary().getLocationBoundaryBox(new_boundary, box, location);
 }
 
 Diagram.prototype.getBoundingBox = function(cell) {
@@ -976,7 +993,7 @@ Diagram.prototype.getSliceBoundingBox = function(location) {
     if (slice.getDimension() == 0) return {
         min: [],
         max: []
-        //,ignore: true
+            //,ignore: true
     };
     if (height >= slice.cells.length) return null;
     return slice.getSlice(height).getBoundingBox(slice.cells[height]); // no need to copy slice

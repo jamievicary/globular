@@ -26,7 +26,7 @@ function Project(string) {
     }
 
     var uncompressed;
-    if (string.compressed_blocks == undefined) {
+    if (string.compressed == undefined) {
         uncompressed = string;
     } else {
         uncompressed = JSON.parse(globular_lz4_decompress(string));

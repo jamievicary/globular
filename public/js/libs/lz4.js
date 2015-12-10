@@ -129,9 +129,6 @@ var
 
 ,	hasher 			= 2654435761
 
-,	hashTable		= new Int16Array(hashSize)
-,	emptyTable		= new Int16Array(hashSize)
-
 // CompressBound returns the maximum length of a lz4 block, given it's uncompressed length
 exports.compressBound = function (isize) {
 	return isize > maxInputSize
@@ -140,15 +137,19 @@ exports.compressBound = function (isize) {
 }
 
 exports.compress = function (src, dst, sIdx, eIdx) {
-	hashTable.set(emptyTable)
-	return compressBlock(src, dst, 0, sIdx || 0, eIdx || dst.length)
+	// V8 optimization: non sparse array with integers
+	var hashTable = new Array(hashSize)
+	for (var i = 0; i < hashSize; i++) {
+		hashTable[i] = 0
+	}
+	return compressBlock(src, dst, 0, hashTable, sIdx || 0, eIdx || dst.length)
 }
 
 exports.compressHC = exports.compress
 
 exports.compressDependent = compressBlock
 
-function compressBlock (src, dst, pos, sIdx, eIdx) {
+function compressBlock (src, dst, pos, hashTable, sIdx, eIdx) {
 	var dpos = sIdx
 	var dlen = eIdx - sIdx
 	var anchor = 0
@@ -7721,6 +7722,7 @@ function blitBuffer (src, dst, offset, length) {
 
 module.exports = require('./static')
 
+module.exports.version = "0.5.1"
 module.exports.createDecoderStream = require('./decoder_stream')
 module.exports.decode = require('./decoder').LZ4_uncompress
 

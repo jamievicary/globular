@@ -212,6 +212,7 @@ $(document).ready(function() {
         if (!gProject.initialized) {
             console.log('Rendering uninitialized workspace');
             render_project_front('');
+            $("#diagram-title").val("My workspace");
         }
     }
 
@@ -341,7 +342,6 @@ $(document).ready(function() {
         $("#add-0-cell-opt").click(function() {
             gProject.addZeroCell();
         });
-        $("#diagram-title").val("My workspace");
         $("#project-menu").show();
         $("#diagram-canvas").show();
         $("#diagram-title").show();
@@ -375,10 +375,6 @@ $(document).ready(function() {
 
         // Now we do the expensive workspace preparation in a continuation-passing
         // style, to allow DOM updates between calls.
-        /*
-        show_loading_window = s.length > 0;
-        console.log('Project length ' + s.length + ' bytes, ' + (show_loading_window ? '' : 'not ') + 'showing loading window');
-        */
         show_loading_window = true;
         cps_perform([{
             f: cps_load_project,
@@ -387,32 +383,6 @@ $(document).ready(function() {
         }]);
 
         /*
-        // Construct new project
-        $('#loading-detail').html("Decompressing...");
-        gProject = new Project(s);
-        //gProject.cacheSourceTarget = null;
-
-        // Prepare data
-        
-        var timer = new Timer('render_project_front preparation');
-        $('#loading-detail').html("Preparing...");
-        gProject.signature.prepare();
-        if (gProject.diagram != null) gProject.diagram.prepare();
-        gProject.initialized = true;
-        
-        // DO THIS WHEN CONSTRUCTING THE PROJECT OBJECT
-        //if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
-        
-        // Render main diagram
-        //MainDisplay.setControls(gProject.view_controls);
-        gProject.renderDiagram({
-            controls: gProject.view_controls
-        });
-
-        gProject.redrawAllCells();
-
-
-
         // Display the cached source or target, if one exists
         var cache = gProject.cacheSourceTarget;
         if (cache == null) {
@@ -425,11 +395,7 @@ $(document).ready(function() {
                 gProject.showSourceTargetPreview(cache[boundary], boundary);
             }
         }
-
         */
-
-        //$('#loading-window').hide();
-
     }
 
     $("#restrict-opt").click(function() {
