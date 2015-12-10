@@ -888,7 +888,7 @@ $(document).ready(function() {
             render_project_front(result.string);
             $("#text-p-desc").val(result.meta.project_desc);
             $("#diagram-title").val(result.meta.project_name);
-            gProject.saveState();
+            //gProject.saveState();
         });
     }
 
