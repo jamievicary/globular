@@ -5,7 +5,9 @@ Hashtable Class
 */
 
 // Creates a new empty hashtable
-function Hashtable() {};
+function Hashtable() {
+    this['_t'] = 'Hashtable';
+};
 
 Hashtable.prototype.getType = function() {
     return 'Hashtable';

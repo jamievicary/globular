@@ -14,6 +14,10 @@ var d;
 */
 function Project(string) {
 
+    this['_t'] = 'Project';
+
+    var timer = new Timer('Project constructor');
+
     if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
@@ -21,11 +25,21 @@ function Project(string) {
         return;
     }
 
-    var new_project = globular_destringify(string);
+    var uncompressed;
+    if (string.compressed_blocks == undefined) {
+        uncompressed = string;
+    } else {
+        uncompressed = JSON.parse(globular_lz4_decompress(string));
+    }
+    var new_project = globular_destringify(uncompressed);
     for (var name in new_project) {
         if (!new_project.hasOwnProperty(name)) continue;
         this[name] = new_project[name];
     }
+
+    // Ensure at least one 0-cell
+
+    timer.Report();
 
 };
 
@@ -198,7 +212,7 @@ Project.prototype.showSourceTargetPreview = function(diagram, boundary) {
 
 // Store a source or target, or build a new generator
 Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'target' */ ) {
-    
+
     if (this.diagram == null) {
         this.cacheSourceTarget = null;
         return;
@@ -332,7 +346,15 @@ Project.prototype.dragCellUI = function(drag) {
             item.click(function() {
                 $("#options-box").fadeOut(100);
                 gProject.performActionUI(action, drag);
-            });
+            }).hover(
+                // Mouse in
+                function() {
+                    MainDisplay.highlight_action(action, drag.boundary)
+                },
+                // Mouse out
+                function() {
+                    MainDisplay.remove_highlight();
+                });
         })(options[i]);
     }
     $("#options-box").fadeIn(100);
@@ -536,7 +558,7 @@ Project.prototype.currentString = function(minimize) {
     this.view_controls = MainDisplay.getControls();
 
     var result = globular_stringify(this, minimize);
-    
+
     timer.Report();
     return result;
 }
@@ -821,9 +843,22 @@ Project.prototype.renderAll = function() {
     this.renderDiagram();
 }
 
+Project.prototype.renderCellChain = function(list) {
+    var id = list.shift();
+    if (id == undefined) return;
+    $('#loading-window').html("Rendering cell " + id);
+    setTimeout(function() {
+        gProject.renderNCell(id);
+        setTimeout(function() {
+            gProject.renderCellChain(list), 0
+        })
+        0
+    });
+
+}
+
 // Render all n-cells
 Project.prototype.renderCells = function() {
-    var list = this.listGenerators();
     for (var i = 0; i < list.length; i++) {
         this.renderNCell(list[i]);
     }
@@ -843,6 +878,7 @@ Project.prototype.renderCellsAbove = function(id) {
 Project.prototype.renderNCell = function(id) {
 
     var generator = this.signature.getGenerator(id);
+    console.log("Rendering " + generator.getDimension() + "-cell " + generator.name);
 
     // Create any required cell groups
     var cell_body = $('#cell-body');
@@ -884,6 +920,12 @@ Project.prototype.renderNCell = function(id) {
 
 Project.prototype.redrawAllCells = function() {
     $("#cell-body").empty();
+
+    var list = this.signature.getAllCells();
+    this.renderCellChain(list);
+    
+    return;
+    
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
         this.renderNCell(cells[i]);
@@ -943,8 +985,9 @@ Project.prototype.saveUI = function() {
                 show_msg("Please log in to save this project.", 7000, 3);
                 return;
             }
+            var compressed_string = JSON.stringify(globular_lz4_compress(currentString));
             $.post("/save_project_changes", {
-                string: currentString,
+                string: compressed_string,
                 p_id: global_p_id,
                 p_name: $("#diagram-title").val(),
                 p_desc: $("#text-p-desc").val()

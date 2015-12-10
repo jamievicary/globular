@@ -8,6 +8,7 @@ var timeout = null;
 
 //function for producing all pop ups/errors
 var original_msg_html = '<br><div id="msg-close-opt-err" class="msg-close-opt">Close</div>';
+
 function show_msg(value, dur, type) {
     var color = "";
     switch (type) {
@@ -63,14 +64,14 @@ $(document).ready(function() {
             gProject.saveUI();
         } else if (key == 'c') {
             gProject.clearDiagramUI();
-        //} else if (key == 'p') {
-        //    gProject.applyStochasticProcess(1);
-        //} else if (key == 'z') {
-        //    gProject.displayInterchangers();
+            //} else if (key == 'p') {
+            //    gProject.applyStochasticProcess(1);
+            //} else if (key == 'z') {
+            //    gProject.displayInterchangers();
         } else if (key == 'h') {
             gProject.storeTheoremUI();
         }
-        
+
         /*
         else if (key == ' ') {
             if (timeout == null) {
@@ -84,7 +85,7 @@ $(document).ready(function() {
         }
         */
     });
-    
+
     // Create the source/target preview div
     $('<div>').attr('id', 'source-target-window').appendTo(document.body).hide();
     $('<div>').attr('id', 'source-target-title').appendTo('#source-target-window').html('TITLE');
@@ -92,12 +93,18 @@ $(document).ready(function() {
         gProject.clearSourceTargetPreview();
     });
     $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
-    
+
     // Create the 'Allow undo' checkbox
     $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>')
         .appendTo($('#project-menu'));
     $('#allow-undo-checkbox').prop('checked', true);
- 
+
+    // Create the 'Loading Workspace' div
+    // Create the source/target preview div
+    $('<div>').attr('id', 'loading-window').appendTo(document.body).hide();
+    //$('<div>').attr('id', 'loading-title').appendTo('#source-target-window').html('Loading Workspace');
+    //$('<div>').attr('id', 'loading-detail').appendTo('#loading-window');
+
     $("div.enable_if-in").hide();
     //$("div.enable_if-out").show();
 
@@ -114,7 +121,7 @@ $(document).ready(function() {
     $("#msg-close-opt-cell").click(function() {
         $("#options-box").fadeOut();
     });
-    
+
     $("#msg-close-opt-fp").click(function() {
         $("#forgot-pass-box").fadeOut();
     });
@@ -125,10 +132,10 @@ $(document).ready(function() {
     $("#msg-close-opt-su").click(function() {
         $("#signup-box").fadeOut();
     });
-    
-    $("#forgot-pass-opt").click(function(){
-         $("#forgot-pass-box").fadeIn();
-         $("#login-box").fadeOut();
+
+    $("#forgot-pass-opt").click(function() {
+        $("#forgot-pass-box").fadeIn();
+        $("#login-box").fadeOut();
     });
 
     // Create the slider
@@ -154,7 +161,7 @@ $(document).ready(function() {
         } else {
             $("#view-desc-body").animate({
                 marginTop: "+=225px"
-            }, 500, function(){
+            }, 500, function() {
                 $("#view-desc-body").hide();
             });
 
@@ -205,8 +212,6 @@ $(document).ready(function() {
         if (!gProject.initialized) {
             console.log('Rendering uninitialized workspace');
             render_project_front('');
-            $("#diagram-title").val("My workspace");
-            gProject.saveState();
         }
     }
 
@@ -247,20 +252,22 @@ $(document).ready(function() {
             }
         });
     });
-    
+
     //forgot password trigger
-    $("#fp-button").click(function(){
+    $("#fp-button").click(function() {
         var email = $("#fp-email").val();
-        $.post('/forgot_pass', {email:email}, function(result){
+        $.post('/forgot_pass', {
+            email: email
+        }, function(result) {
             var color;
-            if(result.success==false){
+            if (result.success == false) {
                 color = 1;
-            }else{
+            } else {
                 color = 2;
             }
-            
+
             show_msg(result.msg, 3000, color);
-            
+
         });
     });
 
@@ -316,42 +323,33 @@ $(document).ready(function() {
 
     //renders a project
     function render_project_front(s) {
+
+        // Do fast initialization stuff
+        $('#loading-window').appendTo($('#gallery-box').parent()).show();
         $("#cell-body").html("");
         $("#my-projects-box").fadeOut();
-
-        // Construct new project
-        gProject = new Project(s);
-        //gProject.cacheSourceTarget = null;
-        gProject.signature.prepare();
-        if (gProject.diagram != null) gProject.diagram.prepare();
-        gProject.initialized = true;
-        if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
-
-        // Bind resizing to the correct rendering function		
+        $('#diagram-canvas').empty();
         $(window).unbind('resize');
         $(window).bind('resize', function() {
             $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
             $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
             globular_set_viewbox();
-            //gProject.renderDiagram();
         })
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
         globular_set_viewbox();
-        
-        // Render main diagram
-        $('#diagram-canvas').empty();
-        //MainDisplay.setControls(gProject.view_controls);
-        gProject.renderDiagram({controls: gProject.view_controls});
-
-        gProject.redrawAllCells();
-
         $("#add-0-cell-opt").click(function() {
             gProject.addZeroCell();
         });
+        $("#diagram-title").val("My workspace");
         $("#project-menu").show();
         $("#diagram-canvas").show();
         $("#diagram-title").show();
+        gProject.initialized = false;
+        $('#loading-window').empty();
+        loading_detail_level = 0;
+        loading_detail_array = [];
+        MainDisplay.diagram = null;
 
         function close_project() {
             $("#diagram-canvas").fadeOut(1000);
@@ -374,7 +372,47 @@ $(document).ready(function() {
             gProject.applyStochasticProcess(iterations);
             gProject.renderDiagram();
         });
+
+        // Now we do the expensive workspace preparation in a continuation-passing
+        // style, to allow DOM updates between calls.
+        /*
+        show_loading_window = s.length > 0;
+        console.log('Project length ' + s.length + ' bytes, ' + (show_loading_window ? '' : 'not ') + 'showing loading window');
+        */
+        show_loading_window = true;
+        cps_perform([{
+            f: cps_load_project,
+            arg: s,
+            status: "Loading workspace..."
+        }]);
+
+        /*
+        // Construct new project
+        $('#loading-detail').html("Decompressing...");
+        gProject = new Project(s);
+        //gProject.cacheSourceTarget = null;
+
+        // Prepare data
         
+        var timer = new Timer('render_project_front preparation');
+        $('#loading-detail').html("Preparing...");
+        gProject.signature.prepare();
+        if (gProject.diagram != null) gProject.diagram.prepare();
+        gProject.initialized = true;
+        
+        // DO THIS WHEN CONSTRUCTING THE PROJECT OBJECT
+        //if (gProject.signature.getAllCells().length == 0) gProject.addZeroCell();
+        
+        // Render main diagram
+        //MainDisplay.setControls(gProject.view_controls);
+        gProject.renderDiagram({
+            controls: gProject.view_controls
+        });
+
+        gProject.redrawAllCells();
+
+
+
         // Display the cached source or target, if one exists
         var cache = gProject.cacheSourceTarget;
         if (cache == null) {
@@ -387,6 +425,11 @@ $(document).ready(function() {
                 gProject.showSourceTargetPreview(cache[boundary], boundary);
             }
         }
+
+        */
+
+        //$('#loading-window').hide();
+
     }
 
     $("#restrict-opt").click(function() {
@@ -416,7 +459,7 @@ $(document).ready(function() {
     $("#clear-project-opt").click(function() {
         gProject.clearDiagramUI();
     });
-    
+
     $("#get-str-opt").click(function() {
         gProject.exportUI();
     });
@@ -447,7 +490,7 @@ $(document).ready(function() {
         $("#gallery-box").fadeOut();
     });
     $("#mm-help").click(function() {
-        window.open('http://ncatlab.org/nlab/show/Globular' ,'_blank');
+        window.open('http://ncatlab.org/nlab/show/Globular', '_blank');
     });
 
 
@@ -622,7 +665,7 @@ $(document).ready(function() {
                                         proj_id: p_id
                                     }, function(result, status) {
                                         if (result.success == true) {
-                                            $("#"+p_id).fadeOut();
+                                            $("#" + p_id).fadeOut();
                                             show_msg("Successfully deleted.", 2000, 2);
                                         }
                                     });
@@ -773,7 +816,7 @@ $(document).ready(function() {
                 }
                 apOptClicked++;
             });
-            
+
             $("#add-project-submit").click(function() {
                 var p_name = $("#ap-name").val();
                 var p_desc = $("#proj_desc").val();
@@ -818,7 +861,7 @@ $(document).ready(function() {
             "<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>" +
             "</div>";
         $("#pl-addnew").html(addNewProjectHTML);
-    
+
         $("#ap-name").keypress(function(e) {
             e.stopPropagation()
         });
@@ -841,17 +884,17 @@ $(document).ready(function() {
             }
         });
     });
-    
+
     var pathName = window.location.pathname;
     pathName = pathName.substring(1);
     var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
     if (regexResult != 0) {
-        
+
         // Public project not requested, so start with a blank page
         render_page();
 
     } else {
-        
+
         // Public project requested
         var dateName = pathName.substring(0, 4);
         var posVersion = pathName.search(/([v])/);
@@ -882,9 +925,9 @@ $(document).ready(function() {
             gProject.saveState();
         });
     }
-    
+
     // Display warning popup if the browser is not Chrome
-    if (navigator.userAgent.indexOf("Chrome") == -1 ) {
+    if (navigator.userAgent.indexOf("Chrome") == -1) {
         alert('Globular is in the early stages of development, and works best in Chrome. If you encounter problems, consider switching browsers.');
     }
 });

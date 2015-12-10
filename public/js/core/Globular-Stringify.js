@@ -4,10 +4,13 @@
     Stringifies and destringifies objects, remembering class structures
 */
 
-function globular_stringify(object, minimize) {
+function globular_stringify(object) {
+    return JSON.stringify(object);
+    /*
     if (minimize == undefined) minimize = false;
     var raw = globular_raw(object, minimize);
     return JSON.stringify(raw);
+    */
 }
 
 function globular_destringify(object) {
@@ -28,7 +31,7 @@ function globular_classify(object) {
         var new_object = eval('new ' + object._t + '()');
         for (var name in object) {
             if (!object.hasOwnProperty(name)) continue;
-            if (name == '_t') continue;
+            //if (name == '_t') continue;
             new_object[name] = globular_classify(object[name]);
         }
         return new_object;

@@ -420,7 +420,6 @@ function bezier_intersect_X(r) {
     */
 }
 
-
 function Timer(caller) {
     this.start_time = performance.now();
     this.caller = caller;
@@ -429,4 +428,104 @@ function Timer(caller) {
 Timer.prototype.Report = function() {
     var time = Math.floor(performance.now() - this.start_time);
     console.log("Timing: " + this.caller + ": " + time + "ms");
+}
+
+var Buffer = require('buffer').Buffer;
+var LZ4 = require('lz4');
+var block_size = 60000;
+function globular_lz4_compress(string) {
+    var timer = new Timer('globular_lz4_compress');
+    /*
+    var num_blocks = Math.ceil(string.length / block_size);
+    var blocks = [];
+    for (var block=0; block<num_blocks; block++) {
+        var substr = string.substr(block*block_size, block_size);
+        blocks.push(globular_lz4_compress_block(substr));
+    }
+    timer.Report();
+    return {
+        compressed_blocks: blocks
+    }
+    */
+    var compressed = globular_lz4_compress_block(string);
+    timer.Report();
+    return compressed;
+}
+
+function globular_lz4_decompress(object) {
+    var timer = new Timer('globular_lz4_decompress');
+    if (object.compressed == undefined) return object;
+    var result = globular_lz4_decompress_block(object.compressed);
+    timer.Report();
+    return result;
+    
+    /*
+    var blocks = object.compressed_blocks;
+    var result = "";
+    for (var index=0; index<blocks.length; index++) {
+        result += globular_lz4_decompress_block(blocks[index]);
+    }
+    timer.Report();
+    return result;
+    */
+}
+
+var blah = 'Blah blah ';
+function globular_lz4_compress_block(string) {
+    var Buffer = require('buffer').Buffer;
+    var LZ4 = require('lz4');
+    console.log('  string.length = ' + string.length);
+    var uncompressed = string + string;
+    var input = new Buffer(uncompressed);
+    var output = new Buffer(LZ4.encodeBound(input.length));
+    var compressedSize = LZ4.encodeBlock(input, output);
+    console.log('  compressedSize = ' + compressedSize);
+    if (compressedSize == 0) return {
+        uncompressed: string
+    };
+    output = output.slice(0, compressedSize);
+    var compressed_string = Uint8ToString(output);
+    console.log('  compressed_string.length = ' + compressed_string.length);
+    var b64 = btoa(compressed_string);
+    console.log('  b64.length = ' + b64.length);
+    return {
+        compressed: b64,
+        original_length: string.length
+    };
+}
+
+function globular_lz4_decompress_block(object) {
+    if (object.compressed == undefined) return object.uncompressed;
+    var b64 = object.compressed;
+    var str = atob(b64);
+    var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
+    var bufView = new Uint8Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    var uncompressed = new Buffer(object.original_length);
+    var size = LZ4.decodeBlock(bufView, uncompressed);
+    var uncompressed_string = Uint8ToString(uncompressed);
+    return uncompressed_string;
+}
+
+function lz4r(str) {
+    var c = globular_lz4_compress(str)
+    var j = JSON.stringify(c);
+    var r = j.length / str.length;
+    return r;
+}
+
+/*
+comp=globular_lz4_compress("Test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test");
+globular_lz4_decompress(comp)
+*/
+
+function Uint8ToString(u8a){
+    var CHUNK_SZ = 0x8000;
+    var c = [];
+    for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
+        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+    }
+    return c.join("");
 }

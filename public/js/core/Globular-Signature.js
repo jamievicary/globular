@@ -10,6 +10,8 @@ Signature Class
     Allows to 'raise' a signature, i.e. create an empty n+1 signature over sig if a signature sig is passed as the argument
 */
 function Signature(sig) {
+    this['_t'] = 'Signature';
+
     if (sig === undefined) {
         return;
     }

@@ -7,6 +7,7 @@
 
 // Creates a generator with a fresh id, and specific source and target, both source and target are of type Diagram
 function Generator(data) {
+    this['_t'] = 'Generator';
     if (data == undefined) return;
     if (data.source === undefined) debugger;
     var n = (data.source == null ? 0 : data.source.getDimension() + 1);
@@ -27,7 +28,7 @@ function Generator(data) {
 Generator.prototype.prepareDiagram = function() {
     var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
     this.diagram = new Diagram(this.source, [new NCell({id: this.id, key: key, box: this.getBoundingBox()})]);
-    this.diagram.ignore = true;
+    this.diagram.ignore = false;
 }
 
 Generator.prototype.getDiagram = function() {

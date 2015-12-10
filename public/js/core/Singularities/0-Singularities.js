@@ -89,7 +89,8 @@ Diagram.prototype.getInterchangerCoordinates = function(type, key) {
 Diagram.prototype.getInterchangerBoundingBox = function(type, key) {
     var family = GetSingularityFamily(type);
     var box = ((this.getInterchangerBoundingBox[family]).bind(this))(type, key);
-    box.ignore = true; // never export boxes to file
+    //box.ignore = true; // never export boxes to file
+    box.ignore = false;
     return box;
 }
 

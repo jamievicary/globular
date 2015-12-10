@@ -12,6 +12,7 @@
 
 // Constructor
 function Display(container, diagram) {
+    this['_t'] = 'Display';
     this.container = container;
     this.diagram = diagram;
     this.select_zone = null;
@@ -42,6 +43,8 @@ Display.prototype.enableMouse = function() {
 }
 
 Display.prototype.mousedown = function(event) {
+    if (!gProject.initialized) return;
+    if (this.diagram == null) return;
     var b = $(this.container)[0].bounds;
     if (b == undefined) return;
     var logical = this.pixelsToGrid(event);
@@ -55,6 +58,8 @@ Display.prototype.mousedown = function(event) {
 
 var min_drag = 0.25;
 Display.prototype.mousemove = function(event) {
+    if (!gProject.initialized) return;
+    if (this.diagram == null) return;
 
     var timer = new Timer("Display.mousemove - updating popup")
     var new_grid = this.pixelsToGrid(event);
@@ -65,7 +70,7 @@ Display.prototype.mousemove = function(event) {
             y: event.offsetY
         }
     });
-    timer.Report();
+    //timer.Report();
 
     if (this.select_grid == null) return;
     if (!detectLeftButton(event)) {
@@ -350,7 +355,7 @@ Display.prototype.has_controls = function() {
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
 Display.prototype.update_controls = function(boundary, controls) {
-    
+
     var timer = new Timer("Display.update_controls");
 
     // If there's no diagram, nothing to do
@@ -380,7 +385,7 @@ Display.prototype.update_controls = function(boundary, controls) {
 
     // Update the slice controls
     this.update_slice_container(boundary, controls);
-    
+
     timer.Report();
 }
 
@@ -498,13 +503,30 @@ Display.prototype.update_slice_container = function(drag, controls) {
                 //.change(function(event) {
                 self.control_change(event)
             })
-            .mouseover(function() {
-                this.focus();
-            });
+            .hover(
+                // Mouse over
+                function() {
+                    this.focus();
+                    self.highlight_slice(Number(this.getAttribute('index')));
+                    /*
+                    if (Number(this.getAttribute('index')) == self.slices.length - 1) {
+                        self.highlight_next_slice();
+                    }
+                    */
+                },
+                // Mouse out
+                function() {
+                    self.remove_highlight();
+                });
+
+        // Store the index of the slice control
+        (function(i) {
+            self.slices[i].attr('index', i)
+        })(i);
         this.slice_div.append(this.slices[i]);
         update_control_width(this.slices[i]);
     }
-    
+
     // If a particular boundary has been requested, make sure it is within view
     if (drag != null) {
         if (drag.boundary == null) {
@@ -547,10 +569,86 @@ Display.prototype.update_slice_container = function(drag, controls) {
 
 }
 
+// Make the number scrollers the correct width
 function update_control_width(input) {
     var length = String(input.val()).length;
     var width = 24 + 6 * length;
     $(input).css('max-width', width + 'px');
+}
+
+Display.prototype.highlight_slice = function(index) {
+
+    // Get bounding box for entire action
+    var location = [];
+    for (var i = 0; i <= index; i++) {
+        location.unshift(Number(this.slices[i].val()));
+    }
+    var box = this.diagram.getLocationBoundingBox(location);
+    if (box == null) return; // no box to display
+
+    // Get display data for bounding box
+    var display_data = this.diagram.getLocationBoundaryBox(null, box, this.padCoordinates([]).reverse());
+    if (display_data == null) return; // the box is invisible on the current slice
+
+    this.highlight_box(display_data.box, display_data.boundary);
+
+}
+
+// Highlight a portion of the diagram
+Display.prototype.highlight_next_slice = function() {
+
+    // Don't highlight if we're on the last slice
+    var slice_control = this.slices.last();
+    if (slice_control.val() == slice_control.attr('max')) return;
+
+    // Get the bounding box of the cell which is next to act
+    var slice = this.diagram;
+    for (var i = 0; i < this.slices.length - 1; i++) {
+        slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
+    }
+    var height = slice_control.val();
+
+    // If the value is out of range (e.g. if we're on the source slice of an identity diagram,
+    // do nothing)
+    if (height >= slice.cells.length) return;
+
+    var box = slice.cells[height].box;
+
+    // Apply the highlight
+    this.highlight_box(box);
+}
+
+Display.prototype.remove_highlight = function() {
+    $(this.container).children('svg').children('g').children('g').remove();
+}
+
+Display.prototype.highlight_action = function(action, boundary) {
+
+    // Get bounding box for entire action
+    var slice = this.diagram;
+    if (boundary != null) {
+        for (var i = 0; i < boundary.depth - 1; i++) {
+            slice = slice.getSourceBoundary();
+        }
+        if (boundary.type == 's') slice = slice.getSourceBoundary();
+        else slice = slice.getTargetBoundary();
+    }
+    var boundary_box = slice.getBoundingBox(action);
+
+    // Get display data for bounding box
+    var display_data = this.diagram.getLocationBoundaryBox(boundary, boundary_box, this.padCoordinates([]).reverse());
+
+    this.highlight_box(display_data.box, display_data.boundary);
+}
+
+// Highlight a portion of the diagram
+Display.prototype.highlight_box = function(box, boundary) {
+
+    // Remove an existing highlight
+    $(this.container).children('svg').children('g').children('g').remove();
+
+    // Add the highlight to the diagram
+    globular_add_highlight(this.container, this.data, box, boundary, this.visible_diagram);
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
@@ -583,9 +681,17 @@ Display.prototype.render = function() {
     }
     this.visible_diagram = slice;
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
-    timer.Report();
-    if (data == null) return;
     this.data = data;
+    timer.Report();
+
+    // Render highlight if necessary
+    if (this.slices.length > 0) {
+        if (this.slices.last().is(":focus")) {
+            this.highlight_next_slice();
+        }
+    }
+
+    //if (data == null) return;
 }
 
 // Pads an object with 'boundary_depth' and 'logical' properties
@@ -635,7 +741,7 @@ Display.prototype.setControls = function(controls) {
         this.suppress_input.val(controls.project);
     }
     if (this.slices != null && controls.slices != null) {
-        for (var i=0; i<controls.slices.length; i++) {
+        for (var i = 0; i < controls.slices.length; i++) {
             if (this.slices[i] != undefined) {
                 this.slices[i].val(controls.slices(i));
             }
