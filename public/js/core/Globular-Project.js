@@ -162,6 +162,7 @@ Project.prototype.limitMatches = function(matches, elements) {
 // Clear thumbnails
 Project.prototype.clearThumbnails = function() {
     $('div.cell-b-sect').empty();
+    $("#options-box").fadeOut(100);
 }
 
 // Clear the main diagram, UI function
