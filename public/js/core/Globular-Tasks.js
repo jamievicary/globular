@@ -233,5 +233,8 @@ function cps_get_diagram_slice(diagram) {
 function cps_finalize() {
     $('#loading-window').hide();
     gProject.initialized = true;
+    $("#add-0-cell-opt").click(function() {
+        gProject.addZeroCell();
+    });
     gProject.saveState();
 }

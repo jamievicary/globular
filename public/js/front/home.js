@@ -339,9 +339,6 @@ $(document).ready(function() {
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
         $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
         globular_set_viewbox();
-        $("#add-0-cell-opt").click(function() {
-            gProject.addZeroCell();
-        });
         $("#project-menu").show();
         $("#diagram-canvas").show();
         $("#diagram-title").show();
