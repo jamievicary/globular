@@ -6,8 +6,8 @@
 
 // Initialize the user-interface elements
 /* Need to inject these elements into the UI
-<li id="run-process" class="button-style-3">Run Process</li>
-<li id='sto-form' class="button-style-3">Stochastic<input type="checkbox" id="stochastic-cb"></li>
+<li id="run-process" class="diagram-button">Run Process</li>
+<li id='sto-form' class="diagram-button">Stochastic<input type="checkbox" id="stochastic-cb"></li>
 */
 
 function timeSampler(rate) {

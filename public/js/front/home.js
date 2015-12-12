@@ -43,6 +43,98 @@ function show_msg(value, dur, type) {
     });
 }
 
+// Render the page depending on the login status
+function render_frontend(state) {
+    if (state === "out") {
+        $("div.enable_if-in").hide();
+        $("div.enable_if-out").show();
+    } else {
+        $("div.enable_if-in").show();
+        $("div.enable_if-out").hide();
+    }
+    //if (window.location.pathname.length < 3) {
+    if (!gProject.initialized) {
+        console.log('Rendering uninitialized workspace');
+        render_project_front('');
+        $("#diagram-title").val("My workspace");
+    }
+}
+
+// Render a workspace
+function render_project_front(s) {
+
+    // Do fast initialization stuff
+    $('#loading-window').appendTo($('#gallery-box').parent()).show();
+    $("#cell-body").html("");
+    $("#my-projects-box").fadeOut();
+    $('#diagram-canvas').empty();
+    $(window).unbind('resize');
+    $(window).bind('resize', function() {
+        $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
+        $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
+        globular_set_viewbox();
+    })
+    $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
+    $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
+    globular_set_viewbox();
+    $("#project-menu").show();
+    $("#diagram-canvas").show();
+    $("#diagram-title").show();
+    gProject.initialized = false;
+    $('#loading-window').empty();
+    loading_detail_level = 0;
+    loading_detail_array = [];
+    MainDisplay.diagram = null;
+
+    function close_project() {
+        $("#diagram-canvas").fadeOut(1000);
+        setTimeout(function() {
+            $("#project-menu").fadeOut(1000);
+            $("#diagram-title").html("");
+            $(".cell-group").slideUp(1000);
+            $(".cell-opt").slideUp(1000);
+            setTimeout(function() {
+                $("#cell-body").html("");
+            }, 1000);
+        }, 1000);
+    }
+    $("#run-process").click(function() {
+        $("#run-proc-box").fadeIn();
+    });
+    $("#run-process-go").click(function() {
+        var iterations = $("#rp-iters").val();
+        iterations = Number(iterations);
+        gProject.applyStochasticProcess(iterations);
+        gProject.renderDiagram();
+    });
+
+    // Now we do the expensive workspace preparation in a continuation-passing
+    // style, to allow DOM updates between calls.
+    show_loading_window = true;
+    cps_perform([{
+        f: cps_load_project,
+        arg: s,
+        status: "Loading workspace..."
+    }]);
+
+    /*
+    // Display the cached source or target, if one exists
+    var cache = gProject.cacheSourceTarget;
+    if (cache == null) {
+        gProject.clearSourceTargetPreview();
+    } else {
+        var boundary = (cache.hasOwnProperty('source') ? 'source' : cache.hasOwnProperty('target') ? 'target' : null);
+        if (boundary == null) {
+            gProject.clearSourceTargetPreview();
+        } else {
+            gProject.showSourceTargetPreview(cache[boundary], boundary);
+        }
+    }
+    */
+}
+
+
+
 $(document).ready(function() {
 
     globular_prepare_renderer();
@@ -59,16 +151,18 @@ $(document).ready(function() {
             gProject.takeIdentityUI();
         } else if (key == 'r') {
             gProject.restrictUI();
-        } else if (key == 'e') {
+        } else if (key == 'x') {
             gProject.exportUI();
+        } else if (key == 'm') {
+            $('#upload-file').click();
         } else if (key == 'a') {
             gProject.saveUI();
         } else if (key == 'c') {
             gProject.clearDiagramUI();
-            //} else if (key == 'p') {
-            //    gProject.applyStochasticProcess(1);
-            //} else if (key == 'z') {
-            //    gProject.displayInterchangers();
+        //} else if (key == 'p') {
+        //    gProject.applyStochasticProcess(1);
+        //} else if (key == 'z') {
+        //    gProject.displayInterchangers();
         } else if (key == 'h') {
             gProject.storeTheoremUI();
         }
@@ -87,6 +181,25 @@ $(document).ready(function() {
         */
     });
 
+    $('#upload-file').change(function(evt) {
+        if (evt.target.files.length == 0) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            new_project_text = e.target.result;
+            try {
+                var parsed = JSON.parse(new_project_text);
+            } catch (e) {
+                alert ('Could not understand file');
+                return;
+            }
+            render_project_front(parsed);
+            global_p_id = ''; // empty project ID
+            $('#upload-file').off('click');
+            $('#upload-file').val('');
+        }
+        reader.readAsText(evt.target.files[0]);
+    });
+
     // Create the source/target preview div
     $('<div>').attr('id', 'source-target-window').appendTo(document.body).hide();
     $('<div>').attr('id', 'source-target-title').appendTo('#source-target-window').html('TITLE');
@@ -101,10 +214,7 @@ $(document).ready(function() {
     $('#allow-undo-checkbox').prop('checked', true);
 
     // Create the 'Loading Workspace' div
-    // Create the source/target preview div
     $('<div>').attr('id', 'loading-window').appendTo(document.body).hide();
-    //$('<div>').attr('id', 'loading-title').appendTo('#source-target-window').html('Loading Workspace');
-    //$('<div>').attr('id', 'loading-detail').appendTo('#loading-window');
 
     $("div.enable_if-in").hide();
     //$("div.enable_if-out").show();
@@ -114,7 +224,8 @@ $(document).ready(function() {
         $("#login-box").fadeIn();
     });
     $("#mm-logout").click(function() {
-        window.location = "/logout";
+        $.get("/logout");
+        render_frontend("out")
     });
     $("#msg-close-opt-log").click(function() {
         $("#login-box").fadeOut();
@@ -122,18 +233,15 @@ $(document).ready(function() {
     $("#msg-close-opt-cell").click(function() {
         $("#options-box").fadeOut();
     });
-
     $("#msg-close-opt-fp").click(function() {
         $("#forgot-pass-box").fadeOut();
     });
-
     $("#mm-signup").click(function() {
         $("#signup-box").fadeIn();
     });
     $("#msg-close-opt-su").click(function() {
         $("#signup-box").fadeOut();
     });
-
     $("#forgot-pass-opt").click(function() {
         $("#forgot-pass-box").fadeIn();
         $("#login-box").fadeOut();
@@ -187,6 +295,7 @@ $(document).ready(function() {
             render_project_front(null);
             $("#diagram-title").val("My workspace");
         } else {
+            global_p_id = event.state.global_p_id;
             render_project_front(JSON.parse(event.state.string));
         }
     };
@@ -200,22 +309,6 @@ $(document).ready(function() {
         $("#ajax-loading").fadeOut();
     });
 
-    //determines whether user is logged in or out - renders different home pages
-    function render_frontend(state) {
-        if (state === "out") {
-            $("div.enable_if-in").hide();
-            $("div.enable_if-out").show();
-        } else {
-            $("div.enable_if-in").show();
-            $("div.enable_if-out").hide();
-        }
-        //if (window.location.pathname.length < 3) {
-        if (!gProject.initialized) {
-            console.log('Rendering uninitialized workspace');
-            render_project_front('');
-            $("#diagram-title").val("My workspace");
-        }
-    }
 
     //actually renders page.
     function render_page() {
@@ -233,20 +326,16 @@ $(document).ready(function() {
 
     //login trigger
     $("#login-button").click(function() {
-        var login_email = $("#login_email").val();
-        var login_pass = $("#login_pass").val();
         $.post("/login", {
-            login_pass: login_pass,
-            login_email: login_email
+            login_email: $("#login_email").val(),
+            login_pass: $("#login_pass").val()
         }, function(result, status) {
             if (status == "success") {
-
                 if (result.success) {
                     $("#login-box").fadeOut();
                     render_page();
                 } else {
                     render_page();
-
                     show_msg("Incorrect login details, please try again.", 3000, 1);
                 }
             } else {
@@ -323,79 +412,6 @@ $(document).ready(function() {
         });
     });
 
-    //renders a project
-    function render_project_front(s) {
-
-        // Do fast initialization stuff
-        $('#loading-window').appendTo($('#gallery-box').parent()).show();
-        $("#cell-body").html("");
-        $("#my-projects-box").fadeOut();
-        $('#diagram-canvas').empty();
-        $(window).unbind('resize');
-        $(window).bind('resize', function() {
-            $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
-            $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
-            globular_set_viewbox();
-        })
-        $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
-        $('#diagram-canvas').css('height', window.innerHeight - $('#header').height() - 50);
-        globular_set_viewbox();
-        $("#project-menu").show();
-        $("#diagram-canvas").show();
-        $("#diagram-title").show();
-        gProject.initialized = false;
-        $('#loading-window').empty();
-        loading_detail_level = 0;
-        loading_detail_array = [];
-        MainDisplay.diagram = null;
-
-        function close_project() {
-            $("#diagram-canvas").fadeOut(1000);
-            setTimeout(function() {
-                $("#project-menu").fadeOut(1000);
-                $("#diagram-title").html("");
-                $(".cell-group").slideUp(1000);
-                $(".cell-opt").slideUp(1000);
-                setTimeout(function() {
-                    $("#cell-body").html("");
-                }, 1000);
-            }, 1000);
-        }
-        $("#run-process").click(function() {
-            $("#run-proc-box").fadeIn();
-        });
-        $("#run-process-go").click(function() {
-            var iterations = $("#rp-iters").val();
-            iterations = Number(iterations);
-            gProject.applyStochasticProcess(iterations);
-            gProject.renderDiagram();
-        });
-
-        // Now we do the expensive workspace preparation in a continuation-passing
-        // style, to allow DOM updates between calls.
-        show_loading_window = true;
-        cps_perform([{
-            f: cps_load_project,
-            arg: s,
-            status: "Loading workspace..."
-        }]);
-
-        /*
-        // Display the cached source or target, if one exists
-        var cache = gProject.cacheSourceTarget;
-        if (cache == null) {
-            gProject.clearSourceTargetPreview();
-        } else {
-            var boundary = (cache.hasOwnProperty('source') ? 'source' : cache.hasOwnProperty('target') ? 'target' : null);
-            if (boundary == null) {
-                gProject.clearSourceTargetPreview();
-            } else {
-                gProject.showSourceTargetPreview(cache[boundary], boundary);
-            }
-        }
-        */
-    }
-
     $("#restrict-opt").click(function() {
         gProject.restrictUI();
     });
@@ -406,6 +422,10 @@ $(document).ready(function() {
 
     $("#save-project-opt").click(function() {
         gProject.saveUI();
+    });
+    
+    $("#import-project-opt").click(function() {
+        $('#upload-file').click();
     });
 
     $("#use-t-opt").click(function() {
@@ -652,7 +672,7 @@ $(document).ready(function() {
                         var p_id = $(this).attr("id").substring(3);
                         show_msg("Would you like to publish this workspace as " +
                             "a new version of an existing public workspace?" +
-                            "<div id = 'publish-opt-no' class = 'button-style-3'>No</div><div class = 'button-style-3' style = 'float:right;margin-top: -31px;' id = 'publish-opt-yes'>Yes</div>", 20000, 3);
+                            "<div id = 'publish-opt-no' class = 'diagram-button'>No</div><div class = 'diagram-button' style = 'float:right;margin-top: -31px;' id = 'publish-opt-yes'>Yes</div>", 20000, 3);
                         $("#publish-opt-no").click(function() {
                             $.post('/publish_project', {
                                 pid: p_id
@@ -820,18 +840,18 @@ $(document).ready(function() {
         var addNewProjectHTML = "<div id='add-project-opt'>" +
             "<div id = 'addp-title'>New workspace +</div>" +
             "<input type='text' placeholder='Workspace name' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>" +
-            "<div id='drop_zone'>Drop workspace JSON here (optional)</div>" +
+            //"<div id='drop_zone'>Drop workspace JSON here (optional)</div>" +
             "<textarea id='proj_desc' class='text-area-style-1' placeholder='Description (optional)'  style='width: 90%;height: 80px;'></textarea>" +
             "<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>" +
             "</div>";
         $("#pl-addnew").html(addNewProjectHTML);
 
+        /*
         // Set up drop zone
         new_project_text = "";
         var dropZone = document.getElementById('drop_zone');
         dropZone.addEventListener('dragover', handleDragOver, false);
         dropZone.addEventListener('drop', handleFileSelect, false);
-
         function handleFileSelect(evt) {
             evt.stopPropagation();
             evt.preventDefault();
@@ -848,13 +868,12 @@ $(document).ready(function() {
             })(files[0]);
             reader.readAsText(files[0]);
         }
-
         function handleDragOver(evt) {
             evt.stopPropagation();
             evt.preventDefault();
             evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
         }
-
+        */
 
         $("#ap-name").keypress(function(e) {
             e.stopPropagation()

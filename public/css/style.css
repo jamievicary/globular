@@ -139,20 +139,33 @@ body, html {
 }
 
 /* line 132, style.sass */
-.button-style-3 {
-  background-color: grey;
+.diagram-button, .workspace-button {
   color: white;
   border-radius: 2px;
   width: 100px;
   text-align: center;
-  height: 17px;
   letter-spacing: 1px;
   padding: 7px;
   cursor: pointer;
-  font-size: 60%;
+  font-size: 100%;
 }
 
 /* line 144, style.sass */
+.diagram-button:hover, .workspace-button:hover {
+  background-color: lightblue;
+}
+
+/* line 147, style.sass */
+.diagram-button {
+  background-color: grey;
+}
+
+/* line 151, style.sass */
+.workspace-button {
+  background-color: #4cd2bb;
+}
+
+/* line 155, style.sass */
 #main-menu li {
   float: left;
   list-style: none;
@@ -161,7 +174,7 @@ body, html {
   padding: 10px;
 }
 
-/* line 153, style.sass */
+/* line 164, style.sass */
 div.cell-group {
   color: black;
   background-color: #aaa;
@@ -171,7 +184,7 @@ div.cell-group {
   margin-bottom: 7px;
 }
 
-/* line 162, style.sass */
+/* line 173, style.sass */
 div.cell-opt {
   background-color: #888;
   color: #ffffff;
@@ -185,7 +198,7 @@ div.cell-opt {
   padding-right: 0px;
 }
 
-/* line 178, style.sass */
+/* line 189, style.sass */
 div.preview-icon {
   height: 67px;
   width: 67px;
@@ -194,23 +207,23 @@ div.preview-icon {
   margin-right: 7px;
 }
 
-/* line 185, style.sass */
+/* line 196, style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 188, style.sass */
+/* line 199, style.sass */
 div.cell-icon > svg {
   border-radius: 2px;
 }
 
-/* line 191, style.sass */
+/* line 202, style.sass */
 .cell-b-sect {
   text-align: center;
   top: 70px;
 }
 
-/* line 195, style.sass */
+/* line 206, style.sass */
 .match-cell-icon {
   height: 67px;
   width: 67px;
@@ -219,12 +232,12 @@ div.cell-icon > svg {
   float: left;
 }
 
-/* line 203, style.sass */
+/* line 214, style.sass */
 div.cell-icon-group {
   float: left;
 }
 
-/* line 206, style.sass */
+/* line 217, style.sass */
 div.cell-detail {
   overflow: hidden;
   height: 67px;
@@ -233,23 +246,23 @@ div.cell-detail {
   font-size: 13px;
 }
 
-/* line 213, style.sass */
+/* line 224, style.sass */
 div.cell-detail > label {
   position: absolute;
   height: 13px;
 }
 
-/* line 221, style.sass */
+/* line 232, style.sass */
 label.cell-invertible {
   top: 41px;
 }
 
-/* line 224, style.sass */
+/* line 235, style.sass */
 label.cell-single-thumbnail {
   top: 57px;
 }
 
-/* line 228, style.sass */
+/* line 239, style.sass */
 input[type=checkbox] {
   height: 13px;
   vertical-align: bottom;
@@ -258,7 +271,7 @@ input[type=checkbox] {
   padding-bottom: -5px;
 }
 
-/* line 241, style.sass */
+/* line 252, style.sass */
 .cell-label {
   width: calc(100% - 23px);
   border: none;
@@ -271,7 +284,7 @@ input[type=checkbox] {
   font-size: 13px;
 }
 
-/* line 252, style.sass */
+/* line 263, style.sass */
 .color-picker {
   width: calc(100% - 23px);
   margin-top: 4px;
@@ -285,12 +298,12 @@ input[type=checkbox] {
   font-size: 13px;
 }
 
-/* line 264, style.sass */
+/* line 275, style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 267, style.sass */
+/* line 278, style.sass */
 div.cell-icon {
   height: 67px;
   width: 67px;
@@ -300,12 +313,12 @@ div.cell-icon {
   float: left;
 }
 
-/* line 277, style.sass */
+/* line 288, style.sass */
 div.cell-icon:nth-child(2) {
   margin-left: 7px;
 }
 
-/* line 280, style.sass */
+/* line 291, style.sass */
 #drop_zone {
   width: calc(90% - 4px);
   margin-left: 5%;
@@ -316,19 +329,19 @@ div.cell-icon:nth-child(2) {
   border: 2px dashed #bbb;
 }
 
-/* line 289, style.sass */
+/* line 300, style.sass */
 #options-box {
   max-height: 80%;
   overflow-y: auto;
 }
 
-/* line 297, style.sass */
+/* line 308, style.sass */
 #options-list {
   overflow-x: hidden;
   text-align: left;
 }
 
-/* line 302, style.sass */
+/* line 313, style.sass */
 .stochastic-rate {
   width: 50px;
   outline-width: 0px;
@@ -341,44 +354,14 @@ div.cell-icon:nth-child(2) {
   height: 15px;
 }
 
-/* line 314, style.sass */
+/* line 325, style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 65px;
   top: 30px;
 }
 
-/* line 319, style.sass */
-.button-style-1 {
-  background-color: #00b8ff;
-  color: white;
-  border-radius: 3px 3px 0px 0px;
-  width: 110px;
-  text-align: center;
-  letter-spacing: 1px;
-  float: left;
-  margin: 1px;
-  cursor: pointer;
-  font-size: 110%;
-  border-bottom: 2px solid #00b8ff;
-}
-
-/* line 333, style.sass */
-.button-style-2 {
-  padding: 5px;
-  background-color: #00b8ff;
-  color: white;
-  border-radius: 3px;
-  width: 130px;
-  text-align: center;
-  letter-spacing: 1px;
-  float: left;
-  margin: 1px;
-  cursor: pointer;
-  font-size: 110%;
-}
-
-/* line 347, style.sass */
+/* line 330, style.sass */
 #view-p-desc {
   background-color: grey;
   color: white;
@@ -395,7 +378,7 @@ div.cell-icon:nth-child(2) {
   font-size: 70%;
 }
 
-/* line 362, style.sass */
+/* line 345, style.sass */
 #view-desc-plate {
   margin-left: 50px;
   background-color: grey;
@@ -404,7 +387,7 @@ div.cell-icon:nth-child(2) {
   padding: 10px;
 }
 
-/* line 369, style.sass */
+/* line 352, style.sass */
 #view-desc-body {
   width: 300px;
   float: right;
@@ -413,7 +396,7 @@ div.cell-icon:nth-child(2) {
   position: absolute;
 }
 
-/* line 376, style.sass */
+/* line 359, style.sass */
 #text-p-desc {
   height: 200px;
   resize: none;
@@ -426,13 +409,13 @@ div.cell-icon:nth-child(2) {
   letter-spacing: 1px;
 }
 
-/* line 387, style.sass */
+/* line 370, style.sass */
 #site-controller-body {
   border: 3px solid grey;
   height: 200px;
 }
 
-/* line 391, style.sass */
+/* line 374, style.sass */
 .text-field-style-1 {
   border: none;
   outline-width: 0px;
@@ -442,7 +425,7 @@ div.cell-icon:nth-child(2) {
   padding: 4px;
 }
 
-/* line 399, style.sass */
+/* line 382, style.sass */
 .text-area-style-1 {
   border: none;
   outline-width: 0px;
@@ -452,7 +435,7 @@ div.cell-icon:nth-child(2) {
   width: calc( 100% - 20px );
 }
 
-/* line 409, style.sass */
+/* line 392, style.sass */
 .submit-field-style-1 {
   width: 70px;
   border: none;
@@ -462,7 +445,7 @@ div.cell-icon:nth-child(2) {
   font-family: "Open Sans", sans-serif;
 }
 
-/* line 417, style.sass */
+/* line 400, style.sass */
 .box {
   display: none;
   background-color: #00b8ff;
@@ -479,7 +462,7 @@ div.cell-icon:nth-child(2) {
   left: calc( 50% - 125px );
 }
 
-/* line 433, style.sass */
+/* line 416, style.sass */
 .grand-box {
   width: 800px;
   height: 500px;
@@ -488,29 +471,29 @@ div.cell-icon:nth-child(2) {
   box-shadow: 0px 0px 20px dimgrey;
 }
 
-/* line 440, style.sass */
+/* line 423, style.sass */
 .zindex-error {
   z-index: 6;
 }
 
-/* line 443, style.sass */
+/* line 426, style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 448, style.sass */
+/* line 431, style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 451, style.sass */
+/* line 434, style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 454, style.sass */
+/* line 437, style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -518,7 +501,7 @@ div.cell-icon:nth-child(2) {
   float: right;
 }
 
-/* line 460, style.sass */
+/* line 443, style.sass */
 #add-project-opt {
   background-color: grey;
   cursor: pointer;
@@ -528,7 +511,7 @@ div.cell-icon:nth-child(2) {
   border-radius: 2px;
 }
 
-/* line 468, style.sass */
+/* line 451, style.sass */
 div .delete_button {
   position: absolute;
   right: 5px;
@@ -536,7 +519,7 @@ div .delete_button {
   color: red;
 }
 
-/* line 474, style.sass */
+/* line 457, style.sass */
 #source-target-clear {
   position: absolute;
   right: 5px;
@@ -544,33 +527,13 @@ div .delete_button {
   color: red;
 }
 
-/* line 480, style.sass */
+/* line 463, style.sass */
 #main_view_control {
   background-color: #aaa;
   padding: 5px;
 }
 
-/* line 484, style.sass */
-#save-project-opt {
-  background-color: #4cd2bb;
-}
-
-/* line 487, style.sass */
-#save-project-opt:hover {
-  background-color: lightblue;
-}
-
-/* line 490, style.sass */
-#get-str-opt {
-  background-color: #4cd2bb;
-}
-
-/* line 493, style.sass */
-#get-str-opt:hover {
-  background-color: lightblue;
-}
-
-/* line 496, style.sass */
+/* line 467, style.sass */
 #diagram-title {
   color: black;
   height: 30px;
@@ -584,12 +547,12 @@ div .delete_button {
   margin-bottom: 7px;
 }
 
-/* line 509, style.sass */
+/* line 480, style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 512, style.sass */
+/* line 483, style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -600,14 +563,14 @@ div .delete_button {
   background-repeat: no-repeat;
 }
 
-/* line 521, style.sass */
+/* line 492, style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 526, style.sass */
+/* line 497, style.sass */
 .mini-opt-links {
   color: #ffffff;
   letter-spacing: 2px;
@@ -618,14 +581,14 @@ div .delete_button {
   cursor: pointer;
 }
 
-/* line 535, style.sass */
+/* line 506, style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 540, style.sass */
+/* line 511, style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -633,7 +596,7 @@ div .delete_button {
   text-decoration: underline;
 }
 
-/* line 546, style.sass */
+/* line 517, style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -647,7 +610,7 @@ div .delete_button {
   color: salmon;
 }
 
-/* line 558, style.sass */
+/* line 529, style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -656,7 +619,7 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 565, style.sass */
+/* line 536, style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -665,7 +628,7 @@ div .delete_button {
   left: 80px;
 }
 
-/* line 572, style.sass */
+/* line 543, style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -673,7 +636,7 @@ div .delete_button {
   padding-top: 20px;
 }
 
-/* line 578, style.sass */
+/* line 549, style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -681,31 +644,31 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 585, style.sass */
+/* line 556, style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 589, style.sass */
+/* line 560, style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 594, style.sass */
+/* line 565, style.sass */
 input.control {
   max-width: 15px;
 }
 
-/* line 601, style.sass */
+/* line 572, style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 605, style.sass */
+/* line 576, style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -716,7 +679,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 614, style.sass */
+/* line 585, style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -726,14 +689,14 @@ input.control {
   position: fixed;
 }
 
-/* line 622, style.sass */
+/* line 593, style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 627, style.sass */
+/* line 598, style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -742,7 +705,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 634, style.sass */
+/* line 605, style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -751,18 +714,13 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 641, style.sass */
+/* line 612, style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 645, style.sass */
-.button-style-3:hover {
-  background-color: lightblue;
-}
-
-/* line 648, style.sass */
+/* line 616, style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -771,7 +729,7 @@ input.control {
   width: 100px;
 }
 
-/* line 655, style.sass */
+/* line 623, style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -782,24 +740,24 @@ input.control {
   z-index: 1;
 }
 
-/* line 664, style.sass */
+/* line 632, style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 667, style.sass */
+/* line 635, style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 670, style.sass */
+/* line 638, style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 676, style.sass */
+/* line 644, style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -808,14 +766,14 @@ input.control {
   font-weight: bold;
 }
 
-/* line 683, style.sass */
+/* line 651, style.sass */
 #forgot-pass-opt {
   font-size: 70%;
   color: lightblue;
   cursor: pointer;
 }
 
-/* line 688, style.sass */
+/* line 656, style.sass */
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;
@@ -829,7 +787,7 @@ input.control {
   padding-bottom: 3px;
 }
 
-/* line 698, style.sass */
+/* line 666, style.sass */
 #loading-window {
   width: 400px;
   height: 150px;
@@ -843,18 +801,18 @@ input.control {
   z-index: 10;
 }
 
-/* line 710, style.sass */
+/* line 678, style.sass */
 div.loading-detail {
   margin: 20px;
   overflow: hidden;
 }
 
-/* line 714, style.sass */
+/* line 682, style.sass */
 #loading-title {
   padding: 15px;
 }
 
-/* line 717, style.sass */
+/* line 685, style.sass */
 #source-target-window {
   position: absolute;
   right: 20;
@@ -865,7 +823,7 @@ div.loading-detail {
   width: 150px;
 }
 
-/* line 729, style.sass */
+/* line 697, style.sass */
 #source-target-diagram {
   height: 100px;
   width: 100px;
@@ -877,7 +835,7 @@ div.loading-detail {
   border-radius: 2px;
 }
 
-/* line 739, style.sass */
+/* line 707, style.sass */
 #source-target-diagram > svg {
   display: block;
   margin: 0 auto;

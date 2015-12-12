@@ -129,18 +129,29 @@ body, html
 #project-menu li
 	margin-top: 7px
 
-.button-style-3
-	background-color: grey
+.diagram-button, .workspace-button
+	//background-color: grey
 	color: white
 	border-radius: $border_radius
 	width: 100px
 	text-align: center
-	height: 17px
+	//height: 17px
 	letter-spacing: 1px
 	padding: 7px
 	cursor: pointer
-	font-size: 60%
+	font-size: 100%
 	
+.diagram-button:hover, .workspace-button:hover
+	background-color: lightblue
+
+.diagram-button
+	background-color: grey
+
+
+.workspace-button
+	background-color: #4cd2bb
+	
+
 #main-menu li 
 	float: left
 	list-style: none
@@ -316,34 +327,6 @@ div.cell-icon:nth-child(2)
 	margin-left: 65px
 	top: 30px
 
-.button-style-1
-	background-color: $blue
-	color: white
-	border-radius: 3px 3px 0px 0px
-	width: 110px
-	text-align: center
-	letter-spacing: 1px
-	float: left
-	margin: 1px
-	cursor: pointer
-	font-size: 110%
-	border-bottom: 2px solid #00b8ff
-//	padding: 5px
-	
-.button-style-2
-	padding: 5px
-	background-color: $blue
-	color: white
-	border-radius: 3px
-	width: 130px
-	text-align: center
-	letter-spacing: 1px
-	float: left
-	margin: 1px
-	cursor: pointer
-	font-size: 110%
-
-
 #view-p-desc
 	background-color: grey
 	color: white
@@ -481,18 +464,6 @@ div .delete_button
 	background-color: $midgrey
 	padding: 5px
 
-#save-project-opt
-	background-color: #4cd2bb
-	
-#save-project-opt:hover
-	background-color: lightblue	
-	
-#get-str-opt
-	background-color: #4cd2bb
-	
-#get-str-opt:hover
-	background-color: lightblue	
-	
 #diagram-title
 	color: black
 	height: 30px
@@ -642,9 +613,6 @@ input.control
 	float: left
 	margin-left: 10px
 	
-.button-style-3:hover
-	background-color: lightblue
-
 .pl-selects
 	border: none
 	outline-width: 0px

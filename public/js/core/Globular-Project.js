@@ -424,7 +424,8 @@ Project.prototype.performActionUI = function(option, drag) {
 Project.prototype.saveState = function() {
     if ($('#allow-undo-checkbox').is(':checked')) {
         history.pushState({
-            string: this.currentString()
+            string: this.currentString(),
+            p_id: global_p_id
         }, "", "");
     }
 }
@@ -988,6 +989,8 @@ Project.prototype.saveUI = function() {
         function(result, status) {
             if (result.status != "in") {
                 show_msg("Please log in to save this project.", 7000, 3);
+                render_frontend("out");
+                //render_page();
                 return;
             }
             //var compressed_string = JSON.stringify(globular_lz4_compress(currentString));
