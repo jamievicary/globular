@@ -110,16 +110,24 @@ Signature.prototype.getCells = function() {
     return Object.keys(this.cells);
 };
 
+/*
 Signature.prototype.prepare = function() {
     var cell_names = this.getCells();
     if (this.sigma != null) this.sigma.prepare();
     for (var i=0; i<cell_names.length; i++) {
         var generator = this.cells[cell_names[i]];
-        if (generator.source != null) generator.source.prepare();
-        if (generator.target != null) generator.target.prepare();
+        if (generator.source != null) {
+            generator.source.prepare();
+            generator.source.clearAllSliceCaches();
+        }
+        if (generator.target != null) {
+            generator.target.prepare();
+            generator.source.clearAllSliceCaches();
+        }
         generator.prepareDiagram();
     }
 }
+*/
 
 Signature.prototype.removeCell = function(id) {
     if (this.cells[id] != undefined) {

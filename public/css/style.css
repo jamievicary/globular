@@ -306,18 +306,29 @@ div.cell-icon:nth-child(2) {
 }
 
 /* line 280, style.sass */
+#drop_zone {
+  width: calc(90% - 4px);
+  margin-left: 5%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border: 2px dashed #bbb;
+}
+
+/* line 289, style.sass */
 #options-box {
   max-height: 80%;
   overflow-y: auto;
 }
 
-/* line 288, style.sass */
+/* line 297, style.sass */
 #options-list {
   overflow-x: hidden;
   text-align: left;
 }
 
-/* line 293, style.sass */
+/* line 302, style.sass */
 .stochastic-rate {
   width: 50px;
   outline-width: 0px;
@@ -330,14 +341,14 @@ div.cell-icon:nth-child(2) {
   height: 15px;
 }
 
-/* line 305, style.sass */
+/* line 314, style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 65px;
   top: 30px;
 }
 
-/* line 310, style.sass */
+/* line 319, style.sass */
 .button-style-1 {
   background-color: #00b8ff;
   color: white;
@@ -352,7 +363,7 @@ div.cell-icon:nth-child(2) {
   border-bottom: 2px solid #00b8ff;
 }
 
-/* line 324, style.sass */
+/* line 333, style.sass */
 .button-style-2 {
   padding: 5px;
   background-color: #00b8ff;
@@ -367,7 +378,7 @@ div.cell-icon:nth-child(2) {
   font-size: 110%;
 }
 
-/* line 338, style.sass */
+/* line 347, style.sass */
 #view-p-desc {
   background-color: grey;
   color: white;
@@ -384,7 +395,7 @@ div.cell-icon:nth-child(2) {
   font-size: 70%;
 }
 
-/* line 353, style.sass */
+/* line 362, style.sass */
 #view-desc-plate {
   margin-left: 50px;
   background-color: grey;
@@ -393,7 +404,7 @@ div.cell-icon:nth-child(2) {
   padding: 10px;
 }
 
-/* line 360, style.sass */
+/* line 369, style.sass */
 #view-desc-body {
   width: 300px;
   float: right;
@@ -402,7 +413,7 @@ div.cell-icon:nth-child(2) {
   position: absolute;
 }
 
-/* line 367, style.sass */
+/* line 376, style.sass */
 #text-p-desc {
   height: 200px;
   resize: none;
@@ -415,13 +426,13 @@ div.cell-icon:nth-child(2) {
   letter-spacing: 1px;
 }
 
-/* line 378, style.sass */
+/* line 387, style.sass */
 #site-controller-body {
   border: 3px solid grey;
   height: 200px;
 }
 
-/* line 382, style.sass */
+/* line 391, style.sass */
 .text-field-style-1 {
   border: none;
   outline-width: 0px;
@@ -431,7 +442,7 @@ div.cell-icon:nth-child(2) {
   padding: 4px;
 }
 
-/* line 390, style.sass */
+/* line 399, style.sass */
 .text-area-style-1 {
   border: none;
   outline-width: 0px;
@@ -441,7 +452,7 @@ div.cell-icon:nth-child(2) {
   width: calc( 100% - 20px );
 }
 
-/* line 400, style.sass */
+/* line 409, style.sass */
 .submit-field-style-1 {
   width: 70px;
   border: none;
@@ -451,7 +462,7 @@ div.cell-icon:nth-child(2) {
   font-family: "Open Sans", sans-serif;
 }
 
-/* line 408, style.sass */
+/* line 417, style.sass */
 .box {
   display: none;
   background-color: #00b8ff;
@@ -468,7 +479,7 @@ div.cell-icon:nth-child(2) {
   left: calc( 50% - 125px );
 }
 
-/* line 424, style.sass */
+/* line 433, style.sass */
 .grand-box {
   width: 800px;
   height: 500px;
@@ -477,29 +488,29 @@ div.cell-icon:nth-child(2) {
   box-shadow: 0px 0px 20px dimgrey;
 }
 
-/* line 431, style.sass */
+/* line 440, style.sass */
 .zindex-error {
   z-index: 6;
 }
 
-/* line 434, style.sass */
+/* line 443, style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 439, style.sass */
+/* line 448, style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 442, style.sass */
+/* line 451, style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 445, style.sass */
+/* line 454, style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -507,7 +518,7 @@ div.cell-icon:nth-child(2) {
   float: right;
 }
 
-/* line 451, style.sass */
+/* line 460, style.sass */
 #add-project-opt {
   background-color: grey;
   cursor: pointer;
@@ -517,7 +528,7 @@ div.cell-icon:nth-child(2) {
   border-radius: 2px;
 }
 
-/* line 459, style.sass */
+/* line 468, style.sass */
 div .delete_button {
   position: absolute;
   right: 5px;
@@ -525,7 +536,7 @@ div .delete_button {
   color: red;
 }
 
-/* line 465, style.sass */
+/* line 474, style.sass */
 #source-target-clear {
   position: absolute;
   right: 5px;
@@ -533,33 +544,33 @@ div .delete_button {
   color: red;
 }
 
-/* line 471, style.sass */
+/* line 480, style.sass */
 #main_view_control {
   background-color: #aaa;
   padding: 5px;
 }
 
-/* line 475, style.sass */
+/* line 484, style.sass */
 #save-project-opt {
   background-color: #4cd2bb;
 }
 
-/* line 478, style.sass */
+/* line 487, style.sass */
 #save-project-opt:hover {
   background-color: lightblue;
 }
 
-/* line 481, style.sass */
+/* line 490, style.sass */
 #get-str-opt {
   background-color: #4cd2bb;
 }
 
-/* line 484, style.sass */
+/* line 493, style.sass */
 #get-str-opt:hover {
   background-color: lightblue;
 }
 
-/* line 487, style.sass */
+/* line 496, style.sass */
 #diagram-title {
   color: black;
   height: 30px;
@@ -573,12 +584,12 @@ div .delete_button {
   margin-bottom: 7px;
 }
 
-/* line 500, style.sass */
+/* line 509, style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 503, style.sass */
+/* line 512, style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -589,14 +600,14 @@ div .delete_button {
   background-repeat: no-repeat;
 }
 
-/* line 512, style.sass */
+/* line 521, style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 517, style.sass */
+/* line 526, style.sass */
 .mini-opt-links {
   color: #ffffff;
   letter-spacing: 2px;
@@ -607,14 +618,14 @@ div .delete_button {
   cursor: pointer;
 }
 
-/* line 526, style.sass */
+/* line 535, style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 531, style.sass */
+/* line 540, style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -622,7 +633,7 @@ div .delete_button {
   text-decoration: underline;
 }
 
-/* line 537, style.sass */
+/* line 546, style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -636,7 +647,7 @@ div .delete_button {
   color: salmon;
 }
 
-/* line 549, style.sass */
+/* line 558, style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -645,7 +656,7 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 556, style.sass */
+/* line 565, style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -654,7 +665,7 @@ div .delete_button {
   left: 80px;
 }
 
-/* line 563, style.sass */
+/* line 572, style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -662,7 +673,7 @@ div .delete_button {
   padding-top: 20px;
 }
 
-/* line 569, style.sass */
+/* line 578, style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -670,31 +681,31 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 576, style.sass */
+/* line 585, style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 580, style.sass */
+/* line 589, style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 585, style.sass */
+/* line 594, style.sass */
 input.control {
   max-width: 15px;
 }
 
-/* line 592, style.sass */
+/* line 601, style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 596, style.sass */
+/* line 605, style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -705,7 +716,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 605, style.sass */
+/* line 614, style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -715,14 +726,14 @@ input.control {
   position: fixed;
 }
 
-/* line 613, style.sass */
+/* line 622, style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 618, style.sass */
+/* line 627, style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -731,7 +742,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 625, style.sass */
+/* line 634, style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -740,18 +751,18 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 632, style.sass */
+/* line 641, style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 636, style.sass */
+/* line 645, style.sass */
 .button-style-3:hover {
   background-color: lightblue;
 }
 
-/* line 639, style.sass */
+/* line 648, style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -760,7 +771,7 @@ input.control {
   width: 100px;
 }
 
-/* line 646, style.sass */
+/* line 655, style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -771,24 +782,24 @@ input.control {
   z-index: 1;
 }
 
-/* line 655, style.sass */
+/* line 664, style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 658, style.sass */
+/* line 667, style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 661, style.sass */
+/* line 670, style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 667, style.sass */
+/* line 676, style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -797,14 +808,14 @@ input.control {
   font-weight: bold;
 }
 
-/* line 674, style.sass */
+/* line 683, style.sass */
 #forgot-pass-opt {
   font-size: 70%;
   color: lightblue;
   cursor: pointer;
 }
 
-/* line 679, style.sass */
+/* line 688, style.sass */
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;
@@ -818,7 +829,7 @@ input.control {
   padding-bottom: 3px;
 }
 
-/* line 689, style.sass */
+/* line 698, style.sass */
 #loading-window {
   width: 400px;
   height: 150px;
@@ -832,18 +843,18 @@ input.control {
   z-index: 10;
 }
 
-/* line 701, style.sass */
+/* line 710, style.sass */
 div.loading-detail {
   margin: 20px;
   overflow: hidden;
 }
 
-/* line 705, style.sass */
+/* line 714, style.sass */
 #loading-title {
   padding: 15px;
 }
 
-/* line 708, style.sass */
+/* line 717, style.sass */
 #source-target-window {
   position: absolute;
   right: 20;
@@ -854,7 +865,7 @@ div.loading-detail {
   width: 150px;
 }
 
-/* line 720, style.sass */
+/* line 729, style.sass */
 #source-target-diagram {
   height: 100px;
   width: 100px;
@@ -866,7 +877,7 @@ div.loading-detail {
   border-radius: 2px;
 }
 
-/* line 730, style.sass */
+/* line 739, style.sass */
 #source-target-diagram > svg {
   display: block;
   margin: 0 auto;

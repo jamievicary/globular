@@ -972,12 +972,15 @@ Project.prototype.restrictUI = function() {
 }
 
 Project.prototype.exportUI = function() {
-    var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
-    show_msg(msg, false, 3);
+    download($('#diagram-title').val() + '.json', this.compressedString());
+}
+
+Project.prototype.compressedString = function() {
+    return JSON.stringify(globular_lz4_compress(this.currentString()));
 }
 
 Project.prototype.saveUI = function() {
-    var currentString = this.currentString(true);
+    var string = this.compressedString();
     $.post("/c-loggedin", {
             valid: true
         },
@@ -986,9 +989,9 @@ Project.prototype.saveUI = function() {
                 show_msg("Please log in to save this project.", 7000, 3);
                 return;
             }
-            var compressed_string = JSON.stringify(globular_lz4_compress(currentString));
+            //var compressed_string = JSON.stringify(globular_lz4_compress(currentString));
             $.post("/save_project_changes", {
-                string: compressed_string,
+                string: string,
                 p_id: global_p_id,
                 p_name: $("#diagram-title").val(),
                 p_desc: $("#text-p-desc").val()

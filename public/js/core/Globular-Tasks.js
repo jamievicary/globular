@@ -87,6 +87,8 @@ function cps_load_project(string) {
 }
 
 function cps_constructor(string) {
+    gProject = null;
+    MainDisplay.visible_diagram = null;
     gProject = new Project(string);
     if (gProject.signature.getNCells(0).length == 0) gProject.addZeroCell();
 }
@@ -150,19 +152,9 @@ function cps_import_cell(generator) {
     var tasks = [];
 
     tasks.push({
-        f: cps_prepare_diagram,
-        arg: generator.source
-    });
-
-    tasks.push({
-        f: cps_prepare_diagram,
-        arg: generator.target
-    })
-
-    tasks.push({
-        f: cps_construct_generator_diagram,
+        f: cps_prepare_generator,
         arg: generator
-    })
+    });
 
     tasks.push({
         f: cps_render_cell,
@@ -172,8 +164,8 @@ function cps_import_cell(generator) {
     return tasks;
 }
 
-function cps_construct_generator_diagram(generator) {
-    generator.prepareDiagram();
+function cps_prepare_generator(generator) {
+    generator.prepare();
 }
 
 function cps_prepare_diagram(diagram) {

@@ -5,6 +5,7 @@ var gProject = {
 var MainDisplay = null;
 var global_p_id = '';
 var timeout = null;
+var new_project_text = '';
 
 //function for producing all pop ups/errors
 var original_msg_html = '<br><div id="msg-close-opt-err" class="msg-close-opt">Close</div>';
@@ -783,7 +784,7 @@ $(document).ready(function() {
             $("#add-project-submit").click(function() {
                 var p_name = $("#ap-name").val();
                 var p_desc = $("#proj_desc").val();
-                var main_string = $("#ap-string").val();
+                var main_string = new_project_text;
                 $.post("/add_new_project", {
                     p_name: p_name,
                     p_desc: p_desc,
@@ -819,11 +820,41 @@ $(document).ready(function() {
         var addNewProjectHTML = "<div id='add-project-opt'>" +
             "<div id = 'addp-title'>New workspace +</div>" +
             "<input type='text' placeholder='Workspace name' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>" +
-            "<textarea id='ap-string' class='text-area-style-1' placeholder='Default string (optional)'  style='width: 90%;margin-top:10px;'></textarea>" +
+            "<div id='drop_zone'>Drop workspace JSON here (optional)</div>" +
             "<textarea id='proj_desc' class='text-area-style-1' placeholder='Description (optional)'  style='width: 90%;height: 80px;'></textarea>" +
             "<input type='button' id='add-project-submit' class='submit-field-style-1' value='Add'>" +
             "</div>";
         $("#pl-addnew").html(addNewProjectHTML);
+
+        // Set up drop zone
+        new_project_text = "";
+        var dropZone = document.getElementById('drop_zone');
+        dropZone.addEventListener('dragover', handleDragOver, false);
+        dropZone.addEventListener('drop', handleFileSelect, false);
+
+        function handleFileSelect(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            var files = evt.dataTransfer.files;
+            if (files.length == 0) return;
+            var reader = new FileReader();
+            $('#add-project-submit').prop('disabled', true);
+            (function(upload_file) {
+                reader.onload = function(e) {
+                    new_project_text = e.target.result;
+                    $('#add-project-submit').prop('disabled', false);
+                    $('#drop_zone').html(upload_file.name);
+                }
+            })(files[0]);
+            reader.readAsText(files[0]);
+        }
+
+        function handleDragOver(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+        }
+
 
         $("#ap-name").keypress(function(e) {
             e.stopPropagation()

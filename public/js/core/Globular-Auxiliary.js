@@ -435,8 +435,6 @@ var LZ4 = require('lz4');
 
 function globular_lz4_compress(string) {
     var timer = new Timer('globular_lz4_compress');
-    var Buffer = require('buffer').Buffer;
-    var LZ4 = require('lz4');
     console.log('  string.length = ' + string.length);
     var uncompressed = string + string;
     var input = new Buffer(uncompressed);
@@ -482,4 +480,14 @@ function Uint8ToString(u8a){
         c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
     }
     return c.join("");
+}
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
 }
