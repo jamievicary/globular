@@ -579,6 +579,7 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
 // Render a generator
 Project.prototype.renderGenerator = function(div, id) {
     var generator = this.signature.getGenerator(id);
+    if (generator.diagram == null) generator.prepareDiagram();
     this.render(div, generator.diagram);
 }
 
