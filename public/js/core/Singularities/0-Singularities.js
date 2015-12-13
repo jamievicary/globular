@@ -68,6 +68,11 @@ Diagram.prototype.expand = function(type, start, n, m) {
     return ((this.expand[family]).bind(this))(type, start, n, m);
 }
 
+Diagram.prototype.pseudoExpand = function(type, box, side_wires) {
+    var family = GetSingularityFamily(type);
+    return ((this.pseudoExpand[family]).bind(this))(box, side_wires);
+}
+
 Diagram.prototype.getInterchangerCoordinates = function(type, key) {
     var family = GetSingularityFamily(type);
     if (family === undefined) throw 0;

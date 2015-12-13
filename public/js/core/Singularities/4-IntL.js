@@ -44,9 +44,9 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     } else if (n === 1 && m === 1) {
         if (a === 0 && b === 0) {
             if (type.tail('I')) {
-                list.push(new NCell(type, null, [x + 1]));
+                list.push(new NCell({id: type, key: [x + 1]}));
             } else {
-                list.push(new NCell(type, null, [x]));
+                list.push(new NCell({id: type, key: [x]}));
             }
         } else {
             list = this.expand(new_type, x, 1, a * m).concat(
@@ -83,8 +83,8 @@ Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
     var count = 0;
     var l = box.max.penultimate() - box.min.penultimate();
     for(var i = box.min.last(); i < box.max.last(); i++){
-        var left_wires = this.nCells[i].coordinates.last() - box.min.penultimate();
-        var right_wires = box.min.penultimate() + l - this.nCells[i].coordinates.last() - this.source_size(i);
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = box.min.penultimate() + l - this.cells[i].key.last() - this.source_size(i);
         count += (left_wires + right_wires + 1) * side_wires;
         l += (this.target_size(i) - this.source_size(i));
     }

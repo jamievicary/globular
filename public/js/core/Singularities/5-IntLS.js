@@ -18,7 +18,11 @@ RegisterSingularityFamily({
     'Int-R-S', 'Int-R-SI',
     'IntI-R-S', 'IntI-R-SI',
     'Int-RI-S', 'Int-RI-SI',
-    'IntI-RI-S', 'IntI-RI-SI']
+    'IntI-RI-S', 'IntI-RI-SI'],
+    friendly: {
+        'Int-L-S': 'Pull-through pull-through interchanger above',
+    }
+
 });
 
 
@@ -27,6 +31,8 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.cells[key.last()];
     var box = this.getSliceBoundingBox(key.last())
+    
+    var steps_back = this.pseudoExpand('Int-L', box, 1);
 
     var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last() // key.last();
     var y = box.min.penultimate() - 1;
@@ -34,7 +40,7 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
     
-    var source = this.getSlice(coord.last()).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
+    var source = this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
     
     if (type == 'Int-L-S') return {
         list: source,
@@ -48,17 +54,30 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
 Diagram.prototype.getTarget.IntLS = function(type, key) {
     
     var coord = this.getInterchangerCoordinates(type, key);
-    var cell = this.cells[key.last()];
+    var cell = this.cells[key.last()].copy();
     var box = this.getSliceBoundingBox(key.last())
-
-    var x = coord.penultimate();
-    var y = coord.end(2); // 3rd from the en
-    var n = this.target_size(key.last());
+    
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
+
+    var steps_back = this.pseudoExpand('Int-L', box, 1);
     
-    if (type == 'Int-L-S') return [cell.move([{relative: -1}, {absolute: coord.penultimate()}])].concat(
-        this.getSlice(coord.last()).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
+    
+    cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
+    
+    var alpha_box = this.getSlice(key.last() - steps_back).getBoundingBox(cell);
+
+    alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last())
+
+    var x = alpha_box.min.penultimate();
+    var y = alpha_box.min.end(2); // 3rd from the en
+    var n = alpha_box.max.last() - alpha_box.min.last() //this.target_size(key.last());
+    var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
+    var m = 1;
+
+
+    if (type == 'Int-L-S') return [cell].concat(
+        this.getSlice(key.last() - steps_back).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
     
     //if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
     alert ('Interchanger ' + type + ' not yet handled');
@@ -123,46 +142,22 @@ Diagram.prototype.getInterchanger.IntLS = function(type, key) {
 */
 
 Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
-    
-    var x = key.last();
-    var coords = this.getInterchangerCoordinates(type, key);
-    if (type.tail('L-S')) return {min: coords, max: coords.slice().move([{relative: this.source_size(x) + 1}, {relative: this.target_size(x) + 1}])};
 
+    var box = this.getSliceBoundingBox(key.last());
+    var steps_back = this.pseudoExpand('Int-L', box, 1);
+    
+    
+    var alpha_box = this.getLocationBoundingBox(key.last());
+    var edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+                box.min.last() - (box.max.penultimate() - box.min.penultimate()),
+                key.last() - steps_back]);
+
+    return this.unionBoundingBoxes(alpha_box, edge_box);
 }
 
 
 Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
-
-    var diagram_pointer = this;
-    var new_key = key.last();
-    var h = key.last();
-    var cell = this.cells[h];
-    var coords = cell.box.min.slice(0);
-    coords.push(h);
-
-    return coords;
-    
-/*
-    if (type.tail('Int-L-S', 'IntI-L')) {
-        return coords;
-    } else if (type.tail('Int-LI', 'IntI-LI')) {
-        return coords.move([{
-            relative: -1
-        }, {
-            relative: -this.source_size(h)
-        }]);
-    } else if (type.tail('Int-R', 'IntI-R')) {
-        return coords.move([{
-            relative: -1
-        }, {
-            relative: 0
-        }]);
-    } else if (type.tail('Int-RI', 'IntI-RI')) {
-        return coords.move([{
-            relative: -this.source_size(h)
-        }])
-    }
-*/
+    return this.getInterchangerBoundingBox(type, key).min;
 }
 
 
