@@ -64,26 +64,131 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var cell = this.cells[key.last()].copy();
     var box = this.getSliceBoundingBox(key.last());
 
-    var steps_back = 0;
-    if(!type.tail('I')) steps_back = this.pseudoExpand(subtype, box, 1);
+    var steps = this.pseudoExpand(subtype, box, 1);
+//    if(!type.tail('I')) steps_back = this.pseudoExpand(subtype, box, 1);
 
-    var alpha_box = this.getSlice(key.last() - steps_back).getBoundingBox(cell);
-    var x, y, n, l;
+    var alpha_box = this.getSlice(key.last() - steps).getBoundingBox(cell);
+    
+    //    alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last());
+    var x = alpha_box.min.penultimate();
+    var y = alpha_box.min.end(2); // 3rd from the end
+    var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
+    
+    var n = alpha_box.max.last() - alpha_box.min.last() 
     var m = 1;
 
     if (type == 'Int-L-S') {
-        alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last());
-        x = alpha_box.min.penultimate();
-        y = alpha_box.min.end(2); // 3rd from the end
-        n = alpha_box.max.last() - alpha_box.min.last();
-        l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
-        
+        n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
+        
         return [cell].concat(
-        this.getSlice(key.last() - steps_back).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
+        this.getSlice(key.last() - steps).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
     }
-    if (type == 'IntI-L-S') return [cell].concat(
-        this.getSlice(key.last() - steps_back).rewrite(cell).expand('IntI-L', {up: x, across: y, length: l}, n, m));
+    if (type == 'IntI-L-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)},
+                    {relative: -m}, {relative: -l}]);
+       
+        return [cell].concat(
+        this.getSlice(key.last() - steps).rewrite(cell).expand('IntI-L', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'Int-LI-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: 0}, {relative: m}, {relative: l}]);
+        
+        return [cell].concat(
+            this.getSlice(key.last() - steps).rewrite(cell).expand('Int-LI', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'IntI-LI-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)},
+                    {relative: m}, {relative: l}]);
+       
+        return [cell].concat(
+        this.getSlice(key.last() - steps).rewrite(cell).expand('IntI-LI', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'Int-R-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)},
+                    {relative: m}, {relative: -l}]);
+        
+        return [cell].concat(
+        this.getSlice(key.last() - steps).rewrite(cell).expand('Int-R', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'IntI-R-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: 0}, {relative: m}, {relative: -l}]);
+       
+        return [cell].concat(
+        this.getSlice(key.last() - steps).rewrite(cell).expand('IntI-R', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'Int-RI-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1)},
+                     {relative: -m}, {relative: l}]);
+        
+        return [cell].concat(
+            this.getSlice(key.last() - steps).rewrite(cell).expand('Int-RI', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'IntI-RI-S') {
+        n += this.target_size(key.last()) - this.source_size(key.last());
+        cell.move([{relative: 0}, {relative: -m}, {relative: l}]);
+       
+        return [cell].concat(
+        this.getSlice(key.last() - steps).rewrite(cell).expand('IntI-RI', {up: x, across: y, length: l}, n, m));
+    }
+    if (type == 'Int-L-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: 0}, {relative: m}, {relative: l}]);
+        
+        return this.getSlice(key.last()).expand('Int-L', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'IntI-L-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)},
+                    {relative: m}, {relative: l}]);
+       
+        return this.getSlice(key.last()).expand('IntI-L', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'Int-LI-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
+        
+        return this.getSlice(key.last()).expand('Int-LI', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'IntI-LI-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)},
+                    {relative: -m}, {relative: -l}]);
+       
+        return this.getSlice(key.last()).expand('IntI-LI', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'Int-R-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1)},
+                     {relative: m}, {relative: -l}]);
+        
+        return this.getSlice(key.last()).expand('Int-R', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'IntI-R-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: 0}, {relative: m}, {relative: -l}]);
+       
+         return this.getSlice(key.last()).expand('IntI-R', {up: x, across: y, length: l}, n, m).concat[cell];
+   }
+    if (type == 'Int-RI-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)},
+                    {relative: -m}, {relative: l}]);
+        
+        return this.getSlice(key.last()).expand('Int-RI', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
+    if (type == 'IntI-RI-SI') {
+        n += this.source_size(key.last()) - this.target_size(key.last());
+        cell.move([{relative: 0}, {relative: -m}, {relative: l}]);
+       
+        return this.getSlice(key.last()).expand('IntI-RI', {up: x, across: y, length: l}, n, m).concat[cell];
+    }
     
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
@@ -136,7 +241,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     var steps = this.pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
     
     var alpha_box = this.getLocationBoundingBox(key.last());
-    var edge_box;
+    var edge_box; // Which edge exactly do we need?
     
     if (type.tail('L-S')) {
     edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
@@ -159,22 +264,22 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 key.last() + steps]);
     }
     if (type.tail('R-S')) {
-    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps]);
     }
     if (type.tail('R-SI')) {
-    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps]);
     }
     if (type.tail('RI-S')) {
-    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()), 
                 key.last() - steps]);
     }
     if (type.tail('RI-SI')) {
-    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps]);
     }
