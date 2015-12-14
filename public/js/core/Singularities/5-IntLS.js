@@ -36,64 +36,52 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var box = this.getSliceBoundingBox(key.last());
     
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
-    var steps_back = this.pseudoExpand(subtype, box, 1);
+    var steps_back = this.pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
 
-    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last();
+//    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last();
+    
+    var x = cell.key.last() + (subtype.tail('I') ? -this.getSlice(key.last()).source_size(cell.key.last()) : this.getSlice(key.last()).source_size(cell.key.last()));
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
-    
-    var source;    
-    if (type == 'Int-L-S'){
-    source = this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
-        return {
-        list: source,
-        key: source.length - 1
-        }
-    }
-    if (type == 'IntI-L-S'){
-    source = this.getSlice(key.last() - steps_back).expand('IntI-L', {up: x, across: y, length: l}, n, m).concat([cell])
-        return {
-        list: source,
-        key: source.length - 1
-        }
-    }
+
+    if (type.tail('I')) return [cell].concat(this.getSlice(key.last()).rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
+    else return this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+
+/*    
+    if (type == 'Int-L-S') return this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell]);
+    if (type == 'IntI-L-S') return this.getSlice(key.last() - steps_back).expand('IntI-L', {up: x, across: y, length: l}, n, m).concat([cell]);
     if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', x + 1, y, n, l, m));
+*/    
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
-}
+};
 
 Diagram.prototype.getTarget.IntLS = function(type, key) {
     
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
-
-    
-    var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.cells[key.last()].copy();
-    var box = this.getSliceBoundingBox(key.last())
-    
-    var l = box.max.penultimate() - box.min.penultimate();
-    var m = 1;
+    var box = this.getSliceBoundingBox(key.last());
 
-    var steps_back = this.pseudoExpand(subtype, box, 1);
-    
-    
-    cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
-    
+    var steps_back = 0;
+    if(!type.tail('I')) steps_back = this.pseudoExpand(subtype, box, 1);
+
     var alpha_box = this.getSlice(key.last() - steps_back).getBoundingBox(cell);
-
-    alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last())
-
-    var x = alpha_box.min.penultimate();
-    var y = alpha_box.min.end(2); // 3rd from the end
-    var n = alpha_box.max.last() - alpha_box.min.last() //this.target_size(key.last());
-    var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
+    var x, y, n, l;
     var m = 1;
 
-
-    if (type == 'Int-L-S') return [cell].concat(
+    if (type == 'Int-L-S') {
+        alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last());
+        x = alpha_box.min.penultimate();
+        y = alpha_box.min.end(2); // 3rd from the end
+        n = alpha_box.max.last() - alpha_box.min.last();
+        l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
+        
+        cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
+        return [cell].concat(
         this.getSlice(key.last() - steps_back).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
+    }
     if (type == 'IntI-L-S') return [cell].concat(
         this.getSlice(key.last() - steps_back).rewrite(cell).expand('IntI-L', {up: x, across: y, length: l}, n, m));
     
@@ -136,14 +124,9 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
-    // Is the key cell well-separated from the adjacent structure?
-   
-    // if (!this.wellSeparated.IntLS(type, key)) return false;
+    var source = this.getSource(type, key);
 
-    // See if the source of the rewrite is a subset of the diagram instruction list
-
-    
-    return this.subinstructions(key, this.getSource(type, key));
+    return this.subinstructions(key,  {list: source, key: source.length - 1});
 }
 
 /*

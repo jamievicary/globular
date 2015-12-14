@@ -199,7 +199,7 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     var offset_array = [];
     
     for (var i = 0; i < diagram_key_cell.key.length; i++) {
-        var offset_array = diagram_key_cell.key[i] - instructions_key_cell.key[i];
+        offset_array[i] = diagram_key_cell.key[i] - instructions_key_cell.key[i];
     }
 
     // Check the instructions match
