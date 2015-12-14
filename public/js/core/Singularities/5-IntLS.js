@@ -123,40 +123,65 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
 };
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
-
+    
     var source = this.getSource(type, key);
-
     return this.subinstructions(key,  {list: source, key: source.length - 1});
-}
+};
 
-/*
-Diagram.prototype.getInterchanger.IntLS = function(type, key) {
-    
-    var diagram_pointer = this;
-    var h = key.last();
-    var cell = this.cells[h - this.source_size(h)];
-    var coords = cell.box.min.slice(0);
-    coords.push(h - this.source_size(h));
-    
-    if (type.tail('IntI-L-S', 'Int-L-S')) {
-        return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
-    }
-}
-*/
 
 Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
 
     var box = this.getSliceBoundingBox(key.last());
-    var steps_back = this.pseudoExpand('Int-L', box, 1);
-    
+    var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+    var steps = this.pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
     
     var alpha_box = this.getLocationBoundingBox(key.last());
-    var edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+    var edge_box;
+    
+    if (type.tail('L-S')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+                box.min.last() - (box.max.penultimate() - box.min.penultimate()), // we subtract the # of crossings
+                key.last() - steps]);
+    }
+    if (type.tail('L-SI')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+                box.min.last() + (box.max.penultimate() - box.min.penultimate()),
+                key.last() + steps]);
+    }
+    if (type.tail('LI-S')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+                box.min.last() + (box.max.penultimate() - box.min.penultimate()), 
+                key.last() - steps]);
+    }
+    if (type.tail('LI-SI')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
-                key.last() - steps_back]);
-
+                key.last() + steps]);
+    }
+    if (type.tail('R-S')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+                box.min.last() - (box.max.penultimate() - box.min.penultimate()),
+                key.last() - steps]);
+    }
+    if (type.tail('R-SI')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+                box.min.last() + (box.max.penultimate() - box.min.penultimate()),
+                key.last() + steps]);
+    }
+    if (type.tail('RI-S')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
+                box.min.last() + (box.max.penultimate() - box.min.penultimate()), 
+                key.last() - steps]);
+    }
+    if (type.tail('RI-SI')) {
+    edge_box = this.getLocationBoundingBox([box.max.penultimate() - 1, 
+                box.min.last() - (box.max.penultimate() - box.min.penultimate()),
+                key.last() + steps]);
+    }
+    
+    
     return this.unionBoundingBoxes(alpha_box, edge_box);
-}
+};
 
 
 Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
