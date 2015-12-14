@@ -38,9 +38,8 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
     var steps_back = this.pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
 
-//    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last();
-    
-    var x = cell.key.last() + (subtype.tail('I') ? -this.getSlice(key.last()).source_size(cell.key.last()) : this.getSlice(key.last()).source_size(cell.key.last()));
+
+    var x = cell.key.last() + (subtype.tail('I') ? this.getSlice(key.last()).source_size(cell.key.last()) : -this.getSlice(key.last()).source_size(cell.key.last()));
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
@@ -228,6 +227,15 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
 };
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
+    
+    /*  Need clauses for separation from sides of the diagram
+    
+    var space_above = (x < this.cells.length - g1_target);
+    var space_below = (x >= g1_source);
+    var space_left = (coords.last() > 0);
+    var space_right = (coords.last() + g1_source < slice.cells.length);
+    
+    */
     
     var source = this.getSource(type, key);
     return this.subinstructions(key,  {list: source, key: source.length - 1});
