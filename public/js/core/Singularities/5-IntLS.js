@@ -21,6 +21,11 @@ RegisterSingularityFamily({
     'IntI-RI-S', 'IntI-RI-SI'],
     friendly: {
         'Int-L-S': 'Pull-through pull-through interchanger above',
+        'Int-L': 'Pull-through pull-through interchanger above',
+        'IntI-L': 'Pull-through pull-through interchanger underneath',
+        'Int-R': 'Pull-through pull-through inverse interchanger underneath',
+        'IntI-R': 'Pull-through pull-through inverse interchanger above'
+
     }
 
 });
@@ -40,11 +45,20 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
     
-    var source = this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
-    
-    if (type == 'Int-L-S') return {
+    var source;    
+    if (type == 'Int-L-S'){
+    source = this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell])
+        return {
         list: source,
         key: source.length - 1
+        }
+    }
+    if (type == 'IntI-L-S'){
+    source = this.getSlice(key.last() - steps_back).expand('IntI-L', {up: x, across: y, length: l}, n, m).concat([cell])
+        return {
+        list: source,
+        key: source.length - 1
+        }
     }
     if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', x + 1, y, n, l, m));
     alert ('Interchanger ' + type + ' not yet handled');
@@ -53,6 +67,14 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
 
 Diagram.prototype.getTarget.IntLS = function(type, key) {
     
+    var new_type;
+    if(type.tail('I')){
+        new_type = type.substr(0, type.length - 3)
+    }
+    else{
+        new_type = type.substr(0, type.length - 2)
+    }
+    
     var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.cells[key.last()].copy();
     var box = this.getSliceBoundingBox(key.last())
@@ -60,7 +82,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
 
-    var steps_back = this.pseudoExpand('Int-L', box, 1);
+    var steps_back = this.pseudoExpand(new_type, box, 1);
     
     
     cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
@@ -70,7 +92,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     alpha_box.max[alpha_box.max.length - 1] += this.target_size(key.last()) - this.source_size(key.last())
 
     var x = alpha_box.min.penultimate();
-    var y = alpha_box.min.end(2); // 3rd from the en
+    var y = alpha_box.min.end(2); // 3rd from the end
     var n = alpha_box.max.last() - alpha_box.min.last() //this.target_size(key.last());
     var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
     var m = 1;
@@ -78,8 +100,9 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
 
     if (type == 'Int-L-S') return [cell].concat(
         this.getSlice(key.last() - steps_back).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
+    if (type == 'IntI-L-S') return [cell].concat(
+        this.getSlice(key.last() - steps_back).rewrite(cell).expand('IntI-L', {up: x, across: y, length: l}, n, m));
     
-    //if (type == 'Int-L-SI') return this.getSlice(coord.last()).expand('Int-L', expand_data, 1, coord).push(cell);
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
 }
@@ -93,7 +116,10 @@ Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
     var up = drag.directions[0] > 0;
     var key = [drag.coordinates[0]];
-    var options = this.getDragOptions(up ? ['Int-L-SI'] : ['Int-L-S'], key);
+    var options = this.getDragOptions(up ? ['Int-L-SI', 'IntI-L-SI', 'Int-R-SI', 'IntI-R-SI', 
+                                            'Int-LI-SI', 'IntI-LI-SI', 'Int-RI-SI', 'IntI-RI-SI'] 
+                                            : ['Int-L-S', 'IntI-L-S', 'Int-R-S', 'IntI-R-S', 
+                                            'Int-LI-S', 'IntI-LI-S', 'Int-RI-S', 'IntI-RI-S'], key);
 
     // Collect the possible options
     var possible_options = [];
@@ -118,7 +144,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     // Is the key cell well-separated from the adjacent structure?
    
-// if (!this.wellSeparated.IntLS(type, key)) return false;
+    // if (!this.wellSeparated.IntLS(type, key)) return false;
 
     // See if the source of the rewrite is a subset of the diagram instruction list
 
