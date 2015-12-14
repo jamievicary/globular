@@ -118,3 +118,7 @@ Generator.prototype.usesCell = function(generator) {
     }
     return false;
 }
+
+Generator.prototype.flippable = function() {
+    return (this.id.indexOf('I1') > -1);
+}

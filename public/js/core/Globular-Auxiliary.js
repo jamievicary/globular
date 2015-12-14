@@ -218,9 +218,17 @@ String.prototype.analyze_id = function() {
     }
 }
 
-String.prototype.toggle_inverse = function() {
+String.prototype.toggle_inverse = function(depth) {
+    var I1 = this.tail('I1');
+    if (I1) this = this.substr()
     if (this.tail('I')) return this.substr(0, this.length - 1);
     return this + 'I';
+}
+
+String.prototype.strip_inverses = function() {
+    if (this.substr(this.length - 1) == 'I') this = this.substr(0, this.length - 1);
+    if (this.substr(this.length - 2) == 'I1') this = this.substr(0, this.length - 2);
+    if (this.substr(this.length - 2) == 'I0') this = this.substr(0, this.length - 2);
 }
 
 String.prototype.repeat = function(n) {

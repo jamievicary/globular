@@ -101,6 +101,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
                 possible: true
             });
         }
+        
         // What about the target
         var matches = this.enumerate(generator.target);
         for (var j = 0; j < matches.length; j++) {
@@ -108,6 +109,31 @@ Diagram.prototype.interpretClickInverses = function(drag) {
             //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
                 id: cells[i] + 'I',
+                key: matches[j],
+                possible: true
+            });
+        }
+        
+        // What about the flip, if possible
+        if (!generator.flippable()) continue;
+        
+        // Match the flip
+        var matches = this.enumerate(generator.getFlipSource());
+        for (var j = 0; j < matches.length; j++) {
+            if (!matches[j].tail(drag.coordinates)) continue;
+            results.push({
+                id: cells[i] + 'I1',
+                key: matches[j],
+                possible: true
+            });
+        }
+
+        // Match the flip inverse
+        var matches = this.enumerate(generator.getFlipSource());
+        for (var j = 0; j < matches.length; j++) {
+            if (!matches[j].tail(drag.coordinates)) continue;
+            results.push({
+                id: cells[i] + 'I0I1',
                 key: matches[j],
                 possible: true
             });
@@ -161,7 +187,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
 Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
 
     // This procedure only recognizes '-E' or '-EI' type moves
-    if (!type.tail('-EI', '-E')) return false;
+    if (!type.strip_inverses().tail('-E')) return false;
 
     var height = key.last();
 
