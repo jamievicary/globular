@@ -832,7 +832,7 @@ Project.prototype.relatedCells = function(id) {
     for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
         var generator = this.signature.getGenerator(cell);
-        if (generator.usesCell(id)) {
+        if (generator.usesCell(generator)) {
             related_cells.push(cell);
             related_cells = related_cells.concat(this.relatedCells(cell));
         }

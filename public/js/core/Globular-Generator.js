@@ -106,10 +106,15 @@ Generator.prototype.getSourceLengths = function() {
     return this.source.getLengthsAtSource();
 }
 
-Generator.prototype.usesCell = function(id) {
+Generator.prototype.usesCell = function(generator) {
+    
+    // Generators can only use cells which have a lower dimension
+    if (generator.getDimension() >= this.getDimension()) return false;
+    
+    // The generator uses the specified cell iff the source or target uses it
     if (this.source != null) {
-        if (this.source.usesCell(id)) return true;
-        if (this.target.usesCell(id)) return true;
+        if (this.source.usesCell(generator.id)) return true;
+        if (this.target.usesCell(generator.id)) return true;
     }
     return false;
 }

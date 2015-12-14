@@ -491,3 +491,8 @@ function download(filename, text) {
     element.click();
     document.body.removeChild(element);
 }
+
+
+function json_replacer(key, value) {
+    return value;
+}

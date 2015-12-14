@@ -5,7 +5,7 @@
 */
 
 function globular_stringify(object) {
-    return JSON.stringify(object);
+    return JSON.stringify(object, json_replacer);
     /*
     if (minimize == undefined) minimize = false;
     var raw = globular_raw(object, minimize);
