@@ -26,7 +26,6 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var l = data.length;
 
     var list = new Array();
-    var new_type;
     var new_l = l + (this.target_size(x) - this.source_size(x));
     var final_l = l;
     for (var i = 0; i < n; i++) {
@@ -34,11 +33,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     }
     var b = this.cells[x].box.min.last() - y;
     var a = y + l - this.cells[x].box.min.last() - this.source_size(x);
-    if (type.tail('I')) {
-        new_type = type.substr(0, type.length - 3)
-    } else {
-        new_type = type.substr(0, type.length - 2)
-    }
+    var new_type = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+
     if (n === 0 || m === 0) {
         return [];
     } else if (n === 1 && m === 1) {

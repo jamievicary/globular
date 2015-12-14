@@ -21,10 +21,9 @@ RegisterSingularityFamily({
     'IntI-RI-S', 'IntI-RI-SI'],
     friendly: {
         'Int-L-S': 'Pull-through pull-through interchanger above',
-        'Int-L': 'Pull-through pull-through interchanger above',
-        'IntI-L': 'Pull-through pull-through interchanger underneath',
-        'Int-R': 'Pull-through pull-through inverse interchanger underneath',
-        'IntI-R': 'Pull-through pull-through inverse interchanger above'
+        'IntI-L-S': 'Pull-through pull-through interchanger underneath',
+        'Int-R-S': 'Pull-through pull-through inverse interchanger underneath',
+        'IntI-R-S': 'Pull-through pull-through inverse interchanger above'
 
     }
 
@@ -33,13 +32,13 @@ RegisterSingularityFamily({
 
 Diagram.prototype.getSource.IntLS = function(type, key) {
     
-    var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.cells[key.last()];
-    var box = this.getSliceBoundingBox(key.last())
+    var box = this.getSliceBoundingBox(key.last());
     
-    var steps_back = this.pseudoExpand('Int-L', box, 1);
+    var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+    var steps_back = this.pseudoExpand(subtype, box, 1);
 
-    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last() // key.last();
+    var x = this.getSlice(key.last()).getInverseKey('Int-LI', cell.key).last();
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
@@ -67,13 +66,8 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
 
 Diagram.prototype.getTarget.IntLS = function(type, key) {
     
-    var new_type;
-    if(type.tail('I')){
-        new_type = type.substr(0, type.length - 3)
-    }
-    else{
-        new_type = type.substr(0, type.length - 2)
-    }
+    var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+
     
     var coord = this.getInterchangerCoordinates(type, key);
     var cell = this.cells[key.last()].copy();
@@ -82,7 +76,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
 
-    var steps_back = this.pseudoExpand(new_type, box, 1);
+    var steps_back = this.pseudoExpand(subtype, box, 1);
     
     
     cell.move([{relative: 0}, {relative: -m}, {relative: -l}]);
