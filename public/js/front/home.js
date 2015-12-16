@@ -231,7 +231,8 @@ $(document).ready(function() {
         $("#login-box").fadeOut();
     });
     $("#msg-close-opt-cell").click(function() {
-        $("#options-box").fadeOut();
+        //$("#options-box").fadeOut();
+        $("#options-box").show();
     });
     $("#msg-close-opt-fp").click(function() {
         $("#forgot-pass-box").fadeOut();
@@ -486,7 +487,9 @@ $(document).ready(function() {
         if (listType == 2 || listType == 3) {
             $("#pl-addnew").html("");
         }
-        $("#gallery-box").fadeIn();
+        //$("#gallery-box").fadeIn();
+        var gallerybox = $('#gallery-box');
+        gallerybox.show();
 
         $.post("/get_project_list", {
             listType: listType,

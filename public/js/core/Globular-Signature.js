@@ -53,18 +53,26 @@ Signature.prototype.addGenerator = function (generator) {
 // Returns a generator with a given id, regardless of the level of where this generator is
 Signature.prototype.getGenerator = function (id) {
     var sig = this;
-    var reverse = false;
-    if (id.last() == 'I') {
-        id = id.substr(0, id.length - 1);
-        reverse = true;
+    var i0 = false;
+    var i1 = false;
+    if (id.tail('I1')) {
+        i1 = true;
+        id = id.chop(2);
     }
+    if (id.tail('I0')) {
+        i0 = true;
+        id = id.chop(2);
+    }
+    
     while (sig != null) {
         if (sig.cells[id] != null) {
             var generator = sig.cells[id];
-            if (reverse) {
-                return generator.copy().swapSourceTarget();
+            if (i0 || i1) {
+                generator = generator.copy();
+                if (i0) generator.mirror(0);
+                if (i1) generator.mirror(1);
             }
-            else return generator;
+            return generator;
         }
         sig = sig.sigma;
     }
@@ -110,7 +118,6 @@ Signature.prototype.getCells = function() {
     return Object.keys(this.cells);
 };
 
-/*
 Signature.prototype.prepare = function() {
     var cell_names = this.getCells();
     if (this.sigma != null) this.sigma.prepare();
@@ -127,7 +134,6 @@ Signature.prototype.prepare = function() {
         generator.prepareDiagram();
     }
 }
-*/
 
 Signature.prototype.removeCell = function(id) {
     if (this.cells[id] != undefined) {

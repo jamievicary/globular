@@ -390,9 +390,11 @@ Display.prototype.update_controls = function(boundary, controls) {
 }
 
 Display.prototype.control_change = function() {
+    var timer = new Timer('Display.control_change');
     gProject.clearThumbnails();
     this.update_controls();
     this.render();
+    timer.Report();
 }
 
 // Create the control panel, only called in the constructor
@@ -506,8 +508,10 @@ Display.prototype.update_slice_container = function(drag, controls) {
             .hover(
                 // Mouse over
                 function() {
+                    var timer = new Timer('mouse over slicer')
                     this.focus();
                     self.highlight_slice(Number(this.getAttribute('index')));
+                    timer.Report();
                     /*
                     if (Number(this.getAttribute('index')) == self.slices.length - 1) {
                         self.highlight_next_slice();
@@ -516,7 +520,9 @@ Display.prototype.update_slice_container = function(drag, controls) {
                 },
                 // Mouse out
                 function() {
+                    var timer = new Timer('mouse out of slicer');
                     self.remove_highlight();
+                    timer.Report();
                 });
 
         // Store the index of the slice control

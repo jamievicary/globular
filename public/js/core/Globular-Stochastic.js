@@ -246,7 +246,7 @@ Diagram.prototype.getInterchangers = function() {
             });
         }
         if (this.interchangerAllowed({
-                id: 'IntI',
+                id: 'IntI0',
                 key: temp_coordinates
             })) {
             interchangers.push({
