@@ -181,7 +181,7 @@ String.prototype.getBaseType = function() {
 String.prototype.getSignatureType = function() {
     if (this.tail('I0')) return this.chop(2).getSignatureType();
     if (this.tail('I1')) return this.chop(2).getSignatureType();
-    if (this.tail('-E')) return this.substr(0, this.length - 2).getSignatureType();
+    if (this.tail('-E')) return this.chop(2).getSignatureType();
     if (gProject.signature.getGenerator(this) == null) return null;
     return this;
 }

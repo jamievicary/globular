@@ -1078,7 +1078,14 @@ Diagram.prototype.usesCell = function(generator) {
     for (var i = 0; i < this.cells.length; i++) {
         if (this.cells[i].id.getSignatureType() == generator.id) return true;
     }
+    
+    // Check whether the source uses it
+    if (this.source != null) if (this.source.usesCell(generator)) return true;
+    
+    // If not, we're clear
+    return false;
 
+    /*
     // Check all the slices
     for (var i = 0; i < this.cells.length + 1; i++) {
         var slice = this.getSlice(i); // no need to copy slice
@@ -1086,8 +1093,8 @@ Diagram.prototype.usesCell = function(generator) {
             if (slice.usesCell(generator)) return true;
         }
     }
-
     return false;
+    */
 };
 
 // Reflect a diagram in the nth way

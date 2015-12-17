@@ -232,7 +232,7 @@ $(document).ready(function() {
     });
     $("#msg-close-opt-cell").click(function() {
         //$("#options-box").fadeOut();
-        $("#options-box").show();
+        $("#options-box").hide();
     });
     $("#msg-close-opt-fp").click(function() {
         $("#forgot-pass-box").fadeOut();
@@ -297,6 +297,7 @@ $(document).ready(function() {
             $("#diagram-title").val("My workspace");
         } else {
             global_p_id = event.state.global_p_id;
+            if (global_p_id == undefined) global_p_id = '';
             render_project_front(JSON.parse(event.state.string));
         }
     };
@@ -544,7 +545,6 @@ $(document).ready(function() {
                         shareOptHTML = "<span class = 'share-project-opt' id = 'share-p" + pIDu + "'>Share</span>";
                         ppOptHTML = "<div class = 'pp-opts'>" + publishOptHTML + shareOptHTML + delProjectHTML + "</div>";
                     }
-
 
                     var listComponents = "<div id = '" + pIDu + "' class = 'gallery-pcomp' link = '" + pIDu + "'>" +
                         "<b style = 'color: dimgrey;font-size:115%;' id = 'title" + pIDu + "' class = 'gallery-comp-title'></b>" + addVersionSelectOptHTML + "<br>" +

@@ -135,5 +135,5 @@ Generator.prototype.usesCell = function(generator) {
 }
 
 Generator.prototype.flippable = function() {
-    return (this.name.indexOf('^1') > -1);
+    return (this.name.indexOf('*1') > -1);
 }
