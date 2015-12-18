@@ -223,7 +223,8 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     // into two classes, dependingon whether the cell is moving 'right' or 'left.'
     var move_right = type.tail('Int-L', 'IntI0-L', 'Int-RI0', 'IntI0-RI0');
     var behind = type.tail('Int-R', 'Int-RI0', 'IntI0-L', 'IntI0-LI0');
-    var q = move_right ? cell.key.last() + s : cell.key.last() - 1;
+    //var q = move_right ? cell.key.last() + s : cell.key.last() - 1;
+    var q = move_right ? cell.box.max.last() : cell.box.min.last() - 1;
     var movement = [{
             relative: behind ? 0 : ((move_right ? 1 : -1) * (slice.target_size(q) - slice.source_size(q)))
         }, {
