@@ -354,7 +354,7 @@ Display.prototype.has_controls = function() {
 // Make sure all the coordinates and suppressions make sense, bearing in mind
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
-Display.prototype.update_controls = function(boundary, controls) {
+Display.prototype.update_controls = function(drag, controls) {
 
     var timer = new Timer("Display.update_controls");
 
@@ -375,8 +375,8 @@ Display.prototype.update_controls = function(boundary, controls) {
     // Update the view dimension input
     if (this.view_input != null) {
         var new_view = Number(this.view_input.val());
-        if (boundary != undefined) {
-            if (boundary.boost) new_view++;
+        if (drag != undefined) {
+            if (drag.boost) new_view++;
         }
         new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
         this.view_input.val(new_view);
@@ -384,7 +384,7 @@ Display.prototype.update_controls = function(boundary, controls) {
     }
 
     // Update the slice controls
-    this.update_slice_container(boundary, controls);
+    this.update_slice_container(drag, controls);
 
     timer.Report();
 }

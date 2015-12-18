@@ -191,9 +191,11 @@ Project.prototype.takeIdentityUI = function() {
     */
     this.diagram.boost();
     this.renderDiagram({
-        boundary: {
-            type: 't',
-            depth: 1
+        drag: {
+            boundary: {
+                type: 't',
+                depth: 1
+            }
         },
         boost: true
     });
@@ -377,7 +379,7 @@ Project.prototype.actionAllowed = function(option, drag) {
         // Not allowed
         return false;
     }
-    
+
     // Allow anything involving flipping
     if (option.id.indexOf('I1') > -1) return true;
 
@@ -593,6 +595,7 @@ Project.prototype.renderGenerator = function(div, id) {
 // Render the main diagram
 Project.prototype.renderDiagram = function(data) {
     if (data == undefined) data = {};
+    //MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
     MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
@@ -925,7 +928,7 @@ Project.prototype.renderNCell = function(id) {
         generator.getSource().render('#ci-' + generator.id);
         generator.getTarget().render('#ci-second-' + generator.id);
     }
-    
+
     // Clear up the data
     generator.prepare();
 }
@@ -936,9 +939,9 @@ Project.prototype.redrawAllCells = function() {
 
     var list = this.signature.getAllCells();
     this.renderCellChain(list);
-    
+
     return;
-    
+
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
         this.renderNCell(cells[i]);
