@@ -153,12 +153,16 @@ $(document).ready(function() {
             gProject.restrictUI();
         } else if (key == 'x') {
             gProject.exportUI();
-        } else if (key == 'm') {
+        } else if (key == 'o') {
             $('#upload-file').click();
         } else if (key == 'a') {
             gProject.saveUI();
         } else if (key == 'c') {
             gProject.clearDiagramUI();
+        } else if (key == 'm') {
+            gProject.keepBottomUI();
+        } else if (key == 'p') {
+            gProject.keepTopUI();
         //} else if (key == 'p') {
         //    gProject.applyStochasticProcess(1);
         //} else if (key == 'z') {

@@ -115,6 +115,7 @@ Display.prototype.updatePopup = function(data) {
     var popup = $('#diagram-popup');
     if (this.update_in_progress || data.logical == null) {
         popup.remove();
+        this.popup = null;
         return;
     }
 
@@ -123,9 +124,11 @@ Display.prototype.updatePopup = function(data) {
         popup = $('<div>').attr('id', 'diagram-popup').appendTo('#diagram-canvas');
     }
 
+    this.popup = data.logical;
     var boundary = this.diagram.getBoundary(data.logical.boundary);
     var cell = boundary.getCell(data.logical.coordinates.reverse());
-    var description = cell.id.getFriendlyName();
+    var boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
+    var description = cell.id.getFriendlyName() + ' @ ' + boundary_string + JSON.stringify(data.logical.coordinates);
     var pos = $('#diagram-canvas').position();
     popup.html(description)
         .css({

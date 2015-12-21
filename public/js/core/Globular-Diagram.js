@@ -1120,3 +1120,19 @@ Diagram.prototype.mirror = function(n) {
 Diagram.prototype.flip = function(n) {
     
 }
+
+Diagram.prototype.keepAfter = function(n) {
+    var new_source = this.getSlice(n).copy();
+    var new_cells = this.cells.slice(n);
+    var new_cache = this.sliceCache.slice(n);
+    this.source = new_source;
+    this.cells = new_cells;
+    this.sliceCache = new_cache;
+}
+
+Diagram.prototype.keepBefore = function(n) {
+    var new_cells = this.cells.slice(0, n);
+    var new_cache = this.sliceCache.slice(0, n);
+    this.cells = new_cells;
+    this.sliceCache = new_cache;
+}

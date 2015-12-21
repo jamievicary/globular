@@ -1019,3 +1019,35 @@ Project.prototype.saveUI = function() {
         }
     );
 }
+
+Project.prototype.keepTopUI = function() {
+    if (this.diagram == null) return;
+    
+    if (MainDisplay.slices.length == 0) {
+        // Get cut location from mouse position
+        if (MainDisplay.popup == null) return;
+        var coordinate = MainDisplay.popup.coordinates[0]
+        this.diagram.keepAfter(coordinate);
+    } else {
+        // Get cut location from first slice
+        this.diagram.keepAfter(Number(MainDisplay.slices[0].val()));
+    }
+    
+    this.renderDiagram();
+}
+
+Project.prototype.keepBottomUI = function() {
+    if (this.diagram == null) return;
+    
+    if (MainDisplay.slices.length == 0) {
+        // Get cut location from mouse position
+        if (MainDisplay.popup == null) return;
+        var coordinate = MainDisplay.popup.coordinates[0]
+        this.diagram.keepBefore(coordinate);
+    } else {
+        // Get cut location from first slice
+        this.diagram.keepBefore(Number(MainDisplay.slices[0].val()));
+    }
+    
+    this.renderDiagram();
+}
