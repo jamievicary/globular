@@ -129,9 +129,8 @@ Signature.prototype.prepare = function() {
         }
         if (generator.target != null) {
             generator.target.prepare();
-            generator.source.clearAllSliceCaches();
+            generator.target.clearAllSliceCaches();
         }
-        generator.prepareDiagram();
     }
 }
 
