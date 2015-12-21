@@ -39,7 +39,7 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var steps_back = this.pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
 
 
-    var x = cell.key.last() + (subtype.tail('I') ? this.getSlice(key.last()).source_size(cell.key.last()) : -this.getSlice(key.last()).source_size(cell.key.last()));
+    var x = cell.key.last() + (subtype.tail('I') ? 0 /*this.getSlice(key.last()).target_size(cell.key.last())*/ : -this.getSlice(key.last()).source_size(cell.key.last()));
     var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
