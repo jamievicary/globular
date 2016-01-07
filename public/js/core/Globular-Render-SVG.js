@@ -229,7 +229,8 @@ function globular_render_2d(container, diagram, subdiagram) {
         return {
             dimension: 2,
             edges: [],
-            vertices: []
+            vertices: [],
+            edge_at_level: [[]]
         };
     }
 
@@ -288,7 +289,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             break;
         }
     }
-    
+
     // Calculate Bezier intersection data for crossings
     for (var i = 0; i < data.vertices.length; i++) {
         var vertex = data.vertices[i];
@@ -1010,7 +1011,7 @@ function process_instructions(data, i) {
         i.turning += 1;
         return;
     }
-    
+
     // We've got to a vertex, as a target edge. Find which edge it is.
     var vertex = data.vertices[vertex_index];
     for (var j = 0; j < vertex.target_edges.length; j++) {
@@ -1348,7 +1349,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                         x: vertex.x,
                         y: vertex.y
                     });
-                    
+
                 }
             }
         }
@@ -1591,8 +1592,8 @@ function SVG_prepare(diagram, subdiagram) {
                 }
                 target_mean /= vertex.target_edges.length;
                 // NEW IDEA
-                source_mean = (edges[vertex.source_edges[0]].x + edges[vertex.source_edges.last()].x)/2;
-                target_mean = (edges[vertex.target_edges[0]].x + edges[vertex.target_edges.last()].x)/2;
+                source_mean = (edges[vertex.source_edges[0]].x + edges[vertex.source_edges.last()].x) / 2;
+                target_mean = (edges[vertex.target_edges[0]].x + edges[vertex.target_edges.last()].x) / 2;
                 var diff = Math.abs(source_mean - target_mean);
                 if (diff > 0.01) {
                     problem = true;
@@ -1655,4 +1656,172 @@ function SVG_prepare(diagram, subdiagram) {
     }
 
     return data;
+}
+
+// Add a highlighting rectangle to the diagram
+function globular_add_highlight(container, data, box, boundary, diagram) {
+
+    var b = $(container)[0].bounds;
+    var bottom, top, left, right;
+    
+    if (boundary != null) {
+        if (boundary.depth == 2) {
+            if (boundary.type == 's') {
+                left = b.left;
+                top = b.top;
+                bottom = b.bottom;
+                right = b.left + 0.25;
+            } else {
+                left = b.right - 0.25;
+                top = b.top;
+                bottom = b.bottom;
+                right = b.right;
+            }
+        } else if (boundary.depth == 1) {
+            var edges;
+            if (boundary.type == 's') {
+                bottom = b.bottom;
+                top = b.bottom + 0.25;
+                edges = data.edges_at_level[0];
+            } else {
+                bottom = b.top - 0.25;
+                top = b.top;
+                edges = data.edges_at_level[diagram.cells.length];
+            }
+            if (box.min.last() == box.max.last()) {
+                if (box.min.last() == 0) {
+                    left = b.left;
+                    right = data.edges[edges[0]].x - 0.5;
+                } else if (box.max.last() == edges.length) {
+                    left = data.edges[edges.last()].x + 0.5;
+                    right = b.right;
+                } else {
+                    left = data.edges[edges[box.min.last() - 1]].x + 0.5;
+                    left = data.edges[edges[box.min.last()]].x - 0.5;
+                }
+            } else {
+                left = data.edges[edges[box.min.last()]].x - 0.5;
+                right = data.edges[edges[box.max.last() - 1]].x + 0.5;
+            }
+            if (left == right) {
+                left -= 0.25;
+                right += 0.25;
+            }
+        }
+    } else {
+
+        // Get top and bottom
+        bottom = box.min.last() + b.bottom;
+        top = box.max.last() + b.bottom;
+    
+        // Get left and right
+        var start_height = box.min.last();
+        var finish_height = box.max.last();
+        var left = b.right;
+        var right = b.left;
+        var chunk = {
+            min: box.min.penultimate(),
+            max: box.max.penultimate()
+        }
+        for (var i = start_height; i <= finish_height; i++) {
+            chunk = diagram.pullUpMinMax(i, i == start_height ? start_height : i - 1, chunk.min, chunk.max)
+            var edges = data.edges_at_level[i];
+            var eff_left, eff_right;
+            if (edges.length == 0) {
+                eff_left = b.left;
+                eff_right = b.right;
+            } else {
+                if (chunk.min == chunk.max) {
+                    if (chunk.min == 0) {
+                        eff_left = b.left;
+                        eff_right = data.edges[edges[0]].x - 0.5;
+                    } else if (chunk.max == edges.length) {
+                        eff_left = data.edges[edges.last()].x + 0.5;
+                        eff_right = b.right;
+                    } else {
+                        eff_left = data.edges[edges[chunk.min - 1]].x + 0.5;
+                        eff_right = data.edges[edges[chunk.min]].x - 0.5;
+                    }
+                } else {
+                    eff_left = data.edges[edges[chunk.min]].x - 0.5;
+                    eff_right = data.edges[edges[chunk.max - 1]].x + 0.5;
+                }
+            }
+            left = Math.min(left, eff_left);
+            right = Math.max(right, eff_right);
+        }
+    
+        // Correct for zero volume
+        if (bottom == top) {
+            top += 0.4;
+            bottom -= 0.4;
+            if (bottom < b.bottom) {
+                bottom = b.bottom;
+                top = b.bottom + 0.5;
+            }
+            if (top > b.top) {
+                top = b.top;
+                bottom = b.top - 0.5;
+            }
+        }
+        if (left == right) {
+            left -= 0.25;
+            right += 0.25;
+            if (left < b.left) {
+                left = b.left;
+                right = b.left + 0.5;
+            }
+            if (right > b.right) {
+                right = b.right;
+                left = b.right - 0.5;
+            }
+        }
+        
+        left += 0.125;
+        right -= 0.125;
+        bottom += 0.125;
+        top -= 0.125;
+    }
+
+    // Insert box
+    var g = $(document.createElementNS("http://www.w3.org/2000/svg", "g"));
+    g.addClass('highlight');
+    var svg = $(container).children('svg');
+    svg.children('g').append(g);
+    var path_string =
+        SVG_move_to({
+            x: left,
+            y: bottom
+        }) + SVG_line_to({
+            x: left,
+            y: top
+        }) + SVG_line_to({
+            x: right,
+            y: top
+        }) + SVG_line_to({
+            x: right,
+            y: bottom
+        }) + SVG_line_to({
+            x: left,
+            y: bottom
+        });
+    g[0].appendChild(SVG_create_path({
+        string: path_string,
+        fill: '#ffff00',
+        fill_opacity: 0.5
+        /*,
+        stroke: '#ff0000',
+        stroke_opacity: 0.4,
+        stroke_width: 0.01
+        */
+    }));
+    /*
+    g[0].appendChild(SVG_create_path({
+        string: path_string,
+        stroke_width: 0.01,
+        stroke: '#ff0000',
+        stroke_opacity: 0.4
+    }));
+    */
+
 }

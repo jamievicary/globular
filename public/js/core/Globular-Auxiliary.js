@@ -218,9 +218,17 @@ String.prototype.analyze_id = function() {
     }
 }
 
-String.prototype.toggle_inverse = function() {
+String.prototype.toggle_inverse = function(depth) {
+    var I1 = this.tail('I1');
+    if (I1) this = this.substr()
     if (this.tail('I')) return this.substr(0, this.length - 1);
     return this + 'I';
+}
+
+String.prototype.strip_inverses = function() {
+    if (this.substr(this.length - 1) == 'I') this = this.substr(0, this.length - 1);
+    if (this.substr(this.length - 2) == 'I1') this = this.substr(0, this.length - 2);
+    if (this.substr(this.length - 2) == 'I0') this = this.substr(0, this.length - 2);
 }
 
 String.prototype.repeat = function(n) {
@@ -418,4 +426,81 @@ function bezier_intersect_X(r) {
     var X = Math.cbrt(1 + r - rr - rrr + 2 * Math.sqrt(-r - 4 * rr - 6 * rrr - 4 * rrrr - 5 * rrrrr));
     return X;
     */
+}
+
+function Timer(caller) {
+    this.start_time = performance.now();
+    this.caller = caller;
+}
+
+Timer.prototype.Report = function() {
+    var time = Math.floor(performance.now() - this.start_time);
+    console.log("Timing: " + this.caller + ": " + time + "ms");
+}
+
+var Buffer = require('buffer').Buffer;
+var LZ4 = require('lz4');
+
+function globular_lz4_compress(string) {
+    var timer = new Timer('globular_lz4_compress');
+    console.log('  string.length = ' + string.length);
+    var uncompressed = string + string;
+    var input = new Buffer(uncompressed);
+    var output = new Buffer(LZ4.encodeBound(input.length));
+    var compressedSize = LZ4.encodeBlock(input, output);
+    console.log('  compressedSize = ' + compressedSize);
+    if (compressedSize == 0) return {
+        uncompressed: string
+    };
+    output = output.slice(0, compressedSize);
+    var compressed_string = Uint8ToString(output);
+    console.log('  compressed_string.length = ' + compressed_string.length);
+    var b64 = btoa(compressed_string);
+    console.log('  b64.length = ' + b64.length);
+    timer.Report();
+    return {
+        compressed: b64,
+        original_length: string.length
+    };
+}
+
+function globular_lz4_decompress(object) {
+    var timer = new Timer('globular_lz4_decompress');
+    if (object.compressed == undefined) return object;
+    var b64 = object.compressed;
+    var str = atob(object.compressed);
+    var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
+    var bufView = new Uint8Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    var uncompressed = new Buffer(object.original_length);
+    var size = LZ4.decodeBlock(bufView, uncompressed);
+    var uncompressed_string = Uint8ToString(uncompressed);
+    timer.Report();
+    return uncompressed_string;
+}
+
+function Uint8ToString(u8a){
+    var CHUNK_SZ = 0x8000;
+    var c = [];
+    for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
+        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+    }
+    return c.join("");
+}
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
+
+
+function json_replacer(key, value) {
+    return value;
 }

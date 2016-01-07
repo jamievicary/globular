@@ -7,12 +7,15 @@
 
 // Creates a generator with a fresh id, and specific source and target, both source and target are of type Diagram
 function Generator(data) {
+    this['_t'] = 'Generator';
     if (data == undefined) return;
     if (data.source === undefined) debugger;
     var n = (data.source == null ? 0 : data.source.getDimension() + 1);
     if (data.id == undefined) data.id = globular_freshName(n);
-    this.source = data.source;
-    this.target = data.target;
+    this.source = (data.source == null ? null : data.source.copy());
+    this.target = (data.target == null ? null : data.target.copy());
+    if (this.source != null) this.source.clearAllSliceCaches();
+    if (this.target != null) this.target.clearAllSliceCaches();
     this.id = data.id;
     this.invertible = data.invertible;
     this.separate_source_target = data.separate_source_target;
@@ -24,10 +27,23 @@ function Generator(data) {
     return this;
 };
 
+Generator.prototype.prepare = function() {
+    if (this.source != null) {
+        this.source.prepare();
+        this.source.clearAllSliceCaches();
+    }
+    if (this.target != null) {
+        this.target.prepare();
+        this.target.clearAllSliceCaches();
+    }
+    if (this.diagram != null) this.diagram.prepare();
+}
+
 Generator.prototype.prepareDiagram = function() {
     var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
     this.diagram = new Diagram(this.source, [new NCell({id: this.id, key: key, box: this.getBoundingBox()})]);
-    this.diagram.ignore = true;
+    this.diagram.clearAllSliceCaches();
+    this.diagram.ignore = false;
 }
 
 Generator.prototype.getDiagram = function() {
@@ -90,10 +106,19 @@ Generator.prototype.getSourceLengths = function() {
     return this.source.getLengthsAtSource();
 }
 
-Generator.prototype.usesCell = function(id) {
+Generator.prototype.usesCell = function(generator) {
+    
+    // Generators can only use cells which have a lower dimension
+    if (generator.getDimension() >= this.getDimension()) return false;
+    
+    // The generator uses the specified cell iff the source or target uses it
     if (this.source != null) {
-        if (this.source.usesCell(id)) return true;
-        if (this.target.usesCell(id)) return true;
+        if (this.source.usesCell(generator.id)) return true;
+        if (this.target.usesCell(generator.id)) return true;
     }
     return false;
+}
+
+Generator.prototype.flippable = function() {
+    return (this.id.indexOf('I1') > -1);
 }

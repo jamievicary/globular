@@ -7,6 +7,7 @@
 /*global gProject*/
 
 function Diagram(source, cells) {
+    this['_t'] = 'Diagram';
     if (source === undefined) return;
     this.source = (source == null ? null : source.copy());
     this.cells = cells;
@@ -37,12 +38,16 @@ Diagram.prototype.getSourceBoundary = function() {
     by systematic application of single cell rewrites based on the list of cells of the diagram
 */
 Diagram.prototype.getTargetBoundary = function() {
+    return this.getSlice(this.cells.length);
+
+    /*
     if (this.source === null) return null;
     var target_boundary = this.source.copy();
     for (var i = 0; i < this.cells.length; i++) {
         target_boundary.rewrite(this.cells[i]);
     }
     return target_boundary;
+    */
 }
 
 
@@ -94,7 +99,18 @@ Diagram.prototype.rewrite = function(cell) {
 
     // Prepare the target cells and insert them
     var slice = this.getSlice(insert_position);
-    this.initializeSliceCache();
+    if (slice != null) slice = slice.copy(); // need to copy
+
+    // Update the slice cache
+    if (this.sliceCache != null) {
+        this.sliceCache.splice(insert_position, source_size);
+        for (var i = 0; i < target.cells.length; i++) {
+            this.sliceCache.splice(insert_position + i, 0, null);
+        }
+    }
+    //this.initializeSliceCache();
+
+    // Insert the target of the rewrite
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
         if (!cell.id.is_interchanger()) {
@@ -160,13 +176,14 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
     }
 
     // This is the base platform for finding each match, it will be rewritten once the matches beginning at the particular height are investigated
-    var intermediate_boundary = this.source.copy();
+    //var intermediate_boundary = this.source.copy();
 
     // The maximum number of matches that can possibly be found
     var loopCount = this.cells.length - matched_diagram.cells.length + 1;
 
     for (var i = 0; i < loopCount; i++) { // i  is the number of the platform where the match is found
 
+        var intermediate_boundary = this.getSlice(i);
         var current_match = new Array();
 
         // We anchor matches by recursively matching the boundary of the matched diagram and this diagram
@@ -206,7 +223,8 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             if (j === boundary_matches.length) {
                 // We haven't found a match
                 // Go to the next platform
-                intermediate_boundary.rewrite(this.cells[i]);
+                //intermediate_boundary = this.getSlice(i + 1);
+                //intermediate_boundary.rewrite(this.cells[i]);
                 continue;
             } else {
                 // We have found a match stored in current_match
@@ -335,7 +353,8 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
         }
 
         // Rewrites the intermediate boundary to allow to search for matches at the next platform
-        intermediate_boundary.rewrite(this.cells[i]);
+        //intermediate_boundary.rewrite(this.cells[i]);
+        //intermediate_boundary = this.getSlice(i + 1);
     }
 
     /*
@@ -444,7 +463,17 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
             type: boundary.type,
             depth: boundary.depth - 1
         });
-        this.initializeSliceCache();
+        // Attach to elements of the slice cache
+        if (this.sliceCache != null) {
+            for (var i = 0; i < this.sliceCache.length; i++) {
+                if (this.sliceCache[i] == undefined) continue;
+                this.sliceCache[i].attach(cell, {
+                    type: boundary.type,
+                    depth: boundary.depth - 1
+                });
+            }
+        }
+        //this.initializeSliceCache();
         return;
     }
 
@@ -463,7 +492,7 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
     var final_cell = this.cells[cell_index];
 
     // Store bounding box
-    this.cells[cell_index].box = this.getSlice(cell_index).getBoundingBox(final_cell);
+    this.cells[cell_index].box = this.getSlice(cell_index).getBoundingBox(final_cell); // no need to copy slice
 
 };
 
@@ -487,10 +516,8 @@ Diagram.prototype.getFullDimensions = function() {
     }
 
     var full_dimensions = [this.source.getFullDimensions()];
-    var platform = this.source.copy();
     for (var i = 0; i < this.cells.length; i++) {
-        platform.rewrite(this.cells[i]);
-        full_dimensions.push(platform.getFullDimensions());
+        full_dimensions.push(this.getSlice(i + 1).getFullDimensions());
     }
     //return [this.cells.length].concat(this.source.getFullDimensions());
     return full_dimensions;
@@ -514,7 +541,7 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
             coordinates: []
         };
     } else {
-        var slice = this.getSlice(c[0]);
+        var slice = this.getSlice(c[0]); // no need to copy slice
         var new_allow_boundary = params.allow_boundary.length == 0 ? [] : params.allow_boundary.slice(1);
         sub = slice.getBoundaryCoordinates({
             coordinates: params.coordinates.slice(1),
@@ -574,7 +601,7 @@ Diagram.prototype.getLengthsAtSource = function() {
 Diagram.prototype.source_size = function(level) {
     var nCell = this.cells[level];
     if (nCell.id.substr(0, 3) === 'Int') {
-        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
+        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last(); // no need to copy slice
     } else {
         return nCell.source_size();
     }
@@ -583,12 +610,13 @@ Diagram.prototype.source_size = function(level) {
 Diagram.prototype.target_size = function(level) {
     var nCell = this.cells[level];
     if (nCell.id.substr(0, 3) === 'Int') {
-        return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length;
+        return this.getSlice(level).rewritePasteData(nCell.id, nCell.key).length; // no need to copy slice
     } else {
         return nCell.target_size();
     }
 };
 
+/*
 // Identify separation of parts of a diagram
 Diagram.prototype.separation = function(c1, c2) {
     var d1 = this.dimension + 1 - c1.length;
@@ -599,7 +627,7 @@ Diagram.prototype.separation = function(c1, c2) {
         return this.wellSeparated(c2, c1);
     }
 
-    /* CAN ASSUME d1 < d2 */
+    // CAN ASSUME d1 < d2
 
     // Only considering single-dimension difference at the moment
     if (d2 != d1 + 1) return false;
@@ -667,6 +695,7 @@ Diagram.prototype.separation = function(c1, c2) {
         }
     }
 };
+*/
 
 // Construct the inverse to the specified cell, for the current diagram
 Diagram.prototype.getInverseCell = function(cell) {
@@ -717,9 +746,9 @@ Diagram.prototype.unionBoundingBoxes = function(b1, b2) {
 
     // Now new_box holds the correct data, except the first entries of the
     // min and max arrays are missing.
-    var b1slice = this.getSlice(b1.min.slice(2));
+    var b1slice = this.getSlice(b1.min.slice(2)); // no need to copy slice
     var mm1 = b1slice.pullBackMinMax(b1.min[1], new_box.min[0], b1.min[0], b1.max[0]);
-    var b2slice = this.getSlice(b2.min.slice(2));
+    var b2slice = this.getSlice(b2.min.slice(2)); // no need to copy slice
     var mm2 = b2slice.pullBackMinMax(b2.min[1], new_box.min[0], b2.min[0], b2.max[0]);
     new_box.min.unshift(Math.min(mm1.min, mm2.min));
     new_box.max.unshift(Math.max(mm1.max, mm2.max));
@@ -769,9 +798,9 @@ Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
 
     // Now new_box holds the correct data, except the first entries of the
     // min and max arrays are missing.
-    var b1slice = this.getSlice(b1.min.slice(2));
+    var b1slice = this.getSlice(b1.min.slice(2)); // no need to copy slice
     var mm1 = b1slice.pullUpMinMax(new_box.min[0], b1.min[1], b1.min[0], b1.max[0]);
-    var b2slice = this.getSlice(b2.min.slice(2));
+    var b2slice = this.getSlice(b2.min.slice(2)); // no need to copy slice
     var mm2 = b2slice.pullUpMinMax(new_box.min[0], b2.min[1], b2.min[0], b2.max[0]);
     new_box.min.unshift(Math.max(mm1.min, mm2.min));
     new_box.max.unshift(Math.min(mm1.max, mm2.max));
@@ -820,7 +849,7 @@ Diagram.prototype.boundingBoxesSlideDownOnLeft = function(lower, upper) {
 // Get the cell at a particular location in the diagram
 Diagram.prototype.getCell = function(location) {
     var level = location.shift();
-    var slice = this.getSlice(location);
+    var slice = this.getSlice(location); // no need to copy slice
     while (slice.cells.length == 0) {
         if (slice == null) return null;
         slice = slice.getSourceBoundary();
@@ -834,12 +863,114 @@ Diagram.prototype.getLocationBoundingBox = function(location) {
     else location = location.slice();
     if (location.length == 0) debugger;
     var box = this.getSliceBoundingBox(location);
+    if (box == null) return null;
     var extra = (location.length > this.getDimension() ? location.slice(1) : location);
     box.min = box.min.concat(extra);
     box.max = box.max.concat(extra);
     if (extra.length == location.length) box.max[box.max.length - location.length]++;
     return box;
 };
+
+// Get bounding box surrounding the entire diagram
+Diagram.prototype.getEntireBoundingBox = function(cell) {
+    var source = this.getSourceBoundary();
+    if (source == null) return {
+        min: [],
+        max: []
+    }
+    var box = this.getSourceBoundary().getEntireBoundingBox();
+    box.min.push(0);
+    box.max.push(this.cells.length);
+    return box;
+}
+
+// Gets the bounding box for an entire slice of the diagram
+Diagram.prototype.getEntireSliceBoundingBox = function(location) {
+    if (!globular_is_array(location)) location = [location];
+    else location = location.slice();
+    if (location.length == 0) return this.getEntireBoundingBox();
+    var height = location.pop();
+    var box = this.getSlice(height).getEntireSliceBoundingBox(location);
+    box.min.push(height);
+    box.max.push(height);
+    return box;
+}
+
+// Embeds a bounding box in a boundary into the entire diagram, extruding as necessary
+/*
+Diagram.prototype.embedBoundaryBoundingBox = function(box, boundary) {
+    
+    // If it's a depth-1 boundary, just embed
+    if (boundary.depth == 1) {
+        if (boundary.type == 's') {
+            box.min.push(0);
+            box.max.push(0);
+        } else {
+            box.min.push(this.cells.length);
+            box.max.push(this.cells.length);
+        }
+        return box;
+    }
+    
+    // Otherwise, embed and extrude
+    var new_boundary = {depth: boundary.depth - 1, type: boundary.type};
+    var box = this.source.embedBoundaryBoundingBox(box, new_boundary);
+    box.min.push(0);
+    box.max.push(this.cells.length);
+    return box;
+}
+*/
+
+// Find how the specified boundary and sub-box appears from the specified location
+Diagram.prototype.getLocationBoundaryBox = function(boundary, box, location) {
+
+    // If the location is the whole diagram, then the inputs are already correct
+    if (location.length == 0) {
+        return {
+            boundary: boundary,
+            box: box
+        };
+    }
+
+    // Pop off the height
+    var height = location.pop();
+
+    // Interior
+    if (boundary == null) {
+        /*
+        if (location.length == 0) {
+            return {boundaryboundary_data
+        }
+        */
+        if (height < box.min.last()) return null;
+        if (height > box.max.last()) return null;
+        var minmax = this.pullUpMinMax(height, box.min.last(), box.min.penultimate(), box.max.penultimate());
+        box.min.pop();
+        box.min[box.min.length - 1] = minmax.min;
+        box.max.pop();
+        box.max[box.max.length - 1] = minmax.max;
+        var slice = this.getSlice(height);
+        return slice.getLocationBoundaryBox(null, box, location);
+    }
+
+    // Shallow boundary
+    if (boundary.depth == 1) {
+        if (boundary.type == 's') {
+            if (height > 0) return null;
+            return this.getSourceBoundary().getLocationBoundaryBox(null, box, location);
+        } else {
+            if (height < Math.max(1, this.cells.length)) return null;
+            return this.getTargetBoundary().getLocationBoundaryBox(null, box, location);
+        }
+    }
+
+    // Deep boundary
+    var new_boundary = boundary == null ? null : {
+        depth: boundary.depth - 1,
+        type: boundary.type
+    };
+    return this.getSourceBoundary().getLocationBoundaryBox(new_boundary, box, location);
+}
 
 Diagram.prototype.getBoundingBox = function(cell) {
     if (cell == undefined) debugger;
@@ -850,7 +981,7 @@ Diagram.prototype.getBoundingBox = function(cell) {
     };
     var generator_box = gProject.signature.getGenerator(cell.id).getBoundingBox();
     box.max = box.min.vector_add(generator_box.max);
-    box.ignore = true; // don't store bounding boxes to file
+    box.ignore = true; // don't store bounding boxes on the server
     return box;
 };
 
@@ -858,13 +989,14 @@ Diagram.prototype.getSliceBoundingBox = function(location) {
     if (globular_is_array(location)) location = location.slice();
     else location = [location];
     var height = location.shift();
-    var slice = this.getSlice(location);
+    var slice = this.getSlice(location); // no need to copy slice
     if (slice.getDimension() == 0) return {
         min: [],
-        max: [],
-        ignore: true
+        max: []
+            //,ignore: true
     };
-    return slice.getSlice(height).getBoundingBox(slice.cells[height]);
+    if (height >= slice.cells.length) return null;
+    return slice.getSlice(height).getBoundingBox(slice.cells[height]); // no need to copy slice
 }
 
 // Returns a slice subdiagram
@@ -876,28 +1008,31 @@ Diagram.prototype.getSlice = function(location) {
 
     // Recursive case
     var height = location.pop();
-    if (location.length > 0) return this.getSlice(height).getSlice(location);
+    if (location.length > 0) return this.getSlice(height).getSlice(location); // no need to copy slice
 
     // Base case
     if (height == 1 && this.cells.length == 0) {
         // Handle request for slice 1 of identity diagram gracefully
-        return this.source.copy(); // Not returning a copy, beware...
+        //return this.source.copy();
+        return this.source;
     } else if (height > this.cells.length) debugger;
 
-    if (height == 0) return this.source.copy();
+    if (height == 0) return this.source;
 
     // Check whether the cache contains the slice
     if (this.sliceCache == null) {
         this.initializeSliceCache();
     } else {
         if (this.sliceCache[height] != undefined) {
-            return this.sliceCache[height].copy();
+            //return this.sliceCache[height].copy();
+            return this.sliceCache[height];
         }
     }
 
     // Otherwise do a recursive call
-    this.sliceCache[height] = this.getSlice(height - 1).rewrite(this.cells[height - 1]); // should we be returning a copy?
-    return this.sliceCache[height].copy();
+    this.sliceCache[height] = this.getSlice(height - 1).copy().rewrite(this.cells[height - 1]); // need to copy before rewrite!
+    //return this.sliceCache[height].copy();
+    return this.sliceCache[height];
     /*
     var slice = this.source.copy();
     for (var i = 0; i < height; i++) {
@@ -910,6 +1045,11 @@ Diagram.prototype.getSlice = function(location) {
 Diagram.prototype.initializeSliceCache = function() {
     this.sliceCache = [];
     this.sliceCache.ignore = true;
+}
+
+Diagram.prototype.clearAllSliceCaches = function() {
+    delete this.sliceCache;
+    if (this.source != null) this.source.clearAllSliceCaches();
 }
 
 Diagram.prototype.prepare = function() {
@@ -931,7 +1071,7 @@ Diagram.prototype.usesCell = function(id) {
 
     // Check all the slices
     for (var i = 0; i < this.cells.length + 1; i++) {
-        var slice = this.getSlice(i);
+        var slice = this.getSlice(i); // no need to copy slice
         if (slice != null) {
             if (slice.usesCell(id)) return true;
         }

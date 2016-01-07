@@ -9,14 +9,15 @@
     This is to allow uniform treatment of interchangers and other cells
 */
 function NCell(data) {
+    this['_t'] = 'NCell';
     if (data == null) return;
     this.id = data.id;
     this.key = data.key.slice();
     if (data.box != undefined) {
         this.box = {
             min: data.box.min.slice(),
-            max: data.box.max.slice(),
-            ignore: true
+            max: data.box.max.slice()
+            //,ignore: true
         };
     }
 };

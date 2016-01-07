@@ -75,7 +75,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     return list;
 };
 
-Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
+/*
+Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     var count = 0;
     var l = box.max.penultimate() - box.min.penultimate();
     for(var i = box.min.last(); i < box.max.last(); i++){
@@ -86,7 +87,7 @@ Diagram.prototype.pseudoExpand.IntL = function(box, side_wires /*, n, m*/) {
     }
     return count;
 };
-
+*/
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {
@@ -95,7 +96,7 @@ Diagram.prototype.interpretDrag.IntL = function(drag) {
     var up = drag.directions[0] > 0;
     var right = drag.directions[1] > 0;
     var key = [drag.coordinates[0]];
-    var options = this.getDragOptions(up ? ['Int-L', 'IntI-L', 'IntI-R', 'Int-R'] : ['Int-RI', 'IntI-RI', 'Int-LI', 'IntI-LI'], key);
+    var options = this.getDragOptions(up ? ['Int-L', 'IntI-L', 'IntI-R', 'Int-R'] : ['IntI-RI', 'Int-RI', 'Int-LI', 'IntI-LI'], key);
 
     // Collect the possible options
     var possible_options = [];

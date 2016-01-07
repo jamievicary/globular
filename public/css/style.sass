@@ -123,24 +123,35 @@ body, html
 	position: relative
 	float: right
 	margin-right: 10px
-	z-index: 1000000
+	z-index: 4
 	top: calc($header_height - 40px)
 
 #project-menu li
 	margin-top: 7px
 
-.button-style-3
-	background-color: grey
+.diagram-button, .workspace-button
+	//background-color: grey
 	color: white
 	border-radius: $border_radius
 	width: 100px
 	text-align: center
-	height: 17px
+	//height: 17px
 	letter-spacing: 1px
 	padding: 7px
 	cursor: pointer
-	font-size: 60%
+	font-size: 100%
 	
+.diagram-button:hover, .workspace-button:hover
+	background-color: lightblue
+
+.diagram-button
+	background-color: grey
+
+
+.workspace-button
+	background-color: #4cd2bb
+	
+
 #main-menu li 
 	float: left
 	list-style: none
@@ -277,6 +288,28 @@ div.cell-icon
 div.cell-icon:nth-child(2) 
 	margin-left: 7px
 	
+#drop_zone
+	width: calc(90% - 4px)
+	margin-left: 5%
+	margin-top: 10px
+	margin-bottom: 10px
+	padding-top: 10px
+	padding-bottom: 10px
+	border: 2px dashed #bbb
+	
+#options-box
+	//overflow: scroll
+	max-height: 80%
+	overflow-y: auto
+	//position: absolute
+	//top: 0
+	//bottom: 0
+
+#options-list
+	overflow-x: hidden
+	//overflow-y: auto
+	text-align: left
+	
 .stochastic-rate
 	width: 50px
 	outline-width: 0px
@@ -293,34 +326,6 @@ div.cell-icon:nth-child(2)
 	position: absolute
 	margin-left: 65px
 	top: 30px
-
-.button-style-1
-	background-color: $blue
-	color: white
-	border-radius: 3px 3px 0px 0px
-	width: 110px
-	text-align: center
-	letter-spacing: 1px
-	float: left
-	margin: 1px
-	cursor: pointer
-	font-size: 110%
-	border-bottom: 2px solid #00b8ff
-//	padding: 5px
-	
-.button-style-2
-	padding: 5px
-	background-color: $blue
-	color: white
-	border-radius: 3px
-	width: 130px
-	text-align: center
-	letter-spacing: 1px
-	float: left
-	margin: 1px
-	cursor: pointer
-	font-size: 110%
-
 
 #view-p-desc
 	background-color: grey
@@ -400,7 +405,7 @@ div.cell-icon:nth-child(2)
 	color: #ffffff
 	width: 265px
 	top: 200px
-	z-index: 10000
+	z-index: 2
 	height: auto
 	text-align: center
 	position: absolute
@@ -416,7 +421,7 @@ div.cell-icon:nth-child(2)
 	box-shadow: 0px 0px 20px dimgrey
 	
 .zindex-error
-	z-index: 100000000
+	z-index: 6
 
 #change-pass-form
 	padding: 3px
@@ -459,18 +464,6 @@ div .delete_button
 	background-color: $midgrey
 	padding: 5px
 
-#save-project-opt
-	background-color: #4cd2bb
-	
-#save-project-opt:hover
-	background-color: lightblue	
-	
-#get-str-opt
-	background-color: #4cd2bb
-	
-#get-str-opt:hover
-	background-color: lightblue	
-	
 #diagram-title
 	color: black
 	height: 30px
@@ -493,7 +486,7 @@ div .delete_button
 	height: 55px
 	width: 55px
 	position: absolute
-	z-index: 10000
+	z-index: 2
 	background-repeat: no-repeat
 
 #no-projects-open-e
@@ -570,7 +563,7 @@ div.control.inline
 	top: 10px
 	
 input.control
-	max-width: 35px
+	max-width: 15px
 	//overflow: hidden
 	//max-width: 200px
 	//float: left
@@ -620,9 +613,6 @@ input.control
 	float: left
 	margin-left: 10px
 	
-.button-style-3:hover
-	background-color: lightblue
-
 .pl-selects
 	border: none
 	outline-width: 0px
@@ -637,7 +627,7 @@ input.control
 	position: fixed
 	padding: 8px
 	background-color: #b0e0e6
-	z-index: 100
+	z-index: 1
 
 #change-list-type
 	width: 140px
@@ -672,6 +662,25 @@ input.control
 	padding-right: 5px
 	padding-top: 3px
 	padding-bottom: 3px
+	
+#loading-window
+	width: 400px
+	height: 150px
+	background-color: white
+	position: absolute
+	top: 0
+	bottom: 0
+	left: 0
+	right: 0
+	margin: auto
+	z-index: 10
+	
+div.loading-detail
+	margin: 20px
+	overflow: hidden
+	
+#loading-title
+	padding: 15px
 
 #source-target-window
 	position: absolute

@@ -14,6 +14,10 @@ var d;
 */
 function Project(string) {
 
+    this['_t'] = 'Project';
+
+    var timer = new Timer('Project constructor');
+
     if (string == '' || string == undefined) {
         this.diagram = null;
         this.signature = new Signature(null);
@@ -21,11 +25,21 @@ function Project(string) {
         return;
     }
 
-    var new_project = globular_destringify(string);
+    var uncompressed;
+    if (string.compressed == undefined) {
+        uncompressed = string;
+    } else {
+        uncompressed = JSON.parse(globular_lz4_decompress(string));
+    }
+    var new_project = globular_destringify(uncompressed);
     for (var name in new_project) {
         if (!new_project.hasOwnProperty(name)) continue;
         this[name] = new_project[name];
     }
+
+    // Ensure at least one 0-cell
+
+    timer.Report();
 
 };
 
@@ -148,6 +162,7 @@ Project.prototype.limitMatches = function(matches, elements) {
 // Clear thumbnails
 Project.prototype.clearThumbnails = function() {
     $('div.cell-b-sect').empty();
+    $("#options-box").fadeOut(100);
 }
 
 // Clear the main diagram, UI function
@@ -198,7 +213,7 @@ Project.prototype.showSourceTargetPreview = function(diagram, boundary) {
 
 // Store a source or target, or build a new generator
 Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'target' */ ) {
-    
+
     if (this.diagram == null) {
         this.cacheSourceTarget = null;
         return;
@@ -332,7 +347,15 @@ Project.prototype.dragCellUI = function(drag) {
             item.click(function() {
                 $("#options-box").fadeOut(100);
                 gProject.performActionUI(action, drag);
-            });
+            }).hover(
+                // Mouse in
+                function() {
+                    MainDisplay.highlight_action(action, drag.boundary)
+                },
+                // Mouse out
+                function() {
+                    MainDisplay.remove_highlight();
+                });
         })(options[i]);
     }
     $("#options-box").fadeIn(100);
@@ -399,12 +422,12 @@ Project.prototype.performActionUI = function(option, drag) {
 }
 
 Project.prototype.saveState = function() {
-    //return;
-    var t0 = performance.now();
-    history.pushState({
-        string: this.currentString()
-    }, "", "");
-    //console.log("Project.saveState: " + parseInt(performance.now() - t0) + "ms");
+    if ($('#allow-undo-checkbox').is(':checked')) {
+        history.pushState({
+            string: this.currentString(),
+            p_id: global_p_id
+        }, "", "");
+    }
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -471,7 +494,7 @@ Project.prototype.selectGeneratorUI = function(id) {
     var last_slice_max = null;
     for (var i = 0; i < slices_data.length; i++) {
         if (i == slices_data.length - 1) last_slice_max = Math.max(1, slice_pointer.cells.length);
-        slice_pointer = slice_pointer.getSlice(slices_data[i]);
+        slice_pointer = slice_pointer.getSlice(slices_data[i]); // no need to copy slice
         //slices_counter++;
     }
     var visible_slice = slice_pointer;
@@ -529,12 +552,17 @@ Project.prototype.prepareEnumerationData = function(subject_diagram, matched_dia
 };
 
 // Returns the current string 
-Project.prototype.currentString = function() {
+Project.prototype.currentString = function(minimize) {
+    if (minimize == undefined) minimize = false;
 
+    var timer = new Timer("Project.currentString");
     // Store the viewbox controls
     this.view_controls = MainDisplay.getControls();
 
-    return globular_stringify(this);
+    var result = globular_stringify(this, minimize);
+
+    timer.Report();
+    return result;
 }
 
 // Returns the current string 
@@ -552,6 +580,7 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
 // Render a generator
 Project.prototype.renderGenerator = function(div, id) {
     var generator = this.signature.getGenerator(id);
+    if (generator.diagram == null) generator.prepareDiagram();
     this.render(div, generator.diagram);
 }
 
@@ -803,7 +832,7 @@ Project.prototype.relatedCells = function(id) {
     for (var i = 0; i < cells.length; i++) {
         var cell = cells[i];
         var generator = this.signature.getGenerator(cell);
-        if (generator.usesCell(id)) {
+        if (generator.usesCell(generator)) {
             related_cells.push(cell);
             related_cells = related_cells.concat(this.relatedCells(cell));
         }
@@ -817,9 +846,22 @@ Project.prototype.renderAll = function() {
     this.renderDiagram();
 }
 
+Project.prototype.renderCellChain = function(list) {
+    var id = list.shift();
+    if (id == undefined) return;
+    $('#loading-window').html("Rendering cell " + id);
+    setTimeout(function() {
+        gProject.renderNCell(id);
+        setTimeout(function() {
+            gProject.renderCellChain(list), 0
+        })
+        0
+    });
+
+}
+
 // Render all n-cells
 Project.prototype.renderCells = function() {
-    var list = this.listGenerators();
     for (var i = 0; i < list.length; i++) {
         this.renderNCell(list[i]);
     }
@@ -839,6 +881,7 @@ Project.prototype.renderCellsAbove = function(id) {
 Project.prototype.renderNCell = function(id) {
 
     var generator = this.signature.getGenerator(id);
+    console.log("Rendering " + generator.getDimension() + "-cell " + generator.name);
 
     // Create any required cell groups
     var cell_body = $('#cell-body');
@@ -880,6 +923,12 @@ Project.prototype.renderNCell = function(id) {
 
 Project.prototype.redrawAllCells = function() {
     $("#cell-body").empty();
+
+    var list = this.signature.getAllCells();
+    this.renderCellChain(list);
+    
+    return;
+    
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
         this.renderNCell(cells[i]);
@@ -925,22 +974,28 @@ Project.prototype.restrictUI = function() {
 }
 
 Project.prototype.exportUI = function() {
-    var msg = "<textarea class = 'text-area-style-1' style = 'height: 400px;width:255px;'>" + gProject.currentString() + "</textarea>";
-    show_msg(msg, false, 3);
+    download($('#diagram-title').val() + '.json', this.compressedString());
+}
+
+Project.prototype.compressedString = function() {
+    return JSON.stringify(globular_lz4_compress(this.currentString()));
 }
 
 Project.prototype.saveUI = function() {
-    var currentString = this.currentString();
+    var string = this.compressedString();
     $.post("/c-loggedin", {
             valid: true
         },
         function(result, status) {
             if (result.status != "in") {
                 show_msg("Please log in to save this project.", 7000, 3);
+                render_frontend("out");
+                //render_page();
                 return;
             }
+            //var compressed_string = JSON.stringify(globular_lz4_compress(currentString));
             $.post("/save_project_changes", {
-                string: currentString,
+                string: string,
                 p_id: global_p_id,
                 p_name: $("#diagram-title").val(),
                 p_desc: $("#text-p-desc").val()
