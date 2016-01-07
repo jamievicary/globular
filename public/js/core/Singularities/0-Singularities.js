@@ -211,7 +211,7 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
         if (list_cell.id != diagram_cell.id) return false;
 
         // Is it at the right position?
-        for (var j = 0; j < offset_array.length; j++) {
+        for (var j = 0; j < diagram_cell.length; j++) {
             if (diagram_cell.key[j] != list_cell.key[j] + offset_array[j]) return false;
         }
     }
@@ -224,15 +224,6 @@ Diagram.prototype.reorganiseCrossings = {};
 Diagram.prototype.source_size = function(level) {
     var bbox = this.getSliceBoundingBox(level);
     return bbox.max.last() - bbox.min.last();
-    /*
-    var nCell = this.cells[level];
-    if(nCell.id.substr(0, 3) === 'Int'){
-        return this.getSlice(level).getInterchangerBoundingBox(nCell.id, nCell.key).last();
-    }
-    else{
-        return nCell.source_size();
-    }
-    */
 };
 
 Diagram.prototype.target_size = function(level) {

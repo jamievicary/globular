@@ -11,14 +11,14 @@
 RegisterSingularityFamily({
     family: 'IntLS',
     dimension: 5,
-    members: ['Int-L-S', 'Int-L-SI',
-    'IntI-L-S', 'IntI-L-SI',
+    members: ['Int-L-S', 'Int-L-SI'
+    /*, 'IntI-L-S', 'IntI-L-SI',
     'Int-LI-S', 'Int-LI-SI',
     'IntI-LI-S', 'IntI-LI-SI',
     'Int-R-S', 'Int-R-SI',
     'IntI-R-S', 'IntI-R-SI',
     'Int-RI-S', 'Int-RI-SI',
-    'IntI-RI-S', 'IntI-RI-SI'],
+    'IntI-RI-S', 'IntI-RI-SI'*/],
     friendly: {
         'Int-L-S': 'Pull-through pull-through interchanger above',
         'IntI-L-S': 'Pull-through pull-through interchanger underneath',
@@ -38,21 +38,30 @@ Diagram.prototype.getSource.IntLS = function(type, key) {
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
     var steps_back = this.pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
 
-
-    var x = cell.key.last() + (subtype.tail('I') ? 0 /*this.getSlice(key.last()).target_size(cell.key.last())*/ : -this.getSlice(key.last()).source_size(cell.key.last()));
-    var y = box.min.penultimate() - 1;
     var n = box.max.last() - box.min.last();
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
+    
+    // For the target we need to modify the key of alpha
 
-    if (type.tail('I')) return [cell].concat(this.getSlice(key.last()).rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
-    else return this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
 
-/*    
-    if (type == 'Int-L-S') return this.getSlice(key.last() - steps_back).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell]);
-    if (type == 'IntI-L-S') return this.getSlice(key.last() - steps_back).expand('IntI-L', {up: x, across: y, length: l}, n, m).concat([cell]);
-    if (type == 'Int-L-SI') return [cell].concat(this.rewrite(cell).expand('Int-L', x + 1, y, n, l, m));
-*/    
+    if (type === 'Int-L-S') {
+        var x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
+        var y = box.min.penultimate() - 1;
+
+        return this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        
+    }
+    else if (type === 'Int-L-SI') {
+        var x = box.min.last() - this.source_size(key.last()) + this.target_size(key.last());
+        var y = box.min.penultimate();
+        
+        return [cell].concat(this.getSlice(key.last()).rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
+    }
+    else{
+        return [];
+    }
+
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
 };
@@ -109,7 +118,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'Int-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)},
-                    {relative: m}, {relative: -l}]);
+                       {relative: m}, {relative: -l}]);
         
         return [cell].concat(
         this.getSlice(key.last() - steps).rewrite(cell).expand('Int-R', {up: x, across: y, length: l}, n, m));
@@ -202,10 +211,10 @@ Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
     var up = drag.directions[0] > 0;
     var key = [drag.coordinates[0]];
-    var options = this.getDragOptions(up ? ['Int-L-SI', 'IntI-L-SI', 'Int-R-SI', 'IntI-R-SI', 
-                                            'Int-LI-SI', 'IntI-LI-SI', 'Int-RI-SI', 'IntI-RI-SI'] 
-                                            : ['Int-L-S', 'IntI-L-S', 'Int-R-S', 'IntI-R-S', 
-                                            'Int-LI-S', 'IntI-LI-S', 'Int-RI-S', 'IntI-RI-S'], key);
+    var options = this.getDragOptions(up ? ['Int-L-SI'/*, 'IntI-L-SI', 'Int-R-SI', 'IntI-R-SI', 
+                                            'Int-LI-SI', 'IntI-LI-SI', 'Int-RI-SI', 'IntI-RI-SI'*/] 
+                                            : ['Int-L-S'/*, 'IntI-L-S', 'Int-R-S', 'IntI-R-S', 
+                                            'Int-LI-S', 'IntI-LI-S', 'Int-RI-S', 'IntI-RI-S'*/], key);
 
     // Collect the possible options
     var possible_options = [];

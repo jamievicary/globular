@@ -138,7 +138,6 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var slice = this.getSlice(x);
     var cell = this.cells[x];
     var coords = cell.box.min;
-    var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
     var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
