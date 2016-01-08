@@ -48,3 +48,18 @@ function globular_render(container, diagram, subdiagram, suppress) {
 
 }
 
+/*
+function SVGtoPNG(svgElement, callback) {
+  var svgURL = new XMLSerializer().serializeToString(svgElement);
+  alert(svgURL);
+  var img = new Image();
+  img.onload = function() {
+  	var canvas = $('#mycanvas')[0];
+    canvas.getContext('2d').drawImage(this, 0, 0);
+    callback(canvas.toDataURL());
+  }
+  img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgURL);
+}
+
+SVGtoPNG(document.querySelector('svg'), function(s) {console.log(s)});
+*/

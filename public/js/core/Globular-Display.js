@@ -43,6 +43,10 @@ Display.prototype.enableMouse = function() {
 }
 
 Display.prototype.mousedown = function(event) {
+
+    // Only interact with left mouse button
+    if (event.buttons != 1) return;
+
     if (!gProject.initialized) return;
     if (this.diagram == null) return;
     var b = $(this.container)[0].bounds;
@@ -53,7 +57,7 @@ Display.prototype.mousedown = function(event) {
     if (logical.x > b.right) return;
     if (logical.y < b.bottom) return;
     if (logical.y > b.top) return;
-    this.select_grid = this.pixelsToGrid(event);
+    this.select_grid = logical;
 }
 
 var min_drag = 0.25;
@@ -62,6 +66,9 @@ Display.prototype.mousemove = function(event) {
     if (this.diagram == null) return;
 
     var timer = new Timer("Display.mousemove - updating popup")
+
+    //console.log('grid.x = ' + new_grid.x + ', grid.y = ' + new_grid.y);
+
     var new_grid = this.pixelsToGrid(event);
     this.updatePopup({
         logical: this.gridToLogical(new_grid),
@@ -320,6 +327,16 @@ Display.prototype.mouseup = function(event) {
 
 Display.prototype.pixelsToGrid = function(event) {
 
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var pan = this.panzoom.getPan();
+    var sizes = this.panzoom.getSizes();
+    return {
+        x: (event.offsetX - pan.x) / sizes.realZoom,
+        y: b.bottom + (pan.y - event.offsetY) / sizes.realZoom
+    }
+
+    /*
     var this_width = $(this.container).width();
     var this_height = $(this.container).height();
     if (this_width == 0) return null;
@@ -348,6 +365,7 @@ Display.prototype.pixelsToGrid = function(event) {
         x: x,
         y: y
     };
+    */
 }
 
 Display.prototype.has_controls = function() {
@@ -628,7 +646,7 @@ Display.prototype.highlight_next_slice = function() {
 }
 
 Display.prototype.remove_highlight = function() {
-    $(this.container).children('svg').children('g').children('g').remove();
+    $(this.container).children('svg').children('g').children('g').children('g').remove();
 }
 
 Display.prototype.highlight_action = function(action, boundary) {
@@ -656,23 +674,25 @@ Display.prototype.highlight_action = function(action, boundary) {
 Display.prototype.highlight_box = function(box, boundary) {
 
     // Remove an existing highlight
-    $(this.container).children('svg').children('g').children('g').remove();
+    this.remove_highlight();
+    //$(this.container).children('svg').children('g').children('g').remove();
 
     // Add the highlight to the diagram
     globular_add_highlight(this.container, this.data, box, boundary, this.visible_diagram);
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
-Display.prototype.set_diagram = function(diagram, boundary, controls) {
+Display.prototype.set_diagram = function(data /*diagram, boundary, controls*/) {
     console.log("Set new diagram");
-    if (diagram == null) {
+    if (data.diagram == null) {
         this.diagram = null;
         this.data = null;
         this.container.empty();
     } else {
-        this.diagram = diagram.copy();
-        this.update_controls(boundary, controls);
-        this.render();
+        //this.diagram = diagram.copy();
+        this.diagram = data.diagram;
+        this.update_controls(data.drag, data.controls);
+        this.render(data.preserve_view);
     }
 }
 
@@ -684,16 +704,33 @@ Display.prototype.get_current_slice = function() {
     return position;
 }
 
-Display.prototype.render = function() {
+Display.prototype.render = function(preserve_view) {
     var timer = new Timer("Display.render");
     var slice = this.diagram;
     for (var i = 0; i < this.slices.length; i++) {
         slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
     }
     this.visible_diagram = slice;
+    var pan = null;
+    var zoom = null;
+    if (this.panzoom != null) {
+        if (preserve_view) {
+            pan = this.panzoom.getPan();
+            zoom = this.panzoom.getZoom();
+        }
+        this.panzoom.destroy();
+    }
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
+    this.container.on('contextmenu', function(evt) {
+        evt.preventDefault();
+    })
     this.data = data;
     timer.Report();
+    this.panzoom = svgPanZoom(this.container.find('svg')[0]);
+    if (pan != null) {
+        this.panzoom.zoom(zoom);
+        this.panzoom.pan(pan);
+    }
 
     // Render highlight if necessary
     if (this.slices.length > 0) {

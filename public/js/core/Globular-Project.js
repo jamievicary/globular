@@ -424,7 +424,8 @@ Project.prototype.performActionUI = function(option, drag) {
     this.selected_cell = null;
     this.clearThumbnails();
     this.renderDiagram({
-        drag: drag
+        drag: drag,
+        preserve_view: true
     });
     this.saveState();
 }
@@ -596,7 +597,7 @@ Project.prototype.renderGenerator = function(div, id) {
 Project.prototype.renderDiagram = function(data) {
     if (data == undefined) data = {};
     //MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
-    MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
+    MainDisplay.set_diagram({diagram: this.diagram, drag: data.drag, controls: data.controls, preserve_view: data.preserve_view});
 };
 
 // Need to write this code
@@ -923,10 +924,16 @@ Project.prototype.renderNCell = function(id) {
 
     // Render the thumbnails
     if (generator.single_thumbnail) {
-        generator.getDiagram().render('#ci-' + generator.id);
+        var d = generator.getDiagram();
+        d.render('#ci-' + generator.id);
+        d.clearAllSliceCaches();
     } else if (generator.getDimension() > 0) {
-        generator.getSource().render('#ci-' + generator.id);
-        generator.getTarget().render('#ci-second-' + generator.id);
+        var s = generator.getSource();
+        s.render('#ci-' + generator.id);
+        s.clearAllSliceCaches();
+        var t = generator.getTarget();
+        t.render('#ci-second-' + generator.id);
+        t.clearAllSliceCaches();
     }
 
     // Clear up the data
