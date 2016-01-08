@@ -4,6 +4,8 @@ function get_new_private_project_id(email) {
 	var data = fs.readdirSync('database/users/' + email + '/projects');
 	var new_id = 0;
 	for (var i = 0; i < data.length; i++) {
+		var id = Number(data[i]);
+		if (isNaN(id)) continue;
 		new_id = Math.max(new_id, Number(data[i]) + 1);
 	}
 	return new_id;

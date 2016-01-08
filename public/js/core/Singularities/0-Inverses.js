@@ -30,7 +30,7 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
         };
         return [{
             preattachment: preattachment,
-            id: cell.id.toggle_inverse() + '-EI',
+            id: cell.id.toggle_inverse() + '-EI0',
             key: [0]
         }];
     };
@@ -49,13 +49,13 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
         };
         return [{
             preattachment: preattachment,
-            id: cell.id + '-EI',
+            id: cell.id + '-EI0',
             key: [this.cells.length - 1]
         }];
     }
 
     var cell = this.cells[up ? height : height - 1];
-    var options = this.getDragOptions([cell.id + '-EI'], [up ? height : height - 1]);
+    var options = this.getDragOptions([cell.id + '-EI0'], [up ? height : height - 1]);
 
     // Collect the possible options
     var possible_options = [];
@@ -108,7 +108,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
             if (!matches[j].tail(drag.coordinates)) continue;
             //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
-                id: cells[i] + 'I',
+                id: cells[i] + 'I0',
                 key: matches[j],
                 possible: true
             });
@@ -118,7 +118,8 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         if (!generator.flippable()) continue;
         
         // Match the flip
-        var matches = this.enumerate(generator.getFlipSource());
+        var flip_generator = generator.copy().mirror(1);
+        var matches = this.enumerate(flip_generator.source);
         for (var j = 0; j < matches.length; j++) {
             if (!matches[j].tail(drag.coordinates)) continue;
             results.push({
@@ -129,7 +130,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
         }
 
         // Match the flip inverse
-        var matches = this.enumerate(generator.getFlipSource());
+        var matches = this.enumerate(flip_generator.target);
         for (var j = 0; j < matches.length; j++) {
             if (!matches[j].tail(drag.coordinates)) continue;
             results.push({
@@ -148,7 +149,7 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     
-    // '-EI' cells require a key of length 1
+    // '-EI0' cells require a key of length 1
     if (type.tail('E')) {
         //if (key.length != this.getDimension()) debugger;
         return [key.last()];
@@ -157,7 +158,7 @@ Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     // '-E' cells require a key of length > 1
     //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
     //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min;
-    if (type.tail('EI')) {
+    if (type.tail('EI0')) {
         if (key.length != 1) debugger;
         return this.cells[key[0]].key.slice().concat(key);
     }
@@ -167,7 +168,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
     var base_type = type.substr(0, type.length - (type.tail('-E') ? 2 : 3));
 
     var box;
-    if (type.tail('-EI')) {
+    if (type.tail('-EI0')) {
         box = this.getSliceBoundingBox(key.last());
         box.max.push(key.last() + 2)
     } else {
@@ -186,7 +187,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
 
 Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
 
-    // This procedure only recognizes '-E' or '-EI' type moves
+    // This procedure only recognizes '-E' or '-EI0' type moves
     if (!type.strip_inverses().tail('-E')) return false;
 
     var height = key.last();
@@ -197,7 +198,7 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     // Can't cancel out an inverse cell if we're at the top of the diagram
     if (height == this.cells.length) return false;
 
-    // Must have at least 2 things to cancel out
+    // Must have at least 2 things to perform a cancellation
     if (this.cells.length < 2) return false;
 
     // Get the two things that are supposed to be inverse
@@ -209,18 +210,17 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     if (!inverse_cell1.equals(cell2)) return false;
 
     // Check cell ids are consistent with the type we've been passed
-    if (type == cell1.id + '-EI' && cell2.id == cell1.id + 'I') return true;
-    if (type == cell1.id + '-EI' && cell1.id == cell2.id + 'I') return true;
+    if (type == cell1.id + '-EI0' && cell2.id == cell1.id + 'I0') return true;
+    if (type == cell1.id + '-EI0' && cell1.id == cell2.id + 'I0') return true;
 
     // Cell ids don't match, so interchanger is not allowed
     return false;
 };
 
-
 Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
 
     // '...-EI'-type cells just rewrite to the identity
-    if (type.tail('-EI')) return [];
+    if (type.tail('-EI0')) return [];
 
     // '...-E'-type cells introduce a nontrivial pair
     var base_type = type.substr(0, type.length - 2);
@@ -238,7 +238,7 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
 }
 
 Diagram.prototype.tidyKey.Inverses = function(type, key) {
-    if (type.tail('-EI') && key.length != 1) debugger;
+    if (type.tail('-EI0') && key.length != 1) debugger;
     if (type.tail('-E') && key.length != this.getDimension()) debugger;
     return key;
 }

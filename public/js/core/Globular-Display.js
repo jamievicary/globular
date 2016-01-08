@@ -115,6 +115,7 @@ Display.prototype.updatePopup = function(data) {
     var popup = $('#diagram-popup');
     if (this.update_in_progress || data.logical == null) {
         popup.remove();
+        this.popup = null;
         return;
     }
 
@@ -123,9 +124,11 @@ Display.prototype.updatePopup = function(data) {
         popup = $('<div>').attr('id', 'diagram-popup').appendTo('#diagram-canvas');
     }
 
+    this.popup = data.logical;
     var boundary = this.diagram.getBoundary(data.logical.boundary);
     var cell = boundary.getCell(data.logical.coordinates.reverse());
-    var description = cell.id.getFriendlyName();
+    var boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
+    var description = cell.id.getFriendlyName() + ' @ ' + boundary_string + JSON.stringify(data.logical.coordinates);
     var pos = $('#diagram-canvas').position();
     popup.html(description)
         .css({
@@ -354,7 +357,7 @@ Display.prototype.has_controls = function() {
 // Make sure all the coordinates and suppressions make sense, bearing in mind
 // that an attachment has just been performed at the specified location,
 // so we want to keep it in view
-Display.prototype.update_controls = function(boundary, controls) {
+Display.prototype.update_controls = function(drag, controls) {
 
     var timer = new Timer("Display.update_controls");
 
@@ -375,8 +378,8 @@ Display.prototype.update_controls = function(boundary, controls) {
     // Update the view dimension input
     if (this.view_input != null) {
         var new_view = Number(this.view_input.val());
-        if (boundary != undefined) {
-            if (boundary.boost) new_view++;
+        if (drag != undefined) {
+            if (drag.boost) new_view++;
         }
         new_view = Math.min(2, new_view, this.diagram.getDimension() - new_suppress);
         this.view_input.val(new_view);
@@ -384,15 +387,17 @@ Display.prototype.update_controls = function(boundary, controls) {
     }
 
     // Update the slice controls
-    this.update_slice_container(boundary, controls);
+    this.update_slice_container(drag, controls);
 
     timer.Report();
 }
 
 Display.prototype.control_change = function() {
+    var timer = new Timer('Display.control_change');
     gProject.clearThumbnails();
     this.update_controls();
     this.render();
+    timer.Report();
 }
 
 // Create the control panel, only called in the constructor
@@ -506,8 +511,10 @@ Display.prototype.update_slice_container = function(drag, controls) {
             .hover(
                 // Mouse over
                 function() {
+                    var timer = new Timer('mouse over slicer')
                     this.focus();
                     self.highlight_slice(Number(this.getAttribute('index')));
+                    timer.Report();
                     /*
                     if (Number(this.getAttribute('index')) == self.slices.length - 1) {
                         self.highlight_next_slice();
@@ -516,7 +523,9 @@ Display.prototype.update_slice_container = function(drag, controls) {
                 },
                 // Mouse out
                 function() {
+                    var timer = new Timer('mouse out of slicer');
                     self.remove_highlight();
+                    timer.Report();
                 });
 
         // Store the index of the slice control

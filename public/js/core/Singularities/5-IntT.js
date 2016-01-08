@@ -12,7 +12,7 @@ RegisterSingularityFamily({
     family: 'IntLT',
     dimension: 5,
     members: ['Int-L-T'
-    ,'Int-L-TI','IntI-L-T', 'IntI-L-TI','Int-LI-T', 'Int-LI-TI','IntI-LI-T', 'IntI-LI-TI','Int-R-T', 'Int-R-TI','IntI-R-T', 'IntI-R-TI','Int-RI-T', 'Int-RI-TI','IntI-RI-T', 'IntI-RI-TI'
+    ,'Int-L-TI','IntI0-L-T', 'IntI0-L-TI','Int-LI-T', 'Int-LI-TI','IntI0-LI-T', 'IntI0-LI-TI','Int-R-T', 'Int-R-TI','IntI0-R-T', 'IntI0-R-TI','Int-RI-T', 'Int-RI-TI','IntI0-RI-T', 'IntI0-RI-TI'
     ]
 });
 */
@@ -31,7 +31,7 @@ Diagram.prototype.getSource.IntLT = function(type, k) {
 
     var key_slice = this.getSlice(k.last());
     //var f_cell = key_slice.cells[key_cell.key.last()];
-    var stack = d.expand('IntI-1I', {start: key_cell.key.last() - 1, n: key_slice.source_size(key_cell.key.last())});
+    var stack = d.expand('IntI0-1I', {start: key_cell.key.last() - 1, n: key_slice.source_size(key_cell.key.last())});
     return [key_cell].concat(stack);
 };
 
@@ -64,7 +64,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
-    var subtype = (type.substr(0, 4) == 'IntI' ? 'IntI' : 'Int');
+    var subtype = (type.substr(0, 5) == 'IntI0' ? 'IntI0' : 'Int');
 
     if (type == 'Int-L-T') {
         if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
@@ -73,7 +73,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     }
 
     /*
-    if (type == 'IntI-L') {
+    if (type == 'IntI0-L') {
         if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() + g1_source).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last(), g1_target, 1));
@@ -85,7 +85,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
     }
 
-    if (type == 'IntI-RI') {
+    if (type == 'IntI0-RI') {
         if (slice.cells.length <= coords.last() + g1_source) return false; // must have something on the right
         if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() + g1_source).max.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last(), 1, g1_source));
@@ -97,7 +97,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
     }
 
-    if (type == 'IntI-LI') {
+    if (type == 'IntI0-LI') {
         if (coords.last() == 0) return false; // must have something on the left
         if (this.getSliceBoundingBox(x).max.end(1) > slice.getSliceBoundingBox(coords.last() - 1).min.end(0)) return false; // must be shallower
         return this.instructionsEquiv(this.cells.slice(x - g1_source, x), this.expand(subtype, coords.last() - 1, g1_source, 1));
@@ -109,7 +109,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
     }
 
-    if (type == 'IntI-R') {
+    if (type == 'IntI0-R') {
         if (coords.last() == 0) return false; // must have something on the left
         if (this.getSliceBoundingBox(x).min.end(1) < slice.getSliceBoundingBox(coords.last() - 1).max.end(0)) return false; // must be deeper
         return this.instructionsEquiv(this.cells.slice(x + 1, x + 1 + g1_target), this.expand(subtype, coords.last() - 1, 1, g1_target));
@@ -130,13 +130,13 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var t = this.target_size(h);
     
     if (type == 'Int-L')   return d.expand('Int', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
-    if (type == 'IntI-L')  return d.expand('IntI', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
+    if (type == 'IntI0-L')  return d.expand('IntI0', coords.last(), s, 1).concat([cell.move([{relative: 1}])]);
     if (type == 'Int-R')   return d.expand('Int', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
-    if (type == 'IntI-R')  return d.expand('IntI', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
+    if (type == 'IntI0-R')  return d.expand('IntI0', coords.last() - 1, 1, s).concat([cell.move([{relative: -1}])]);
     if (type == 'Int-LI')  return [cell.move([{relative: -1}])].concat(d.expand('Int', coords.last() - 1, t, 1));
-    if (type == 'IntI-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI', coords.last() - 1, t, 1));
+    if (type == 'IntI0-LI') return [cell.move([{relative: -1}])].concat(d.expand('IntI0', coords.last() - 1, t, 1));
     if (type == 'Int-RI')  return [cell.move([{relative: 1}])].concat(d.expand('Int', coords.last(), t, 1));
-    if (type == 'IntI-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI', coords.last(), t, 1));
+    if (type == 'IntI0-RI') return [cell.move([{relative: 1}])].concat(d.expand('IntI0', coords.last(), t, 1));
     
 }
 
@@ -149,16 +149,16 @@ Diagram.prototype.getInterchangerCoordinates.IntL = function(type, key) {
     var coords = cell.coordinates.slice(0);
     coords.push(h);
     
-    if (type.tail('Int-L', 'IntI-L')) {
+    if (type.tail('Int-L', 'IntI0-L')) {
         return coords;
     }
-    else if (type.tail('Int-LI', 'IntI-LI')) {
+    else if (type.tail('Int-LI', 'IntI0-LI')) {
         return coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
     }
-    else if (type.tail('Int-R', 'IntI-R')) {
+    else if (type.tail('Int-R', 'IntI0-R')) {
         return coords.move([{relative: -1}, {relative: 0}]);
     }
-    else if (type.tail('Int-RI', 'IntI-RI')) {
+    else if (type.tail('Int-RI', 'IntI0-RI')) {
         return coords.move([{relative: -this.source_size(h)}])
     }
 

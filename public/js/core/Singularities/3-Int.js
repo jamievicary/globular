@@ -5,7 +5,7 @@
 RegisterSingularityFamily({
     family: 'Int',
     dimension: 3,
-    members: ['Int', 'IntI'],
+    members: ['Int', 'IntI0'],
     friendly: {'Int': 'Interchanger'}
 });
 
@@ -47,9 +47,9 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
     var h = drag.coordinates[0];
     if (drag.directions[0] > 0) {
         r.left = {
-            id: 'IntI',
+            id: 'IntI0',
             key: [h + 1],
-            possible: this.interchangerAllowed('IntI', [h + 1])
+            possible: this.interchangerAllowed('IntI0', [h + 1])
         };
         r.right = {
             id: 'Int',
@@ -63,9 +63,9 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
             possible: this.interchangerAllowed('Int', [h - 1])
         };
         r.right = {
-            id: 'IntI',
+            id: 'IntI0',
             key: [h],
-            possible: this.interchangerAllowed('IntI', [h])
+            possible: this.interchangerAllowed('IntI0', [h])
         };
     }
     // Return the best match in a permissive way
@@ -95,7 +95,7 @@ Diagram.prototype.interchangerAllowed.Int = function(type, key) {
         if (x == this.cells.length - 1) return false;
         return (this.cells[x].box.min.last() >= this.cells[x + 1].box.min.last() + this.source_size(x + 1));
     }
-    if (type.tail('IntI')) {
+    if (type.tail('IntI0')) {
         if (x == 0) return false;
         var delta = this.target_size(x - 1) - this.source_size(x - 1);
         return (this.cells[x - 1].box.min.last() + this.target_size(x - 1) <= this.cells[x].box.min.last());
@@ -112,7 +112,7 @@ Diagram.prototype.rewritePasteData.Int = function(type, key) {
             relative: this.target_size(x + 1) - this.source_size(x + 1)
         }])];
     }
-    if (type.tail('IntI')) {
+    if (type.tail('IntI0')) {
         var cell1 = this.cells[x - 1].copy();
         var cell2 = this.cells[x].copy();
         return [cell2.move([{
@@ -132,7 +132,7 @@ Diagram.prototype.getInterchangerCoordinates.Int = function(type, key) {
     if (key.length === 1) {
         if (type.tail('Int')) {
             list = this.cells[x + 1].box.min.slice(0);
-        } else if (type.tail('IntI')) {
+        } else if (type.tail('IntI0')) {
             x--;
             list = this.cells[x].box.min.slice(0);
         } else {
@@ -166,7 +166,7 @@ Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
                 }])
         };
         */
-    } else if (type.tail('IntI')) {
+    } else if (type.tail('IntI0')) {
         return this.unionBoundingBoxes(this.getLocationBoundingBox([x]), this.getLocationBoundingBox([x-1]));
         /*
         return {
@@ -184,6 +184,6 @@ Diagram.prototype.getInterchangerBoundingBox.Int = function(type, key) {
 Diagram.prototype.getInverseKey.Int = function(type, key) {
     if (key.length != 1) debugger
     if (type.tail('Int')) return [key.last() + 1];
-    else if (type.tail('IntI')) return [key.last() - 1];
+    else if (type.tail('IntI0')) return [key.last() - 1];
 };
 

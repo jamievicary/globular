@@ -12,13 +12,13 @@ RegisterSingularityFamily({
     family: 'IntLS',
     dimension: 5,
     members: ['Int-L-S', 'Int-L-SI',
-    'IntI-L-S', 'IntI-L-SI',
+    'IntI0-L-S', 'IntI0-L-SI',
     'Int-LI-S', 'Int-LI-SI',
-    'IntI-LI-S', 'IntI-LI-SI',
+    'IntI0-LI-S', 'IntI0-LI-SI',
     'Int-R-S', 'Int-R-SI',
-    'IntI-R-S', 'IntI-R-SI',
+    'IntI0-R-S', 'IntI0-R-SI',
     'Int-RI-S', 'Int-RI-SI',
-    'IntI-RI-S', 'IntI-RI-SI']
+    'IntI0-RI-S', 'IntI0-RI-SI']
 });
 
 
@@ -116,7 +116,7 @@ Diagram.prototype.getInterchanger.IntLS = function(type, key) {
     var coords = cell.box.min.slice(0);
     coords.push(h - this.source_size(h));
     
-    if (type.tail('IntI-L-S', 'Int-L-S')) {
+    if (type.tail('IntI0-L-S', 'Int-L-S')) {
         return coords; //coords.move([{relative: -1}, {relative: -this.source_size(h)}]);
     }
 }
@@ -143,21 +143,21 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     return coords;
     
 /*
-    if (type.tail('Int-L-S', 'IntI-L')) {
+    if (type.tail('Int-L-S', 'IntI0-L')) {
         return coords;
-    } else if (type.tail('Int-LI', 'IntI-LI')) {
+    } else if (type.tail('Int-LI', 'IntI0-LI')) {
         return coords.move([{
             relative: -1
         }, {
             relative: -this.source_size(h)
         }]);
-    } else if (type.tail('Int-R', 'IntI-R')) {
+    } else if (type.tail('Int-R', 'IntI0-R')) {
         return coords.move([{
             relative: -1
         }, {
             relative: 0
         }]);
-    } else if (type.tail('Int-RI', 'IntI-RI')) {
+    } else if (type.tail('Int-RI', 'IntI0-RI')) {
         return coords.move([{
             relative: -this.source_size(h)
         }])

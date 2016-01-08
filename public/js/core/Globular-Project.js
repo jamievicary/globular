@@ -162,7 +162,8 @@ Project.prototype.limitMatches = function(matches, elements) {
 // Clear thumbnails
 Project.prototype.clearThumbnails = function() {
     $('div.cell-b-sect').empty();
-    $("#options-box").fadeOut(100);
+    //$("#options-box").fadeOut(100);
+    $("#options-box").hide();
 }
 
 // Clear the main diagram, UI function
@@ -190,9 +191,11 @@ Project.prototype.takeIdentityUI = function() {
     */
     this.diagram.boost();
     this.renderDiagram({
-        boundary: {
-            type: 't',
-            depth: 1
+        drag: {
+            boundary: {
+                type: 't',
+                depth: 1
+            }
         },
         boost: true
     });
@@ -345,7 +348,8 @@ Project.prototype.dragCellUI = function(drag) {
         // Use a closure to specify the behaviour on selection
         (function(action) {
             item.click(function() {
-                $("#options-box").fadeOut(100);
+                //$("#options-box").fadeOut(100);
+                $("#options-box").hide();
                 gProject.performActionUI(action, drag);
             }).hover(
                 // Mouse in
@@ -358,7 +362,8 @@ Project.prototype.dragCellUI = function(drag) {
                 });
         })(options[i]);
     }
-    $("#options-box").fadeIn(100);
+    //$("#options-box").fadeIn(100);
+    $("#options-box").show();
 };
 
 Project.prototype.actionAllowed = function(option, drag) {
@@ -374,6 +379,9 @@ Project.prototype.actionAllowed = function(option, drag) {
         // Not allowed
         return false;
     }
+
+    // Allow anything involving flipping
+    if (option.id.indexOf('I1') > -1) return true;
 
     // If the base type we're attaching is invertible, there's no problem
     var signature_id = option.id.getSignatureType();
@@ -580,13 +588,14 @@ Project.prototype.render = function(div, diagram, slider, highlight) {
 // Render a generator
 Project.prototype.renderGenerator = function(div, id) {
     var generator = this.signature.getGenerator(id);
-    if (generator.diagram == null) generator.prepareDiagram();
-    this.render(div, generator.diagram);
+    if (generator == null) debugger;
+    this.render(div, generator.getDiagram());
 }
 
 // Render the main diagram
 Project.prototype.renderDiagram = function(data) {
     if (data == undefined) data = {};
+    //MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
     MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
 };
 
@@ -697,7 +706,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     div_detail.appendChild(input_color);
 
     // Add invertibility selector
-    if (n > 0 && generator.id.last() != 'I') {
+    if (n > 0) {
         var label = $('<br><label class="cell-invertible"><input type="checkbox" name="checkbox">Invertible</label>');
         var input = label.find('input');
         input.attr('id', 'invertible-' + generator.id).prop('checked', generator.invertible);
@@ -810,31 +819,32 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
 }
 
 Project.prototype.removeCell = function(id) {
-    var relatedCells = this.relatedCells(id);
+    var generator = this.signature.getGenerator(id);
+    var relatedCells = this.relatedCells(generator);
 
     // Remove the main diagram if it uses any related cells
     for (var i = 0; i < relatedCells.length; i++) {
         if (this.diagram == null) break;
-        var cell = relatedCells[i];
-        if (this.diagram.usesCell(cell)) this.clearDiagram();
+        var related_generator = relatedCells[i];
+        if (this.diagram.usesCell(related_generator)) this.clearDiagram();
     }
 
     // Remove the related cells
     for (var i = 0; i < relatedCells.length; i++) {
-        this.signature.removeCell(relatedCells[i]);
-        $('#cell-opt-' + relatedCells[i]).remove();
+        this.signature.removeCell(relatedCells[i].id);
+        $('#cell-opt-' + relatedCells[i].id).remove();
     }
 }
 
-Project.prototype.relatedCells = function(id) {
-    var related_cells = [id];
+Project.prototype.relatedCells = function(generator_to_remove) {
+    var related_cells = [generator_to_remove];
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        var generator = this.signature.getGenerator(cell);
-        if (generator.usesCell(generator)) {
-            related_cells.push(cell);
-            related_cells = related_cells.concat(this.relatedCells(cell));
+        var id = cells[i];
+        var generator = this.signature.getGenerator(id);
+        if (generator.usesCell(generator_to_remove)) {
+            related_cells.push(generator);
+            related_cells = related_cells.concat(this.relatedCells(generator));
         }
     }
     return related_cells;
@@ -913,11 +923,14 @@ Project.prototype.renderNCell = function(id) {
 
     // Render the thumbnails
     if (generator.single_thumbnail) {
-        this.renderGenerator('#ci-' + generator.id, generator.id);
+        generator.getDiagram().render('#ci-' + generator.id);
     } else if (generator.getDimension() > 0) {
-        generator.source.render('#ci-' + generator.id);
-        generator.target.render('#ci-second-' + generator.id);
+        generator.getSource().render('#ci-' + generator.id);
+        generator.getTarget().render('#ci-second-' + generator.id);
     }
+
+    // Clear up the data
+    generator.prepare();
 }
 
 
@@ -926,9 +939,9 @@ Project.prototype.redrawAllCells = function() {
 
     var list = this.signature.getAllCells();
     this.renderCellChain(list);
-    
+
     return;
-    
+
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
         this.renderNCell(cells[i]);
@@ -1005,4 +1018,36 @@ Project.prototype.saveUI = function() {
             });
         }
     );
+}
+
+Project.prototype.keepTopUI = function() {
+    if (this.diagram == null) return;
+    
+    if (MainDisplay.slices.length == 0) {
+        // Get cut location from mouse position
+        if (MainDisplay.popup == null) return;
+        var coordinate = MainDisplay.popup.coordinates[0]
+        this.diagram.keepAfter(coordinate);
+    } else {
+        // Get cut location from first slice
+        this.diagram.keepAfter(Number(MainDisplay.slices[0].val()));
+    }
+    
+    this.renderDiagram();
+}
+
+Project.prototype.keepBottomUI = function() {
+    if (this.diagram == null) return;
+    
+    if (MainDisplay.slices.length == 0) {
+        // Get cut location from mouse position
+        if (MainDisplay.popup == null) return;
+        var coordinate = MainDisplay.popup.coordinates[0]
+        this.diagram.keepBefore(coordinate);
+    } else {
+        // Get cut location from first slice
+        this.diagram.keepBefore(Number(MainDisplay.slices[0].val()));
+    }
+    
+    this.renderDiagram();
 }

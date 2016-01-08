@@ -27,7 +27,7 @@ function RegisterSingularityFamily(data) {
 }
 
 function GetSingularityFamily(type) {
-    if (type.tail('-E', '-EI')) return 'Inverses';
+    if (type.tail('-E', '-EI0')) return 'Inverses';
     if (gProject.signature.getGenerator(type.getBaseType())) return 'Signature';
     return SingularityFamilies[type];
 }

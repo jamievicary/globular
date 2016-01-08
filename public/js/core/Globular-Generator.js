@@ -23,7 +23,6 @@ function Generator(data) {
     this.name = data.name;
     if (data.single_thumbnail == undefined) data.single_thumbnail = (this.getDimension() <= 2);
     this.single_thumbnail = data.single_thumbnail;
-    this.prepareDiagram();
     return this;
 };
 
@@ -36,26 +35,38 @@ Generator.prototype.prepare = function() {
         this.target.prepare();
         this.target.clearAllSliceCaches();
     }
-    if (this.diagram != null) this.diagram.prepare();
-}
-
-Generator.prototype.prepareDiagram = function() {
-    var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
-    this.diagram = new Diagram(this.source, [new NCell({id: this.id, key: key, box: this.getBoundingBox()})]);
-    this.diagram.clearAllSliceCaches();
-    this.diagram.ignore = false;
+    
+    // We don't hold diagram objects any more
+    if (this.diagram != undefined) delete this.diagram;
 }
 
 Generator.prototype.getDiagram = function() {
-    var copy = this.diagram.copy();
-    delete copy.ignore;
-    return copy;
+    var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
+    return new Diagram(this.source == null ? null : this.source.copy(), [new NCell({id: this.id, key: key.slice(), box: this.getBoundingBox()})]);
+}
+
+Generator.prototype.getSource = function() {
+    return (this.source == null ? null : this.source.copy());
+}
+
+Generator.prototype.getTarget = function() {
+    return (this.target == null ? null : this.target.copy());
+}
+
+// Mirror a generator
+Generator.prototype.mirror = function(n) {
+    if (n == 0) {
+        var temp = this.source;
+        this.source = this.target;
+        this.target = temp;
+    } else if (n == 1) {
+        this.source = this.source.mirror(0);
+        this.target = this.target.mirror(0);
+    }
+    return this;
 }
 
 Generator.prototype.swapSourceTarget = function() {
-    var temp = this.source;
-    this.source = this.target;
-    this.target = temp;
     return this;
 }
 
@@ -88,8 +99,7 @@ Generator.prototype.copy = function() {
     if (this.target != null) {
         newTarget = this.target.copy();
     }
-    var generator = new Generator({source: newSource, target: newTarget, id: this.id, name: this.name});
-    return generator;
+    return new Generator({source: newSource, target: newTarget, id: this.id, name: this.name});
 };
 
 Generator.prototype.getBoundingBox = function() {
@@ -113,12 +123,17 @@ Generator.prototype.usesCell = function(generator) {
     
     // The generator uses the specified cell iff the source or target uses it
     if (this.source != null) {
-        if (this.source.usesCell(generator.id)) return true;
-        if (this.target.usesCell(generator.id)) return true;
+        var source_uses = this.source.usesCell(generator);
+        this.source.clearAllSliceCaches();
+        if (source_uses) return true;
+
+        var target_uses = this.target.usesCell(generator);
+        this.target.clearAllSliceCaches();
+        if (target_uses) return true;
     }
     return false;
 }
 
 Generator.prototype.flippable = function() {
-    return (this.id.indexOf('I1') > -1);
+    return (this.name.indexOf('*1') > -1);
 }
