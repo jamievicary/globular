@@ -220,7 +220,7 @@ String.prototype.analyze_id = function() {
 
 String.prototype.toggle_inverse = function(depth) {
     var I1 = this.tail('I1');
-    if (I1) this = this.substr()
+    if (I1) this = this.substr();
     if (this.tail('I')) return this.substr(0, this.length - 1);
     return this + 'I';
 }
