@@ -73,6 +73,7 @@ Diagram.prototype.render = function(div, highlight) {
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
     if (cell == undefined) debugger;
+    if (cell.key.last() < 0) debugger;
 
     // Identify the portion to be cut out, and the cells to be spliced in
     var source_size;
@@ -85,10 +86,17 @@ Diagram.prototype.rewrite = function(cell) {
         source_size = bounding_box.max.last() - bounding_box.min.last();
     } else {
         // Info on the source and the target of the rewrite is retrieved from the signature here
+        var rewrite = gProject.signature.getGenerator(cell.id);
+        source_size = rewrite.source.cells.length;
+        target = rewrite.target.copy();
+        insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
+        
+        /* OLD
         var rewrite = gProject.signature.getGenerator(cell.id.getBaseType());
         source_size = (cell.id.last() == 'I' ? rewrite.target.cells.length : rewrite.source.cells.length);
         target = (cell.id.last() == 'I' ? rewrite.source.copy() : rewrite.target.copy());
         insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
+        */
     }
 
     if (isNaN(insert_position)) debugger;
@@ -463,7 +471,7 @@ Diagram.prototype.attach = function(cell, boundary /*, bounds*/ ) {
             type: boundary.type,
             depth: boundary.depth - 1
         });
-        // Attach to elements of the slice cache
+        // Attach to final element of the slice cache
         if (this.sliceCache != null) {
             for (var i = 0; i < this.sliceCache.length; i++) {
                 if (this.sliceCache[i] == undefined) continue;
@@ -1050,32 +1058,81 @@ Diagram.prototype.initializeSliceCache = function() {
 Diagram.prototype.clearAllSliceCaches = function() {
     delete this.sliceCache;
     if (this.source != null) this.source.clearAllSliceCaches();
+    return this;
 }
 
 Diagram.prototype.prepare = function() {
     if (this.source != null) this.source.prepare();
     for (var i = 0; i < this.cells.length; i++) {
         var cell = this.cells[i];
+        cell.id = cell.id.clean(); // update the ID to the new format, in case this is an old workspace
         if (cell.box != undefined) continue;
         cell.box = this.getSliceBoundingBox(i);
     }
-}
+};
 
 // Check if the specified id is used at all in this diagram
-Diagram.prototype.usesCell = function(id) {
+Diagram.prototype.usesCell = function(generator) {
 
     // Check all the cells
     for (var i = 0; i < this.cells.length; i++) {
-        if (this.cells[i].id == id) return true;
+        if (this.cells[i].id.getSignatureType() == generator.id) return true;
     }
+    
+    // Check whether the source uses it
+    if (this.source != null) if (this.source.usesCell(generator)) return true;
+    
+    // If not, we're clear
+    return false;
 
+    /*
     // Check all the slices
     for (var i = 0; i < this.cells.length + 1; i++) {
         var slice = this.getSlice(i); // no need to copy slice
         if (slice != null) {
-            if (slice.usesCell(id)) return true;
+            if (slice.usesCell(generator)) return true;
         }
     }
-
     return false;
+    */
+};
+
+// Reflect a diagram in the nth way
+Diagram.prototype.mirror = function(n) {
+    if (n == 0) {
+        // Construct the inverse diagram
+        var new_diagram = new Diagram(this.getTargetBoundary(), []);
+        for (var i = this.cells.length - 1; i >= 0; i--) {
+            var new_cell = this.getSlice(i).getInverseCell(this.cells[i]);
+            new_diagram.attach(new_cell, {
+                depth: 1,
+                type: 't'
+            });
+        }
+        return new_diagram;
+    } else {
+        // Not yet implemented
+        debugger;
+    }
+}
+
+// Flips the diagram in the nth way
+Diagram.prototype.flip = function(n) {
+    
+}
+
+Diagram.prototype.keepAfter = function(n) {
+    var new_source = this.getSlice(n).copy();
+    var new_cells = this.cells.slice(n);
+    var new_cache = this.sliceCache.slice(n);
+    this.source = new_source;
+    this.cells = new_cells;
+    this.sliceCache = new_cache;
+}
+
+Diagram.prototype.keepBefore = function(n) {
+    var new_cells = this.cells.slice(0, n);
+    var new_cache = this.sliceCache.slice(0, n);
+    this.cells = new_cells;
+    this.sliceCache = new_cache;
 }

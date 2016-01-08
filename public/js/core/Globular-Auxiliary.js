@@ -158,46 +158,59 @@ Array.prototype.fill = function(value, length) {
 };
 
 String.prototype.is_basic_interchanger = function() {
-    return (this == 'Int' || this == 'IntI');
+    return (this == 'Int' || this == 'IntI0');
 };
 
 String.prototype.is_interchanger = function() {
-    if (this.tail('-E', '-EI')) return true;
+    if (this.tail('-E', 'EI0')) return true;
     return (this.substr(0, 3) == 'Int');
 };
 
 String.prototype.is_invertible = function() {
     if (this.is_interchanger()) return true;
+    if (this.indexOf('^0') > -1) return true;
     var checkbox = $('#invertible-' + this.getBaseType());
     if (checkbox.length == 0) return false;
     return checkbox.is(':checked');
 }
 
-String.prototype.is_inverse = function() {
-    return (this[this.length - 1] == 'I');
-}
-
 String.prototype.getBaseType = function() {
-    if (this.tail('I')) return this.substr(0, this.length - 1);
-    return this;
+    return this.strip_inverses();
 }
 
 String.prototype.getSignatureType = function() {
-    if (this.tail('I')) return this.substr(0, this.length - 1).getSignatureType();
-    if (this.tail('-E')) return this.substr(0, this.length - 2).getSignatureType();
+    if (this.tail('I0')) return this.chop(2).getSignatureType();
+    if (this.tail('I1')) return this.chop(2).getSignatureType();
+    if (this.tail('-E')) return this.chop(2).getSignatureType();
     if (gProject.signature.getGenerator(this) == null) return null;
     return this;
 }
 
+// Remove the trailing n characters
+String.prototype.chop = function(n) {
+    return this.substring(0, this.length - n);
+}
+
+// Ensure any old 'I'-style inverse markers are replaced with 'I0' markers
+String.prototype.clean = function() {
+    return this.replace(/I(?![\d,n])/g, 'I0');
+}
+
 String.prototype.analyze_id = function() {
-    if (this.tail('I')) {
-        var r = this.substr(0, this.length - 1).analyze_id();
+    if (this.tail('I1')) {
+        var r = this.chop(2).analyze_id();
         if (r == null) return null;
-        r.inverse = true;
+        r.i1 = true;
+        return r;
+    }
+    if (this.tail('I0')) {
+        var r = this.chop(2).analyze_id();
+        if (r == null) return null;
+        r.i0 = true;
         return r;
     }
     if (this.tail('-E')) {
-        var r = this.substr(0, this.length - 2).analyze_id();
+        var r = this.chop(2).analyze_id();
         if (r == null) return null;
         r.dimension++;
         return r;
@@ -206,29 +219,45 @@ String.prototype.analyze_id = function() {
     if (generator == null) return {
         base_id: this,
         signature: false,
-        inverse: false,
+        i0: false,
+        i1: false,
         dimension: 0
     }
     return {
         base_id: this,
         signature: true,
-        inverse: false,
+        i0: false,
+        i1: false,
         dimension: generator.getDimension(),
         generator: generator
     }
 }
 
 String.prototype.toggle_inverse = function(depth) {
-    var I1 = this.tail('I1');
-    if (I1) this = this.substr()
-    if (this.tail('I')) return this.substr(0, this.length - 1);
-    return this + 'I';
+    if (depth == undefined) depth = 0;
+    var i0 = false;
+    var i1 = false;
+    if (this.tail('I0I1')) {
+        i0 = true;
+        i1 = true;
+    } else if (this.tail('I0')) {
+        i0 = true;
+    } else if (this.tail('I1')) {
+        i1 = true;
+    }
+    if (depth == 0) i0 = !i0;
+    if (depth == 1) i1 = !i1;
+    var new_id = this.strip_inverses();
+    if (i0) new_id += 'I0';
+    if (i1) new_id += 'I1';
+    return new_id;
 }
 
 String.prototype.strip_inverses = function() {
-    if (this.substr(this.length - 1) == 'I') this = this.substr(0, this.length - 1);
-    if (this.substr(this.length - 2) == 'I1') this = this.substr(0, this.length - 2);
-    if (this.substr(this.length - 2) == 'I0') this = this.substr(0, this.length - 2);
+    var new_id = this;
+    if (new_id.tail('I1')) new_id = new_id.chop(2);
+    if (new_id.tail('I0')) new_id = new_id.chop(2);
+    return new_id;
 }
 
 String.prototype.repeat = function(n) {
@@ -242,13 +271,16 @@ String.prototype.repeat = function(n) {
 String.prototype.getFriendlyName = function() {
 
     // Is it a cancellation?
-    if (this.tail('-EI')) return this.substr(0, this.length - 3).getFriendlyName() + ", cancel";
+    if (this.tail('-EI0')) return this.chop(4).getFriendlyName() + ", cancel";
 
     // Is it an inverse cancellation?
-    if (this.tail('-E')) return this.substr(0, this.length - 2).getFriendlyName() + ", insert";
+    if (this.tail('-E')) return this.chop(2).getFriendlyName() + ", insert";
 
     // Is it an inverse?
-    if (this.tail('I')) return this.substr(0, this.length - 1).getFriendlyName() + " inverse";
+    if (this.tail('I0')) return this.chop(2).getFriendlyName() + " inverse";
+
+    // Is it a flip?
+    if (this.tail('I1')) return this.chop(2).getFriendlyName() + " flip";
 
     // Is it a generator?
     var generator = gProject.signature.getGenerator(this);
@@ -258,7 +290,7 @@ String.prototype.getFriendlyName = function() {
     var family = GetSingularityFamily(this);
     if (family != undefined) return SingularityData[family].friendly[this];
 
-    // Can't understand this
+    // Don't understand this
     return 'UNKNOWN';
 }
 
@@ -481,11 +513,11 @@ function globular_lz4_decompress(object) {
     return uncompressed_string;
 }
 
-function Uint8ToString(u8a){
+function Uint8ToString(u8a) {
     var CHUNK_SZ = 0x8000;
     var c = [];
-    for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
-        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+    for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
     }
     return c.join("");
 }

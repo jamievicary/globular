@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd /home/nodejs/Globular/database
+git add --all
+git commit -a -m "..."
+git push

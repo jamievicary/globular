@@ -230,7 +230,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             dimension: 2,
             edges: [],
             vertices: [],
-            edge_at_level: [[]]
+            edges_at_level: [[],[]]
         };
     }
 
@@ -512,7 +512,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             });
 
             // Draw lower path, possibly using an obscuring mask
-            var obscure = (vertex.type.length <= 4); // obscure only for basic interchangers
+            var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
             var mask_id = "mask" + i;
             if (obscure) {
                 // Add the obscuring mask, which is a fattened version of the upper line
@@ -1661,6 +1661,7 @@ function SVG_prepare(diagram, subdiagram) {
 // Add a highlighting rectangle to the diagram
 function globular_add_highlight(container, data, box, boundary, diagram) {
 
+    if (diagram.getDimension() < 2) return;
     var b = $(container)[0].bounds;
     var bottom, top, left, right;
     
@@ -1697,7 +1698,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
                     right = b.right;
                 } else {
                     left = data.edges[edges[box.min.last() - 1]].x + 0.5;
-                    left = data.edges[edges[box.min.last()]].x - 0.5;
+                    right = data.edges[edges[box.min.last()]].x - 0.5;
                 }
             } else {
                 left = data.edges[edges[box.min.last()]].x - 0.5;

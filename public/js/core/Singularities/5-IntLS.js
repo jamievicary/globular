@@ -14,11 +14,11 @@ RegisterSingularityFamily({
     members: ['Int-L-S', 'Int-L-SI'
     /*, 'IntI-L-S', 'IntI-L-SI',
     'Int-LI-S', 'Int-LI-SI',
-    'IntI-LI-S', 'IntI-LI-SI',
+    'IntI0-LI-S', 'IntI0-LI-SI',
     'Int-R-S', 'Int-R-SI',
-    'IntI-R-S', 'IntI-R-SI',
+    'IntI0-R-S', 'IntI0-R-SI',
     'Int-RI-S', 'Int-RI-SI',
-    'IntI-RI-S', 'IntI-RI-SI'*/],
+    'IntI0-RI-S', 'IntI0-RI-SI'*/],
     friendly: {
         'Int-L-S': 'Pull-through pull-through interchanger above',
         'IntI-L-S': 'Pull-through pull-through interchanger underneath',
@@ -26,7 +26,6 @@ RegisterSingularityFamily({
         'IntI-R-S': 'Pull-through pull-through inverse interchanger above'
 
     }
-
 });
 
 
@@ -299,6 +298,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     edge_box = this.getLocationBoundingBox([box.max.penultimate() + 1, 
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps]);
+
     }
     
     
@@ -308,6 +308,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
 
 Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
+
 }
 
 
