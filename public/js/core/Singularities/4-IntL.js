@@ -24,6 +24,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var x = data.up;
     var y = data.across;
     var l = data.length;
+    var new_type;
 
     var list = new Array();
     var new_l = l + (this.target_size(x) - this.source_size(x));
@@ -32,12 +33,12 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
         final_l += (this.target_size(x + i) - this.source_size(x + i));
     }
     var b = this.cells[x].box.min.last() - y;
-    var a = y + l - this.cells[x].box.min.last() - this.source_size(x);
+    var a = l - this.source_size(x) - b;
 
     if (type.tail('I0')) {
-        new_type = type.substr(0, type.length - 3)
+        new_type = type.substr(0, type.length - 3);
     } else {
-        new_type = type.substr(0, type.length - 2)
+        new_type = type.substr(0, type.length - 2);
     }
     if (n === 0 || m === 0) {
         return [];
@@ -66,20 +67,24 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             this.expand(type, {
                 up: x + a + b + this.source_size(x),
                 across: y + 1,
-                up: new_l
+                length: new_l
             }, 1, m - 1));
     } else {
-        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {
-            up: x,
-            across: y,
-            length: l
+        list = this.expand(type, {
+                up: x + n - 1, 
+                across: y,  
+                length: final_l
+            }, n - 1, 1).concat(this.expand(type, {
+                up: x,
+                across: y,
+                length: l
         }, n - 1, m));
     }
 
     return list;
 };
 
-/*
+
 Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     var count = 0;
     var l = box.max.penultimate() - box.min.penultimate();
@@ -91,7 +96,7 @@ Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     }
     return count;
 };
-*/
+
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {
