@@ -114,9 +114,11 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
     var cell = this.cells[key.last()].copy();
     var box = this.getSliceBoundingBox(key.last());
+    var steps = 0;
 
-    var steps = this.getSlice(key.last()).pseudoExpand(subtype, box, 1);
-
+    if(!type.tail("I")){
+        steps = this.getSlice(key.last()).pseudoExpand(subtype, box, 1);
+    }
 
     var alpha_box = this.getSlice(key.last() - steps).getBoundingBox(cell);
     var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
@@ -209,13 +211,14 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     }
     if (type == 'Int-L-SI') {
         n += this.source_size(key.last()) - this.target_size(key.last());
-        cell.move([{relative: 0}, {relative: m}, {relative: l}]);
-        
         alpha_box = this.getSlice(key.last()).getBoundingBox(cell);
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
+        cell.move([{relative: 0}, {relative: m}, {relative: l}]);
+
         
-        return this.getSlice(key.last()).expand('Int-L', {up: x, across: y, length: l}, n, m).concat[cell];
+        return this.getSlice(key.last()).expand('Int-L', {up: x, across: y, length: l}, n, m).concat([cell]);
+
     }
     if (type == 'IntI0-L-SI') {
         n += this.source_size(key.last()) - this.target_size(key.last());
@@ -340,8 +343,93 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     
     */
     
-    var source = this.getSource(type, key);
-    return this.subinstructions(key,  {list: source, key: source.length - 1});
+    var cell = this.cells[key.last()];
+    var box = this.getSliceBoundingBox(key.last());
+    
+    var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+    var steps_back = this.getSlice(key.last()).pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
+
+    var n = box.max.last() - box.min.last();
+    var l = box.max.penultimate() - box.min.penultimate();
+    var m = 1;
+    var x, y;
+    
+    // For the target we need to modify the key of alpha
+    if (type === 'Int-L-S') {
+        x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() - 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+    }
+    else if (type === 'IntI0-L-S') {
+        x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() - 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+    }
+    else if (type === 'Int-LI0-S') {
+        x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() + 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+    }
+    else if (type === 'IntI0-LI0-S') {
+        x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() + 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+    }
+    else if (type === 'Int-R-S') {
+        x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() + 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+    }
+    else if (type === 'IntI0-R-S') {
+        x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() + 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+
+    }
+    else if (type === 'Int-RI0-S') {
+        x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() - 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+
+    }
+    else if (type === 'IntI0-RI0-S') {
+        x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
+        y = box.min.penultimate() - 1;
+
+        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        return this.subinstructions(key,  {list: source, key: source.length - 1});
+
+    }
+    else if (type.tail('I')) {
+        x = box.min.last() - this.source_size(key.last()) + this.target_size(key.last());
+        y = box.min.penultimate();
+        n += - this.source_size(key.last()) + this.target_size(key.last());
+        
+        var source = [cell].concat(this.getSlice(key.last()).rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
+        return this.subinstructions(key,  {list: source, key: 0});
+    }
+
+    else{
+        return [];
+    }
+
+    alert ('Interchanger ' + type + ' not yet handled');
+    throw 0;
+    
 };
 
 
