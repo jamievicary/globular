@@ -134,7 +134,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('Int-L', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'IntI0-L-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -144,7 +144,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
        
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('IntI0-L', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('IntI0-L', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'Int-LI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -154,7 +154,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('Int-LI', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('Int-LI', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'IntI0-LI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -165,7 +165,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
        
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('IntI0-LI', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('IntI0-LI', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'Int-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -176,7 +176,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.last();
         y = alpha_box.min.penultimate(); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('Int-R', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('Int-R', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'IntI0-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -186,7 +186,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('IntI0-R', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('IntI0-R', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'Int-RI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -197,7 +197,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('Int-RI', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('Int-RI', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'IntI0-RI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
@@ -207,7 +207,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.penultimate();
         y = alpha_box.min.end(2); // 3rd from the end
         
-        return [cell].concat(this.getSlice(key.last() - steps).rewrite(cell).expand('IntI0-RI', {up: x, across: y, length: l}, n, m));
+        return [cell].concat(this.getSlice(key.last() - steps).copy()/*!!!!!*/.rewrite(cell).expand('IntI0-RI', {up: x, across: y, length: l}, n, m));
     }
     if (type == 'Int-L-SI') {
         //n += this.source_size(key.last()) - this.target_size(key.last());
