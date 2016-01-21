@@ -1025,7 +1025,7 @@ Diagram.prototype.getSlice = function(location) {
         return this.source;
     } else if (height > this.cells.length) debugger;
 
-    if (height == 0) return this.source;
+    if (height == 0) return this.source.copy();
 
     // Check whether the cache contains the slice
     if (this.sliceCache == null) {

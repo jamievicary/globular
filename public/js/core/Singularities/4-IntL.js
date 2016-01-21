@@ -74,7 +74,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                 up: x + n - 1, 
                 across: y,  
                 length: final_l
-            }, n - 1, 1).concat(this.expand(type, {
+            }, 1, 1).concat(this.expand(type, {
                 up: x,
                 across: y,
                 length: l
