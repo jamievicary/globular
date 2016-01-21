@@ -47,4 +47,3 @@ function globular_render(container, diagram, subdiagram, suppress) {
     }
 
 }
-
