@@ -419,7 +419,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         y = box.min.penultimate();
         n += - this.source_size(key.last()) + this.target_size(key.last());
         
-        var source = [cell].concat(this.getSlice(key.last()).rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
+        var source = [cell].concat(this.getSlice(key.last()).copy().rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
         return this.subinstructions(key,  {list: source, key: 0});
     }
 
@@ -450,7 +450,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     if (type.tail('L-SI')) {
     edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1, 
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
-                key.last() + steps + 1]); // We need the '+1' to account for the cell itself, not just the 'pull-throughs'
+                key.last() + steps]); // We need the '+1' to account for the cell itself, not just the 'pull-throughs'
     }
     if (type.tail('LI0-S')) {
     edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1, 
