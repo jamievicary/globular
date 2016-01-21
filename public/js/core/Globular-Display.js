@@ -325,16 +325,50 @@ Display.prototype.mouseup = function(event) {
     gProject.dragCellUI(position);
 }
 
-Display.prototype.pixelsToGrid = function(event) {
+Display.prototype.getExportRegion = function() {
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var top_left = this.gridToPixels({
+        x: b.left,
+        y: b.top
+    });
+    var bottom_right = this.gridToPixels({
+        x: b.right,
+        y: b.bottom
+    });
+    return {
+        sx: top_left.x,
+        sy: top_left.y,
+        sWidth: bottom_right.x - top_left.x,
+        sHeight: bottom_right.y - top_left.y,
+        logical_width: b.right - b.left,
+        logical_height: b.top - b.bottom
+    };
+}
 
+Display.prototype.gridToPixels = function(grid) {
+    var pixel = {};
     var b = $(this.container)[0].bounds;
     if (b === undefined) return;
     var pan = this.panzoom.getPan();
     var sizes = this.panzoom.getSizes();
-    return {
-        x: (event.offsetX - pan.x) / sizes.realZoom,
-        y: b.bottom + (pan.y - event.offsetY) / sizes.realZoom
-    }
+    pixel.x = grid.x * sizes.realZoom + pan.x;
+    pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
+    console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
+    return pixel;
+}
+
+Display.prototype.pixelsToGrid = function(event) {
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var pan = this.panzoom.getPan();
+    var sizes = this.panzoom.getSizes();
+    var grid = {};
+    grid.x = (event.offsetX - pan.x) / sizes.realZoom;
+    grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
+    console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
+    this.gridToPixels(grid);
+    return grid;
 
     /*
     var this_width = $(this.container).width();
@@ -682,7 +716,7 @@ Display.prototype.highlight_box = function(box, boundary) {
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
-Display.prototype.set_diagram = function(data /*diagram, boundary, controls*/) {
+Display.prototype.set_diagram = function(data /*diagram, boundary, controls*/ ) {
     console.log("Set new diagram");
     if (data.diagram == null) {
         this.diagram = null;
@@ -721,6 +755,7 @@ Display.prototype.render = function(preserve_view) {
         this.panzoom.destroy();
     }
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
+    this.svg_element = this.container.find('svg')[0];
     this.container.on('contextmenu', function(evt) {
         evt.preventDefault();
     })

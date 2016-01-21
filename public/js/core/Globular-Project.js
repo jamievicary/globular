@@ -701,7 +701,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     color_widget.onImmediateChange = function() {
         project.setColourUI(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
-        project.renderCellsAbove(generator.id);
+        //project.renderCellsAbove(generator.id);
         project.renderDiagram();
     };
     div_detail.appendChild(input_color);
@@ -1057,4 +1057,8 @@ Project.prototype.keepBottomUI = function() {
     }
     
     this.renderDiagram();
+}
+
+Project.prototype.downloadGraphic = function() {
+    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
 }
