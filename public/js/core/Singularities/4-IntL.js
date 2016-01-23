@@ -148,10 +148,10 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var slice = this.getSlice(x);
     var cell = this.cells[x];
     var coords = cell.box.min;
-    var g1_source = this.source_size(x);
-    var g1_target = this.target_size(x);
     var subtype = (type.substr(0, 5) == 'IntI0' ? 'IntI0' : 'Int');
     if (this.cells.length == 0) return false;
+    var g1_source = this.source_size(x);
+    var g1_target = this.target_size(x);
     var space_above = (x < this.cells.length - g1_target);
     var space_below = (x >= g1_source);
     var space_left = (coords.last() > 0);

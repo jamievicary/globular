@@ -334,17 +334,10 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
 
 Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     
-    /*  Need clauses for separation from sides of the diagram
-    
-    var space_above = (x < this.cells.length - g1_target);
-    var space_below = (x >= g1_source);
-    var space_left = (coords.last() > 0);
-    var space_right = (coords.last() + g1_source < slice.cells.length);
-    
-    */
     
     var cell = this.cells[key.last()];
     var box = this.getSliceBoundingBox(key.last());
+    var slice = this.getSlice(key.last());
     
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
     var steps_back = this.getSlice(key.last()).pseudoExpand(subtype, box, 1); // The subtype is needed to identify which family to call the expansion procedure on
@@ -353,9 +346,23 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     var l = box.max.penultimate() - box.min.penultimate();
     var m = 1;
     var x, y;
+
+    var g1_source = this.source_size(key.last());
+    var g1_target = this.target_size(key.last());
+    var space_above = (x < this.cells.length - g1_target);
+    var space_below = (x >= g1_source);
+    var space_left = (cell.box.min.last() > 0);
+    var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
+    
+    var space_behind = (box.min.penultimate() > 0);
+    var subslice = slice.getSlice(box.min.last());
+    var space_infront = (box.max.penultimate() < subslice.cells.length);
     
     // For the target we need to modify the key of alpha
     if (type === 'Int-L-S') {
+        if (!(space_below && space_right && space_behind)) return false;
+        if (!subslice.boundingBoxesSlideDownOnRight(slice.getLocationBoundingBox(box.min.penultimate()-1), box.getBoundingBoxSource())) return false;
+
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
 
@@ -363,6 +370,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'IntI0-L-S') {
+        if (!(space_below && space_right && space_behind)) return false;
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
 
@@ -370,6 +378,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'Int-LI0-S') {
+        if (!(space_below && space_right && space_infront)) return false;
         x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() + 1;
 
@@ -377,6 +386,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'IntI0-LI0-S') {
+        if (!(space_below && space_right && space_infront)) return false;
         x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() + 1;
 
@@ -384,6 +394,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'Int-R-S') {
+        if (!(space_below && space_right && space_infront)) return false;
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() + 1;
 
@@ -391,6 +402,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'IntI0-R-S') {
+        if (!(space_below && space_right && space_infront)) return false;
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() + 1;
 
@@ -399,6 +411,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     }
     else if (type === 'Int-RI0-S') {
+        if (!(space_below && space_right && space_behind)) return false;
         x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
 
@@ -407,6 +420,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     }
     else if (type === 'IntI0-RI0-S') {
+        if (!(space_below && space_right && space_behind)) return false;
         x = box.min.last() + (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
 
@@ -415,6 +429,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     }
     else if (type.tail('I')) {
+        //if (!(space_above && &&)) return false;
         x = box.min.last() //- this.source_size(key.last()) + this.target_size(key.last());
         y = box.min.penultimate();
         n += - this.source_size(key.last()) + this.target_size(key.last());
