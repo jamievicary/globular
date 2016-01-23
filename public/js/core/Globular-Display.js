@@ -1,4 +1,7 @@
 "use strict";
+/*global gProject*/
+/*global Timer*/
+/*global detectLeftButton*/
 
 /*
     A Display class for rendering diagrams.
@@ -43,6 +46,10 @@ Display.prototype.enableMouse = function() {
 }
 
 Display.prototype.mousedown = function(event) {
+
+    // Only interact with left mouse button
+    if (event.buttons != 1) return;
+
     if (!gProject.initialized) return;
     if (this.diagram == null) return;
     var b = $(this.container)[0].bounds;
@@ -53,7 +60,7 @@ Display.prototype.mousedown = function(event) {
     if (logical.x > b.right) return;
     if (logical.y < b.bottom) return;
     if (logical.y > b.top) return;
-    this.select_grid = this.pixelsToGrid(event);
+    this.select_grid = logical;
 }
 
 var min_drag = 0.25;
@@ -62,6 +69,9 @@ Display.prototype.mousemove = function(event) {
     if (this.diagram == null) return;
 
     var timer = new Timer("Display.mousemove - updating popup")
+
+    //console.log('grid.x = ' + new_grid.x + ', grid.y = ' + new_grid.y);
+
     var new_grid = this.pixelsToGrid(event);
     this.updatePopup({
         logical: this.gridToLogical(new_grid),
@@ -318,8 +328,52 @@ Display.prototype.mouseup = function(event) {
     gProject.dragCellUI(position);
 }
 
-Display.prototype.pixelsToGrid = function(event) {
+Display.prototype.getExportRegion = function() {
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var top_left = this.gridToPixels({
+        x: b.left,
+        y: b.top
+    });
+    var bottom_right = this.gridToPixels({
+        x: b.right,
+        y: b.bottom
+    });
+    return {
+        sx: top_left.x,
+        sy: top_left.y,
+        sWidth: bottom_right.x - top_left.x,
+        sHeight: bottom_right.y - top_left.y,
+        logical_width: b.right - b.left,
+        logical_height: b.top - b.bottom
+    };
+}
 
+Display.prototype.gridToPixels = function(grid) {
+    var pixel = {};
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var pan = this.panzoom.getPan();
+    var sizes = this.panzoom.getSizes();
+    pixel.x = grid.x * sizes.realZoom + pan.x;
+    pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
+    console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
+    return pixel;
+}
+
+Display.prototype.pixelsToGrid = function(event) {
+    var b = $(this.container)[0].bounds;
+    if (b === undefined) return;
+    var pan = this.panzoom.getPan();
+    var sizes = this.panzoom.getSizes();
+    var grid = {};
+    grid.x = (event.offsetX - pan.x) / sizes.realZoom;
+    grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
+    console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
+    this.gridToPixels(grid);
+    return grid;
+
+    /*
     var this_width = $(this.container).width();
     var this_height = $(this.container).height();
     if (this_width == 0) return null;
@@ -348,6 +402,7 @@ Display.prototype.pixelsToGrid = function(event) {
         x: x,
         y: y
     };
+    */
 }
 
 Display.prototype.has_controls = function() {
@@ -628,7 +683,7 @@ Display.prototype.highlight_next_slice = function() {
 }
 
 Display.prototype.remove_highlight = function() {
-    $(this.container).children('svg').children('g').children('g').remove();
+    $(this.container).children('svg').children('g').children('g').children('g').remove();
 }
 
 Display.prototype.highlight_action = function(action, boundary) {
@@ -656,23 +711,25 @@ Display.prototype.highlight_action = function(action, boundary) {
 Display.prototype.highlight_box = function(box, boundary) {
 
     // Remove an existing highlight
-    $(this.container).children('svg').children('g').children('g').remove();
+    this.remove_highlight();
+    //$(this.container).children('svg').children('g').children('g').remove();
 
     // Add the highlight to the diagram
     globular_add_highlight(this.container, this.data, box, boundary, this.visible_diagram);
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
-Display.prototype.set_diagram = function(diagram, boundary, controls) {
+Display.prototype.set_diagram = function(data /*diagram, boundary, controls*/ ) {
     console.log("Set new diagram");
-    if (diagram == null) {
+    if (data.diagram == null) {
         this.diagram = null;
         this.data = null;
         this.container.empty();
     } else {
-        this.diagram = diagram.copy();
-        this.update_controls(boundary, controls);
-        this.render();
+        //this.diagram = diagram.copy();
+        this.diagram = data.diagram;
+        this.update_controls(data.drag, data.controls);
+        this.render(data.preserve_view);
     }
 }
 
@@ -684,16 +741,34 @@ Display.prototype.get_current_slice = function() {
     return position;
 }
 
-Display.prototype.render = function() {
+Display.prototype.render = function(preserve_view) {
     var timer = new Timer("Display.render");
     var slice = this.diagram;
     for (var i = 0; i < this.slices.length; i++) {
         slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
     }
     this.visible_diagram = slice;
+    var pan = null;
+    var zoom = null;
+    if (this.panzoom != null) {
+        if (preserve_view) {
+            pan = this.panzoom.getPan();
+            zoom = this.panzoom.getZoom();
+        }
+        this.panzoom.destroy();
+    }
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
+    this.svg_element = this.container.find('svg')[0];
+    this.container.on('contextmenu', function(evt) {
+        evt.preventDefault();
+    })
     this.data = data;
     timer.Report();
+    this.panzoom = svgPanZoom(this.container.find('svg')[0]);
+    if (pan != null) {
+        this.panzoom.zoom(zoom);
+        this.panzoom.pan(pan);
+    }
 
     // Render highlight if necessary
     if (this.slices.length > 0) {
