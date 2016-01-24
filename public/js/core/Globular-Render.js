@@ -4,7 +4,7 @@
     Diagram rendering with Three.js
 */
 
-// Cool implementation idea for the future:
+// Implementation idea for the future:
 // http://stackoverflow.com/questions/30541121/multiple-webgl-models-on-the-same-page
 
 // Choose "SVG" or "THREE"
