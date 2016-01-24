@@ -306,6 +306,7 @@ Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
+    if (drag.directions == null) return [];
     var up = drag.directions[0] > 0;
     var key = [drag.coordinates[0]];
     var options = this.getDragOptions(up ? ['Int-L-SI'/*, 'IntI0-L-SI', 'Int-R-SI', 'IntI0-R-SI', 
@@ -326,7 +327,7 @@ Diagram.prototype.interpretDrag.IntLS = function(drag) {
     // Maybe it's already determined what to do
     if (possible_options.length == 0) {
         console.log('interpretDrag.IntLS: no moves allowed');
-        return null;
+        return [];
     }
     console.log(msg);
     return possible_options;
@@ -349,8 +350,8 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
     var g1_source = this.source_size(key.last());
     var g1_target = this.target_size(key.last());
-    var space_above = (x < this.cells.length - g1_target);
-    var space_below = (x >= g1_source);
+    var space_above = (key.last() < this.cells.length - g1_target);
+    var space_below = (key.last() >= g1_source);
     var space_left = (cell.box.min.last() > 0);
     var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
     
@@ -360,8 +361,8 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     
     // For the target we need to modify the key of alpha
     if (type === 'Int-L-S') {
-        if (!(space_below && space_right && space_behind)) return false;
-        if (!subslice.boundingBoxesSlideDownOnRight(slice.getLocationBoundingBox(box.min.penultimate()-1), box.getBoundingBoxSource())) return false;
+        if (!(space_below && space_left && space_behind)) return false;
+        if (!subslice.boundingBoxesSlideDownOnRight(slice.getLocationBoundingBox([box.min.penultimate()-1, box.min.last()]), getBoundingBoxSource(box))) return false;
 
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
@@ -370,7 +371,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         return this.subinstructions(key,  {list: source, key: source.length - 1});
     }
     else if (type === 'IntI0-L-S') {
-        if (!(space_below && space_right && space_behind)) return false;
+        if (!(space_below && space_left && space_behind)) return false;
         x = box.min.last() - (box.max.penultimate() - box.min.penultimate());
         y = box.min.penultimate() - 1;
 

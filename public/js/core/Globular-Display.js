@@ -357,7 +357,7 @@ Display.prototype.gridToPixels = function(grid) {
     var sizes = this.panzoom.getSizes();
     pixel.x = grid.x * sizes.realZoom + pan.x;
     pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
-    console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
+    //console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
     return pixel;
 }
 
@@ -369,8 +369,8 @@ Display.prototype.pixelsToGrid = function(event) {
     var grid = {};
     grid.x = (event.offsetX - pan.x) / sizes.realZoom;
     grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
-    console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
-    this.gridToPixels(grid);
+    //console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
+    //this.gridToPixels(grid);
     return grid;
 
     /*
