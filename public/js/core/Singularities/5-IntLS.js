@@ -15,8 +15,8 @@ RegisterSingularityFamily({
     'IntI0-L-S', 'IntI0-L-SI',
     'Int-LI0-S', 'Int-LI0-SI',
     'IntI0-LI0-S', 'IntI0-LI0-SI',
-    */'Int-R-S', 'Int-R-SI'/*,
-    'IntI0-R-S', 'IntI0-R-SI',
+    'Int-R-S', 'Int-R-SI',
+    */'IntI0-R-S', 'IntI0-R-SI'/*,
     'Int-RI0-S', 'Int-RI0-SI',
     'IntI0-RI0-S', 'IntI0-RI0-SI'*/],
     friendly: {
