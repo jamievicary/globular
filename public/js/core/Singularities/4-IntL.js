@@ -35,52 +35,85 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var b = this.cells[x].box.min.last() - y;
     var a = l - this.source_size(x) - b;
 
-    if (type.tail('I0')) {
-        new_type = type.substr(0, type.length - 4);
-    } else {
-        new_type = type.substr(0, type.length - 2);
-    }
     if (n === 0 || m === 0) {
         return [];
-    } else if (n === 1 && m === 1) {
-        if (a === 0 && b === 0) {
-            if (type.tail('I0')) {
+    }
+
+    if (type.tail('I0')) {
+        new_type = type.substr(0, type.length - 4);
+        if (n === 1 && m === 1) {
+            if (a === 0 && b === 0) {
                 list.push(new NCell({id: type, key: [x]}));
             } else {
-                list.push(new NCell({id: type, key: [x]}));
+                list = this.expand(new_type, x, 1, a * m).concat(
+                    this.expand(type, {
+                        up: x + a * m,
+                        across: y + a,
+                        length: this.source_size(x)
+                    }, 1, 1)).concat(
+                    this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
             }
-        } else {
-            list = this.expand(new_type, x, 1, a * m).concat(
-                this.expand(type, {
-                    up: x + a * m,
-                    across: y + a,
-                    length: this.source_size(x)
-                }, 1, 1)).concat(
-                this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
-        }
-    } else if (m != 1 && n === 1) {
-        list = this.expand(type, {
-            up: x,
-            across: y,
-            length: l
-        }, 1, 1).concat(
-            this.expand(type, {
-                up: x + a + b + this.source_size(x),
-                across: y + 1,
-                length: new_l
-            }, 1, m - 1));
-    } else {
-        list = this.expand(type, {
-                up: x + n - 1, 
-                across: y,  
-                length: final_l
-            }, 1, 1).concat(this.expand(type, {
+        } else if (m != 1 && n === 1) {
+            /* Possibly to be modified when we deal with multiple strands*/
+            list = this.expand(type, {
                 up: x,
                 across: y,
                 length: l
-        }, n - 1, m));
+            }, 1, 1).concat(
+                this.expand(type, {
+                    up: x + a + b + this.source_size(x),
+                    across: y + 1,
+                    length: new_l
+                }, 1, m - 1));
+        } else {
+            list = this.expand(type, {
+                    up: x, 
+                    across: y,  
+                    length: l
+                }, 1, 1).concat(this.expand(type, {
+                    up: x + 1,
+                    across: y,
+                    length: new_l
+            }, n - 1, m));
+        }
     }
-
+    else {
+        new_type = type.substr(0, type.length - 2);
+        if (n === 1 && m === 1) {
+            if (a === 0 && b === 0) {
+                list.push(new NCell({id: type, key: [x]}));
+            } else {
+                list = this.expand(new_type, x, 1, a * m).concat(
+                    this.expand(type, {
+                        up: x + a * m,
+                        across: y + a,
+                        length: this.source_size(x)
+                    }, 1, 1)).concat(
+                    this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
+            }
+        } else if (m != 1 && n === 1) {
+            list = this.expand(type, {
+                up: x,
+                across: y,
+                length: l
+            }, 1, 1).concat(
+                this.expand(type, {
+                    up: x + a + b + this.source_size(x),
+                    across: y + 1,
+                    length: new_l
+                }, 1, m - 1));
+        } else {
+            list = this.expand(type, {
+                    up: x + n - 1, 
+                    across: y,  
+                    length: final_l
+                }, 1, 1).concat(this.expand(type, {
+                    up: x,
+                    across: y,
+                    length: l
+            }, n - 1, m));
+        }
+    }
     return list;
 };
 

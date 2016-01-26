@@ -506,7 +506,8 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
     var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
     
     if(type.tail("I")){
-        var correction = this.pullUpMinMax(key.last(), key.last() + 1, box.min.last(), box.max.last());
+        var correction = this.pullUpMinMax(key.last() + 1 , key.last(), box.min.last(), box.max.last());
+
         box.max[box.max.length - 1] = correction.max;
         box.min[box.min.length - 1] = correction.min;
 
