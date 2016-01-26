@@ -36,7 +36,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var a = l - this.source_size(x) - b;
 
     if (type.tail('I0')) {
-        new_type = type.substr(0, type.length - 3);
+        new_type = type.substr(0, type.length - 4);
     } else {
         new_type = type.substr(0, type.length - 2);
     }
@@ -45,7 +45,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     } else if (n === 1 && m === 1) {
         if (a === 0 && b === 0) {
             if (type.tail('I0')) {
-                list.push(new NCell(type, null, [x + 1]));
+                list.push(new NCell({id: type, key: [x]}));
             } else {
                 list.push(new NCell({id: type, key: [x]}));
             }
@@ -148,10 +148,10 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var slice = this.getSlice(x);
     var cell = this.cells[x];
     var coords = cell.box.min;
-    var subtype = (type.substr(0, 5) == 'IntI0' ? 'IntI0' : 'Int');
-    if (this.cells.length == 0) return false;
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
+    var subtype = (type.substr(0, 5) == 'IntI0' ? 'IntI0' : 'Int');
+    if (this.cells.length == 0) return false;
     var space_above = (x < this.cells.length - g1_target);
     var space_below = (x >= g1_source);
     var space_left = (coords.last() > 0);
