@@ -45,6 +45,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             if (a === 0 && b === 0) {
                 list.push(new NCell({id: type, key: [x]}));
             } else {
+                /*
                 list = this.expand(new_type, x, 1, a * m).concat(
                     this.expand(type, {
                         up: x + a * m,
@@ -52,6 +53,12 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                         length: this.source_size(x)
                     }, 1, 1)).concat(
                     this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
+                    */
+                list = this.expand('IntI0', x, 1, a * m).concat([new NCell({id: type, key: [x + a*m]})]);
+                
+                for(var i = 0; i < b * m; i++){
+                    list.push(new NCell({id: 'Int', key: [x + a*m + 1 + i]}));
+                }
             }
         } else if (m != 1 && n === 1) {
             /* Possibly to be modified when we deal with multiple strands*/
@@ -83,7 +90,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             if (a === 0 && b === 0) {
                 list.push(new NCell({id: type, key: [x]}));
             } else {
-                var list_one = this.expand(new_type+'I0', x, 1, a * m)
+                var list_one = this.expand('IntI0', x, 1, a * m)
                 /*
                 var list_one = this.expand(new_type, x, 1, a * m).concat(
                     this.expand(type, {
@@ -93,11 +100,18 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                     }, 1, 1)).concat(
                     this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
                 */
+                /*
                 for(var i = 0; i < list_one.length; i++){
                     this.rewrite(list_one[i]);
                 }
+                */
+                list = this.expand('IntI0', x, 1, a * m).concat([new NCell({id: type, key: [x + a*m]})]);
                 
-                
+                for(var i = 0; i < b * m; i++){
+                    list.push(new NCell({id: 'Int', key: [x + a*m + 1 + i]}));
+                }
+                 
+                /*    
                 var list_two = this.expand(type, {
                         up: x + a * m,
                         across: y + b,
@@ -107,9 +121,10 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                     this.rewrite(list_two[i]);
                 }    
                     
-                var list_three = this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1);
+                var list_three = this.expand('Int', x + this.source_size(x) + a * m, b * m, 1);
                 
                 list = list_one.concat(list_two).concat(list_three);
+                */
             }
         } else if (m != 1 && n === 1) {
             list = this.expand(type, {
@@ -143,12 +158,38 @@ Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     var l = box.max.penultimate() - box.min.penultimate();
     for(var i = box.min.last(); i < box.max.last(); i++){
         var left_wires = this.cells[i].key.last() - box.min.penultimate();
-        var right_wires = box.min.penultimate() + l - this.cells[i].key.last() - this.source_size(i);
+        var right_wires = l - this.source_size(i) - left_wires;
         count += (left_wires + right_wires + 1) * side_wires;
         l += (this.target_size(i) - this.source_size(i));
     }
     return count;
 };
+
+/*
+Diagram.prototype.expansionStepsDown.IntL = function(box, side_wires) {
+    var count = 0;
+    var l = box.max.penultimate() - box.min.penultimate();
+    for(var i = box.min.last(); i < box.max.last(); i++){
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = l - this.source_size(i) - left_wires;
+        count += (left_wires + right_wires + 1) * side_wires;
+        l += (this.target_size(i) - this.source_size(i));
+    }
+    return count;
+};
+
+Diagram.prototype.expansionStepsUp.IntL = function(box, side_wires) {
+    var count = 0;
+    var l = box.max.penultimate() - box.min.penultimate();
+    for(var i = box.min.last(); i < box.max.last(); i++){
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = l - this.source_size(i) - left_wires;
+        count += (left_wires + right_wires + 1) * side_wires;
+        l += (this.target_size(i) - this.source_size(i));
+    }
+    return count;
+};
+*/
 
 
 // Interpret drag of this type
