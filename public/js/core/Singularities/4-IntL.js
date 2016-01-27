@@ -48,7 +48,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                 list = this.expand(new_type, x, 1, a * m).concat(
                     this.expand(type, {
                         up: x + a * m,
-                        across: y + a,
+                        across: y + b,
                         length: this.source_size(x)
                     }, 1, 1)).concat(
                     this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
@@ -83,13 +83,33 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             if (a === 0 && b === 0) {
                 list.push(new NCell({id: type, key: [x]}));
             } else {
-                list = this.expand(new_type, x, 1, a * m).concat(
+                var list_one = this.expand(new_type+'I0', x, 1, a * m)
+                /*
+                var list_one = this.expand(new_type, x, 1, a * m).concat(
                     this.expand(type, {
                         up: x + a * m,
-                        across: y + a,
+                        across: y + b,
                         length: this.source_size(x)
                     }, 1, 1)).concat(
                     this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
+                */
+                for(var i = 0; i < list_one.length; i++){
+                    this.rewrite(list_one[i]);
+                }
+                
+                
+                var list_two = this.expand(type, {
+                        up: x + a * m,
+                        across: y + b,
+                        length: l - a - b, //this.source_size(x)
+                    }, 1, 1);
+                for(var i = 0; i < list_two.length; i++){
+                    this.rewrite(list_two[i]);
+                }    
+                    
+                var list_three = this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1);
+                
+                list = list_one.concat(list_two).concat(list_three);
             }
         } else if (m != 1 && n === 1) {
             list = this.expand(type, {
