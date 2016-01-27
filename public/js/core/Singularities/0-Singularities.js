@@ -68,6 +68,11 @@ Diagram.prototype.expand = function(type, start, n, m) {
     return ((this.expand[family]).bind(this))(type, start, n, m);
 }
 
+Diagram.prototype.reorganiseCrossings = function(type, start, n, m) {
+    var family = GetSingularityFamily(type);
+    return ((this.reorganiseCrossings[family]).bind(this))(type, start, n, m);
+}
+
 Diagram.prototype.pseudoExpand = function(type, box, side_wires) {
     var family = GetSingularityFamily(type);
     return ((this.pseudoExpand[family]).bind(this))(box, side_wires);
@@ -221,8 +226,6 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
 
     return true;
 }
-
-Diagram.prototype.reorganiseCrossings = {};
 
 Diagram.prototype.source_size = function(level) {
     var bbox = this.getSliceBoundingBox(level);
