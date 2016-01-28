@@ -62,10 +62,12 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         var fixed_key = cell.key.last();
         cell.move([{relative: 0}, {relative: 0}, {relative: -slice.source_size(cell.key.last()) * slice.source_size(cell.key.last() - 1)}]);
         
-        var x = cell.key.last() + 1;
+        cell.id = 'Int';
+        cell.key[cell.key.length - 1]--;
         
         var expansion_base = this.getSlice(key.last() - m - n - steps_crossings).copy().rewrite(cell);
         
+        var x = cell.key.last() + 2;
         var crossings_list_one = expansion_base.reorganiseCrossings('Int', x, n, m);
         for(var i = 0; i < crossings_list_one.length; i++){
             expansion_base.rewrite(crossings_list_one[i]);   
@@ -94,15 +96,16 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         }
         var crossings_list_three = expansion_base.reorganiseCrossings('Int', x, n, m);
         
-        cell.id = 'Int';
-        cell.key[cell.key.length - 1]--;
+
         var target = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))));
     } else if (type == 'Int-L-NI') {
         var fixed_key = cell.key.last();
         var expansion_base = this.getSlice(key.last()).copy();
     
         cell.move([{relative: 0}, {relative: 0}, {relative: slice.source_size(cell.key.last()) * slice.source_size(cell.key.last())}]);
-    
+        cell.id = 'IntI0';
+        cell.key[cell.key.length - 1]++;
+        
         var x = fixed_key + 2;
         var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x, n, m);
         for(var i = 0; i < crossings_list_one.length; i++){
@@ -125,15 +128,13 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         x = x - 1;
         y = expansion_base.cells[fixed_key].key.last();
         var complementary_type = 'Int-R'
-        var pullthrough_bottom = expansion_base.expand(complementary_type, {up: x, across: y, length: expansion_base.source_size(fixed_key)}, 1, m);
+        var pullthrough_bottom = expansion_base.expand(complementary_type, {up: x, across: y, length: expansion_base.source_size(fixed_key)}, 1, s1);
         
         for(var i = 0; i < pullthrough_bottom.length; i++){
             expansion_base.rewrite(pullthrough_bottom[i]);   
         }
         var crossings_list_three = expansion_base.reorganiseCrossings('IntI0', x, n, m);
         
-        cell.id = 'IntI0';
-        cell.key[cell.key.length - 1]++;
         var target = crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))).concat([cell]);
     }
 
@@ -236,8 +237,8 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         var expansion_base = this.getSlice(key.last() + 1).copy();
    
         var x = cell.key.last() + 1;
-        var y = slice.cells[cell.key.last()].key.last();
-        var pullthrough_top = expansion_base.expand('Int-R', {up: x, across: y, length: n}, 1, n);
+        var y = expansion_base.cells[x].key.last();
+        var pullthrough_top = expansion_base.expand('Int-R', {up: x, across: y, length: expansion_base.source_size(x)}, 1, t1);
         for(var i = 0; i < pullthrough_top.length; i++){
             expansion_base.rewrite(pullthrough_top[i]);   
         }
@@ -248,8 +249,8 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         }
         
         x = x - 1;
-        y = expansion_base.cells[cell.key.last()].key.last();
-        var pullthrough_bottom = expansion_base.expand(subtype, {up: x, across: y, length: slice.source_size(cell.key.last())}, 1, m);
+        y = expansion_base.cells[x].key.last();
+        var pullthrough_bottom = expansion_base.expand(subtype, {up: x, across: y, length: expansion_base.source_size(x)}, 1, s2);
         var source = [cell].concat(pullthrough_top.concat(crossings_list_one.concat(pullthrough_bottom)));
         
         return this.subinstructions(key,  {list: source, key: 0});
