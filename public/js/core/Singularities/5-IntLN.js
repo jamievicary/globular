@@ -89,7 +89,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
             expansion_base.rewrite(pullthrough_bottom[i]);   
         }
         
-        var crossings_list_three = expansion_base.reorganiseCrossings('Int', x, s1, s2);
+        var crossings_list_three = expansion_base.reorganiseCrossings('Int', x, s2, s1);
         
         var target = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))));
     } else if (type == 'Int-L-NI') {
@@ -125,7 +125,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
             expansion_base.rewrite(pullthrough_bottom[i]);   
         }
         
-        var crossings_list_three = expansion_base.reorganiseCrossings('Int', x, s1, s2);
+        var crossings_list_three = expansion_base.reorganiseCrossings('Int', x, s2, s1);
         
         var target = crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))).concat([cell]);
     }
