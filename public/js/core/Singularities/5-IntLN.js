@@ -59,10 +59,10 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
 
 
     if (type == 'Int-L-N') {
-        var x = cell.key.last() + 2;
-        cell.move([{relative: 0}, {relative: 0}, {relative: - s1 * s2}]);//-slice.source_size(cell.key.last()) * slice.source_size(cell.key.last() - 1)}]);
+        cell.move([{relative: 0}, {relative: 0}, {relative: - s1 * s2}]);
         cell.id = 'Int';
         cell.key[cell.key.length - 1]--;
+        var x = cell.key.last() + 2;
         
         var expansion_base = this.getSlice(key.last() - t1 - s2 - steps_crossings).copy().rewrite(cell);
         var crossings_list_one = expansion_base.reorganiseCrossings('Int', x, t2, t1);
@@ -94,13 +94,13 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         var target = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))));
     } else if (type == 'Int-L-NI') {
 
-        var x = cell.key.last(); + 2;
         var expansion_base = this.getSlice(key.last()).copy();
-    
-        cell.move([{relative: 0}, {relative: 0}, {relative: s1 * s2}]); //slice.source_size(cell.key.last()) * slice.source_size(cell.key.last())}]);
+
+        var x = cell.key.last() + 2; // x has to be set before we move the cell
+        cell.move([{relative: 0}, {relative: 0}, {relative: s1 * s2}]); 
         cell.id = 'IntI0';
         cell.key[cell.key.length - 1]++;
-        
+
         var crossings_list_one = expansion_base.reorganiseCrossings('Int', x, t2, t1);
         for(var i = 0; i < crossings_list_one.length; i++){
             expansion_base.rewrite(crossings_list_one[i]);   
@@ -207,7 +207,10 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
 
         var pullthrough_top = expansion_base.expand('Int-L', {up: x, across: y, length: expansion_base.source_size(x)}, 1, t1);
         for(var i = 0; i < pullthrough_top.length; i++){
-            expansion_base.rewrite(pullthrough_top[i]);   
+            if(expansion_base.interchangerAllowed(pullthrough_top[i].id, pullthrough_top[i].key)){
+                expansion_base.rewrite(pullthrough_top[i]);
+            }
+            else {return [];}
         }
 
         var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x, s2, t1);
@@ -220,7 +223,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         var pullthrough_bottom = expansion_base.expand('Int-R', {up: x, across: y, length: expansion_base.source_size(x)}, 1, s2);
         
         var source = pullthrough_top.concat(crossings_list_one.concat(pullthrough_bottom)).concat([cell]);
-        return this.subinstructions(key,  {list: source, key: source.length - 1});
+        var source_key = source.length - 1
     }
     else if (type === 'Int-L-NI') {
    
@@ -230,10 +233,13 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         var y = expansion_base.cells[x].key.last();
         var pullthrough_top = expansion_base.expand('Int-R', {up: x, across: y, length: expansion_base.source_size(x)}, 1, t1);
         for(var i = 0; i < pullthrough_top.length; i++){
-            expansion_base.rewrite(pullthrough_top[i]);   
+            if(expansion_base.interchangerAllowed(pullthrough_top[i].id, pullthrough_top[i].key)){
+                expansion_base.rewrite(pullthrough_top[i]);
+            }
+            else {return [];}
         }
         
-        var crossings_list_one = expansion_base.reorganiseCrossings('Int', x, s2, t1);
+        var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x, s2, t1);
         for(var i = 0; i < crossings_list_one.length; i++){
             expansion_base.rewrite(crossings_list_one[i]);   
         }
@@ -242,12 +248,14 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         y = expansion_base.cells[x].key.last();
         var pullthrough_bottom = expansion_base.expand('Int-L', {up: x, across: y, length: expansion_base.source_size(x)}, 1, s2);
         var source = [cell].concat(pullthrough_top.concat(crossings_list_one.concat(pullthrough_bottom)));
-        
-        return this.subinstructions(key,  {list: source, key: 0});
+        var source_key = 0;
    }
     else{
         return [];
     }
+    
+    return this.subinstructions(key,  {list: source, key: source_key});
+
 
     alert ('Interchanger ' + type + ' not yet handled');
     throw 0;
