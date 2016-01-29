@@ -53,6 +53,23 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             }
         } else if (m != 1 && n === 1) {
             /* Possibly to be modified when we deal with multiple strands*/
+            
+            var list_one = list = this.expand(type, {up: x, across: y, length: l}, 1, 1);
+            var copy = this.copy();
+            for(var i = 0; i < list_one.length; i++){
+                copy.rewrite(list_one[i]);
+            }
+            
+            if(type === 'Int-L'){
+                y++;
+            }
+            else{
+                y--;
+            }
+            
+            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: y, length: l}, 1, m - 1));
+            
+            /*
             list = this.expand(type, {
                 up: x,
                 across: y,
@@ -63,6 +80,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                     across: y + 1,
                     length: new_l
                 }, 1, m - 1));
+            */
         } else {
             list = this.expand(type, {
                     up: x, 
@@ -102,7 +120,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                 y--;
             }
             
-            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: y, length: new_l}, 1, m - 1));
+            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: y, length: l}, 1, m - 1));
             
             /*
             list = this.expand(type, {
