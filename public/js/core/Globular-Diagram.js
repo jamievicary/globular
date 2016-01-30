@@ -136,6 +136,20 @@ Diagram.prototype.rewrite = function(cell) {
     return this;
 }
 
+Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
+    
+    for(var i = 0; i < rewrite_array.length; i++){
+        if(this.interchangerAllowed(rewrite_array[i].id, rewrite_array[i].key)){
+            this.rewrite(rewrite_array[i]);
+        }
+        else{
+            return false;
+        }
+    }
+    return true;
+
+}
+
 
 /*
     Returns a copy of this diagram. This is obtained by recursively copying the source boundary and then
