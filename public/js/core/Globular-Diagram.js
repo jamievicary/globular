@@ -111,6 +111,7 @@ Diagram.prototype.rewrite = function(cell) {
 
     // Update the slice cache
     if (this.sliceCache != null) {
+        this.sliceCache = [];
         this.sliceCache.splice(insert_position, source_size);
         for (var i = 0; i < target.cells.length; i++) {
             this.sliceCache.splice(insert_position + i, 0, null);
