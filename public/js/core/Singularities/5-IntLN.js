@@ -47,37 +47,40 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
     var s1 = slice.source_size(index_left);
     var t2 = slice.target_size(index_right);
     var s2 = slice.source_size(index_right);
+    
+    var x, expansion_base, pullthrough_top, pullthrough_bottom, x_ings_one, x_ings_two, target;
 
-    if (type == 'Int-L-N') {
-        var x = cell.key.last() - s1 * s2 - 1;
-        var expansion_base = this.getSlice(key.last() - t1 - s2 - this.crossings(s2, t1) - this.crossings(s2, s1)).copy().rewrite(cell);
+    if (type === 'Int-L-N') {
+        x = cell.key.last() - s1 * s2 - 1;
+        var complimentary_cell = new NCell({id: 'Int', key: [cell.key.last() - s1 * s2 - 1]});
+        expansion_base = this.getSlice(key.last() - t1 - s2 - this.crossings(s2, t1) - this.crossings(s2, s1)).copy().rewrite(complimentary_cell);
 
-        var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_one)) {return [];}
-        
-        var pullthrough_top = expansion_base.expand('Int-R', {up: x + 1, across: expansion_base.cells[x + 1].key.last(), length: expansion_base.source_size(x + 1)}, 1, t2);
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return [];}
+
+        pullthrough_top = expansion_base.expandWrapper('Int-R', x + 1, t2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return [];}
         
-        var crossings_list_two = expansion_base.reorganiseCrossings('Int', x + 1, s1, t2);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_two)) {return [];}
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s1, t2);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return [];}
 
-        var pullthrough_bottom = expansion_base.expand('Int-L', {up: x, across: expansion_base.cells[x].key.last(), length: expansion_base.source_size(x)}, 1, s1);
-        var target = [new NCell({id: 'Int', key: [cell.key.last() - s1 * s2 - 1]})].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom))));
-    } else if (type == 'Int-L-NI') {
-        var x = cell.key.last();
-        var expansion_base = this.getSlice(key.last()).copy();
-        
-        var pullthrough_top = expansion_base.expand('Int-L', {up: x + 1, across: expansion_base.cells[x + 1].key.last(), length: expansion_base.source_size(x + 1)}, 1, t2);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-L', x, s1);
+        target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
+    } else if (type === 'Int-L-NI') {
+        x = cell.key.last();
+        expansion_base = this.getSlice(key.last()).copy();
+
+        pullthrough_top = expansion_base.expandWrapper('Int-L', x + 1, t2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return [];}
         
-        var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x + 1, s1, t2);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_one)) {return [];}
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 1, s1, t2);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return [];}
 
-        var pullthrough_bottom = expansion_base.expand('Int-R', {up: x, across: expansion_base.cells[x].key.last(), length: expansion_base.source_size(x)}, 1, s1);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-R', x, s1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return [];}
 
-        var crossings_list_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
-        var target = pullthrough_top.concat(crossings_list_one.concat(pullthrough_bottom.concat(crossings_list_two))).concat([new NCell({id: 'IntI0', key: [cell.key.last() - s1 * s2 + 1]})]);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
+        target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [cell.key.last() + s1 * s2 + 1]})]);
     }
 
     return target;
@@ -140,44 +143,44 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
     var s1 = slice.source_size(index_left);
     var t2 = slice.target_size(index_right);
     var s2 = slice.source_size(index_right);
-
-    var subtype = (type.tail('I') ? type.substr(0, type.length - 3) : type.substr(0, type.length - 2));
+    
+    var x, expansion_base, pullthrough_top, pullthrough_bottom, x_ings_one, x_ings_two, source, source_key;
 
     if (type === 'Int-L-N') {
-        var x = cell.key.last() - s1 * s2 - 1;
-        var expansion_base = this.getSlice(key.last() - s2 - this.crossings(s2, t1) - this.crossings(s2, s1) - t1).copy();
+        x = cell.key.last() - s1 * s2 - 1;
+        expansion_base = this.getSlice(key.last() - s2 - this.crossings(s2, t1) - this.crossings(s2, s1) - t1).copy();
 
-        var pullthrough_top = expansion_base.expand('Int-L', {up: x + 1, across: expansion_base.cells[x + 1].key.last(), length: expansion_base.source_size(x + 1)}, 1, t1);
+        pullthrough_top = expansion_base.expandWrapper('Int-L', x + 1, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return [];}
 
-        var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x + 1, s2, t1);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_one)) {return [];}
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 1, s2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return [];}
         
-        var pullthrough_bottom = expansion_base.expand('Int-R', {up: x, across: expansion_base.cells[x].key.last(), length: expansion_base.source_size(x)}, 1, s2);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-R', x, s2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return [];}
 
-        var crossings_list_two = expansion_base.reorganiseCrossings('Int', x, s1, s2);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s1, s2);
 
-        var source = pullthrough_top.concat(crossings_list_one.concat(pullthrough_bottom.concat(crossings_list_two))).concat([cell]);
-        var source_key = source.length - 1;
+        source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
+        source_key = source.length - 1;
     }
     else if (type === 'Int-L-NI') {
-        var x = cell.key.last()
-        var expansion_base = this.getSlice(key.last() + 1).copy();
+        x = cell.key.last()
+        expansion_base = this.getSlice(key.last() + 1).copy();
    
-        var crossings_list_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_one)) {return [];}
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return [];}
  
-        var pullthrough_top = expansion_base.expand('Int-R', {up: x + 1, across: expansion_base.cells[x + 1].key.last(), length: expansion_base.source_size(x + 1)}, 1, t1);
+        pullthrough_top = expansion_base.expandW('Int-R', x + 1, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return [];}
         
-        var crossings_list_two = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
-        if(!expansion_base.multipleInterchangerRewrite(crossings_list_two)) {return [];}
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return [];}
         
-        var pullthrough_bottom = expansion_base.expand('Int-L', {up: x, across: expansion_base.cells[x].key.last(), length: expansion_base.source_size(x)}, 1, s2);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-L', x, s2);
         
-        var source = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom))));
-        var source_key = 0;
+        source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
+        source_key = 0;
    }
     else{
         return [];

@@ -150,6 +150,9 @@ Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
 
 }
 
+Diagram.prototype.expandWrapper = function(type, x, k) {
+    return this.expand(type, {up: x, across: this.cells[x].key.last(), length: this.source_size(x)}, 1, k);
+}
 
 /*
     Returns a copy of this diagram. This is obtained by recursively copying the source boundary and then
