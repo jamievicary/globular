@@ -78,7 +78,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
             expansion_base.rewrite(pullthrough_bottom[i]);   
         }
         
-        var target = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom.concat(crossings_list_three)))));
+        var target = [cell].concat(crossings_list_one.concat(pullthrough_top.concat(crossings_list_two.concat(pullthrough_bottom))));
     } else if (type == 'Int-L-NI') {
 
         var expansion_base = this.getSlice(key.last()).copy();
