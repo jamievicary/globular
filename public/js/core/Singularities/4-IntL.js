@@ -52,35 +52,20 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                 }
             }
         } else if (m != 1 && n === 1) {
-            /* Possibly to be modified when we deal with multiple strands*/
-            
+
             var list_one = list = this.expand(type, {up: x, across: y, length: l}, 1, 1);
             var copy = this.copy();
             for(var i = 0; i < list_one.length; i++){
                 copy.rewrite(list_one[i]);
             }
             
-            if(type === 'Int-L'){
-                y++;
+            if (type.tail('L', 'R')){
+            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: (type.tail('L')) ? y + 1: y - 1, length: l}, 1, m - 1));
             }
-            else{
-                y--;
+            else if (type.tail('LI0', 'RI0')){
+            list = list_one.concat(copy.expand(type, {up: x - a - b - this.source_size(x), across: (type.tail('LI0')) ? y - 1: y + 1, length: l}, 1, m - 1));
             }
             
-            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: y, length: l}, 1, m - 1));
-            
-            /*
-            list = this.expand(type, {
-                up: x,
-                across: y,
-                length: l
-            }, 1, 1).concat(
-                this.expand(type, {
-                    up: x + a + b + this.source_size(x),
-                    across: y + 1,
-                    length: new_l
-                }, 1, m - 1));
-            */
         } else {
             list = this.expand(type, {
                     up: x, 
@@ -113,27 +98,12 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                 copy.rewrite(list_one[i]);
             }
             
-            if(type === 'Int-L'){
-                y++;
+            if (type.tail('L', 'R')){
+            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: (type.tail('L')) ? y + 1: y - 1, length: l}, 1, m - 1));
             }
-            else{
-                y--;
-            }
-            
-            list = list_one.concat(copy.expand(type, {up: x + a + b + this.source_size(x), across: y, length: l}, 1, m - 1));
-            
-            /*
-            list = this.expand(type, {
-                up: x,
-                across: y,
-                length: l
-            }, 1, 1).concat(
-                this.expand(type, {
-                    up: x + a + b + this.source_size(x),
-                    across: y + 1,
-                    length: new_l
-                }, 1, m - 1));
-            */    
+            else if (type.tail('LI0', 'RI0')){
+            list = list_one.concat(copy.expand(type, {up: x - a - b - this.source_size(x), across: (type.tail('LI0')) ? y - 1: y + 1, length: l}, 1, m - 1));
+            }  
                 
         } else {
             list = this.expand(type, {
