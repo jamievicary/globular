@@ -138,6 +138,8 @@ Diagram.prototype.rewrite = function(cell) {
 
 Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
     
+    if(rewrite_array === false){return false;}
+    
     for(var i = 0; i < rewrite_array.length; i++){
         if(this.interchangerAllowed(rewrite_array[i].id, rewrite_array[i].key)){
             this.rewrite(rewrite_array[i]);
@@ -151,6 +153,8 @@ Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
 }
 
 Diagram.prototype.expandWrapper = function(type, x, k) {
+    
+    if(x < 0 || x >= this.cells.length){return false;}
     return this.expand(type, {up: x, across: this.cells[x].key.last(), length: this.source_size(x)}, 1, k);
 }
 
