@@ -140,11 +140,11 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 1, t2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
-        pullthrough_bottom = expansion_base.expandWrapper('Int-RI0', x + t2 * s1, t2);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-RI0', x + 1 + t2 * s1, t2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
-        target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [cell.key.last() + s1 * s2 + 1]})]);
+        target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [cell.key.last() - s1 * s2 + 1]})]);
     }
 
     return target;
@@ -312,7 +312,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
-        pullthrough_bottom = expansion_base.expandWrapper('Int-LI0', x + s2 * t1, t1);
+        pullthrough_bottom = expansion_base.expandWrapper('Int-LI0', x + 1 + s2 * t1, t1);
         
         source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
         source_key = 0;
@@ -378,7 +378,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLN = function(type, key) {
     } else if (type.tail('LI0-NI')) {
     edge_box = this.getLocationBoundingBox([0, 
                 box.min.last() - s1 * s2,
-                key.last() + t1 + s2 + this.crossings(s2, t1) + this.crossings(t2, t1)]);
+                key.last() + s1 + t2 + this.crossings(t2, s1) + this.crossings(t2, t1)]);
     }
 
     return this.unionBoundingBoxes(alpha_box, edge_box);
