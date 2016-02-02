@@ -20,11 +20,22 @@ RegisterSingularityFamily({
     'Int-RI0-N', 'Int-RI0-NI',
     'IntI0-RI0-N', 'IntI0-RI0-NI'],
     friendly: {
-        'Int-L-N': 'Pull-through pull-through interchanger above',
-        'IntI0-L-N': 'Pull-through pull-through interchanger underneath',
-        'Int-R-N': 'Pull-through pull-through inverse interchanger underneath',
-        'IntI0-R-N': 'Pull-through pull-through inverse interchanger above'
-
+        'Int-L-N': 'Pull-through pull-through interchanger left above',
+        'IntI0-L-N': 'Pull-through pull-through interchanger left underneath',
+        'Int-R-N': 'Pull-through pull-through inverse interchanger right underneath',
+        'IntI0-R-N': 'Pull-through pull-through inverse interchanger right above',
+        'Int-L-NI': 'Pull-through pull-through interchanger above left inverse',
+        'IntI0-L-NI': 'Pull-through pull-through interchanger left underneath inverse',
+        'Int-R-NI': 'Pull-through pull-through inverse interchanger right underneath inverse',
+        'IntI0-R-NI': 'Pull-through pull-through inverse interchanger right above inverse',
+        'Int-LI0-N': 'Pull-through pull-through interchanger left inverse above',
+        'IntI0-LI0-N': 'Pull-through pull-through interchanger left inverse underneath',
+        'Int-RI0-N': 'Pull-through pull-through inverse interchanger right inverse underneath',
+        'IntI0-RI0-N': 'Pull-through pull-through inverse interchanger right inverse above',
+        'Int-LI0-NI': 'Pull-through pull-through interchanger left inverse above inverse',
+        'IntI0-LI0-NI': 'Pull-through pull-through interchanger left inverse underneath inverse',
+        'Int-RI0-NI': 'Pull-through pull-through inverse interchanger right inverse underneath inverse',
+        'IntI0-RI0-NI': 'Pull-through pull-through inverse interchanger right inverse above inverse'
     }
 });
 
@@ -65,7 +76,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-R', x + 1, t2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s1, t2);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, t2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s1);
@@ -90,7 +101,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         var complimentary_cell = new NCell({id: 'IntI0', key: [cell.key.last() - s1 * s2 + 1]});
         expansion_base = this.getSlice(key.last() - s1 - this.crossings(t2, s1) - this.crossings(s2, s1) - t2).copy().rewrite(complimentary_cell);
 
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 2, t1, t2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
         pullthrough_top = expansion_base.expandWrapper(base_type + '-L', x + 1, t1);
@@ -108,7 +119,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-R', x + 1, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, t1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s2);
@@ -127,7 +138,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-RI0', x + s1 * s2, s1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s1, t2);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, t2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + s1 * t2 + 1, t2);
@@ -145,14 +156,14 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-RI0', x + 1 + t2 * s1, t2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t1, t2);
         target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [x + 1]})]);
     } else if (type.tail('RI0-N')) {
         x = cell.key.last();
         var complimentary_cell = new NCell({id: 'IntI0', key: [cell.key.last() + s1 * s2 + 1]});
         expansion_base = this.getSlice(key.last() - t2 - this.crossings(s1, t2) - this.crossings(t1, t2) - s1).copy().rewrite(complimentary_cell);
 
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x, s1, s2);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x, s2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
         pullthrough_top = expansion_base.expandWrapper(base_type + '-LI0', x + s1 * s2, s2);
@@ -170,7 +181,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-RI0', x + s1 * s2, s2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, t1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + 1 + s2 * t1, t1);
@@ -258,7 +269,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-R', x, s2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s1, s2);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -268,13 +279,13 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         index = key.last() + 1; if(index < 0 || index >= this.cells.length) {return false;}
         expansion_base = this.getSlice(index).copy();
    
-        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x + 2, t1, t2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
  
         pullthrough_top = expansion_base.expandWrapper(base_type + '-R', x + 1, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, t1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s2);
@@ -305,7 +316,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         index = key.last() + 1; if(index < 0 || index >= this.cells.length) {return false;}
         expansion_base = this.getSlice(index).copy();
    
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 2, t1, t2);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
  
         pullthrough_top = expansion_base.expandWrapper(base_type + '-L', x + 1, t2);
@@ -332,7 +343,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-RI0', x + 1 + t1 * s2, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t1, t2);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -343,13 +354,13 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
 
         expansion_base = this.getSlice(index).copy();
    
-        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x, s1, s2);
+        x_ings_one = expansion_base.reorganiseCrossings('IntI0', x, s2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
  
         pullthrough_top = expansion_base.expandWrapper(base_type + '-RI0', x + s1 * s2, s2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x + 1, t1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + 1 + s2 * t1, t1);
@@ -364,7 +375,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-RI0', x + s1 * s2, s1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
 
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, s1, t2);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, t2, s1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + 1 + s1 * t2, t2);
@@ -380,7 +391,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         index = key.last() + 1; if(index < 0 || index >= this.cells.length) {return false;}
         expansion_base = this.getSlice(index).copy();
    
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x, s2, s1);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x, s1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
  
         pullthrough_top = expansion_base.expandWrapper(base_type + '-LI0', x + s1 * s2, s1);

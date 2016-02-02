@@ -32,14 +32,15 @@ Diagram.prototype.expand.Int = function(type, x, n, m) {
 Diagram.prototype.reorganiseCrossings.Int = function(type, x, n, m) {
 
     var list = new Array();
-
-    for (var i = 1; i < m; i++) {
-        list = list.concat(this.expand(type, x + i, i * (n - 1), 1));
-    }
-    if(n != 1){
-        list = list.concat(this.reorganiseCrossings(type, x + m, n - 1, m));
-    }
     
+
+        for (var i = 1; i < m; i++) {
+            list = list.concat(this.expand(type, x + i, i * (n - 1), 1));
+        }
+        if(n != 1){
+            list = list.concat(this.reorganiseCrossings(type, x + m, n - 1, m));
+        }
+
     return list;
 }
 
