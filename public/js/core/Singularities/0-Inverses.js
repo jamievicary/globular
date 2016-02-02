@@ -147,6 +147,15 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
 }
 
+Diagram.prototype.expand.Inverses = function(type, x, n, m) {
+    
+    var list = new Array();
+    for(var i = 1; i <= n; i++){
+        list.push(new NCell({id: type, key: [x + n - i]}));
+    }
+    return list;
+}
+
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     
     // '-EI0' cells require a key of length 1
