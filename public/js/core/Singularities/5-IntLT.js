@@ -39,12 +39,13 @@ Diagram.prototype.getTarget.IntLT = function(type, key) {
     var slice = this.getSlice(key.last());
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
+    var x_coordinate = slice.cells[cell.key.last()].box.min.last();
+    var offset = -1;
     
     var key_type = type.substr(0, type.length - (type.tail('-TI0') ? 4 : 2));
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';
     var complimentary_base_type = base_type === 'Int' ? 'IntI0' : 'Int';
     var complementary_key_type = this.complementaryKey(key_type);
-
     var x, expansion_base, target, source_key;
 
 
@@ -64,12 +65,43 @@ Diagram.prototype.getTarget.IntLT = function(type, key) {
         var new_cell = new NCell({id: key_type, key: cell.key})
         expansion_base = this.getSlice(key.last()).copy()
         if(!expansion_base.multipleInterchangerRewrite([new_cell])) {return false;}
-
-
         var stack = expansion_base.expand(complimentary_base_type + '-EI0', cell.key.last() - s, s);
         if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
 
         target = [new_cell].concat(stack);
+    } else if (type.tail('LI0-T')) {
+        var new_cell = new NCell({id: complimentary_base_type + '-' + complementary_key_type, key: [cell.key.last() - 2 * s]});
+        expansion_base = this.getSlice(key.last() - s).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last() - 2 * s + 1], t, 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(new_cell.id, new_cell.key)) {return false;}
+
+        target = stack.concat([new_cell]);
+    } else if (type.tail('RI0-T')) {
+        var new_cell = new NCell({id: complimentary_base_type + '-' + complementary_key_type, key: [cell.key.last() - 2 * s]});
+        expansion_base = this.getSlice(key.last() - s).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + t - 1, cell.key.last() - 2 * s + 1], t, - 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(new_cell.id, new_cell.key)) {return false;}
+
+        target = stack.concat([new_cell]);
+    }
+    else if (type.tail('LI0-TI0')) {
+        var new_cell = new NCell({id: key_type, key: [cell.key.last() + 2 * s]})
+        expansion_base = this.getSlice(key.last() - t).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last()], s, 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(new_cell.id, new_cell.key)) {return false;}
+
+        target = stack.concat([new_cell]);
+    } else if (type.tail('RI0-TI0')) {
+        var new_cell = new NCell({id: key_type, key: [cell.key.last() + 2 * s]})
+        expansion_base = this.getSlice(key.last() - t).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + s - 1, cell.key.last()], s, - 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(new_cell.id, new_cell.key)) {return false;}
+
+        target = stack.concat([new_cell]);
     }
 
     else{
@@ -122,6 +154,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     var slice = this.getSlice(key.last());
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
+    var x_coordinate = slice.cells[cell.key.last()].box.min.last();
     
     var key_type = type.substr(0, type.length - (type.tail('-TI0') ? 4 : 2));
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';
@@ -145,9 +178,44 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
 
         source = [cell].concat(stack);
         source_key = 0;
-    }
-
-    else{
+    } else if (type.tail('LI0-T')) {
+        if (cell.id != key_type) {return false;}
+        var new_cell = new NCell({id: cell.id, key: [cell.key.last() + 2 * s]});
+        expansion_base = this.getSlice(key.last() - s).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last() - 2 * s], s, 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(cell.id, cell.key)) {return false;}
+        
+        source = stack.concat([cell]);
+        source_key = source.length - 1;
+    } else if (type.tail('RI0-T')) {
+        if (cell.id != key_type) {return false;}
+        expansion_base = this.getSlice(key.last() - s).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + s - 1, cell.key.last() - 2 * s], s, -1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(cell.id, cell.key)) {return false;}
+        
+        source = stack.concat([cell]);
+        source_key = source.length - 1;
+    } else if (type.tail('LI0-TI0')) {
+        if (cell.id != complimentary_base_type + '-' + complementary_key_type) {return false;}
+        expansion_base = this.getSlice(key.last() - t).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last() + 1], t, 1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(cell.id, cell.key)) {return false;}
+        
+        source = stack.concat([cell]);
+        source_key = source.length - 1;
+    } else if (type.tail('RI0-TI0')) {
+        if (cell.id != complimentary_base_type + '-' + complementary_key_type) {return false;}
+        expansion_base = this.getSlice(key.last() - t).copy();
+        stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + t - 1, cell.key.last() + 1], t, -1);
+        if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
+        if(!expansion_base.interchangerAllowed(cell.id, cell.key)) {return false;}
+        
+        source = stack.concat([cell]);
+        source_key = source.length - 1;
+    } else{
         return false;
     }
     
@@ -180,6 +248,15 @@ Diagram.prototype.getInterchangerBoundingBox.IntLT = function(type, key) {
     edge_box = this.getLocationBoundingBox([0, 
                 box.min.last() ,
                 key.last() + 1 + t]);
+    } if (type.tail('LI0-T')  || type.tail('RI0-T')) {
+    edge_box = this.getLocationBoundingBox([0, 
+                box.min.last() - s,
+                key.last() - s]);
+    } 
+    else if (type.tail('LI0-TI0')  || type.tail('RI0-TI0')) {
+    edge_box = this.getLocationBoundingBox([0, 
+                box.min.last(),
+                key.last() - t]);
     } 
 
     return this.unionBoundingBoxes(alpha_box, edge_box);

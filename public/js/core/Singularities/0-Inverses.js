@@ -147,12 +147,24 @@ Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
 }
 
-Diagram.prototype.expand.Inverses = function(type, x, n, m) {
+Diagram.prototype.expand.Inverses = function(type, x, n, o) {
     
     var list = new Array();
-    for(var i = 1; i <= n; i++){
-        list.push(new NCell({id: type, key: [x + n - i]}));
+    
+    if(type.tail('EI0')){
+        for(var i = 1; i <= n; i++){
+            list.push(new NCell({id: type, key: [x + n - i]}));
+        }
     }
+    else{
+        var k = x[0];
+        if(type.substr(0, 5) === 'IntI0'){k++}
+        for(var i = 0; i < n; i++){
+            list.push(new NCell({id: type, key: [k, x[1] + i]}));
+            k += o;
+        }   
+    }
+    
     return list;
 }
 
