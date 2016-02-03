@@ -80,7 +80,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s1);
-        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+        //if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
     } else if (type.tail('L-NI')) {
@@ -285,7 +285,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-R', x, s2);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
-        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
+        x_ings_two = expansion_base.reorganiseCrossings('Int', x, s1, s2);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
