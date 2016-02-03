@@ -55,13 +55,12 @@ Diagram.prototype.getTarget.IntLT = function(type, key) {
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
     var x_coordinate = slice.cells[cell.key.last()].box.min.last();
-    var offset = -1;
-    
+
     var key_type = type.substr(0, type.length - (type.tail('-TI0') ? 4 : 2));
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';
     var complimentary_base_type = base_type === 'Int' ? 'IntI0' : 'Int';
     var complementary_key_type = this.complementaryKey(key_type);
-    var x, expansion_base, target, source_key;
+    var expansion_base, target;
 
 
     if (type.tail('L-T')  || type.tail('R-T')) {
@@ -69,8 +68,6 @@ Diagram.prototype.getTarget.IntLT = function(type, key) {
         var new_cell = new NCell({id: complimentary_base_type + '-' + complementary_key_type, key: cell.key})
         expansion_base = this.getSlice(key.last()).copy()
         if(!expansion_base.multipleInterchangerRewrite([new_cell])) {return false;}
-
-
         var stack = expansion_base.expand(complimentary_base_type + '-EI0', cell.key.last() - s + 1, t);
         if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
 
@@ -175,7 +172,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';
     var complimentary_base_type = base_type === 'Int' ? 'IntI0' : 'Int';
     var complementary_key_type = this.complementaryKey(key_type);
-    var x, expansion_base, stack, source, source_key;
+    var expansion_base, stack, source, source_key;
 
     if (type.tail('L-T') || type.tail('R-T')) {
         if (cell.id != key_type) {return false;}

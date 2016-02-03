@@ -80,6 +80,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s1);
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
     } else if (type.tail('L-NI')) {
         x = cell.key.last();
@@ -95,6 +97,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
+
         target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [cell.key.last() + s1 * s2 + 1]})]);
     } else if (type.tail('R-N')) {
         x = cell.key.last() - s1 * s2;
@@ -111,6 +115,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-R', x, s2);
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
     } else if (type.tail('R-NI')) {
         x = cell.key.last() - 1;
@@ -126,6 +132,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('IntI0', x, s1, s2);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
+
         target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'Int', key: [cell.key.last() + s1 * s2 - 1]})]);
     } else if (type.tail('LI0-N')) {
         x = cell.key.last() - 1;
@@ -142,6 +150,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + s1 * t2 + 1, t2);
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
     } else if (type.tail('LI0-NI')) {
         x = cell.key.last() - s1 * s2;
@@ -157,6 +167,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t1, t2);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
+        
         target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'IntI0', key: [x + 1]})]);
     } else if (type.tail('RI0-N')) {
         x = cell.key.last();
@@ -173,6 +185,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-RI0', x + t1 * s2 + 1, t1);
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         target = [complimentary_cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
     } else if (type.tail('RI0-NI')) {
         x = cell.key.last() - s1 * s2 - 1;
@@ -188,6 +202,8 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('IntI0', x + 2, t2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
+
         target = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([new NCell({id: 'Int', key: [x]})]);
     }
 
@@ -270,6 +286,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('Int', x, s2, s1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -289,6 +306,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s2);
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
         
         source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
         source_key = 0;
@@ -307,6 +325,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('IntI0', x, s2, s1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -326,7 +345,8 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-R', x, s1);
-        
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
         source_key = 0;
    } else if (type.tail('LI0-N')) {
@@ -344,6 +364,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('Int', x + 2, t2, t1);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -364,7 +385,8 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-LI0', x + 1 + s2 * t1, t1);
-        
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
         source_key = 0;
    } else if (type.tail('RI0-N')) {
@@ -382,6 +404,7 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
 
         x_ings_two = expansion_base.reorganiseCrossings('IntI0', x + 2, t1, t2);
+        if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
 
         source = pullthrough_top.concat(x_ings_one.concat(pullthrough_bottom.concat(x_ings_two))).concat([cell]);
         source_key = source.length - 1;
@@ -401,7 +424,8 @@ Diagram.prototype.interchangerAllowed.IntLN = function(type, key) {
         if(!expansion_base.multipleInterchangerRewrite(x_ings_two)) {return false;}
         
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-RI0', x + 1 + t2 * s1, t2);
-        
+        if(!expansion_base.multipleInterchangerRewrite(pullthrough_bottom)) {return false;}
+
         source = [cell].concat(x_ings_one.concat(pullthrough_top.concat(x_ings_two.concat(pullthrough_bottom))));
         source_key = 0;
    }
