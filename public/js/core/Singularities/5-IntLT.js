@@ -20,7 +20,22 @@ RegisterSingularityFamily({
     'Int-RI0-T', 'Int-RI0-TI0',
     'IntI0-RI0-T', 'IntI0-RI0-TI0'],
     friendly: {
-        'Int-L-T': 'Pull-through tangle interchanger above',
+        'Int-L-T': 'Pull-through left tangle interchanger above',
+        'Int-R-T': 'Pull-through right tangle interchanger above',
+        'Int-LI0-T': 'Pull-through left inverse tangle interchanger above',
+        'Int-RI0-T': 'Pull-through right inverse tangle interchanger above',
+        'Int-L-TI0': 'Pull-through left tangle interchanger above inverse',
+        'Int-R-TI0': 'Pull-through right tangle interchanger above inverse',
+        'Int-LI0-TI0': 'Pull-through left inverse tangle interchanger above inverse',
+        'Int-RI0-TI0': 'Pull-through right inverse tangle interchanger above inverse',
+        'IntI0-L-T': 'Pull-through left tangle interchanger below',
+        'IntI0-LI0-T': 'Pull-through left inverse tangle interchanger below',
+        'IntI0-R-T': 'Pull-through right tangle interchanger below',
+        'IntI0-RI0-T': 'Pull-through right inverse tangle interchanger below',
+        'IntI0-L-TI0': 'Pull-through left tangle interchanger below inverse',
+        'IntI0-R-TI0': 'Pull-through right tangle interchanger below inverse',
+        'IntI0-LI0-TI0': 'Pull-through left inverse tangle interchanger below inverse',
+        'IntI0-RI0-TI0': 'Pull-through right inverse tangle interchanger below inverse',
     }
 });
 
