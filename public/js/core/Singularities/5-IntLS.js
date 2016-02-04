@@ -498,10 +498,10 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         if (!(space_above && space_left && space_behind)) return false;
         if (!subslice.boundingBoxesSlideDownOnLeft(subslice.getLocationBoundingBox([box.min.penultimate() - 1]), getBoundingBoxSource(box))) return false;
     } else if (type.tail('Int-R-SI0')) {
-        if (!(space_above && space_left && space_behind)) return false;
+        if (!(space_above && space_right && space_behind)) return false;
         if (!subslice.boundingBoxesSlideDownOnLeft(subslice.getLocationBoundingBox([box.min.penultimate() - 1]), getBoundingBoxSource(box))) return false;
     } else if (type.tail('IntI0-R-SI0')) {
-        if (!(space_above && space_left && space_behind)) return false;
+        if (!(space_above && space_right && space_behind)) return false;
         if (!subslice.boundingBoxesSlideDownOnRight(subslice.getLocationBoundingBox([box.min.penultimate() - 1]), getBoundingBoxSource(box))) return false;
     } else if (type.tail('Int-RI0-SI0')) {
         if (!(space_above && space_left && space_infront)) return false;
@@ -553,7 +553,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()), // we subtract the # of crossings
                 key.last() - steps_back]);
     }
-    if (type.tail('L-SI')) {
+    if (type.tail('L-SI0')) {
         edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]); // We need the '+1' to account for the cell itself, not just the 'pull-throughs'
@@ -563,7 +563,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps_back]);
     }
-    if (type.tail('LI0-SI')) {
+    if (type.tail('LI0-SI0')) {
         edge_box = this.getLocationBoundingBox([box.min.penultimate() - 1,
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]);
@@ -573,7 +573,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps_back]);
     }
-    if (type.tail('R-SI')) {
+    if (type.tail('R-SI0')) {
         edge_box = this.getLocationBoundingBox([box.min.penultimate() - 1,
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]);
@@ -583,7 +583,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps_back]);
     }
-    if (type.tail('RI0-SI')) {
+    if (type.tail('RI0-SI0')) {
         edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]);
