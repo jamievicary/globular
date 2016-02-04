@@ -16,14 +16,20 @@ var SingularityFamilies = {};
 var SingularityData = {};
 
 function RegisterSingularityFamily(data) {
+    if (data.friendly == undefined) data.friendly = {};
     for (var index in data.members) {
         if (!data.members.hasOwnProperty(index)) continue;
-        SingularityFamilies[data.members[index]] = data.family;
+        var member = data.members[index];
+        SingularityFamilies[member] = data.family;
+        if (data.friendly[member] == undefined) data.friendly[member] = member;
     }
+    
     SingularityData[data.family] = {
         dimension: data.dimension,
         friendly: data.friendly
     };
+    // Clean up friendly names
+    
 }
 
 function GetSingularityFamily(type) {
@@ -150,7 +156,7 @@ Diagram.prototype.interpretDrag = function(drag) {
         // See if this family can interpret the drag
         var t = performance.now();
         var r = ((this.interpretDrag[family]).bind(this))(drag);
-        console.log('interpretDrag[' + family + '] time: ' + (performance.now() - t) + 'ms');
+        //console.log('interpretDrag[' + family + '] time: ' + (performance.now() - t) + 'ms');
         var msg = "interpretDrag." + family + ": allowed ";
         var found_possibilities = false;
         for (var i=0; i<r.length; i++) {

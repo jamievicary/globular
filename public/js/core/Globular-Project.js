@@ -570,7 +570,7 @@ Project.prototype.currentString = function(minimize) {
 
     var result = globular_stringify(this, minimize);
 
-    timer.Report();
+    //timer.Report();
     return result;
 }
 

@@ -153,7 +153,7 @@ Diagram.prototype.interpretDrag.IntLT = function(drag) {
 
     // Maybe it's already determined what to do
     if (possible_options.length == 0) {
-        console.log('interpretDrag.IntLT: no moves allowed');
+        //console.log('interpretDrag.IntLT: no moves allowed');
         return [];
     }
     console.log(msg);
