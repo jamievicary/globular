@@ -125,7 +125,7 @@ Diagram.prototype.getTarget.IntLN = function(type, key) {
         pullthrough_top = expansion_base.expandWrapper(base_type + '-R', x + 1, t1);
         if(!expansion_base.multipleInterchangerRewrite(pullthrough_top)) {return false;}
         
-        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, t1, s2);
+        x_ings_one = expansion_base.reorganiseCrossings('Int', x + 1, s2, t1);
         if(!expansion_base.multipleInterchangerRewrite(x_ings_one)) {return false;}
 
         pullthrough_bottom = expansion_base.expandWrapper(base_type + '-L', x, s2);
