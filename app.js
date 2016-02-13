@@ -66,6 +66,10 @@ app.use('/public', express.static(__dirname + '/database/projects'));
 
 //routes
 
+app.get('/source', function(req, res) {
+	res.redirect('https://github.com/jamievicary/globular');
+});
+
 app.post('/login', function(req, res) {
 	users.login_user(req, res);
 });
