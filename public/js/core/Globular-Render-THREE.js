@@ -35,156 +35,192 @@ function globular_prepare_renderer_THREE() {
         attr('id', 'globular-offscreen');
 }
 
-// Render a diagram on the offscreen canvas, then copy to the specified container
-function globular_render_THREE(container, diagram, subdiagram) {
+function globular_render_THREE(container1, diagram, subdiagram) {
+	var scene = new THREE.Scene();
+	var camera = globular_offscreen.camera;
+	var container = $(container1);
 
-    if (diagram.getDimension() > 2) return;
+	//var container = $('#view');
+	var container_width = container.width();
+	var container_height = container.height();
+	if (container_width == 0) return;
+	if (container_height == 0) return;
 
-    // Make contact with offscreen renderer
-    //var offscreen_canvas = globular_offscreen.renderer.domElement;
-    var g = globular_offscreen;
-    
-    /*
-    g.camera = new THREE.OrthographicCamera(-10, 10, -10, 10, -10, 10);
-    g.renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        canvas: document.getElementById('globular-offscreen')
-    });
-    */
+	var renderer = globular_offscreen.renderer;
+	renderer.setClearColor(0xdddddd, 1);
+	renderer.setSize( container_width, container_height );
 
-    container = $(container);
+	var geometry = new THREE.BoxGeometry( 3, 3, 3 );
+	var material = new THREE.MeshBasicMaterial( { color: 0xdd0000 } );
+	var cube = new THREE.Mesh( geometry, material );
+	cube.rotation.x = 0.25;
+	cube.rotation.y = 0.25;
+	scene.add( cube );
 
-    // Prepare scene, and store interactive rectangles
-    var scene = new THREE.Scene();
-    //var complex = new Complex(diagram);
-    scene.meshes = [];
-    scene.geometries = [];
-    scene.materials = [];
-    //container[0].rectangles = complex.rectangles;
-    //globular_draw_complex(complex, scene, subdiagram);
+	renderer.render(scene, camera);
 
-    // Get dimensions
-    var container_width = container.width();
-    var container_height = container.height();
-    if (container_width == 0) return;
-    if (container_height == 0) return;
-    g.renderer.enableScissorTest(false);
-    g.renderer.setPixelRatio(window.devicePixelRatio);
-    $('#globular-offscreen')
-        .css('width', container_width)
-        .css('height', container_height);
-    g.renderer.setSize(container_width, container_height);
-    g.renderer.setClearColor(0xdddddd, 1);
-    g.renderer.clear();
+	var target_canvas = container.find('canvas');
+	if (target_canvas.length == 0) {
+	  target_canvas = document.createElement('canvas');
+	  container.append(target_canvas);
+	}
+	else {
+	  target_canvas = target_canvas[0];
+	}
+	$(target_canvas)
+	.attr('width', container_width)
+	.attr('height', container_height);
 
-    // Prepare target canvas
-    var target_canvas = container.find('canvas');
-    if (target_canvas.length == 0) {
-        target_canvas = document.createElement('canvas');
-        container.append(target_canvas);
-    }
-    else {
-        target_canvas = target_canvas[0];
-    }
-    $(target_canvas)
-        .attr('width', container_width)
-        .attr('height', container_height);
-    var context = target_canvas.getContext('2d');
 
-    // Calculate viewport
-    var viewport = {};
-    viewport.mix_x = -1;
-    viewport.max_x = 1;
-    
-    // diagram.width = complex.max_x - complex.min_x;
-    // diagram.height = complex.max_y - complex.min_y;
-    // if (diagram.width / diagram.height > container_width / container_height) {
-    //     // Diagram is wide with respect to the container
-    //     viewport.min_x = complex.min_x;
-    //     viewport.max_x = complex.max_x;
-    //     var mean_y = (complex.min_y + complex.max_y) / 2;
-    //     var viewport_height = container_height * diagram.width / container_width;
-    //     viewport.min_y = mean_y - (viewport_height / 2);
-    //     viewport.max_y = mean_y + (viewport_height / 2);
-    //     g.renderer.setScissor(
-    //         0,
-    //         (container_height - (diagram.height * container_width / diagram.width))/2,
-    //         container_width,
-    //         diagram.height * container_width / diagram.width);
-    // }
-    // else {
-    //     viewport.min_y = complex.min_y;
-    //     viewport.max_y = complex.max_y;
-    //     var mean_x = (complex.min_x + complex.max_x) / 2;
-    //     var viewport_width = container_width * diagram.height / container_height;
-    //     viewport.min_x = mean_x - (viewport_width / 2);
-    //     viewport.max_x = mean_x + (viewport_width / 2);
-    //     g.renderer.setScissor(
-    //         (container_width - (diagram.width * container_height / diagram.height))/2,
-    //         0,
-    //         diagram.width * container_height / diagram.height,
-    //         container_height
-    //     );
-    // }
-    g.camera.left = viewport.min_x;
-    g.camera.right = viewport.max_x;
-    g.camera.top = viewport.max_y;
-    g.camera.bottom = viewport.min_y;
-    g.camera.position.x = 0;
-    g.camera.position.y = 0;
-    //    g.camera.position.z = g.diagram_max_z;
-    g.camera.position.z = 10;
-    g.camera.updateProjectionMatrix();
-    //g.renderer.setScissor ( complex.min_x, complex.min_y, complex.max_x - complex.min_x, complex.max_y - complex.min_y );
-    //g.renderer.setScissor ( 0, 0, 100, 100 );
-    g.renderer.enableScissorTest(true);
-
-    // Store bounds in the container so we can interpret mouse clicks on the canvas
-    container[0].bounds = {
-        left: g.camera.left,
-        right: g.camera.right,
-        top: g.camera.top,
-        bottom: g.camera.bottom
-    };
-
-    // Controls ... forget about controls for now
-    /*
-    g.controls = new THREE.OrbitControls(g.camera);
-    g.controls.addEventListener('change', g.render);
-    */
-
-    // Render scene on offscreen canvas
-    g.renderer.render(scene, g.camera);
-
-    // Pixel ratio calculations
-    var backingStoreRatio =
-        context.webkitBackingStorePixelRatio ||
-        context.mozBackingStorePixelRatio ||
-        context.msBackingStorePixelRatio ||
-        context.oBackingStorePixelRatio ||
-        context.backingStorePixelRatio || 1;
-    var devicePixelRatio = window.devicePixelRatio || 1;
-    pixelScale = devicePixelRatio / backingStoreRatio;
-
-    // Copy image
-    context.drawImage(document.getElementById('globular-offscreen'), 0, 0, container_width * pixelScale, container_height * pixelScale, 0, 0, container_width, container_height);
-    
-    // Deallocate everything
-    for (var i=0; i<scene.geometries.length; i++) {
-        scene.geometries[i].dispose();
-    }
-    for (var i=0; i<scene.materials.length; i++) {
-        scene.materials[i].dispose();
-    }
-    for (var i=0; i<scene.meshes.length; i++) {
-        scene.remove(scene.meshes[i]);
-    }
-    scene.meshes = null;
-    scene.geometries = null;
-    scene.materials = null;
-    scene = null;
-
+	var context = target_canvas.getContext('2d');
+	context.drawImage(document.getElementById('globular-offscreen'),
+	0, 0, container_width, container_height,
+	0, 0, container_width, container_height);
 }
+
+// Render a diagram on the offscreen canvas, then copy to the specified container
+// function globular_render_THREE(container, diagram, subdiagram) {
+
+//     if (diagram.getDimension() > 2) return;
+
+//     var g = globular_offscreen;
+
+//     container = $(container);
+
+//     // Prepare scene, and store interactive rectangles
+//     var scene = new THREE.Scene();
+//     scene.meshes = [];
+//     scene.geometries = [];
+//     scene.materials = [];
+
+//     // Get dimensions
+//     var container_width = container.width();
+//     var container_height = container.height();
+//     if (container_width == 0) return;
+//     if (container_height == 0) return;
+//     g.renderer.enableScissorTest(false);
+//     g.renderer.setPixelRatio(window.devicePixelRatio);
+//     $('#globular-offscreen')
+//         .css('width', container_width)
+//         .css('height', container_height);
+//     g.renderer.setSize(container_width, container_height);
+//     g.renderer.setClearColor(0xdddddd, 1);
+//     g.renderer.clear();
+
+//     // Prepare target canvas
+//     var target_canvas = container.find('canvas');
+//     if (target_canvas.length == 0) {
+//         target_canvas = document.createElement('canvas');
+//         container.append(target_canvas);
+//     }
+//     else {
+//         target_canvas = target_canvas[0];
+//     }
+//     $(target_canvas)
+//         .attr('width', container_width)
+//         .attr('height', container_height);
+//     var context = target_canvas.getContext('2d');
+
+//     // Calculate viewport
+//     var viewport = {};
+//     viewport.mix_x = 10;
+//     viewport.max_x = 10;
+    
+// 	// diagram.width = complex.max_x - complex.min_x;
+//     // diagram.height = complex.max_y - complex.min_y;
+//     // if (diagram.width / diagram.height > container_width / container_height) {
+//     //     // Diagram is wide with respect to the container
+//     //     viewport.min_x = complex.min_x;
+//     //     viewport.max_x = complex.max_x;
+//     //     var mean_y = (complex.min_y + complex.max_y) / 2;
+//     //     var viewport_height = container_height * diagram.width / container_width;
+//     //     viewport.min_y = mean_y - (viewport_height / 2);
+//     //     viewport.max_y = mean_y + (viewport_height / 2);
+//     //     g.renderer.setScissor(
+//     //         0,
+//     //         (container_height - (diagram.height * container_width / diagram.width))/2,
+//     //         container_width,
+//     //         diagram.height * container_width / diagram.width);
+//     // }
+//     // else {
+//     //     viewport.min_y = complex.min_y;
+//     //     viewport.max_y = complex.max_y;
+//     //     var mean_x = (complex.min_x + complex.max_x) / 2;
+//     //     var viewport_width = container_width * diagram.height / container_height;
+//     //     viewport.min_x = mean_x - (viewport_width / 2);
+//     //     viewport.max_x = mean_x + (viewport_width / 2);
+//     //     g.renderer.setScissor(
+//     //         (container_width - (diagram.width * container_height / diagram.height))/2,
+//     //         0,
+//     //         diagram.width * container_height / diagram.height,
+//     //         container_height
+//     //     );
+//     // }
+//     g.camera.left = viewport.min_x;
+//     g.camera.right = viewport.max_x;
+//     g.camera.top = viewport.max_y;
+//     g.camera.bottom = viewport.min_y;
+//     g.camera.position.x = 0;
+//     g.camera.position.y = 0;
+//     //    g.camera.position.z = g.diagram_max_z;
+//     g.camera.position.z = 10;
+//     g.camera.updateProjectionMatrix();
+//     //g.renderer.setScissor ( complex.min_x, complex.min_y, complex.max_x - complex.min_x, complex.max_y - complex.min_y );
+//     //g.renderer.setScissor ( 0, 0, 100, 100 );
+//     g.renderer.enableScissorTest(true);
+
+//     // Store bounds in the container so we can interpret mouse clicks on the canvas
+//     container[0].bounds = {
+//         left: g.camera.left,
+//         right: g.camera.right,
+//         top: g.camera.top,
+//         bottom: g.camera.bottom
+//     };
+
+//     var geometry = new THREE.BoxGeometry( 3, 3, 3 );
+// 	var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// 	var cube = new THREE.Mesh( geometry, material );
+// 	scene.add( cube );
+
+//     // Controls ... forget about controls for now
+//     /*
+//     g.controls = new THREE.OrbitControls(g.camera);
+//     g.controls.addEventListener('change', g.render);
+//     */
+
+//     // Render scene on offscreen canvas
+//     g.renderer.render(scene, g.camera);
+
+//     // Pixel ratio calculations
+//     var backingStoreRatio =
+//         context.webkitBackingStorePixelRatio ||
+//         context.mozBackingStorePixelRatio ||
+//         context.msBackingStorePixelRatio ||
+//         context.oBackingStorePixelRatio ||
+//         context.backingStorePixelRatio || 1;
+//     var devicePixelRatio = window.devicePixelRatio || 1;
+//     pixelScale = devicePixelRatio / backingStoreRatio;
+
+//     // Copy image
+//     context.drawImage(document.getElementById('globular-offscreen'), 0, 0, container_width * pixelScale, container_height * pixelScale, 0, 0, container_width, container_height);
+    
+
+//     // Deallocate everything
+//     for (var i=0; i<scene.geometries.length; i++) {
+//         scene.geometries[i].dispose();
+//     }
+//     for (var i=0; i<scene.materials.length; i++) {
+//         scene.materials[i].dispose();
+//     }
+//     for (var i=0; i<scene.meshes.length; i++) {
+//         scene.remove(scene.meshes[i]);
+//     }
+//     scene.meshes = null;
+//     scene.geometries = null;
+//     scene.materials = null;
+//     scene = null;
+
+// }
 
 function globular_get_dimension(diagram) {
     var cells = diagram[0];

@@ -10,6 +10,42 @@ var circle_radius = 0.1;
 var highlight_colour = '#ffff00';
 var highlight_opacity = 0.8;
 
+function SVGRender(container, min_x, min_y, max_x, max_y) {
+    container = $(container);
+    this.container = container;
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    this.svg = svg;
+
+    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    this.g = g;
+
+    svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
+    //}
+    svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
+    svg.setAttribute("width", container.width());
+    svg.setAttribute("height", container.height());
+    //container.append(svg);
+    svg.appendChild(g);
+    g.setAttributeNS(null, "transform", "scale (1 -1)");
+
+    return this;
+}
+
+SVGRender.prototype.render = function() {
+    this.container.children('svg').remove();
+    this.container.append(this.svg);
+}
+
+SVGRender.prototype.drawNode = function(cx, cy, radius, colour) {
+    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttributeNS(null, "cx", cx);
+    circle.setAttributeNS(null, "cy", cy);
+    circle.setAttributeNS(null, "r", radius);
+    circle.setAttributeNS(null, "fill", colour);
+    circle.setAttributeNS(null, "stroke", "none");
+    this.g.appendChild(circle);
+}
+
 function globular_set_viewbox() {
     var container = $('#diagram-canvas');
     $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
@@ -60,22 +96,19 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
 }
 
 function globular_render_0d(container, diagram, subdiagram) {
-    var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
+    var r = new SVGRender(container, -0.5, 0.5, -0.5, 0.5);
+
     $(container)[0].bounds = {
         left: -0.5,
         right: 0.5,
         top: 0.5,
         bottom: -0.5
     };
-    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttributeNS(null, "cx", 0);
-    circle.setAttributeNS(null, "cy", 0);
-    circle.setAttributeNS(null, "r", circle_radius);
+
     var id_data = diagram.getLastId();
-    circle.setAttributeNS(null, "fill", gProject.getColour(id_data));
-    circle.setAttributeNS(null, "stroke", "none");
-    d.g.appendChild(circle);
-    $(container).append(d.svg);
+    r.drawNode(0, 0, circle_radius, gProject.getColour(id_data));
+    r.render();
+
     return {
         vertex: {
             x: 0,
