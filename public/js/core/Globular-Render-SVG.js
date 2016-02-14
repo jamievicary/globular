@@ -10,30 +10,60 @@ var circle_radius = 0.1;
 var highlight_colour = '#ffff00';
 var highlight_opacity = 0.8;
 
-function SVGRender(container, min_x, min_y, max_x, max_y) {
-    container = $(container);
-    this.container = container;
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    this.svg = svg;
-
-    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    this.g = g;
-
-    svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
-    //}
-    svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
-    svg.setAttribute("width", container.width());
-    svg.setAttribute("height", container.height());
-    //container.append(svg);
-    svg.appendChild(g);
-    g.setAttributeNS(null, "transform", "scale (1 -1)");
+function SVGRender(container, min_x, max_x, min_y, max_y) {
+    this.container = null;
+    this.svg = null;
+    this.g = null;
+    this.path_string = "";
 
     return this;
+}
+
+SVGRender.prototype.init = function(container, min_x, max_x, min_y, max_y) {
+    this.container = $(container);
+    this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+    this.svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
+    this.svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
+    this.svg.setAttribute("width", this.container.width());
+    this.svg.setAttribute("height", this.container.height());
+    this.svg.appendChild(this.g);
+    this.g.setAttributeNS(null, "transform", "scale (1 -1)");
 }
 
 SVGRender.prototype.render = function() {
     this.container.children('svg').remove();
     this.container.append(this.svg);
+}
+
+SVGRender.prototype.startPath = function() {
+    this.path_string = "";
+}
+
+SVGRender.prototype.finishPath = function(colour, args) {
+    if (args == null) { args = {}; }
+    args.string = this.path_string;
+    this.g.appendChild(SVG_create_path(args));
+}
+
+SVGRender.prototype.moveTo = function(x, y) {
+    this.path_string += SVG_move_to({x: x, y: y});
+}
+
+SVGRender.prototype.lineTo = function(x, y) {
+    this.path_string += SVG_line_to({x: x, y: y});
+}
+
+SVGRender.prototype.bezierTo = function(c1x, c1y, c2x, c2y, x, y) {
+    this.path_string += SVG_bezier_to({
+        c1x: c1x,
+        c1y: c1y,
+        c2x: c2x,
+        c2y: c2y,
+        x: x,
+        y: y
+    });
 }
 
 SVGRender.prototype.drawNode = function(cx, cy, radius, colour) {
@@ -45,6 +75,37 @@ SVGRender.prototype.drawNode = function(cx, cy, radius, colour) {
     circle.setAttributeNS(null, "stroke", "none");
     this.g.appendChild(circle);
 }
+
+SVGRender.prototype.drawEmpty = function(colour) {
+    this.g.appendChild(SVG_create_path({
+        string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
+        fill: colour
+    }));
+}
+
+SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
+    if (opacity == null) opacity = 1.0;
+    this.startPath();
+    this.moveTo(x1, y1);
+    this.lineTo(x2, y2);
+    this.finishPath(colour, {'stroke-opacity':opacity, 'stroke': colour});
+}
+
+SVGRender.prototype.drawRect = function(x, y, w, h, colour) {
+    var x1 = x + w;
+    var y1 = y + h;
+    var path_string = SVG_move_to({x: x, y: y});
+    path_string += SVG_line_to({x: x1, y: y});
+    path_string += SVG_line_to({x: x1, y: y1});
+    path_string += SVG_line_to({x: x, y: y1});
+
+    this.g.appendChild(SVG_create_path({
+        string: path_string,
+        fill: colour
+    }));
+}
+
+var globular_renderer = new SVGRender();
 
 function globular_set_viewbox() {
     var container = $('#diagram-canvas');
@@ -96,7 +157,8 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
 }
 
 function globular_render_0d(container, diagram, subdiagram) {
-    var r = new SVGRender(container, -0.5, 0.5, -0.5, 0.5);
+    var r = globular_renderer;
+    r.init(container, -0.5, 0.5, -0.5, 0.5);
 
     $(container)[0].bounds = {
         left: -0.5,
@@ -121,7 +183,9 @@ function globular_render_0d(container, diagram, subdiagram) {
 
 function globular_render_1d(container, diagram, subdiagram) {
     var length = Math.max(1, diagram.cells.length);
-    var d = prepare_SVG_container(container, diagram, 0, length, -0.5, 0.5);
+    var r = globular_renderer;
+    r.init(container, 0, length, -0.5, 0.5);
+
     $(container)[0].bounds = {
         left: 0,
         right: length,
@@ -139,17 +203,8 @@ function globular_render_1d(container, diagram, subdiagram) {
     for (var i = 0; i < diagram.cells.length; i++) {
         var start_x = (i == 0 ? 0 : i - 0.5);
         var finish_x = i + 0.5;
-        var path_string = SVG_move_to({
-            x: start_x,
-            y: 0
-        }) + SVG_line_to({
-            x: finish_x,
-            y: 0
-        });
-        d.g.appendChild(SVG_create_path({
-            string: path_string,
-            stroke: diagram.getSlice(i).getLastColour()
-        }));
+        r.drawLine(start_x, 0, finish_x, 0, diagram.getSlice(i).getLastColour());
+
         data.edges.push({
             start_x: start_x,
             finish_x: finish_x,
@@ -164,16 +219,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     var finish_x = length;
     //var id = diagram.getTargetBoundary().cells[0].id;
     var id_data = diagram.getTargetBoundary().getLastId();
-    d.g.appendChild(SVG_create_path({
-        string: SVG_move_to({
-            x: start_x,
-            y: 0
-        }) + SVG_line_to({
-            x: finish_x,
-            y: 0
-        }),
-        stroke: gProject.getColour(id_data),
-    }));
+    r.drawLine(start_x, 0, finish_x, 0, gProject.getColour(id_data));
     data.edges.push({
         start_x: start_x,
         finish_x: finish_x,
@@ -190,15 +236,12 @@ function globular_render_1d(container, diagram, subdiagram) {
             id: id,
             dimension: dimension
         });
-        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        
         var x = i + 0.5;
         var y = 0;
-        circle.setAttributeNS(null, "cx", x);
-        circle.setAttributeNS(null, "cy", y);
-        circle.setAttributeNS(null, "r", circle_radius);
-        circle.setAttributeNS(null, "fill", colour);
-        circle.setAttributeNS(null, "stroke", "none");
-        d.g.appendChild(circle);
+
+        r.drawNode(x, y, circle_radius, colour);
+
         data.vertices.push({
             x: x,
             y: y,
@@ -211,48 +254,26 @@ function globular_render_1d(container, diagram, subdiagram) {
     // Draw highlight
     if (subdiagram != undefined) {
         if (subdiagram.boundaryType == 's' && subdiagram.visibleBoundaryDepth == 1) {
-            d.g.appendChild(SVG_create_path({
-                string: SVG_move_to({
-                    x: 0,
-                    y: 0
-                }) + SVG_line_to({
-                    x: .25,
-                    y: 0
-                }),
-                stroke: highlight_colour,
-                'stroke-opacity': highlight_opacity
-            }));
+            r.drawLine(0, 0, 0.25, 0, highlight_colour, highlight_opacity);
         } else if (subdiagram.boundaryType == 't' && subdiagram.visibleBoundaryDepth == 1) {
-            d.g.appendChild(SVG_create_path({
-                string: SVG_move_to({
-                    x: length,
-                    y: 0
-                }) + SVG_line_to({
-                    x: length - .25,
-                    y: 0
-                }),
-                stroke: highlight_colour,
-                'stroke-opacity': highlight_opacity
-            }));
+            r.drawLine(length, 0, length - 0.25, 0, highlight_colour, highlight_opacity);
         }
     }
 
-    $(container).append(d.svg);
+    r.render();
     return data;
 }
 
 // Render the top 2 dimensions of a diagram
 function globular_render_2d(container, diagram, subdiagram) {
+    var r = globular_renderer;
 
     // Deal with an empty 2-diagram specially
     if ((diagram.cells.length == 0) && (diagram.source.cells.length == 0)) {
-        var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
-        d.g.appendChild(SVG_create_path({
-            string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
-            //fill: gProject.getColour(diagram.source.source.cells[0].id)
-            fill: diagram.getLastColour()
-        }));
-        $(container).append(d.svg);
+        r.init(container, -0.5, 0.5, -0.5, 0.5);
+        r.drawEmpty(diagram.getLastColour());
+        r.render();
+
         $(container)[0].bounds = {
             left: -0.5,
             right: 0.5,
@@ -269,10 +290,11 @@ function globular_render_2d(container, diagram, subdiagram) {
 
     var data = SVG_prepare(diagram);
 
-    // Prepare the SVG group in which to render the diagram    
-    var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
+    // Prepare the SVG group in which to render the diagram
+    r.init(container, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
+    //var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
     var defs = $('<defs>');
-    $(d.svg).prepend(defs);
+    $(r.svg).prepend(defs);
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -282,30 +304,12 @@ function globular_render_2d(container, diagram, subdiagram) {
     var y_center = Math.max(1, data.vertices.length) / 2;
     var w = big_background ? 20 : data.max_x + 1;
     var h = big_background ? 20 : Math.max(1, data.vertices.length);
-    var path_string = SVG_move_to({
-        x: x_center - w / 2,
-        y: y_center - h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center + w / 2,
-        y: y_center - h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center + w / 2,
-        y: y_center + h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center - w / 2,
-        y: y_center + h / 2
-    });
 
     // Determine background colour
     var color = diagram.source.source.getLastColour();
-    d.g.appendChild(SVG_create_path({
-        string: path_string,
-        //        fill: gProject.getColour(diagram.source.source.cells[0].id)
-        fill: color
-    }));
+    r.drawRect(x_center - w / 2, y_center - h / 2, w, h, color);
+
+    
     $(container)[0].bounds = {
         left: -0.5,
         right: data.max_x + 0.5,
@@ -338,7 +342,6 @@ function globular_render_2d(container, diagram, subdiagram) {
         vertex.y = vertex.intersection.centre[1];
     }
 
-    var svg_paths = [];
     for (var i = -1; i < data.edges.length; i++) {
         // Fill the extended area to the right of edge i
         var edge;
@@ -360,9 +363,11 @@ function globular_render_2d(container, diagram, subdiagram) {
             turning: 0,
             avoid_boundary: (i >= 0)
         };
+
+        r.startPath();
         do {
             instructions.edge.adjacent_regions.push(edge);
-            process_instructions(data, instructions)
+            process_instructions(data, instructions);
             if (instructions.edge == null) break;
         } while (instructions.edge != edge);
         if (instructions.edge == null) {
@@ -372,9 +377,11 @@ function globular_render_2d(container, diagram, subdiagram) {
             continue;
         }
 
-        var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttributeNS(null, "d", instructions.path_string);
-        //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.cells[0].id));
+
+
+        //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        //path.setAttributeNS(null, "d", instructions.path_string);
+        
         var colour;
         if (edge.type == null) {
             colour = '#ffffff';
@@ -387,24 +394,16 @@ function globular_render_2d(container, diagram, subdiagram) {
                 sublevel = data.edges_at_level[level].indexOf(i);
             }
             var sd = diagram.getSlice(level).getSlice(sublevel + 1);
-
-            //var sd = diagram.getSlice(Math.ceil(edge.start_height)).getSlice(edge.attachment_height + 1);
             colour = sd.getLastColour();
-            //var generator = gProject.signature.getGenerator(edge.type);
-            //colour = generator.getTargetColour();
         }
+
+        r.finishPath(colour);
 
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
         path.setAttributeNS(null, "fill", colour);
         path.region = edge;
-        svg_paths.push({
-            path: path,
-            edge: edge
-        });
-    }
-    for (var i = 0; i < svg_paths.length; i++) {
-        d.g.appendChild(svg_paths[i].path);
+        d.g.appendChild(path);
     }
 
     // Draw the edges
@@ -980,7 +979,7 @@ function process_instructions(data, i) {
                 // Continue up the last target edge
                 i.edge = data.edges[vertex.target_edges[vertex.target_edges.length - 1]];
                 i.draw_up = true;
-                i.turning += 0; // not turning
+                // not turning
                 return;
             }
         }
