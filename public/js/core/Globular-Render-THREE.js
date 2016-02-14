@@ -14,6 +14,11 @@ var pixelScale = 1;
 var item_size = 0.05;
 var Pi = 3.141592654;
 
+function globular_set_viewbox() {
+    var container = $('#diagram-canvas');
+    $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
+}
+
 // Create offscreen WebGL canvas
 function globular_prepare_renderer_THREE() {
     // Prepare WebGL stuff
@@ -51,12 +56,12 @@ function globular_render_THREE(container, diagram, subdiagram) {
 
     // Prepare scene, and store interactive rectangles
     var scene = new THREE.Scene();
-    var complex = new Complex(diagram);
+    //var complex = new Complex(diagram);
     scene.meshes = [];
     scene.geometries = [];
     scene.materials = [];
-    container[0].rectangles = complex.rectangles;
-    globular_draw_complex(complex, scene, subdiagram);
+    //container[0].rectangles = complex.rectangles;
+    //globular_draw_complex(complex, scene, subdiagram);
 
     // Get dimensions
     var container_width = container.width();
@@ -88,36 +93,39 @@ function globular_render_THREE(container, diagram, subdiagram) {
 
     // Calculate viewport
     var viewport = {};
-    diagram.width = complex.max_x - complex.min_x;
-    diagram.height = complex.max_y - complex.min_y;
-    if (diagram.width / diagram.height > container_width / container_height) {
-        // Diagram is wide with respect to the container
-        viewport.min_x = complex.min_x;
-        viewport.max_x = complex.max_x;
-        var mean_y = (complex.min_y + complex.max_y) / 2;
-        var viewport_height = container_height * diagram.width / container_width;
-        viewport.min_y = mean_y - (viewport_height / 2);
-        viewport.max_y = mean_y + (viewport_height / 2);
-        g.renderer.setScissor(
-            0,
-            (container_height - (diagram.height * container_width / diagram.width))/2,
-            container_width,
-            diagram.height * container_width / diagram.width);
-    }
-    else {
-        viewport.min_y = complex.min_y;
-        viewport.max_y = complex.max_y;
-        var mean_x = (complex.min_x + complex.max_x) / 2;
-        var viewport_width = container_width * diagram.height / container_height;
-        viewport.min_x = mean_x - (viewport_width / 2);
-        viewport.max_x = mean_x + (viewport_width / 2);
-        g.renderer.setScissor(
-            (container_width - (diagram.width * container_height / diagram.height))/2,
-            0,
-            diagram.width * container_height / diagram.height,
-            container_height
-        );
-    }
+    viewport.mix_x = -1;
+    viewport.max_x = 1;
+    
+    // diagram.width = complex.max_x - complex.min_x;
+    // diagram.height = complex.max_y - complex.min_y;
+    // if (diagram.width / diagram.height > container_width / container_height) {
+    //     // Diagram is wide with respect to the container
+    //     viewport.min_x = complex.min_x;
+    //     viewport.max_x = complex.max_x;
+    //     var mean_y = (complex.min_y + complex.max_y) / 2;
+    //     var viewport_height = container_height * diagram.width / container_width;
+    //     viewport.min_y = mean_y - (viewport_height / 2);
+    //     viewport.max_y = mean_y + (viewport_height / 2);
+    //     g.renderer.setScissor(
+    //         0,
+    //         (container_height - (diagram.height * container_width / diagram.width))/2,
+    //         container_width,
+    //         diagram.height * container_width / diagram.width);
+    // }
+    // else {
+    //     viewport.min_y = complex.min_y;
+    //     viewport.max_y = complex.max_y;
+    //     var mean_x = (complex.min_x + complex.max_x) / 2;
+    //     var viewport_width = container_width * diagram.height / container_height;
+    //     viewport.min_x = mean_x - (viewport_width / 2);
+    //     viewport.max_x = mean_x + (viewport_width / 2);
+    //     g.renderer.setScissor(
+    //         (container_width - (diagram.width * container_height / diagram.height))/2,
+    //         0,
+    //         diagram.width * container_height / diagram.height,
+    //         container_height
+    //     );
+    // }
     g.camera.left = viewport.min_x;
     g.camera.right = viewport.max_x;
     g.camera.top = viewport.max_y;

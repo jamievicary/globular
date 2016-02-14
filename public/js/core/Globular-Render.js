@@ -8,8 +8,8 @@
 // http://stackoverflow.com/questions/30541121/multiple-webgl-models-on-the-same-page
 
 // Choose "SVG" or "THREE"
-var render_mode = "SVG";
-//var render_mode = "THREE";
+// var render_mode = "SVG";
+var render_mode = "THREE";
 
 var globular_offscreen = {};
 var pixelScale = 1;
