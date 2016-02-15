@@ -21,6 +21,7 @@ function SVGRender(container, min_x, max_x, min_y, max_y) {
 
 SVGRender.prototype.init = function(container, min_x, max_x, min_y, max_y) {
     this.container = $(container);
+    this.container.children('svg').remove();
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
@@ -117,10 +118,10 @@ SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
     this.startPath();
     this.moveTo({x:x1, y:y1});
     this.lineTo({x:x2, y:y2});
-    this.finishPath({'stroke-opacity':opacity, 'stroke': colour});
+    this.finishPath({'stroke_opacity':opacity, 'stroke': colour});
 }
 
-SVGRender.prototype.drawRect = function(x, y, w, h, colour) {
+SVGRender.prototype.drawRect = function(x, y, w, h, colour, opacity) {
     var x1 = x + w;
     var y1 = y + h;
     this.startPath();
@@ -128,7 +129,7 @@ SVGRender.prototype.drawRect = function(x, y, w, h, colour) {
     this.lineTo({x:x1, y:y});
     this.lineTo({x:x1, y:y1});
     this.lineTo({x:x, y:y1});
-    this.finishPath({fill: colour});
+    this.finishPath({fill: colour, 'fill_opacity': 0.5});
 }
 
 //var globular_renderer = new SVGRender();
