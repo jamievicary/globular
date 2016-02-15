@@ -122,6 +122,7 @@ SVGRenderContext.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) 
 }
 
 SVGRenderContext.prototype.drawRect = function(x, y, w, h, colour, opacity) {
+    if (opacity == undefined) opacity = 1.0;
     var x1 = x + w;
     var y1 = y + h;
     this.startPath();
@@ -129,7 +130,7 @@ SVGRenderContext.prototype.drawRect = function(x, y, w, h, colour, opacity) {
     this.lineTo({x:x1, y:y});
     this.lineTo({x:x1, y:y1});
     this.lineTo({x:x, y:y1});
-    this.finishPath({fill: colour, 'fill_opacity': 0.5});
+    this.finishPath({fill: colour, 'fill_opacity': opacity});
 }
 
 //var globular_renderer = new SVGRenderContext();
