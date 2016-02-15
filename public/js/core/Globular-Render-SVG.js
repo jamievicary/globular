@@ -10,7 +10,7 @@ var circle_radius = 0.1;
 var highlight_colour = '#ffff00';
 var highlight_opacity = 0.8;
 
-function SVGRender(container, min_x, max_x, min_y, max_y) {
+function SVGRenderContext(container, min_x, max_x, min_y, max_y) {
     this.container = null;
     this.svg = null;
     this.g = null;
@@ -19,7 +19,7 @@ function SVGRender(container, min_x, max_x, min_y, max_y) {
     return this;
 }
 
-SVGRender.prototype.init = function(container, min_x, max_x, min_y, max_y) {
+SVGRenderContext.prototype.init = function(container, min_x, max_x, min_y, max_y) {
     this.container = $(container);
     this.container.children('svg').remove();
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -33,17 +33,17 @@ SVGRender.prototype.init = function(container, min_x, max_x, min_y, max_y) {
     this.g.setAttributeNS(null, "transform", "scale (1 -1)");
 }
 
-SVGRender.prototype.render = function() {
+SVGRenderContext.prototype.render = function() {
     this.container.children('svg').remove();
     this.container.append(this.svg);
 }
 
-SVGRender.prototype.startPath = function() {
+SVGRenderContext.prototype.startPath = function() {
     this.path_string = "";
 }
 
 
-SVGRender.prototype.finishPath = function(data) {
+SVGRenderContext.prototype.finishPath = function(data) {
     if (data == undefined) { data = {}; }
     if (data.stroke_width === undefined) data.stroke_width = 0.1;
     if (data.stroke === undefined) data.stroke = "none";
@@ -64,14 +64,14 @@ SVGRender.prototype.finishPath = function(data) {
 }
 
 
-SVGRender.prototype.moveTo = function(p) {
+SVGRenderContext.prototype.moveTo = function(p) {
     if (p.x === undefined) throw 0;
     if (p.y === undefined) throw 0;
 
     this.path_string += "M " + p.x + " " + p.y + " ";
 }
 
-SVGRender.prototype.lineTo = function(p) {
+SVGRenderContext.prototype.lineTo = function(p) {
     if (p.x === undefined) {
         throw 0;
     }
@@ -80,7 +80,7 @@ SVGRender.prototype.lineTo = function(p) {
     this.path_string += "L " + p.x + " " + p.y + " ";
 }
 
-SVGRender.prototype.bezierTo = function(p) {
+SVGRenderContext.prototype.bezierTo = function(p) {
     if (p.c1x === undefined) throw 0;
     if (p.c1y === undefined) throw 0;
     if (p.c2x === undefined) throw 0;
@@ -91,7 +91,7 @@ SVGRender.prototype.bezierTo = function(p) {
     this.path_string += "C " + p.c1x + " " + p.c1y + ", " + p.c2x + " " + p.c2y + ", " + p.x + " " + p.y + " ";
 }
 
-SVGRender.prototype.drawCircle = function(data) {
+SVGRenderContext.prototype.drawCircle = function(data) {
     var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     if (data.radius == undefined) data.radius = 0.05;
     circle.setAttributeNS(null, "cx", data.x);
@@ -102,18 +102,18 @@ SVGRender.prototype.drawCircle = function(data) {
     this.g.appendChild(circle);
 }
 
-SVGRender.prototype.drawNode = function(cx, cy, radius, colour) {
+SVGRenderContext.prototype.drawNode = function(cx, cy, radius, colour) {
     this.drawCircle({x: cx, y: cy, radius: radius, fill: colour});
 }
 
-SVGRender.prototype.drawEmpty = function(colour) {
+SVGRenderContext.prototype.drawEmpty = function(colour) {
     this.g.appendChild(SVG_create_path({
         string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
         fill: colour
     }));
 }
 
-SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
+SVGRenderContext.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
     if (opacity == null) opacity = 1.0;
     this.startPath();
     this.moveTo({x:x1, y:y1});
@@ -121,7 +121,7 @@ SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
     this.finishPath({'stroke_opacity':opacity, 'stroke': colour});
 }
 
-SVGRender.prototype.drawRect = function(x, y, w, h, colour, opacity) {
+SVGRenderContext.prototype.drawRect = function(x, y, w, h, colour, opacity) {
     var x1 = x + w;
     var y1 = y + h;
     this.startPath();
@@ -132,7 +132,7 @@ SVGRender.prototype.drawRect = function(x, y, w, h, colour, opacity) {
     this.finishPath({fill: colour, 'fill_opacity': 0.5});
 }
 
-//var globular_renderer = new SVGRender();
+//var globular_renderer = new SVGRenderContext();
 
 function globular_set_viewbox() {
     var container = $('#diagram-canvas');
@@ -145,7 +145,7 @@ function globular_render_SVG(container, diagram, subdiagram, suppress) {
     container_dom.rectangles = [];
     diagram = diagram.copy();
 
-    var r = new SVGRender();
+    var r = new SVGRenderContext();
 
     if (diagram.getDimension() - suppress == 0) {
 
