@@ -37,7 +37,7 @@ Diagram.prototype.reorganiseCrossings.Int = function(type, x, n, m) {
         for (var i = 1; i < m; i++) {
             list = list.concat(this.expand(type, x + i, i * (n - 1), 1));
         }
-        if(n != 1){
+        if(n > 1){
             list = list.concat(this.reorganiseCrossings(type, x + m, n - 1, m));
         }
 
