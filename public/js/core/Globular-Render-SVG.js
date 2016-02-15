@@ -41,22 +41,52 @@ SVGRender.prototype.startPath = function() {
     this.path_string = "";
 }
 
-SVGRender.prototype.finishPath = function(args) {
-    if (args == undefined) { args = {}; }
-    args.string = this.path_string;
-    this.g.appendChild(SVG_create_path(args));
+
+SVGRender.prototype.finishPath = function(data) {
+    if (data == undefined) { data = {}; }
+    if (data.stroke_width === undefined) data.stroke_width = 0.1;
+    if (data.stroke === undefined) data.stroke = "none";
+    if (data.fill === undefined) data.fill = "none";
+    if (data.stroke_opacity === undefined) data.stroke_opacity = "1";
+    if (data.fill_opacity === undefined) data.fill_opacity = "1";
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttributeNS(null, "d", this.path_string);
+    path.setAttributeNS(null, "stroke-width", data.stroke_width);
+    path.setAttributeNS(null, "stroke", data.stroke);
+    path.setAttributeNS(null, "fill", data.fill);
+    path.setAttributeNS(null, "stroke-opacity", data.stroke_opacity);
+    path.setAttributeNS(null, "fill-opacity", data.fill_opacity);
+    if (data.mask != null) path.setAttributeNS(null, "mask", data.mask);
+    
+    this.g.appendChild(path);
 }
 
-SVGRender.prototype.moveTo = function(x, y) {
-    this.path_string += SVG_move_to({x: x, y: y});
+
+SVGRender.prototype.moveTo = function(p) {
+    if (p.x === undefined) throw 0;
+    if (p.y === undefined) throw 0;
+
+    this.path_string += "M " + p.x + " " + p.y + " ";
 }
 
-SVGRender.prototype.lineTo = function(x, y) {
-    this.path_string += SVG_line_to({x: x, y: y});
+SVGRender.prototype.lineTo = function(p) {
+    if (p.x === undefined) {
+        throw 0;
+    }
+    if (p.y === undefined) throw 0;
+
+    this.path_string += "L " + p.x + " " + p.y + " ";
 }
 
 SVGRender.prototype.bezierTo = function(p) {
-    this.path_string += SVG_bezier_to(p);
+    if (p.c1x === undefined) throw 0;
+    if (p.c1y === undefined) throw 0;
+    if (p.c2x === undefined) throw 0;
+    if (p.c2y === undefined) throw 0;
+    if (p.x === undefined) throw 0;
+    if (p.y === undefined) throw 0;
+    
+    this.path_string += "C " + p.c1x + " " + p.c1y + ", " + p.c2x + " " + p.c2y + ", " + p.x + " " + p.y + " ";
 }
 
 SVGRender.prototype.drawCircle = function(data) {
@@ -84,8 +114,8 @@ SVGRender.prototype.drawEmpty = function(colour) {
 SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
     if (opacity == null) opacity = 1.0;
     this.startPath();
-    this.moveTo(x1, y1);
-    this.lineTo(x2, y2);
+    this.moveTo({x:x1, y:y1});
+    this.lineTo({x:x2, y:y2});
     this.finishPath({'stroke-opacity':opacity, 'stroke': colour});
 }
 
@@ -93,14 +123,14 @@ SVGRender.prototype.drawRect = function(x, y, w, h, colour) {
     var x1 = x + w;
     var y1 = y + h;
     this.startPath();
-    this.moveTo(x, y);
-    this.lineTo(x1, y);
-    this.lineTo(x1, y1);
-    this.lineTo(x, y1);
+    this.moveTo({x:x, y:y});
+    this.lineTo({x:x1, y:y});
+    this.lineTo({x:x1, y:y1});
+    this.lineTo({x:x, y:y1});
     this.finishPath({fill: colour});
 }
 
-var globular_renderer = new SVGRender();
+//var globular_renderer = new SVGRender();
 
 function globular_set_viewbox() {
     var container = $('#diagram-canvas');
@@ -112,49 +142,22 @@ function globular_render(container, diagram, subdiagram, suppress) {
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
     diagram = diagram.copy();
+
+    var r = new SVGRender();
+
     if (diagram.getDimension() - suppress == 0) {
-        return globular_render_0d(container, diagram, subdiagram);
+        r.init(container, -0.5, 0.5, -0.5, 0.5);
+        return globular_render_0d(r, container, diagram, subdiagram);
     } else if (diagram.getDimension() - suppress == 1) {
-        return globular_render_1d(container, diagram, subdiagram);
+        var length = Math.max(1, diagram.cells.length);
+        r.init(container, 0, length, -0.5, 0.5);
+        return globular_render_1d(r, container, diagram, subdiagram);
     } else if (diagram.getDimension() - suppress >= 2) {
-        return globular_render_2d(container, diagram, subdiagram);
+        return globular_render_2d(r, container, diagram, subdiagram);
     }
 }
 
-function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
-    container = $(container);
-    container.children('svg').remove();
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    var x_center = (min_x + max_x) / 2;
-    var y_center = (min_y + max_y) / 2;
-    var w, h;
-    /* special display mode for bio pictures
-    if (container.attr('id') == 'diagram-canvas' && diagram.getDimension() == 2 && diagram.source.cells.length == 0) {
-        w = 15;
-        h = 15;
-        svg.setAttributeNS(null, "viewBox", (x_center - w / 2).toString() + " " + (-y_center - h / 2).toString() + " " + w + " " + h);
-    }
-    else {
-    */
-    svg.setAttributeNS(null, "viewBox", (min_x).toString() + " " + (-max_y.toString()) + " " + (max_x - min_x) + " " + (max_y - min_y));
-    //}
-    svg.setAttributeNS(null, "preserveAspectRatio", "xMidYMid meet");
-    svg.setAttribute("width", container.width());
-    svg.setAttribute("height", container.height());
-    //container.append(svg);
-    svg.appendChild(g);
-    g.setAttributeNS(null, "transform", "scale (1 -1)");
-    return {
-        svg: svg,
-        g: g
-    };
-}
-
-function globular_render_0d(container, diagram, subdiagram) {
-    var r = globular_renderer;
-    r.init(container, -0.5, 0.5, -0.5, 0.5);
-
+function globular_render_0d(r, container, diagram, subdiagram) {
     $(container)[0].bounds = {
         left: -0.5,
         right: 0.5,
@@ -176,10 +179,8 @@ function globular_render_0d(container, diagram, subdiagram) {
     };
 }
 
-function globular_render_1d(container, diagram, subdiagram) {
+function globular_render_1d(r, container, diagram, subdiagram) {
     var length = Math.max(1, diagram.cells.length);
-    var r = globular_renderer;
-    r.init(container, 0, length, -0.5, 0.5);
 
     $(container)[0].bounds = {
         left: 0,
@@ -260,8 +261,7 @@ function globular_render_1d(container, diagram, subdiagram) {
 }
 
 // Render the top 2 dimensions of a diagram
-function globular_render_2d(container, diagram, subdiagram) {
-    var r = globular_renderer;
+function globular_render_2d(r, container, diagram, subdiagram) {
 
     // Deal with an empty 2-diagram specially
     if ((diagram.cells.length == 0) && (diagram.source.cells.length == 0)) {
@@ -283,7 +283,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         };
     }
 
-    var data = SVG_prepare(diagram);
+    var data = layout2d(diagram);
 
     // Prepare the SVG group in which to render the diagram
     r.init(container, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
@@ -362,7 +362,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         r.startPath();
         do {
             instructions.edge.adjacent_regions.push(edge);
-            process_instructions(data, instructions);
+            process_instructions(r, data, instructions);
             if (instructions.edge == null) break;
         } while (instructions.edge != edge);
         if (instructions.edge == null) {
@@ -418,7 +418,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             //    x: edge.x,
             //    y: 0
             //});
-            r.moveTo(edge.x, 0);
+            r.moveTo({x: edge.x, y: 0});
         } else {
             // We start at a vertex
             var vertex = data.vertices[edge.start_vertex];
@@ -427,13 +427,13 @@ function globular_render_2d(container, diagram, subdiagram) {
 //                     x: edge.x,
 //                     y: edge.start_height + 0.5
 //                 });
-                r.moveTo(edge.x, edge.start_height + 0.5);
+                r.moveTo({x: edge.x, y: edge.start_height + 0.5});
             } else {
                 //path_s += SVG_move_to({
                 //    x: vertex.x,
                 //    y: vertex.y
                 //});
-                r.moveTo(vertex.x, vertex.y);
+                r.moveTo({x: vertex.x, y: vertex.y});
                 //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
 //                 path_s += SVG_bezier_to({
 //                     c1x: edge.x,
@@ -462,7 +462,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 //                 x: edge.x,
 //                 y: edge.finish_height - 0.5
 //             });
-            r.lineTo(edge.x, edge.finish_height - 0.5);
+            r.lineTo({x: edge.x, y: edge.finish_height - 0.5});
             drawn_something = true;
             draw_main = true;
         }
@@ -475,7 +475,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 //                 x: edge.x,
 //                 y: edge.finish_height
 //             });
-            r.lineTo(edge.x, edge.finish_height);
+            r.lineTo({x: edge.x, y: edge.finish_height});
             drawn_something = true;
             //            }
         } else {
@@ -608,7 +608,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 //             }));
 
             r.startPath();
-            r.moveTo(e1.x, i - epsilon);
+            r.moveTo({x: e1.x, y: i - epsilon});
             r.bezierTo({
                 c1x: e1_bot.x,
                 c1y: i + 0.5,
@@ -638,7 +638,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 //             }));
 
             r.startPath();
-            r.moveTo(e2_bot.x, i - epsilon);
+            r.moveTo({x: e2_bot.x, y: i - epsilon});
             r.bezierTo({
                 c1x: e2_bot.x,
                 c1y: i + 0.5,
@@ -756,8 +756,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 //             }));
 
             r.startPath();
-            r.moveTo(x, 0);
-            r.lineTo(x, Math.max(1, diagram.cells.length));
+            r.moveTo({x: x, y: 0});
+            r.lineTo({x: x, y: Math.max(1, diagram.cells.length)});
             r.finishPath({
                 stroke: highlight_colour,
                 'stroke-width': 0.25,
@@ -818,8 +818,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 //             }));
 
             r.startPath();
-            r.moveTo(x1, y);
-            r.lineTo(x2, y);
+            r.moveTo({x: x1, y: y});
+            r.lineTo({x: x2, y: y});
             r.finishPath({
                 stroke: highlight_colour,
                 'stroke-width': 0.25,
@@ -931,40 +931,9 @@ function globular_render_2d(container, diagram, subdiagram) {
     return data;
 }
 
-function SVG_create_path(data) {
-    if (data.string.length == 0) return;
-    if (data.stroke_width === undefined) data.stroke_width = 0.1;
-    if (data.stroke === undefined) data.stroke = "none";
-    if (data.fill === undefined) data.fill = "none";
-    if (data.stroke_opacity === undefined) data.stroke_opacity = "1";
-    if (data.fill_opacity === undefined) data.fill_opacity = "1";
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttributeNS(null, "d", data.string);
-    path.setAttributeNS(null, "stroke-width", data.stroke_width);
-    path.setAttributeNS(null, "stroke", data.stroke);
-    path.setAttributeNS(null, "fill", data.fill);
-    path.setAttributeNS(null, "stroke-opacity", data.stroke_opacity);
-    path.setAttributeNS(null, "fill-opacity", data.fill_opacity);
-    if (data.mask != null) path.setAttributeNS(null, "mask", data.mask);
-    return path;
-}
 
-function SVG_create_circle(data) {
-    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    if (data.radius == undefined) data.radius = 0.05;
-    circle.setAttributeNS(null, "cx", data.x);
-    circle.setAttributeNS(null, "cy", data.y);
-    circle.setAttributeNS(null, "r", data.radius);
-    circle.setAttributeNS(null, "fill", data.fill);
-    circle.setAttributeNS(null, "stroke", "none");
-    //d.g.appendChild(circle);
-    return circle;
-
-}
-
-function process_instructions(data, i) {
+function process_instructions(r, data, i) {
     var c = null;
-    var r = globular_renderer;
 
     // Draw the edge segment appropriately
     if (i.draw_up) {
@@ -972,10 +941,10 @@ function process_instructions(data, i) {
         if (i.path_string.length == 0) {
             //i.path_string = SVG_move_to(bottom_of_edge(data, i.edge));
             var c = bottom_of_edge(data, i.edge);
-            r.moveTo(c.x, c.y);
+            r.moveTo({x: c.x, y: c.y});
         }
         //i.path_string +=
-        SVG_draw_edge_bottom_to_top(data, i.edge);
+        draw_edge_bottom_to_top(r, data, i.edge);
         // ... update the instructions.
         var vertex_index = i.edge.finish_vertex;
         if (vertex_index == null) {
@@ -993,14 +962,14 @@ function process_instructions(data, i) {
 //                     y: Math.max(1, data.vertices.length)
 //                 });
 
-                r.lineTo(data.max_x + 0.5, Math.max(1, data.vertices.length));
+                r.lineTo({x: data.max_x + 0.5, y: Math.max(1, data.vertices.length)});
 
 //                 i.path_string += SVG_line_to({
 //                     x: data.max_x + 0.5,
 //                     y: 0
 //                 });
 
-                r.lineTo(data.max_x + 0.5, 0);
+                r.lineTo({x: data.max_x + 0.5, y: 0});
 
                 var source_edges = data.edges_at_level[0];
                 if (source_edges.length == 0) {
@@ -1008,16 +977,16 @@ function process_instructions(data, i) {
 //                         x: -0.5,
 //                         y: 0
 //                     });
-                    r.lineTo(-0.5, 0);
+                    r.lineTo({x: -0.5, y: 0});
 //                     i.path_string += SVG_line_to({
 //                         x: -0.5,
 //                         y: Math.max(1, data.vertices.length)
 //                     });
-                    r.lineTo(-0.5, Math.max(1, data.vertices.length));
+                    r.lineTo({x: -0.5, y: Math.max(1, data.vertices.length)});
                     var target_edges = data.edges_at_level[data.edges_at_level.length - 1];
                     i.edge = data.edges[target_edges[0]]; // Will necessarily exist
                     c = top_of_edge(data, i.edge);
-                    r.lineTo(c.x, c.y);
+                    r.lineTo({x: c.x, y: c.y});
 //                  i.path_string += SVG_line_to(top_of_edge(data, i.edge));
                     i.draw_up = false;
                     i.turning += 3; // turn right thrice
@@ -1025,7 +994,7 @@ function process_instructions(data, i) {
                 }
                 i.edge = data.edges[source_edges[source_edges.length - 1]];
                 c = bottom_of_edge(data, i.edge);
-                r.lineTo(c.x, c.y);
+                r.lineTo({x: c.x, y: c.y});
 //                 i.path_string += SVG_line_to(bottom_of_edge(data, i.edge));
                 i.draw_up = true;
                 i.turning += 2; // turn right twice
@@ -1034,7 +1003,7 @@ function process_instructions(data, i) {
             // Come down the next edge
 //             i.path_string += SVG_line_to(top_of_edge(data, next_edge));
             c = top_of_edge(data, next_edge);
-            r.lineTo(c.x, c.y);
+            r.lineTo({x: c.x, y: c.y});
             i.edge = next_edge;
             i.draw_up = false;
             i.turning += 1; // turn right once
@@ -1076,7 +1045,7 @@ function process_instructions(data, i) {
 //     }
 
     //i.path_string +=
-    SVG_draw_edge_top_to_bottom(data, i.edge);
+    draw_edge_top_to_bottom(r, data, i.edge);
 
     var vertex_index = i.edge.start_vertex;
     if (vertex_index == null) {
@@ -1093,12 +1062,12 @@ function process_instructions(data, i) {
 //                 x: -0.5,
 //                 y: 0
 //             });
-            r.lineTo(-0.5, 0);
+            r.lineTo({x: -0.5, y: 0});
 //             i.path_string += SVG_line_to({
 //                 x: -0.5,
 //                 y: Math.max(1, data.vertices.length)
 //             });
-            r.lineTo(-0.5, Math.max(1, data.vertices.length));
+            r.lineTo({x: -0.5, y: Math.max(1, data.vertices.length)});
             var target_edges = data.edges_at_level[data.edges_at_level.length - 1];
             if (target_edges.length == 0) {
                 // No edges at the top of the diagram, so come around
@@ -1106,17 +1075,17 @@ function process_instructions(data, i) {
 //                     x: data.max_x + 0.5,
 //                     y: Math.max(1, data.vertices.length)
 //                 });
-                r.lineTo(data.max_x + 0.5, Math.max(1, data.vertices.length));
+                r.lineTo({x: data.max_x + 0.5, y: Math.max(1, data.vertices.length)});
 //                 i.path_string += SVG_line_to({
 //                     x: data.max_x + 0.5,
 //                     y: 0
 //                 });
-                r.lineTo(data.max_x + 0.5, 0);
+                r.lineTo({x: data.max_x + 0.5, y: 0});
                 var source_edges = data.edges_at_level[0];
                 i.edge = data.edges[source_edges.length - 1]; // Will necessarily exist
 //                 i.path_string += SVG_line_to(bottom_of_edge(data, i.edge));
                 c = bottom_of_edge(data, i.edge);
-                r.lineTo(c.x, c.y);
+                r.lineTo({x: c.x, y: c.y});
                 i.draw_up = true;
                 i.turning += 3;
                 return;
@@ -1125,7 +1094,7 @@ function process_instructions(data, i) {
             i.edge = data.edges[target_edges[0]];
 //             i.path_string += SVG_line_to(top_of_edge(data, i.edge));
             c = top_of_edge(data, i.edge);
-            r.lineTo(c.x, c.y);
+            r.lineTo({x: c.x, y: c.y});
             i.draw_up = false;
             i.turning += 2;
             return;
@@ -1133,7 +1102,7 @@ function process_instructions(data, i) {
         // We've got another edge clockwise on the bottom of the diagram
 //         i.path_string += SVG_line_to(bottom_of_edge(data, next_edge));
         c = bottom_of_edge(data, next_edge);
-        r.lineTo(c.x, c.y);
+        r.lineTo({x: c.x, y: c.y});
         i.edge = next_edge;
         i.draw_up = true;
         i.turning += 1;
@@ -1170,30 +1139,6 @@ function process_instructions(data, i) {
     }
 }
 
-function SVG_line_to(p) {
-    if (p.x === undefined) {
-        throw 0;
-    }
-    if (p.y === undefined) throw 0;
-    return "L " + p.x + " " + p.y + " ";
-}
-
-function SVG_bezier_to(p) {
-    if (p.c1x === undefined) throw 0;
-    if (p.c1y === undefined) throw 0;
-    if (p.c2x === undefined) throw 0;
-    if (p.c2y === undefined) throw 0;
-    if (p.x === undefined) throw 0;
-    if (p.y === undefined) throw 0;
-    return "C " + p.c1x + " " + p.c1y + ", " + p.c2x + " " + p.c2y + ", " + p.x + " " + p.y + " ";
-}
-
-function SVG_move_to(p) {
-    if (p.x === undefined) throw 0;
-    if (p.y === undefined) throw 0;
-    return "M " + p.x + " " + p.y + " ";
-}
-
 // Return the point at the bottom of the edge
 function bottom_of_edge(data, edge) {
     if (edge.start_vertex == null) {
@@ -1224,16 +1169,16 @@ function top_of_edge(data, edge) {
     };
 }
 
-function SVG_draw_edge_bottom_to_top(data, edge) {
+function draw_edge_bottom_to_top(r, data, edge) {
     //var r = 
-    SVG_draw_edge_section(data, edge, edge.start_height, edge.finish_height);
+    draw_edge_section(r, data, edge, edge.start_height, edge.finish_height);
     //if (r === undefined) throw 0;
     //return r;
 }
 
-function SVG_draw_edge_top_to_bottom(data, edge) {
+function draw_edge_top_to_bottom(r, data, edge) {
     //var r =
-    SVG_draw_edge_section(data, edge, edge.finish_height, edge.start_height);
+    draw_edge_section(r, data, edge, edge.finish_height, edge.start_height);
     //if (r === undefined) throw 0;
     //return r;
 }
@@ -1282,38 +1227,37 @@ function point_on_edge(data, edge_list, edge_index, height) {
 }
 
 // Draw section of an edge. Assume that we have already moved to the start point.
-function SVG_draw_edge_section_at_slice(data, edge_list, edge_index, h_start, h_end) {
-    var diagram_height = Math.max(1, data.vertices.length);
-    h_start = Math.min(Math.max(h_start, 0), diagram_height);
-    h_end = Math.min(Math.max(h_end, 0), diagram_height);
-    if (h_start == h_end) return "";
-    var edge;
-    if (edge_index < 0) {
-        edge = {
-            start_height: 0,
-            finish_height: Math.max(1, data.vertices.length),
-            length: Math.max(1, data.vertices.length),
-            x: -0.5,
-            start_vertex: null,
-            finish_vertex: null
-        }
-    } else if (edge_index == edge_list.length) {
-        edge = {
-            start_height: 0,
-            finish_height: Math.max(1, data.vertices.length),
-            length: Math.max(1, data.vertices.length),
-            x: data.max_x + 0.5,
-            start_vertex: null,
-            finish_vertex: null
-        }
-    } else {
-        edge = data.edges[edge_list[edge_index]];
-    }
-    return SVG_draw_edge_section(data, edge, h_start, h_end);
-}
+// function draw_edge_section_at_slice(r, data, edge_list, edge_index, h_start, h_end) {
+//     var diagram_height = Math.max(1, data.vertices.length);
+//     h_start = Math.min(Math.max(h_start, 0), diagram_height);
+//     h_end = Math.min(Math.max(h_end, 0), diagram_height);
+//     if (h_start == h_end) return "";
+//     var edge;
+//     if (edge_index < 0) {
+//         edge = {
+//             start_height: 0,
+//             finish_height: Math.max(1, data.vertices.length),
+//             length: Math.max(1, data.vertices.length),
+//             x: -0.5,
+//             start_vertex: null,
+//             finish_vertex: null
+//         }
+//     } else if (edge_index == edge_list.length) {
+//         edge = {
+//             start_height: 0,
+//             finish_height: Math.max(1, data.vertices.length),
+//             length: Math.max(1, data.vertices.length),
+//             x: data.max_x + 0.5,
+//             start_vertex: null,
+//             finish_vertex: null
+//         }
+//     } else {
+//         edge = data.edges[edge_list[edge_index]];
+//     }
+//     return draw_edge_section(r, data, edge, h_start, h_end);
+// }
 
-function SVG_draw_edge_section(data, edge, h_start, h_end) {
-    var r = globular_renderer;
+function draw_edge_section(r, data, edge, h_start, h_end) {
     var diagram_height = Math.max(1, data.vertices.length);
     h_start = Math.min(Math.max(h_start, 0), diagram_height);
     h_end = Math.min(Math.max(h_end, 0), diagram_height);
@@ -1332,7 +1276,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                     x: edge.x,
 //                     y: h_start + 0.5
 //                 });
-                r.lineTo(edge.x, h_start + 0.5);
+                r.lineTo({x: edge.x, y: h_start + 0.5});
 
             } else {
                 // Coming up out of a vertex as a target edge
@@ -1384,7 +1328,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                 x: edge.x,
 //                 y: central_finish
 //             });
-            r.lineTo(edge.x, central_finish);
+            r.lineTo({x: edge.x, y: central_finish});
         }
         if (top_section) {
             // Draw top half-height of line
@@ -1394,7 +1338,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                     x: edge.x,
 //                     y: h_end
 //                 });
-                r.lineTo(edge.x, h_end);
+                r.lineTo({x: edge.x, y: h_end});
             } else {
                 // Coming up into a vertex as a source edge
                 var vertex = data.vertices[edge.finish_vertex];
@@ -1450,7 +1394,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                     x: edge.x,
 //                     y: h_start - 0.5
 //                 });
-                r.lineTo(edge.x, h_start - 0.5);
+                r.lineTo({x: edge.x, y: h_start - 0.5});
             } else {
                 // Coming down out of a vertex as a source edge
                 var vertex = data.vertices[edge.finish_vertex];
@@ -1500,7 +1444,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                 x: edge.x,
 //                 y: central_finish
 //             });
-            r.lineTo(edge.x, central_finish);
+            r.lineTo({x: edge.x, y: central_finish});
         }
         if (bottom_section) {
             // Draw bottom half-height of line
@@ -1510,7 +1454,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                     x: edge.x,
 //                     y: h_end
 //                 });
-                r.lineTo(edge.x, h_end);
+                r.lineTo({x: edge.x, y: h_end});
             } else {
                 // Coming down into a vertex as a target edge
                 var vertex = data.vertices[edge.start_vertex];
@@ -1560,7 +1504,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 }
 
 
-function SVG_prepare(diagram, subdiagram) {
+function layout2d(diagram, subdiagram) {
     /*
         For each edge, calculate its start and finish height, and its
         x-coordinate.
