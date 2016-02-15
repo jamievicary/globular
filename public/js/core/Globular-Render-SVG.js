@@ -137,7 +137,7 @@ function globular_set_viewbox() {
     $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
 }
 
-function globular_render(container, diagram, subdiagram, suppress) {
+function globular_render_SVG(container, diagram, subdiagram, suppress) {
     if (suppress == undefined) suppress = 0;
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
@@ -146,25 +146,34 @@ function globular_render(container, diagram, subdiagram, suppress) {
     var r = new SVGRender();
 
     if (diagram.getDimension() - suppress == 0) {
+
         r.init(container, -0.5, 0.5, -0.5, 0.5);
-        return globular_render_0d(r, container, diagram, subdiagram);
+        $(container)[0].bounds = {
+            left: -0.5,
+            right: 0.5,
+            top: 0.5,
+            bottom: -0.5
+        };
+        return globular_render_0d(r, diagram, subdiagram);
+
     } else if (diagram.getDimension() - suppress == 1) {
+
         var length = Math.max(1, diagram.cells.length);
         r.init(container, 0, length, -0.5, 0.5);
-        return globular_render_1d(r, container, diagram, subdiagram);
+        $(container)[0].bounds = {
+            left: 0,
+            right: length,
+            top: 0.5,
+            bottom: -0.5
+        };
+        return globular_render_1d(r, diagram, subdiagram);
+
     } else if (diagram.getDimension() - suppress >= 2) {
         return globular_render_2d(r, container, diagram, subdiagram);
     }
 }
 
-function globular_render_0d(r, container, diagram, subdiagram) {
-    $(container)[0].bounds = {
-        left: -0.5,
-        right: 0.5,
-        top: 0.5,
-        bottom: -0.5
-    };
-
+function globular_render_0d(r, diagram, subdiagram) {
     var id_data = diagram.getLastId();
     r.drawNode(0, 0, circle_radius, gProject.getColour(id_data));
     r.render();
@@ -179,15 +188,8 @@ function globular_render_0d(r, container, diagram, subdiagram) {
     };
 }
 
-function globular_render_1d(r, container, diagram, subdiagram) {
+function globular_render_1d(r, diagram, subdiagram) {
     var length = Math.max(1, diagram.cells.length);
-
-    $(container)[0].bounds = {
-        left: 0,
-        right: length,
-        top: 0.5,
-        bottom: -0.5
-    };
 
     var data = {
         vertices: [],
@@ -608,7 +610,7 @@ function globular_render_2d(r, container, diagram, subdiagram) {
 //             }));
 
             r.startPath();
-            r.moveTo({x: e1.x, y: i - epsilon});
+            r.moveTo({x: e1_bot.x, y: i - epsilon});
             r.bezierTo({
                 c1x: e1_bot.x,
                 c1y: i + 0.5,
@@ -1955,19 +1957,6 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
         string: path_string,
         fill: '#ffff00',
         fill_opacity: 0.5
-        /*,
-        stroke: '#ff0000',
-        stroke_opacity: 0.4,
-        stroke_width: 0.01
-        */
     }));
-    /*
-    g[0].appendChild(SVG_create_path({
-        string: path_string,
-        stroke_width: 0.01,
-        stroke: '#ff0000',
-        stroke_opacity: 0.4
-    }));
-    */
 
 }
