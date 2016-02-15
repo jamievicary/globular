@@ -37,13 +37,14 @@ function globular_prepare_renderer() {
 function globular_render(container, diagram, subdiagram, suppress) {
     
     if (render_mode == 'SVG') {
-        globular_render_SVG(container, diagram, subdiagram, suppress);
+        return globular_render_SVG(container, diagram, subdiagram, suppress);
     }
     else if (render_mode == 'THREE') {
-        globular_render_THREE(container, diagram, subdiagram);
+        return globular_render_THREE(container, diagram, subdiagram);
     }
     else {
         alert("Invalid render mode");
+        return null;
     }
 
 }

@@ -1933,31 +1933,32 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     }
 
     // Insert box
-    var g = $(document.createElementNS("http://www.w3.org/2000/svg", "g"));
-    g.addClass('highlight');
-    var svg = $(container).children('svg');
-    svg.children('g').children('g').append(g);
-    var path_string =
-        SVG_move_to({
-            x: left,
-            y: bottom
-        }) + SVG_line_to({
-            x: left,
-            y: top
-        }) + SVG_line_to({
-            x: right,
-            y: top
-        }) + SVG_line_to({
-            x: right,
-            y: bottom
-        }) + SVG_line_to({
-            x: left,
-            y: bottom
-        });
-    g[0].appendChild(SVG_create_path({
-        string: path_string,
-        fill: '#ffff00',
-        fill_opacity: 0.5
-    }));
+//     var g = $(document.createElementNS("http://www.w3.org/2000/svg", "g"));
+//     g.addClass('highlight');
+//     var svg = $(container).children('svg');
+//     svg.children('g').children('g').append(g);
+//     var path_string =
+//         SVG_move_to({
+//             x: left,
+//             y: bottom
+//         }) + SVG_line_to({
+//             x: left,
+//             y: top
+//         }) + SVG_line_to({
+//             x: right,
+//             y: top
+//         }) + SVG_line_to({
+//             x: right,
+//             y: bottom
+//         }) + SVG_line_to({
+//             x: left,
+//             y: bottom
+//         });
+//     g[0].appendChild(SVG_create_path({
+//         string: path_string,
+//         fill: '#ffff00',
+//         fill_opacity: 0.5
+//     }));
+    r.drawRect(left, top, right - left, top - bottom, '#ffff00', 0.5);
 
 }
