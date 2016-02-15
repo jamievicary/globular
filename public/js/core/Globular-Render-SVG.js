@@ -59,6 +59,7 @@ SVGRender.prototype.finishPath = function(data) {
     if (data.mask != null) path.setAttributeNS(null, "mask", data.mask);
     
     this.g.appendChild(path);
+    return path;
 }
 
 
@@ -394,9 +395,9 @@ function globular_render_2d(r, container, diagram, subdiagram) {
             colour = sd.getLastColour();
         }
 
-        r.finishPath({'stroke-width': 0.01, stroke: 'none', fill: colour});
+        var path = r.finishPath({'stroke-width': 0.01, stroke: 'none', fill: colour});
 
-        //path.region = edge; // AK --- does this need to be saved here?
+        path.region = edge; // AK --- does this need to be saved here?
         //d.g.appendChild(path);
     }
 
