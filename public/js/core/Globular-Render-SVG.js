@@ -41,7 +41,7 @@ SVGRender.prototype.startPath = function() {
     this.path_string = "";
 }
 
-SVGRender.prototype.finishPath = function(colour, args) {
+SVGRender.prototype.finishPath = function(args) {
     if (args == undefined) { args = {}; }
     args.string = this.path_string;
     this.g.appendChild(SVG_create_path(args));
@@ -55,15 +55,8 @@ SVGRender.prototype.lineTo = function(x, y) {
     this.path_string += SVG_line_to({x: x, y: y});
 }
 
-SVGRender.prototype.bezierTo = function(c1x, c1y, c2x, c2y, x, y) {
-    this.path_string += SVG_bezier_to({
-        c1x: c1x,
-        c1y: c1y,
-        c2x: c2x,
-        c2y: c2y,
-        x: x,
-        y: y
-    });
+SVGRender.prototype.bezierTo = function(p) {
+    this.path_string += SVG_bezier_to(p);
 }
 
 SVGRender.prototype.drawCircle = function(data) {
@@ -93,7 +86,7 @@ SVGRender.prototype.drawLine = function(x1, y1, x2, y2, colour, opacity) {
     this.startPath();
     this.moveTo(x1, y1);
     this.lineTo(x2, y2);
-    this.finishPath(colour, {'stroke-opacity':opacity, 'stroke': colour});
+    this.finishPath({'stroke-opacity':opacity, 'stroke': colour});
 }
 
 SVGRender.prototype.drawRect = function(x, y, w, h, colour) {
@@ -450,7 +443,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 //                     x: edge.x,
 //                     y: edge.start_height + 0.5
 //                 });
-                r.bezierTo(edge.x, vertex.y, edge.x, vertex.y + 0.5, edge.x, edge.start_height);
+                r.bezierTo({
+                    c1x: edge.x,
+                    c1y: vertex.y,
+                    c2x: edge.x,
+                    c2y: vertex.y + 0.4,
+                    x: edge.x,
+                    y: edge.start_height + 0.5
+                });
                 drawn_something = true;
             }
         }
@@ -490,7 +490,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 //                     x: vertex.x,
 //                     y: vertex.y
 //                 });
-                r.bezierTo(edge.x, vertex.y - 0.4, edge.x, vertex.y, vertex.x, vertex.y);
+                r.bezierTo({
+                    c1x: edge.x,
+                    c1y: vertex.y - 0.4,
+                    c2x: edge.x,
+                    c2y: vertex.y,
+                    x: vertex.x,
+                    y: vertex.y
+                });
                 drawn_something = true;
             }
         }
@@ -602,7 +609,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             r.startPath();
             r.moveTo(e1.x, i - epsilon);
-            r.bezierTo(e1_bot.x, i + 0.5, e1_top.x, i + 0.5, e1_top.x, i + 1 + epsilon);
+            r.bezierTo({
+                c1x: e1_bot.x,
+                c1y: i + 0.5,
+                c2x: e1_top.x,
+                c2y: i + 0.5,
+                x: e1_top.x,
+                y: i + 1 + epsilon
+            });
             r.finishPath({stroke: lower_colour, 'stroke-width': 0.1});
 
             // Draw upper path
@@ -625,7 +639,14 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             r.startPath();
             r.moveTo(e2_bot.x, i - epsilon);
-            r.bezierTo(e2_bot.x, i + 0.5, e2_top.x, i + 0.5, e2_top.x, i + 1 + epsilon);
+            r.bezierTo({
+                c1x: e2_bot.x,
+                c1y: i + 0.5,
+                c2x: e2_top.x,
+                c2y: i + 0.5,
+                x: e2_top.x,
+                y: i + 1 + epsilon
+            });
             r.finishPath({stroke: upper_colour, 'stroke-width': 0.1});
 
             // Calculate the intersection data
@@ -1326,7 +1347,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         y: edge.start_height + 0.5
 //                     });
 
-                    r.bezierTo(edge.x, vertex.y, edge.x, vertex.y + 0.4, edge.x, edge.start_height + 0.5);
+                    r.bezierTo({
+                        c1x: edge.x,
+                        c1y: vertex.y,
+                        c2x: edge.x,
+                        c2y: vertex.y + 0.4,
+                        x: edge.x,
+                        y: edge.start_height + 0.5
+                    });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == data.edges[vertex.target_edges[0]]);
@@ -1338,13 +1366,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: edge.x,
 //                         y: edge.start_height + 0.5
 //                     });
-                    r.bezierTo(
-                        (left ? i.tl.P3[0] : i.tr.P3[0]),
-                        (left ? i.tl.P3[1] : i.tr.P3[1]),
-                        (left ? i.tl.P2[0] : i.tr.P2[0]),
-                        (left ? i.tl.P2[1] : i.tr.P2[1]),
-                        edge.x,
-                        edge.start_height + 0.5);
+                    r.bezierTo({
+                        c1x: (left ? i.tl.P3[0] : i.tr.P3[0]),
+                        c1y: (left ? i.tl.P3[1] : i.tr.P3[1]),
+                        c2x: (left ? i.tl.P2[0] : i.tr.P2[0]),
+                        c2y: (left ? i.tl.P2[1] : i.tr.P2[1]),
+                        x: edge.x,
+                        y: edge.start_height + 0.5
+                    });
                 }
             }
         }
@@ -1378,14 +1407,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: vertex.x,
 //                         y: vertex.y
 //                     });
-                    r.bezierTo(
-                        edge.x,
-                        vertex.y - 0.4,
-                        edge.x,
-                        vertex.y,
-                        vertex.x,
-                        vertex.y
-                    );
+                    r.bezierTo({
+                        c1x: edge.x,
+                        c1y: vertex.y - 0.4,
+                        c2x: edge.x,
+                        c2y: vertex.y,
+                        x: vertex.x,
+                        y: vertex.y
+                    });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == data.edges[vertex.source_edges[0]]);
@@ -1397,14 +1426,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: vertex.x,
 //                         y: vertex.y
 //                     });
-                    r.bezierTo(
-                        (left ? i.bl.P2[0] : i.br.P2[0]),
-                        (left ? i.bl.P2[1] : i.br.P2[1]),
-                        (left ? i.bl.P3[0] : i.br.P3[0]),
-                        (left ? i.bl.P3[1] : i.br.P3[1]),
-                        vertex.x,
-                        vertex.y
-                    );
+                    r.bezierTo({
+                        c1x: (left ? i.bl.P2[0] : i.br.P2[0]),
+                        c1y: (left ? i.bl.P2[1] : i.br.P2[1]),
+                        c2x: (left ? i.bl.P3[0] : i.br.P3[0]),
+                        c2y: (left ? i.bl.P3[1] : i.br.P3[1]),
+                        x: vertex.x,
+                        y: vertex.y
+                    });
                 }
             }
         }
@@ -1434,14 +1463,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: edge.x,
 //                         y: edge.finish_height - 0.5
 //                     });
-                    r.bezierTo(
-                        edge.x,
-                        vertex.y,
-                        edge.x,
-                        vertex.y - 0.4,
-                        edge.x,
-                        edge.finish_height - 0.5
-                    );
+                    r.bezierTo({
+                        c1x: edge.x,
+                        c1y: vertex.y,
+                        c2x: edge.x,
+                        c2y: vertex.y - 0.4,
+                        x: edge.x,
+                        y: edge.finish_height - 0.5
+                    });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == data.edges[vertex.source_edges[0]]);
@@ -1453,14 +1482,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: edge.x,
 //                         y: edge.finish_height - 0.5
 //                     });
-                    r.bezierTo(
-                        (left ? i.bl.P3[0] : i.br.P3[0]),
-                        (left ? i.bl.P3[1] : i.br.P3[1]),
-                        (left ? i.bl.P2[0] : i.br.P2[0]),
-                        (left ? i.bl.P2[1] : i.br.P2[1]),
-                        edge.x,
-                        edge.finish_height - 0.5
-                    );
+                    r.bezierTo({
+                        c1x: (left ? i.bl.P3[0] : i.br.P3[0]),
+                        c1y: (left ? i.bl.P3[1] : i.br.P3[1]),
+                        c2x: (left ? i.bl.P2[0] : i.br.P2[0]),
+                        c2y: (left ? i.bl.P2[1] : i.br.P2[1]),
+                        x: edge.x,
+                        y: edge.finish_height - 0.5
+                    });
                 }
             }
         }
@@ -1494,14 +1523,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: vertex.x,
 //                         y: vertex.y
 //                     });
-                    r.bezierTo(
-                        edge.x,
-                        vertex.y + 0.4,
-                        edge.x,
-                        vertex.y,
-                        vertex.x,
-                        vertex.y
-                    );
+                    r.bezierTo({
+                        c1x: edge.x,
+                        c1y: vertex.y + 0.4,
+                        c2x: edge.x,
+                        c2y: vertex.y,
+                        x: vertex.x,
+                        y: vertex.y
+                    });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == data.edges[vertex.target_edges[0]]);
@@ -1513,14 +1542,14 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 //                         x: vertex.x,
 //                         y: vertex.y
 //                     });
-                    r.bezierTo(
-                        (left ? i.tl.P2[0] : i.tr.P2[0]),
-                        (left ? i.tl.P2[1] : i.tr.P2[1]),
-                        (left ? i.tl.P3[0] : i.tr.P3[0]),
-                        (left ? i.tl.P3[1] : i.tr.P3[1]),
-                        vertex.x,
-                        vertex.y
-                    );
+                    r.bezierTo({
+                        c1x: (left ? i.tl.P2[0] : i.tr.P2[0]),
+                        c1y: (left ? i.tl.P2[1] : i.tr.P2[1]),
+                        c2x: (left ? i.tl.P3[0] : i.tr.P3[0]),
+                        c2y: (left ? i.tl.P3[1] : i.tr.P3[1]),
+                        x: vertex.x,
+                        y: vertex.y
+                    });
 
                 }
             }
