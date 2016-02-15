@@ -712,7 +712,7 @@ Display.prototype.highlight_box = function(box, boundary) {
     //$(this.container).children('svg').children('g').children('g').remove();
 
     // Add the highlight to the diagram
-    globular_add_highlight(this.container, this.data, box, boundary, this.visible_diagram);
+    globular_add_highlight(this.data.renderContext, this.data, box, boundary, this.visible_diagram);
 }
 
 // Attach the given diagram to the window, showing at least the specified boundary
