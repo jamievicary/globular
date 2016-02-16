@@ -516,10 +516,15 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         x = box.min.last();
         y = box.min.penultimate();
         n += this.target_size(key.last()) - this.source_size(key.last());
-        var source = [cell].concat(this.getSlice(key.last()).copy().rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m));
+        var expanded_list = this.getSlice(key.last()).copy().rewrite(cell).expand(subtype, {up: x, across: y, length: l}, n, m);
+        if (!expanded_list) {return false;}
+        var source = [cell].concat(expanded_list);
         key_start = 0;
     } else {
-        var source = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m).concat([cell]);
+        if(x < 0 || x >= this.getSlice(key.last() - steps_back).cells.length) {return false;}
+        var expanded_list = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m);
+        if (!expanded_list) {return false;}
+        var source = expanded_list.concat([cell]);
         key_start = source.length - 1;
     }
 

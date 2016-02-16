@@ -35,6 +35,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var b = this.cells[x].box.min.last() - y;
     var a = l - this.source_size(x) - b;
 
+    if(a < 0 || b < 0) {return false;}
+
     if (n === 0 || m === 0) {
         return [];
     }
@@ -45,17 +47,19 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             if (a === 0 && b === 0) {
                 list.push(new NCell({id: type, key: [x]}));
             } else {
-                list = this.expand('IntI0', x, 1, a * m).concat([new NCell({id: type, key: [x + a*m]})]);
+                list = this.expand('IntI0', x - b * m, b * m, 1).concat([new NCell({id: type, key: [x - b * m]})]);
                 
-                for(var i = 0; i < b * m; i++){
-                    list.push(new NCell({id: 'Int', key: [x + a*m + 1 + i]}));
+                for(var i = 0; i < a * m; i++){
+                    list.push(new NCell({id: 'Int', key: [x - (l - a - b) - 1 - i]}));
                 }
             }
         } else if (m != 1 && n === 1) {
 
-            var list_one = list = this.expand(type, {up: x, across: y, length: l}, 1, 1);
+            var list_one = this.expand(type, {up: x, across: y, length: l}, 1, 1);
+            if(!list_one) {return false;}
             var copy = this.copy();
             for(var i = 0; i < list_one.length; i++){
+                if(!copy.interchangerAllowed(list_one[i].id, list_one[i].key)) {return false;}
                 copy.rewrite(list_one[i]);
             }
             
@@ -67,6 +71,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             }
             
         } else {
+            /*
             list = this.expand(type, {
                     up: x, 
                     across: y,  
@@ -76,6 +81,18 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                     across: y,
                     length: new_l
             }, n - 1, m));
+            */
+            var list_one = this.expand(type, {up: x, across: y, length: l}, 1, 1);
+            if(!list_one) {return false;}
+            var copy = this.copy();
+            for(var i = 0; i < list_one.length; i++){
+                if(!copy.interchangerAllowed(list_one[i].id, list_one[i].key)) {return false;}
+                copy.rewrite(list_one[i]);
+            }
+            
+            if (type.tail('LI0', 'RI0')){
+            list = list_one.concat(copy.expand(type, {up: x + 1 - (this.source_size(x) - this.target_size(x)) , across: y, length: new_l}, n - 1, m));
+            }
         }
     }
     else {
@@ -91,10 +108,11 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             }
         } else if (m != 1 && n === 1) {
             var list_one = list = this.expand(type, {up: x, across: y, length: l}, 1, 1);
-            
+            if(!list_one) {return false;}
             var copy = this.copy();
             
             for(var i = 0; i < list_one.length; i++){
+                if(!copy.interchangerAllowed(list_one[i].id, list_one[i].key)) {return false;}
                 copy.rewrite(list_one[i]);
             }
             
@@ -106,6 +124,7 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
             }  
                 
         } else {
+            /*
             list = this.expand(type, {
                     up: x + n - 1, 
                     across: y,  
@@ -115,6 +134,20 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
                     across: y,
                     length: l
             }, n - 1, m));
+            
+            */
+            
+            var list_one = this.expand(type, {up: x + n - 1, across: y, length: final_l}, 1, 1);
+            if(!list_one) {return false;}
+            var copy = this.copy();
+            for(var i = 0; i < list_one.length; i++){
+                if(!copy.interchangerAllowed(list_one[i].id, list_one[i].key)) {return false;}
+                copy.rewrite(list_one[i]);
+            }
+            
+            if (type.tail('L', 'R')){
+            list = list_one.concat(copy.expand(type, {up: x, across: y, length: l}, n - 1, m));
+            }
         }
     }
     return list;
