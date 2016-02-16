@@ -521,7 +521,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         var source = [cell].concat(expanded_list);
         key_start = 0;
     } else {
-        if(x < 0 || x >= this.getSlice(key.last() - steps_back).cells.length) {return false;}
+        if(x < 0 || key.last() - steps_back < 0 || x >= this.getSlice(key.last() - steps_back).cells.length) {return false;}
         var expanded_list = this.getSlice(key.last() - steps_back).expand(subtype, {up: x, across: y, length: l}, n, m);
         if (!expanded_list) {return false;}
         var source = expanded_list.concat([cell]);
