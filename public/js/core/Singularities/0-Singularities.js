@@ -221,6 +221,8 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
         var list_cell = instructions.list[i];
         var diagram_cell = this.cells[i + diagram_key.last() - instructions.key];
         
+        if(diagram_cell === undefined) return false;
+        
         // Is it the right thing?
         if (list_cell.id != diagram_cell.id) return false;
 
