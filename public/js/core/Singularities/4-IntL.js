@@ -25,6 +25,8 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var y = data.across;
     var l = data.length;
     var list_one = new Array(); 
+    
+    if(n === 0 || m === 0) return [];
 
     var list = new Array();
     var new_l = l + (this.target_size(x) - this.source_size(x));
