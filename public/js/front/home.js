@@ -169,6 +169,8 @@ $(document).ready(function() {
         //    gProject.displayInterchangers();
         } else if (key == 'h') {
             gProject.storeTheoremUI();
+        } else if (key == 'g') {
+            gProject.downloadGraphic();
         }
 
         /*
@@ -424,6 +426,10 @@ $(document).ready(function() {
 
     $("#theorem-opt").click(function() {
         gProject.storeTheoremUI();
+    });
+
+    $("#graphic-opt").click(function() {
+        gProject.downloadGraphic();
     });
 
     $("#save-project-opt").click(function() {

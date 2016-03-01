@@ -1788,7 +1788,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     var g = $(document.createElementNS("http://www.w3.org/2000/svg", "g"));
     g.addClass('highlight');
     var svg = $(container).children('svg');
-    svg.children('g').append(g);
+    svg.children('g').children('g').append(g);
     var path_string =
         SVG_move_to({
             x: left,
