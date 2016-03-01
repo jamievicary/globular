@@ -428,6 +428,10 @@ $(document).ready(function() {
         gProject.storeTheoremUI();
     });
 
+    $("#graphic-opt").click(function() {
+        gProject.downloadGraphic();
+    });
+
     $("#save-project-opt").click(function() {
         gProject.saveUI();
     });
