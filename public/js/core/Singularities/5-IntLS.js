@@ -523,9 +523,24 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         var source = [cell].concat(expanded_list);
         key_start = 0;
         
-       var offset = (subtype.tail('I0')) ? -1 : n - (this.target_size(key.last()) - this.source_size(key.last()));
-       var aaa = this.getSlice(key.last()).cells[cell.key.last() + offset].id;
-       if(aaa != subsubtype) {return false;}
+        var temp_slice = this.getSlice(key.last());
+        if(subtype.tail('I0')){
+            var offset = -1;
+            if(cell.key.last() + offset - (l - 1) < 0) {return false;}
+            for(var i = 0; i < l; i++){
+                var aaa = temp_slice.cells[cell.key.last() + offset - i].id;
+                if(aaa != subsubtype) {return false;}           
+            }
+            
+        }else{
+            var offset = n - (this.target_size(key.last()) - this.source_size(key.last()));
+            if(cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {return false;}
+            for(var i = 0; i < l; i++){
+                var aaa = temp_slice.cells[cell.key.last() + offset + i].id;
+                if(aaa != subsubtype) {return false;}           
+            }
+        }
+
 
     } else {
         if(x < 0 || key.last() - steps_back < 0 || (x >= this.getSlice(key.last() - steps_back).cells.length && g1_source != 0)) {return false;}
@@ -534,10 +549,29 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         var source = expanded_list.concat([cell]);
         key_start = source.length - 1;
         
+        var temp_slice = this.getSlice(key.last());
+        if(subtype.tail('I0')){
+            var offset = n;
+            if(cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {return false;}
+            for(var i = 0; i < l; i++){
+                var aaa = temp_slice.cells[cell.key.last() + offset + i].id;
+                if(aaa != subsubtype) {return false;}           
+            }
+            
+        }else{
+            var offset = -1;
+            if(cell.key.last() + offset - (l - 1) < 0) {return false;}
+            for(var i = 0; i < l; i++){
+                var aaa = temp_slice.cells[cell.key.last() + offset - i].id;
+                if(aaa != subsubtype) {return false;}           
+            }
+        }
+        
+        /*
         var offset = (subtype.tail('I0')) ? n: -1;
         var aaa = this.getSlice(key.last()).cells[cell.key.last() + offset].id;
         if(aaa!= subsubtype) {return false;}
-
+        */
     }
 
     // Inspect instruction list
