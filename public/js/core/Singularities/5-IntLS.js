@@ -530,10 +530,12 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             for(var i = 0; i < l; i++){
                 var aaa = temp_slice.cells[cell.key.last() + offset - i];
                 if(aaa.id != subsubtype) {return false;}
+                var intI_modifier = 0;
+                if (aaa.id === 'IntI0') {intI_modifier = -1;}
                 if(subtype.tail('LI0')){
-                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() - 1 + i)) {return false;}
                 } else if(subtype.tail('RI0')){
-                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() + l - 1 - i)) {return false;}
                 }
             }
             
@@ -542,11 +544,13 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             if(cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {return false;}
             for(var i = 0; i < l; i++){
                 var aaa = temp_slice.cells[cell.key.last() + offset + i];
-                if(aaa.id != subsubtype) {return false;}     
+                if(aaa.id != subsubtype) {return false;}  
+                var intI_modifier = 0;
+                if (aaa.id === 'IntI0') {intI_modifier = -1;}
                 if(subtype.tail('L')){
-                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() + l - 1 - i)) {return false;}
                 } else if(subtype.tail('R')){
-                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() - 1 + i)) {return false;}
                 }
             }
         }
@@ -566,10 +570,12 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             for(var i = 0; i < l; i++){
                 var aaa = temp_slice.cells[cell.key.last() + offset + i];
                 if(aaa.id != subsubtype) {return false;}
+                var intI_modifier = 0;
+                if (aaa.id === 'IntI0') {intI_modifier = -1;}
                 if(subtype.tail('LI0')){
-                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() + l - 1 - i)) {return false;}
                 } else if(subtype.tail('RI0')){
-                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier=== cell.key.penultimate() - 1 + i)) {return false;}
                 }
             }
             
@@ -578,11 +584,13 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             if(cell.key.last() + offset - (l - 1) < 0) {return false;}
             for(var i = 0; i < l; i++){
                 var aaa = temp_slice.cells[cell.key.last() + offset - i];
-                if(aaa.id != subsubtype) {return false;}  
+                if(aaa.id != subsubtype) {return false;}
+                var intI_modifier = 0;
+                if (aaa.id === 'IntI0') {intI_modifier = -1;}
                 if(subtype.tail('L')){
-                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() - 1 + i)) {return false;}
                 } else if(subtype.tail('R')){
-                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                    if(!(aaa.key.last() + intI_modifier === cell.key.penultimate() + l - 1 - i)) {return false;}
                 }
             }
         }
