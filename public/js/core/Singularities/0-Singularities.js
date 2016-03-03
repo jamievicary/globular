@@ -227,7 +227,7 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
         if (list_cell.id != diagram_cell.id) return false;
 
         // Is it at the right position?
-        for (var j = 0; j < diagram_cell.length; j++) {
+        for (var j = 0; j < diagram_cell.key.length; j++) {
             if (diagram_cell.key[j] != list_cell.key[j] + offset_array[j]) return false;
         }
     }

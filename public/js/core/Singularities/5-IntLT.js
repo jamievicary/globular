@@ -164,6 +164,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     
     var cell = this.cells[key.last()];
     var slice = this.getSlice(key.last());
+    if(cell.key.last() >= slice.cells.length) {return false;}
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
     var x_coordinate = slice.cells[cell.key.last()].box.min.last();
@@ -192,6 +193,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         source_key = 0;
     } else if (type.tail('LI0-T')) {
         if (cell.id != key_type) {return false;}
+        if(key.last() - s < 0) {return false;}
         var new_cell = new NCell({id: cell.id, key: [cell.key.last() + 2 * s]});
         expansion_base = this.getSlice(key.last() - s).copy();
         stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last() - 2 * s], s, 1);
@@ -202,6 +204,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         source_key = source.length - 1;
     } else if (type.tail('RI0-T')) {
         if (cell.id != key_type) {return false;}
+        if(key.last() - s < 0) {return false;}
         expansion_base = this.getSlice(key.last() - s).copy();
         stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + s - 1, cell.key.last() - 2 * s], s, -1);
         if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
@@ -211,6 +214,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         source_key = source.length - 1;
     } else if (type.tail('LI0-TI0')) {
         if (cell.id != complimentary_base_type + '-' + complementary_key_type) {return false;}
+        if(key.last() - t < 0) {return false;}
         expansion_base = this.getSlice(key.last() - t).copy();
         stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate - 1, cell.key.last() + 1], t, 1);
         if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
@@ -220,6 +224,7 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
         source_key = source.length - 1;
     } else if (type.tail('RI0-TI0')) {
         if (cell.id != complimentary_base_type + '-' + complementary_key_type) {return false;}
+        if(key.last() - t < 0) {return false;}
         expansion_base = this.getSlice(key.last() - t).copy();
         stack = expansion_base.expand(complimentary_base_type + '-E', [x_coordinate + t - 1, cell.key.last() + 1], t, -1);
         if(!expansion_base.multipleInterchangerRewrite(stack)) {return false;}
