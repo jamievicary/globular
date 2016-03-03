@@ -528,16 +528,26 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             var offset = -1;
             if(cell.key.last() + offset - (l - 1) < 0) {return false;}
             for(var i = 0; i < l; i++){
-                var aaa = temp_slice.cells[cell.key.last() + offset - i].id;
-                if(aaa != subsubtype) {return false;}           
+                var aaa = temp_slice.cells[cell.key.last() + offset - i];
+                if(aaa.id != subsubtype) {return false;}
+                if(subtype.tail('LI0')){
+                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                } else if(subtype.tail('RI0')){
+                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                }
             }
             
         }else{
             var offset = n - (this.target_size(key.last()) - this.source_size(key.last()));
             if(cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {return false;}
             for(var i = 0; i < l; i++){
-                var aaa = temp_slice.cells[cell.key.last() + offset + i].id;
-                if(aaa != subsubtype) {return false;}           
+                var aaa = temp_slice.cells[cell.key.last() + offset + i];
+                if(aaa.id != subsubtype) {return false;}     
+                if(subtype.tail('L')){
+                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                } else if(subtype.tail('R')){
+                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                }
             }
         }
 
@@ -554,16 +564,26 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             var offset = n;
             if(cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {return false;}
             for(var i = 0; i < l; i++){
-                var aaa = temp_slice.cells[cell.key.last() + offset + i].id;
-                if(aaa != subsubtype) {return false;}           
+                var aaa = temp_slice.cells[cell.key.last() + offset + i];
+                if(aaa.id != subsubtype) {return false;}
+                if(subtype.tail('LI0')){
+                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                } else if(subtype.tail('RI0')){
+                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                }
             }
             
         }else{
             var offset = -1;
             if(cell.key.last() + offset - (l - 1) < 0) {return false;}
             for(var i = 0; i < l; i++){
-                var aaa = temp_slice.cells[cell.key.last() + offset - i].id;
-                if(aaa != subsubtype) {return false;}           
+                var aaa = temp_slice.cells[cell.key.last() + offset - i];
+                if(aaa.id != subsubtype) {return false;}  
+                if(subtype.tail('L')){
+                    if(!(aaa.key.last() === cell.key.penultimate() - 1 + i)) {return false;}
+                } else if(subtype.tail('R')){
+                    if(!(aaa.key.last() === cell.key.penultimate() + l - 1 - i)) {return false;}
+                }
             }
         }
         
