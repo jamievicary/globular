@@ -11,6 +11,8 @@
 	<script src="/js/libs/lz4.js"></script>
 	<script src="/js/libs/jscolor/jscolor.js"></script>
 	<script src="/js/libs/husl.min.js"></script>
+	<script src="/js/libs/svg-pan-zoom.js"></script>
+	<script src="/js/libs/FileSaver.min.js"></script>
 	<script src="/js/front/home.js"></script>
 	<script src="/js/libs/three.min.js"></script>
 	<script src="/js/core/Globular-Project.js"></script>
@@ -80,6 +82,7 @@
 				<li id="use-t-opt" class="diagram-button"><u>T</u>arget</li>
 				<li id="restrict-opt" class="diagram-button"><u>R</u>estrict</li>
 				<li id="theorem-opt" class="diagram-button">T<u>h</u>eorem</li>
+				<li id="graphic-opt" class="diagram-button"><u>G</u>raphic</li>
 				<!-- disabling stochastic code for now
 				<li id="run-process" class="diagram-button">Run Process</li>
 				<li id='sto-form' class="diagram-button">Stochastic
@@ -213,5 +216,7 @@
 	</div>
 	
 	 <input type="file" id="upload-file" style="position:absolute; top:-100px;">
+	 
+	 <canvas id='mycanvas' style='position: absolute; right: 0px; bottom: 0px'></canvas>
 </body>
 </html>
