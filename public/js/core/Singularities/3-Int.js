@@ -32,7 +32,8 @@ Diagram.prototype.expand.Int = function(type, x, n, m) {
 Diagram.prototype.reorganiseCrossings.Int = function(type, x, n, m) {
 
     var list = new Array();
-    if(n === 0 || m === 0) {return false;}
+    if(n === 0 &  m === 0) {return list;}
+    if((n === 0 & m != 0) || (n != 0 & m === 0)) {return false;}
 
         for (var i = 1; i < m; i++) {
             list = list.concat(this.expand(type, x + i, i * (n - 1), 1));

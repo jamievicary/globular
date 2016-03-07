@@ -155,7 +155,9 @@ Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
 Diagram.prototype.expandWrapper = function(type, x, k) {
     
     if(x < 0 || x >= this.cells.length){return false;}
-    return this.expand(type, {up: x, across: this.cells[x].key.last(), length: this.source_size(x)}, 1, k);
+    var y = this.cells[x].key.last();
+    if(this.cells[x].id === 'IntI0'){y--;} // Special code to deal with the key for IntI0
+    return this.expand(type, {up: x, across: y, length: this.source_size(x)}, 1, k);
 }
 
 /*

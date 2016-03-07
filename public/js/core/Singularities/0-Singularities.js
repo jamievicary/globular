@@ -210,7 +210,7 @@ Diagram.prototype.subinstructions = function(diagram_key, instructions) {
     var instructions_key_cell = instructions.list[instructions.key];
     
     if (diagram_key_cell.key.length != instructions_key_cell.key.length) return false;
-    var offset_array = [];
+    var offset_array = zero_array(this.dimension);
     
     for (var i = 0; i < diagram_key_cell.key.length; i++) {
         offset_array[i] = diagram_key_cell.key[i] - instructions_key_cell.key[i];
