@@ -1,4 +1,7 @@
 "use strict";
+/*global gProject*/
+/*global Timer*/
+/*global detectLeftButton*/
 
 /*
     A Display class for rendering diagrams.
@@ -354,7 +357,7 @@ Display.prototype.gridToPixels = function(grid) {
     var sizes = this.panzoom.getSizes();
     pixel.x = grid.x * sizes.realZoom + pan.x;
     pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
-    console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
+    //console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
     return pixel;
 }
 
@@ -366,8 +369,8 @@ Display.prototype.pixelsToGrid = function(event) {
     var grid = {};
     grid.x = (event.offsetX - pan.x) / sizes.realZoom;
     grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
-    console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
-    this.gridToPixels(grid);
+    //console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
+    //this.gridToPixels(grid);
     return grid;
 
     /*
@@ -441,7 +444,7 @@ Display.prototype.update_controls = function(drag, controls) {
     // Update the slice controls
     this.update_slice_container(drag, controls);
 
-    timer.Report();
+    //timer.Report();
 }
 
 Display.prototype.control_change = function() {
@@ -760,7 +763,7 @@ Display.prototype.render = function(preserve_view) {
         evt.preventDefault();
     })
     this.data = data;
-    timer.Report();
+    //timer.Report();
     this.panzoom = svgPanZoom(this.container.find('svg')[0]);
     if (pan != null) {
         this.panzoom.zoom(zoom);

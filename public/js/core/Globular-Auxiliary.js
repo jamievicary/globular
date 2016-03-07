@@ -365,10 +365,17 @@ function globular_is_array(object) {
     //return object.constructor.toString().indexOf("Array") > -1;
 }
 
-function bounding_box_slice(a, b) {
+function bbox_slice(box, a, b) {
     return {
         min: box.min.slice(a, b),
         max: box.max.slice(a, b)
+    }
+}
+
+function getBoundingBoxSource(box) {
+    return {
+        min: box.min.slice(0, box.min.length - 1),
+        max: box.max.slice(0, box.max.length - 1)
     }
 }
 

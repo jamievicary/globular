@@ -4,7 +4,7 @@
     Diagram rendering with Three.js
 */
 
-// Cool implementation idea for the future:
+// Implementation idea for the future:
 // http://stackoverflow.com/questions/30541121/multiple-webgl-models-on-the-same-page
 
 // Choose "SVG" or "THREE"
@@ -79,3 +79,4 @@ function download_SVG_as_PNG(svgElement, coords, filename) {
   }
   img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgURL);
 }
+
