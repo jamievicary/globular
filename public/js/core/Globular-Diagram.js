@@ -111,6 +111,7 @@ Diagram.prototype.rewrite = function(cell) {
 
     // Update the slice cache
     if (this.sliceCache != null) {
+        this.sliceCache = [];
         this.sliceCache.splice(insert_position, source_size);
         for (var i = 0; i < target.cells.length; i++) {
             this.sliceCache.splice(insert_position + i, 0, null);
@@ -135,6 +136,29 @@ Diagram.prototype.rewrite = function(cell) {
     return this;
 }
 
+Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
+    
+    if(rewrite_array === false){return false;}
+    
+    for(var i = 0; i < rewrite_array.length; i++){
+        if(this.interchangerAllowed(rewrite_array[i].id, rewrite_array[i].key)){
+            this.rewrite(rewrite_array[i]);
+        }
+        else{
+            return false;
+        }
+    }
+    return true;
+
+}
+
+Diagram.prototype.expandWrapper = function(type, x, k) {
+    
+    if(x < 0 || x >= this.cells.length){return false;}
+    var y = this.cells[x].key.last();
+    if(this.cells[x].id === 'IntI0'){y--;} // Special code to deal with the key for IntI0
+    return this.expand(type, {up: x, across: y, length: this.source_size(x)}, 1, k);
+}
 
 /*
     Returns a copy of this diagram. This is obtained by recursively copying the source boundary and then

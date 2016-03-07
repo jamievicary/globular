@@ -24,74 +24,117 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var x = data.up;
     var y = data.across;
     var l = data.length;
+    var list_one = new Array(); 
+    
+    if(n === 0 || m === 0) return [];
 
     var list = new Array();
-    var new_type;
     var new_l = l + (this.target_size(x) - this.source_size(x));
-    var final_l = l;
-    for (var i = 0; i < n; i++) {
-        final_l += (this.target_size(x + i) - this.source_size(x + i));
+    var penultimate_l = l;
+    for (var i = 0; i < n - 1; i++) {
+        penultimate_l += (this.target_size(x + i) - this.source_size(x + i));
     }
     var b = this.cells[x].box.min.last() - y;
-    var a = y + l - this.cells[x].box.min.last() - this.source_size(x);
-    if (type.tail('I0')) {
-        new_type = type.substr(0, type.length - 3)
-    } else {
-        new_type = type.substr(0, type.length - 2)
-    }
+    var a = l - this.source_size(x) - b;
+
+    if(a < 0 || b < 0) {return false;}
+
+    var expansion_base = this.copy();
+
     if (n === 0 || m === 0) {
         return [];
-    } else if (n === 1 && m === 1) {
-        if (a === 0 && b === 0) {
-            if (type.tail('I0')) {
-                list.push(new NCell(type, null, [x + 1]));
-            } else {
-                list.push(new NCell(type, null, [x]));
-            }
-        } else {
-            list = this.expand(new_type, x, 1, a * m).concat(
-                this.expand(type, {
-                    up: x + a * m,
-                    across: y + a,
-                    length: this.source_size(x)
-                }, 1, 1)).concat(
-                this.expand(new_type, x + this.source_size(x) + a * m, b * m, 1));
-        }
-    } else if (m != 1 && n === 1) {
-        list = this.expand(type, {
-            up: x,
-            across: y,
-            length: l
-        }, 1, 1).concat(
-            this.expand(type, {
-                up: x + a + b + this.source_size(x),
-                across: y + 1,
-                up: new_l
-            }, 1, m - 1));
-    } else {
-        list = this.expand(type, x + n - 1, y, 1, final_l, m).concat(this.expand(type, {
-            up: x,
-            across: y,
-            length: l
-        }, n - 1, m));
     }
 
+    if (n === 1 && m === 1) {
+        if (a === 0 && b === 0) {
+            list.push(new NCell({id: type, key: [x]}));
+        } else {
+
+            if (type.tail('LI0')) {
+                list_one = this.expand('IntI0', x - b * m, b * m, 1).concat([new NCell({id: type, key: [x - b * m]})]);
+                if(!expansion_base.multipleInterchangerRewrite(list_one)) {return false;}
+                list = list_one.concat(expansion_base.expand('Int', x - this.source_size(x) - (a + b) * m, a * m, 1));
+            }
+            else if (type.tail('L')){
+                list_one = this.expand('IntI0', x, 1, a * m).concat([new NCell({id: type, key: [x + a * m]})]);
+                if(!expansion_base.multipleInterchangerRewrite(list_one)) {return false;}
+                list = list_one.concat(expansion_base.expand('Int', x + this.source_size(x) + a * m, 1, b * m));
+            } else if (type.tail('RI0')) {
+                list_one = this.expand('Int', x - a * m, a * m, 1).concat([new NCell({id: type, key: [x - a * m]})]);
+                if(!expansion_base.multipleInterchangerRewrite(list_one)) {return false;}
+                list = list_one.concat(expansion_base.expand('IntI0', x - this.source_size(x) - (a + b) * m, b * m, 1));
+            }
+            else if (type.tail('R')){
+                list_one = this.expand('Int', x, 1, b * m).concat([new NCell({id: type, key: [x + b * m]})]);
+                if(!expansion_base.multipleInterchangerRewrite(list_one)) {return false;}
+                list = list_one.concat(expansion_base.expand('IntI0', x + this.source_size(x) + b * m, 1, a * m));
+            }
+        }
+    } else{
+        if (type.tail('I0')) {
+            list_one = this.expand(type, {up: x, across: y, length: l}, 1, 1);
+        }
+        else{
+            list_one = this.expand(type, {up: x + n - 1, across: y, length: penultimate_l}, 1, 1);
+        }
+        if(!expansion_base.multipleInterchangerRewrite(list_one)) {return false;}
+            
+        if (m != 1 && n === 1) {
+            if (type.tail('I0')) {
+                list = list_one.concat(expansion_base.expand(type, {up: x - a - b - this.source_size(x), across: (type.tail('LI0')) ? y - 1: y + 1, length: l}, 1, m - 1));
+            } else{
+                list = list_one.concat(expansion_base.expand(type, {up: x + a + b + this.source_size(x), across: (type.tail('L')) ? y + 1: y - 1, length: l}, 1, m - 1));
+            }
+        } else {
+            if (type.tail('I0')) {
+                list = list_one.concat(expansion_base.expand(type, {up: x + 1 - (this.source_size(x) - this.target_size(x)) , across: y, length: new_l}, n - 1, m));
+            } else{
+                list = list_one.concat(expansion_base.expand(type, {up: x, across: y, length: l}, n - 1, m));
+            }
+        }
+    } 
     return list;
 };
 
-/*
+
 Diagram.prototype.pseudoExpand.IntL = function(box, side_wires) {
     var count = 0;
     var l = box.max.penultimate() - box.min.penultimate();
     for(var i = box.min.last(); i < box.max.last(); i++){
-        var left_wires = this.nCells[i].coordinates.last() - box.min.penultimate();
-        var right_wires = box.min.penultimate() + l - this.nCells[i].coordinates.last() - this.source_size(i);
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = l - this.source_size(i) - left_wires;
+        count += (left_wires + right_wires + 1) * side_wires;
+        l += (this.target_size(i) - this.source_size(i));
+    }
+    return count;
+};
+
+/*
+Diagram.prototype.expansionStepsDown.IntL = function(box, side_wires) {
+    var count = 0;
+    var l = box.max.penultimate() - box.min.penultimate();
+    for(var i = box.min.last(); i < box.max.last(); i++){
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = l - this.source_size(i) - left_wires;
+        count += (left_wires + right_wires + 1) * side_wires;
+        l += (this.target_size(i) - this.source_size(i));
+    }
+    return count;
+};
+
+Diagram.prototype.expansionStepsUp.IntL = function(box, side_wires) {
+    var count = 0;
+    var l = box.max.penultimate() - box.min.penultimate();
+    for(var i = box.min.last(); i < box.max.last(); i++){
+        var left_wires = this.cells[i].key.last() - box.min.penultimate();
+        var right_wires = l - this.source_size(i) - left_wires;
         count += (left_wires + right_wires + 1) * side_wires;
         l += (this.target_size(i) - this.source_size(i));
     }
     return count;
 };
 */
+
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntL = function(drag) {
@@ -143,7 +186,6 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var slice = this.getSlice(x);
     var cell = this.cells[x];
     var coords = cell.box.min;
-    var cell_depth = coords.end(1);
     var g1_source = this.source_size(x);
     var g1_target = this.target_size(x);
     var subtype = (type.substr(0, 5) == 'IntI0' ? 'IntI0' : 'Int');
@@ -225,6 +267,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var behind = type.tail('Int-R', 'Int-RI0', 'IntI0-L', 'IntI0-LI0');
     //var q = move_right ? cell.key.last() + s : cell.key.last() - 1;
     var q = move_right ? cell.box.max.last() : cell.box.min.last() - 1;
+    if (q >= slice.cells.length) debugger;
     var movement = [{
             relative: behind ? 0 : ((move_right ? 1 : -1) * (slice.target_size(q) - slice.source_size(q)))
         }, {
