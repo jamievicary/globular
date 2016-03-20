@@ -35,18 +35,82 @@ function globular_prepare_renderer() {
 
 // Render a diagram on the offscreen canvas, then copy to the specified container
 function globular_render(container, diagram, subdiagram, suppress) {
-    
+    var r = null;
+
     if (render_mode == 'SVG') {
-        return globular_render_SVG(container, diagram, subdiagram, suppress);
+        r = new SVGRenderContext();
     }
     else if (render_mode == 'THREE') {
-        return globular_render_THREE(container, diagram, subdiagram);
+        r = null;
     }
     else {
         alert("Invalid render mode");
         return null;
     }
 
+    if (suppress == undefined) suppress = 0;
+    var container_dom = $(container)[0];
+    container_dom.rectangles = [];
+    diagram = diagram.copy();
+
+    
+    var data;
+
+    // Deal with an empty diagram specially
+    if ((diagram.cells.length == 0) && (diagram.source.cells.length == 0)) {
+        r.init(container, -0.5, 0.5, -0.5, 0.5);
+        r.drawEmpty(diagram.getLastColour());
+        r.render();
+
+        $(container)[0].bounds = {
+            left: -0.5,
+            right: 0.5,
+            top: 0.5,
+            bottom: -0.5
+        };
+        return {
+            dimension: diagram.getDimension() - suppress,
+            edges: [],
+            vertices: [],
+            edges_at_level: [[],[]]
+        };
+    }
+
+    if (diagram.getDimension() - suppress == 0) {
+
+        r.init(container, -0.5, 0.5, -0.5, 0.5);
+        $(container)[0].bounds = {
+            left: -0.5,
+            right: 0.5,
+            top: 0.5,
+            bottom: -0.5
+        };
+        data = globular_render_0d(r, diagram, subdiagram);
+
+    } else if (diagram.getDimension() - suppress == 1) {
+
+        var length = Math.max(1, diagram.cells.length);
+        r.init(container, 0, length, -0.5, 0.5);
+        $(container)[0].bounds = {
+            left: 0,
+            right: length,
+            top: 0.5,
+            bottom: -0.5
+        };
+        data = globular_render_1d(r, diagram, subdiagram);
+
+    } else if (diagram.getDimension() - suppress >= 2) {
+
+        var layoutData = layout2d(diagram);
+
+        // Prepare the SVG group in which to render the diagram
+        r.init(container, -0.5, layoutData.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
+
+        data = globular_render_2d(r, layoutData, container, diagram, subdiagram);
+    }
+
+    data.renderContext = r;
+    return data;
 }
 
 
@@ -141,32 +205,7 @@ function globular_render_1d(r, diagram, subdiagram) {
 }
 
 // Render the top 2 dimensions of a diagram
-function globular_render_2d(r, container, diagram, subdiagram) {
-
-    // Deal with an empty 2-diagram specially
-    if ((diagram.cells.length == 0) && (diagram.source.cells.length == 0)) {
-        r.init(container, -0.5, 0.5, -0.5, 0.5);
-        r.drawEmpty(diagram.getLastColour());
-        r.render();
-
-        $(container)[0].bounds = {
-            left: -0.5,
-            right: 0.5,
-            top: 0.5,
-            bottom: -0.5
-        };
-        return {
-            dimension: 2,
-            edges: [],
-            vertices: [],
-            edges_at_level: [[],[]]
-        };
-    }
-
-    var data = layout2d(diagram);
-
-    // Prepare the SVG group in which to render the diagram
-    r.init(container, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
+function globular_render_2d(r, data, container, diagram, subdiagram) {
     //var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
     var defs = $('<defs>');
     $(r.svg).prepend(defs); // AK --- not sure what to do here....
