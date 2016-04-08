@@ -289,7 +289,7 @@ Diagram.prototype.getInverseKey.IntLT = function(type, key) {
     if (type.tail('L-T')  || type.tail('R-T')) {return [key.last()]} 
     else if (type.tail('L-TI0')  || type.tail('R-TI0')) {return [key.last()]}
     else if (type.tail('LI0-T')  || type.tail('RI0-T')) {return [key.last() - s + t]} 
-    else if (type.tail('LI0-TI0')  || type.tail('RI0-TI0')) {return [key.last() - t - s]} 
+    else if (type.tail('LI0-TI0')  || type.tail('RI0-TI0')) {return [key.last() - t + s]} 
 }
 
 
