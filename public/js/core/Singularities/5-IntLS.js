@@ -716,8 +716,35 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
 }
 
 Diagram.prototype.getInverseKey.IntLS = function(type, key) {
+    
+    var box = this.getSliceBoundingBox(key.last());
+    var subtype = (type.tail('I0') ? type.substr(0, type.length - 4) : type.substr(0, type.length - 2));
 
-    // *** // 
+    if (type.tail('I0')) {
+/*
+    
+        var correction = this.pullUpMinMax(key.last() + 1, key.last(), box.min.last(), box.max.last());
+        box.max[box.max.length - 1] = correction.max;
+        box.min[box.min.length - 1] = correction.min;
+    
+    var a = this.target_size(key.last());
+    var b = this.source_size(key.last())
+        box.max[box.max.length - 1] += this.source_size(key.last()) - this.target_size(key.last());
+*/
+    
+        var steps_front = this.getSlice(key.last() + 1).pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
+    } else {
+        var steps_back = this.getSlice(key.last()).pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
+    }
+
+    if (type.tail('L-S')) {return [key.last() - steps_back]}
+    if (type.tail('L-SI0')){return [key.last() + steps_front]}
+    if (type.tail('LI0-S')){return [key.last() - steps_back]}
+    if (type.tail('LI0-SI0')){return [key.last() + steps_front]}
+    if (type.tail('R-S')) {return [key.last() - steps_back]}
+    if (type.tail('R-SI0')){return [key.last() + steps_front]}
+    if (type.tail('RI0-S')){return [key.last() - steps_back]}
+    if (type.tail('RI0-SI0')){return [key.last() + steps_front]}
 }
 
 
