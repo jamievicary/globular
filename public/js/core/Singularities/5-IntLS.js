@@ -88,9 +88,11 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         steps = this.getSlice(key.last()).pseudoExpand(subtype, box, 1);
     }
 
-    var alpha_box = this.getSlice(key.last() - steps).getBoundingBox(cell);
+    var alpha_box = this.getSlice(key.last()).getBoundingBox(cell);
     var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
     var n = alpha_box.max.last() - alpha_box.min.last();
+    
+
     var m = 1;
     var x, y;
 
