@@ -6,6 +6,8 @@
 
 // Data for the Int-L-P family
 
+// This is Baez and Neuchl's "S^- = S^+" axiom
+
 RegisterSingularityFamily({
     family: 'IntLP',
     dimension: 5,
