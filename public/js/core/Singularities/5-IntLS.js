@@ -187,7 +187,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1))
 
             //relative: 0
         }, {
@@ -232,7 +232,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-RI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1))
             
             //relative: 0
         }, {
@@ -358,7 +358,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.last();
         y = alpha_box.min.penultimate();
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1))
             
           //  relative: 0
         }, {
@@ -474,6 +474,8 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     var space_below = (key.last() >= g1_source);
     var space_left = (cell.box.min.last() > 0);
     var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
+    //var space_right = (cell.box.min.last() + slice.target_size(key.penultimate()) < slice.cells.length);
+
 
     var space_behind = (box.min.penultimate() > 0);
     var subslice = slice.getSlice(box.min.last());
