@@ -88,6 +88,6 @@ Diagram.prototype.getInterchangerCoordinates.IntLP = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
 }
 
-Diagram.prototype.getInverseKey.IntLS = function(type, key) {
+Diagram.prototype.getInverseKey.IntLP = function(type, key) {
     return key;
 }

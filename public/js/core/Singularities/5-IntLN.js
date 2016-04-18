@@ -519,6 +519,38 @@ Diagram.prototype.getInterchangerCoordinates.IntLN = function(type, key) {
 
 }
 
+Diagram.prototype.getInverseKey.IntLN = function(type, key) {
+
+    var cell = this.cells[key.last()].copy();
+    var slice = this.getSlice(key.last());
+    var s1, t1, s2, t2;
+    if(cell.id === 'Int'){
+        t1 = slice.target_size(cell.key.last() + 1);
+        s1 = slice.source_size(cell.key.last() + 1);
+        t2 = slice.target_size(cell.key.last());
+        s2 = slice.source_size(cell.key.last());
+    }
+    else if(cell.id === 'IntI0'){
+        t1 = slice.target_size(cell.key.last() - 1);
+        s1 = slice.source_size(cell.key.last() - 1);
+        t2 = slice.target_size(cell.key.last());
+        s2 = slice.source_size(cell.key.last());
+    }
+    else{
+        return false;
+    }
+    
+    if (type.tail('L-N')) {return [key.last() - t1 - s2 - this.crossings(s2, t1) - this.crossings(s2, s1)]} 
+    else if (type.tail('L-NI0')) {return [key.last() + t2 + s1 + this.crossings(s1, t2) + this.crossings(s1, s2)]}
+    else if (type.tail('R-N')) {return [key.last() - t2 - s1 - this.crossings(t2, s1) - this.crossings(s2, s1)]}
+    else if (type.tail('R-NI0')) {return [key.last() + t1 + s2 + this.crossings(t1, s2) + this.crossings(s1, s2)]}
+    else  if (type.tail('LI0-N')) {return [key.last() - s2 - t1 - this.crossings(t1, s2) - this.crossings(t1, t2)]}
+    else if (type.tail('LI0-NI0')) {return [key.last() + s1 + t2 + this.crossings(t2, s1) + this.crossings(t2, t1)]}
+    else  if (type.tail('RI0-N')) {return [key.last() - s1 - t2 - this.crossings(s1, t2) - this.crossings(t1, t2)]}
+    else if (type.tail('RI0-NI0')) {return [key.last() + s2 + t1 + this.crossings(s2, t1) + this.crossings(t2, t1)]}
+    
+}
+
 Diagram.prototype.crossings = function(n, m) {
     var steps_crossings = 0;
     for (var i = n; i > 0; i--){

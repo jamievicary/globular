@@ -88,9 +88,11 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         steps = this.getSlice(key.last()).pseudoExpand(subtype, box, 1);
     }
 
-    var alpha_box = this.getSlice(key.last() - steps).getBoundingBox(cell);
+    var alpha_box = this.getSlice(key.last()).getBoundingBox(cell);
     var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
     var n = alpha_box.max.last() - alpha_box.min.last();
+    
+
     var m = 1;
     var x, y;
 
@@ -185,7 +187,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1))
 
             //relative: 0
         }, {
@@ -230,7 +232,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-RI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1))
             
             //relative: 0
         }, {
@@ -356,7 +358,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.last();
         y = alpha_box.min.penultimate();
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1)
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1))
             
           //  relative: 0
         }, {
@@ -472,6 +474,8 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     var space_below = (key.last() >= g1_source);
     var space_left = (cell.box.min.last() > 0);
     var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
+    //var space_right = (cell.box.min.last() + slice.target_size(key.penultimate()) < slice.cells.length);
+
 
     var space_behind = (box.min.penultimate() > 0);
     var subslice = slice.getSlice(box.min.last());
@@ -716,8 +720,35 @@ Diagram.prototype.getInterchangerCoordinates.IntLS = function(type, key) {
 }
 
 Diagram.prototype.getInverseKey.IntLS = function(type, key) {
+    
+    var box = this.getSliceBoundingBox(key.last());
+    var subtype = (type.tail('I0') ? type.substr(0, type.length - 4) : type.substr(0, type.length - 2));
 
-    // *** // 
+    if (type.tail('I0')) {
+/*
+    
+        var correction = this.pullUpMinMax(key.last() + 1, key.last(), box.min.last(), box.max.last());
+        box.max[box.max.length - 1] = correction.max;
+        box.min[box.min.length - 1] = correction.min;
+    
+    var a = this.target_size(key.last());
+    var b = this.source_size(key.last())
+        box.max[box.max.length - 1] += this.source_size(key.last()) - this.target_size(key.last());
+*/
+    
+        var steps_front = this.getSlice(key.last() + 1).pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
+    } else {
+        var steps_back = this.getSlice(key.last()).pseudoExpand(subtype, box, 1); // type just needed to correctly identify the family
+    }
+
+    if (type.tail('L-S')) {return [key.last() - steps_back]}
+    if (type.tail('L-SI0')){return [key.last() + steps_front]}
+    if (type.tail('LI0-S')){return [key.last() - steps_back]}
+    if (type.tail('LI0-SI0')){return [key.last() + steps_front]}
+    if (type.tail('R-S')) {return [key.last() - steps_back]}
+    if (type.tail('R-SI0')){return [key.last() + steps_front]}
+    if (type.tail('RI0-S')){return [key.last() - steps_back]}
+    if (type.tail('RI0-SI0')){return [key.last() + steps_front]}
 }
 
 

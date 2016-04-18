@@ -158,7 +158,7 @@ Diagram.prototype.expand.Inverses = function(type, x, n, o) {
     }
     else{
         var k = x[0];
-        if(type.substr(0, 5) === 'IntI0'){k++}
+        if(type.substr(0, 5) === 'IntI0' /*&& o === -1*/){k++}
         for(var i = 0; i < n; i++){
             list.push(new NCell({id: type, key: [k, x[1] + i]}));
             k += o;
@@ -196,6 +196,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
         var slice = this.getSlice(key.last());
         //var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
         var base_key = key.slice(0, key.length - 1);
+        //if(base_type === 'IntI0'){base_key.increment_last(1)}
         box = this.getSlice(key.last()).getBoundingBox({
             id: base_type,
             key: base_key
@@ -213,9 +214,15 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
 
     var height = key.last();
 
-    if(type.tail('Int-E') || type.tail('IntI0-E')){
+    if(type.tail('Int-E')){
         var slice = this.getSlice(height);
         if(key.penultimate() + 1 >= slice.cells.length){return false;}
+        return true;
+    }
+    else if(type.tail('IntI0-E')){
+        var slice = this.getSlice(height);
+        if(key.penultimate() + 1 > slice.cells.length){return false;}
+        if(key.penultimate() < 1){return false;}
         return true;
     }
     else if (type.tail('-E')) return true;
