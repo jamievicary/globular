@@ -23,14 +23,14 @@ RegisterSingularityFamily({
 
 Diagram.prototype.getTarget.IntLP = function(type, key) {
     var cell = this.cells[key.last()];
-    if (type == 'Int-L-P')   return [{id: 'Int-RI0',   key: [cell.key.last() + 2]}];
-    if (type == 'Int-L-PI0') return [{id: 'Int-L',     key: [cell.key.last() - 2]}];
-    if (type == 'Int-R-P')   return [{id: 'Int-LI0',   key: [cell.key.last() + 2]}];
-    if (type == 'Int-R-PI0') return [{id: 'Int-R',     key: [cell.key.last() - 2]}];
-    if (type == 'IntI0-L-P') return [{id: 'IntI0-RI0', key: [cell.key.last() + 2]}];
-    if (type == 'IntI0-L-PI0') return [{id: 'IntI0-L',   key: [cell.key.last() - 2]}];
-    if (type == 'IntI0-R-P')   return [{id: 'IntI0-LI0', key: [cell.key.last() + 2]}];
-    if (type == 'IntI0-R-PI0') return [{id: 'IntI0-R',   key: [cell.key.last() - 2]}];
+    if (type == 'Int-L-P')   return [new NCell({id: 'Int-RI0',   key: [cell.key.last() + 2]})];
+    if (type == 'Int-L-PI0') return [new NCell({id: 'Int-L',     key: [cell.key.last() - 2]})];
+    if (type == 'Int-R-P')   return [new NCell({id: 'Int-LI0',   key: [cell.key.last() + 2]})];
+    if (type == 'Int-R-PI0') return [new NCell({id: 'Int-R',     key: [cell.key.last() - 2]})];
+    if (type == 'IntI0-L-P') return [new NCell({id: 'IntI0-RI0', key: [cell.key.last() + 2]})];
+    if (type == 'IntI0-L-PI0') return [new NCell({id: 'IntI0-L',   key: [cell.key.last() - 2]})];
+    if (type == 'IntI0-R-P')   return [new NCell({id: 'IntI0-LI0', key: [cell.key.last() + 2]})];
+    if (type == 'IntI0-R-PI0') return [new NCell({id: 'IntI0-R',   key: [cell.key.last() - 2]})];
 }
 
 // Data to insert result of rewrite into diagram
