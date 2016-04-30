@@ -30,7 +30,11 @@ SVGRenderContext.prototype.init = function(container, min_x, max_x, min_y, max_y
 
 SVGRenderContext.prototype.render = function() {
     this.container.children('svg').remove();
-    this.container.append(this.svg);
+    //this.container.append(this.svg);
+    // Add SVG object to container. We have to do it in this weird way because
+    // otherwise the masks aren't recognized in Chrome v46.
+    var html = $("<div />").append($(r.svg)).html();
+    this.container.append($(html));
 }
 
 SVGRenderContext.prototype.startPath = function() {

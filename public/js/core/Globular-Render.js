@@ -218,8 +218,8 @@ function globular_render_1d(r, diagram, subdiagram) {
 // Render the top 2 dimensions of a diagram
 function globular_render_2d(r, data, container, diagram, subdiagram) {
     //var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
-    var defs = $('<defs>');
-    $(r.svg).prepend(defs); // AK --- not sure what to do here....
+    //var defs = $('<defs>');
+    //$(r.svg).prepend(defs); // AK --- not sure what to do here....
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -851,10 +851,7 @@ function globular_render_2d(r, data, container, diagram, subdiagram) {
         }
     }
 
-    // Add SVG object to container. We have to do it in this weird way because
-    // otherwise the masks aren't recognized in Chrome v46.
-    var html = $("<div />").append($(r.svg)).html();
-    $(container).append($(html));
+    r.render();
 
     // Return layout data
     data.dimension = 2;
