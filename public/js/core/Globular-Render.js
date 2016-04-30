@@ -8,7 +8,7 @@
 // http://stackoverflow.com/questions/30541121/multiple-webgl-models-on-the-same-page
 
 // Choose "SVG" or "THREE"
-var render_mode = "SVG";
+var render_mode = "THREE";
 // var render_mode = "THREE";
 
 var globular_offscreen = {};
@@ -17,6 +17,12 @@ var pixelScale = 1;
 //var sphere_radius = 0.05;
 var item_size = 0.05;
 var Pi = 3.141592654;
+
+// Parameter that sets the hardness of string diagram curves
+var shoulder_strength = 0.1;
+var circle_radius = 0.1;
+var highlight_colour = '#ffff00';
+var highlight_opacity = 0.8;
 
 // Create offscreen WebGL canvas
 function globular_prepare_renderer() {
@@ -33,6 +39,11 @@ function globular_prepare_renderer() {
     }
 }
 
+function globular_set_viewbox() {
+    var container = $('#diagram-canvas');
+    $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
+}
+
 // Render a diagram on the offscreen canvas, then copy to the specified container
 function globular_render(container, diagram, subdiagram, suppress) {
     var r = null;
@@ -41,7 +52,7 @@ function globular_render(container, diagram, subdiagram, suppress) {
         r = new SVGRenderContext();
     }
     else if (render_mode == 'THREE') {
-        r = null;
+        r = new THREERenderContext();
     }
     else {
         alert("Invalid render mode");

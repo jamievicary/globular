@@ -350,8 +350,12 @@ Display.prototype.gridToPixels = function(grid) {
     var pixel = {};
     var b = $(this.container)[0].bounds;
     if (b === undefined) return;
-    var pan = this.panzoom.getPan();
-    var sizes = this.panzoom.getSizes();
+    var pan = {x:0,y:0};
+    var sizes = {realZoom:1};
+    if (render_mode == 'SVG') {
+        pan = this.panzoom.getPan();
+        sizes = this.panzoom.getSizes();
+    }
     pixel.x = grid.x * sizes.realZoom + pan.x;
     pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
     console.log("pixel.x:" + pixel.x + ", pixel.y:" + pixel.y);
@@ -361,8 +365,13 @@ Display.prototype.gridToPixels = function(grid) {
 Display.prototype.pixelsToGrid = function(event) {
     var b = $(this.container)[0].bounds;
     if (b === undefined) return;
-    var pan = this.panzoom.getPan();
-    var sizes = this.panzoom.getSizes();
+
+    var pan = {x:0,y:0};
+    var sizes = {realZoom:1};
+    if (render_mode == 'SVG') {
+        pan = this.panzoom.getPan();
+        sizes = this.panzoom.getSizes();
+    }
     var grid = {};
     grid.x = (event.offsetX - pan.x) / sizes.realZoom;
     grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
@@ -755,17 +764,22 @@ Display.prototype.render = function(preserve_view) {
         this.panzoom.destroy();
     }
     var data = globular_render(this.container, slice, this.highlight, this.suppress_input.val());
-    this.svg_element = this.container.find('svg')[0];
+    
+    if (render_mode == "SVG") {
+        this.svg_element = this.container.find('svg')[0];
+        this.panzoom = svgPanZoom(this.container.find('svg')[0]);
+        if (pan != null) {
+            this.panzoom.zoom(zoom);
+            this.panzoom.pan(pan);
+        }
+    }
+    
     this.container.on('contextmenu', function(evt) {
         evt.preventDefault();
     })
     this.data = data;
     timer.Report();
-    this.panzoom = svgPanZoom(this.container.find('svg')[0]);
-    if (pan != null) {
-        this.panzoom.zoom(zoom);
-        this.panzoom.pan(pan);
-    }
+    
 
     // Render highlight if necessary
     if (this.slices.length > 0) {

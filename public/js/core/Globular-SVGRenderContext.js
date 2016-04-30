@@ -4,13 +4,8 @@
     SVG rendering of 2d diagrams
 */
 
-// Parameter that sets the hardness of string diagram curves
-var shoulder_strength = 0.1;
-var circle_radius = 0.1;
-var highlight_colour = '#ffff00';
-var highlight_opacity = 0.8;
 
-function SVGRenderContext(container, min_x, max_x, min_y, max_y) {
+function SVGRenderContext() {
     this.container = null;
     this.svg = null;
     this.g = null;
@@ -133,50 +128,45 @@ SVGRenderContext.prototype.drawRect = function(x, y, w, h, colour, opacity) {
     this.finishPath({fill: colour, 'fill_opacity': opacity});
 }
 
-//var globular_renderer = new SVGRenderContext();
 
-function globular_set_viewbox() {
-    var container = $('#diagram-canvas');
-    $('#diagram-canvas>svg').css("width", container.width()).css("height", container.height());
-}
 
-function globular_render_SVG(container, diagram, subdiagram, suppress) {
-    if (suppress == undefined) suppress = 0;
-    var container_dom = $(container)[0];
-    container_dom.rectangles = [];
-    diagram = diagram.copy();
+// function globular_render_SVG(container, diagram, subdiagram, suppress) {
+//     if (suppress == undefined) suppress = 0;
+//     var container_dom = $(container)[0];
+//     container_dom.rectangles = [];
+//     diagram = diagram.copy();
 
-    var r = new SVGRenderContext();
-    var data;
+//     var r = new SVGRenderContext();
+//     var data;
 
-    if (diagram.getDimension() - suppress == 0) {
+//     if (diagram.getDimension() - suppress == 0) {
 
-        r.init(container, -0.5, 0.5, -0.5, 0.5);
-        $(container)[0].bounds = {
-            left: -0.5,
-            right: 0.5,
-            top: 0.5,
-            bottom: -0.5
-        };
-        data = globular_render_0d(r, diagram, subdiagram);
+//         r.init(container, -0.5, 0.5, -0.5, 0.5);
+//         $(container)[0].bounds = {
+//             left: -0.5,
+//             right: 0.5,
+//             top: 0.5,
+//             bottom: -0.5
+//         };
+//         data = globular_render_0d(r, diagram, subdiagram);
 
-    } else if (diagram.getDimension() - suppress == 1) {
+//     } else if (diagram.getDimension() - suppress == 1) {
 
-        var length = Math.max(1, diagram.cells.length);
-        r.init(container, 0, length, -0.5, 0.5);
-        $(container)[0].bounds = {
-            left: 0,
-            right: length,
-            top: 0.5,
-            bottom: -0.5
-        };
-        data = globular_render_1d(r, diagram, subdiagram);
+//         var length = Math.max(1, diagram.cells.length);
+//         r.init(container, 0, length, -0.5, 0.5);
+//         $(container)[0].bounds = {
+//             left: 0,
+//             right: length,
+//             top: 0.5,
+//             bottom: -0.5
+//         };
+//         data = globular_render_1d(r, diagram, subdiagram);
 
-    } else if (diagram.getDimension() - suppress >= 2) {
-        data = globular_render_2d(r, container, diagram, subdiagram);
-    }
+//     } else if (diagram.getDimension() - suppress >= 2) {
+//         data = globular_render_2d(r, container, diagram, subdiagram);
+//     }
 
-    data.renderContext = r;
-    return data;
-}
+//     data.renderContext = r;
+//     return data;
+// }
 
