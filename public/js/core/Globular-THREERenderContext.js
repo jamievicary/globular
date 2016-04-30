@@ -30,6 +30,9 @@ THREERenderContext.prototype.init = function(container, min_x, max_x, min_y, max
     this.scene = new THREE.Scene();
     this.renderer = globular_offscreen.renderer;
     this.camera = globular_offscreen.camera;
+    this.path = null;
+    this.shape = null;
+    this.point = null;
 
 	// set camera to as small as possible, while keeping the correct aspect ratio
 	var w = max_x - min_x;
@@ -90,7 +93,9 @@ THREERenderContext.prototype.render = function() {
 }
 
 THREERenderContext.prototype.startPath = function() {
-    // ...
+    this.path = new THREE.CurvePath();
+    this.shape = new THREE.Shape();
+    this.point = new THREE.Vector3(0,0,0);
 }
 
 
@@ -101,9 +106,24 @@ THREERenderContext.prototype.finishPath = function(data) {
     if (data.fill === undefined) data.fill = "none";
     if (data.stroke_opacity === undefined) data.stroke_opacity = "1";
     if (data.fill_opacity === undefined) data.fill_opacity = "1";
-    // ...
+    
+    var geometry, material;
+    if (data.stroke != "none") {
+    	geometry = new THREE.TubeGeometry(this.path, 20,  data.stroke_width*0.5, 12, false);
+    	material = new THREE.MeshBasicMaterial( { color: data.stroke } );
+		var wire = new THREE.Mesh( geometry, material );
+		this.scene.add( wire );
+    }
 
-    return {};
+    if (data.fill != "none") {
+    	geometry = new THREE.ShapeGeometry(this.shape);
+    	material = new THREE.MeshBasicMaterial( { color: data.fill } );
+    	var region = new THREE.Mesh( geometry, material );
+    	this.scene.add( region );
+    }
+    
+
+    return data;
 }
 
 
@@ -111,7 +131,8 @@ THREERenderContext.prototype.moveTo = function(p) {
     if (p.x === undefined) throw 0;
     if (p.y === undefined) throw 0;
 
-    // ...
+    this.point = new THREE.Vector3(p.x,p.y,0);
+    this.shape.moveTo(p.x,p.y);
 }
 
 THREERenderContext.prototype.lineTo = function(p) {
@@ -120,7 +141,10 @@ THREERenderContext.prototype.lineTo = function(p) {
     }
     if (p.y === undefined) throw 0;
 
-    // ...
+	var dest = new THREE.Vector3(p.x,p.y,0);
+	this.path.add(new THREE.LineCurve3(this.point, dest));
+    this.point = dest;
+    this.shape.lineTo(p.x,p.y);
 }
 
 THREERenderContext.prototype.bezierTo = function(p) {
@@ -131,7 +155,12 @@ THREERenderContext.prototype.bezierTo = function(p) {
     if (p.x === undefined) throw 0;
     if (p.y === undefined) throw 0;
     
-    // ...
+    var dest = new THREE.Vector3(p.x,p.y,0);
+    var c1 = new THREE.Vector3(p.c1x,p.c1y,0);
+    var c2 = new THREE.Vector3(p.c2x,p.c2y,0);
+    this.path.add(new THREE.CubicBezierCurve3(this.point, c1, c2, dest));
+    this.point = dest;
+    this.shape.bezierCurveTo(p.c1x,p.c1y,p.c2x,p.c2y,p.x,p.y);
 }
 
 THREERenderContext.prototype.drawCircle = function(data) {
@@ -143,10 +172,10 @@ THREERenderContext.prototype.drawCircle = function(data) {
     
     var geometry = new THREE.SphereGeometry( data.radius, 32, 32 );
 	var material = new THREE.MeshBasicMaterial( { color: data.fill } );
-	var cube = new THREE.Mesh( geometry, material );
-	cube.rotation.x = 0.25;
-	cube.rotation.y = 0.25;
-	this.scene.add( cube );
+	var sphere = new THREE.Mesh( geometry, material );
+	sphere.position.x = data.x;
+	sphere.position.y = data.y;
+	this.scene.add( sphere );
 }
 
 THREERenderContext.prototype.drawNode = function(cx, cy, radius, colour) {
