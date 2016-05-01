@@ -6,7 +6,7 @@
 // Create offscreen WebGL canvas
 function globular_prepare_renderer_THREE() {
     // Prepare WebGL stuff
-    globular_offscreen.camera = new THREE.OrthographicCamera(-1, 1, -1, 1, -1, 1);
+    globular_offscreen.camera = new THREE.OrthographicCamera(-1, 1, -1, 1, -20, 20);
     globular_offscreen.renderer = new THREE.WebGLRenderer({
         antialias: true
     });
