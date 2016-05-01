@@ -33,6 +33,7 @@ THREERenderContext.prototype.init = function(container, min_x, max_x, min_y, max
     this.path = null;
     this.shape = null;
     this.point = null;
+    this.nudge = 0; // total hack to keep surfaces from intersecting
 
 	// set camera to as small as possible, while keeping the correct aspect ratio
 	var w = max_x - min_x;
@@ -45,10 +46,10 @@ THREERenderContext.prototype.init = function(container, min_x, max_x, min_y, max
     	min_y = (min_y/h)*(w/aspect);
     	max_y = (max_y/h)*(w/aspect);
     }
-    this.camera.left = min_x;
-    this.camera.right = max_x;
-    this.camera.bottom = min_y;
-    this.camera.top = max_y;
+    this.camera.left = min_x - 0.2*aspect;
+    this.camera.right = max_x + 0.2*aspect;
+    this.camera.bottom = min_y - 0.2;
+    this.camera.top = max_y + 0.2;
 
 	
 
@@ -63,13 +64,16 @@ THREERenderContext.prototype.init = function(container, min_x, max_x, min_y, max
 }
 
 THREERenderContext.prototype.render = function() {
-    // display rendered diagram
-
-    var scene = new THREE.Scene();
-	var camera = globular_offscreen.camera;
-	var container = this.container;
 
 	//var container = $('#view');
+
+	this.scene.rotation.x = 0.3;
+	this.scene.rotation.y = 0.2;
+
+	var light = new THREE.PointLight(0xffffff, 0.5, 0);
+	light.position.set (20, 20, 20);
+	this.scene.add(light);
+	this.scene.add(new THREE.AmbientLight( 0x909090 ));
 
 	this.renderer.render(this.scene, this.camera);
 
@@ -109,18 +113,22 @@ THREERenderContext.prototype.finishPath = function(data) {
     
     var geometry, material;
     if (data.stroke != "none") {
-    	geometry = new THREE.TubeGeometry(this.path, 20,  data.stroke_width*0.5, 12, false);
-    	material = new THREE.MeshBasicMaterial( { color: data.stroke } );
+    	geometry = new THREE.TubeGeometry(this.path, 20,  data.stroke_width*0.5 + this.nudge, 12, false);
+    	material = new THREE.MeshLambertMaterial( { color: data.stroke } );
+    	//new THREE.MeshBasicMaterial( { color: data.stroke } );
 		var wire = new THREE.Mesh( geometry, material );
 		this.scene.add( wire );
     }
 
     if (data.fill != "none") {
     	geometry = new THREE.ShapeGeometry(this.shape);
-    	material = new THREE.MeshBasicMaterial( { color: data.fill } );
+    	material = new THREE.MeshLambertMaterial( { color: data.fill } );
     	var region = new THREE.Mesh( geometry, material );
+    	region.position.z += this.nudge;
     	this.scene.add( region );
     }
+
+    this.nudge += 0.0001;
     
 
     return data;
@@ -171,7 +179,7 @@ THREERenderContext.prototype.drawCircle = function(data) {
     if (data.radius == undefined) data.radius = circle_radius;
     
     var geometry = new THREE.SphereGeometry( data.radius, 32, 32 );
-	var material = new THREE.MeshBasicMaterial( { color: data.fill } );
+	var material = new THREE.MeshLambertMaterial( { color: data.fill } );
 	var sphere = new THREE.Mesh( geometry, material );
 	sphere.position.x = data.x;
 	sphere.position.y = data.y;
