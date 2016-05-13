@@ -100,7 +100,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{//relative: 0
             relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)
-            
         }, {relative: -m}, {relative: -l}]);
         alpha_box = this.getSlice(key.last() - steps).getBoundingBox(cell);
         x = alpha_box.min.last();
@@ -123,7 +122,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         cell.move([{
             //relative: 0
             relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1)
-
         }, {
             relative: m
         }, {
@@ -211,7 +209,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         cell.move([{
         //        relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)
             relative: 0
-
             },
             {
                 relative: -m
@@ -232,8 +229,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-RI0-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1))
-            
+            relative: (this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1))
             //relative: 0
         }, {
             relative: -m
@@ -257,7 +253,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
         cell.move([{
             relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
-
 //            relative: 0
         }, {
             relative: m
@@ -277,7 +272,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
         cell.move([{
             relative: 0
-
 //                relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
             },
             {
@@ -299,7 +293,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         cell.move([{
 //            relative: 0
             relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1)
-
         }, {
             relative: -m
         }, {
@@ -338,7 +331,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
         cell.move([{
             relative: 0
-
 //                relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1)
             },
             {
@@ -359,7 +351,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
         cell.move([{
             relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() - 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() - 1))
-            
           //  relative: 0
         }, {
             relative: -m
@@ -380,7 +371,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         cell.move([{
  //               relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
             relative: 0
-
             },
             {
                 relative: m
@@ -400,8 +390,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
 
         cell.move([{
-                relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
-            
+            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
     //        relative: 0
         }, {
             relative: m
