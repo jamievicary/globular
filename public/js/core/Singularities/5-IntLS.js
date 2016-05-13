@@ -92,7 +92,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     var l = alpha_box.max.penultimate() - alpha_box.min.penultimate();
     var n = alpha_box.max.last() - alpha_box.min.last();
 
-
     var m = 1;
     var x, y;
 
@@ -159,10 +158,10 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
                 relative: 0
-        },
+            },
             {
                 relative: m
-        }, {
+            }, {
                 relative: l
         }]);
 
@@ -404,8 +403,6 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         y = alpha_box.min.penultimate();
         cell.move([{
             relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1) << << << < HEAD === === =
-                //        relative: 0
-                >>> >>> > master
         }, {
             relative: m
         }, {
