@@ -137,7 +137,15 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
             //relative: 0
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1)
+            //relative: 0
+            /*
+            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
+                      -
+                      this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1)
+            */
+            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.max.penultimate())
+                      -
+                      this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.max.penultimate())
         }, {
             relative: m
         }, {
@@ -200,7 +208,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
     if (type == 'IntI0-R-S') {
         n += this.target_size(key.last()) - this.source_size(key.last());
         cell.move([{
-            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1))
+            relative: -(this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.max.penultimate()) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.max.penultimate()))
 
             //relative: 0
         }, {
@@ -267,7 +275,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.last();
         y = alpha_box.min.penultimate();
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
+            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.max.penultimate()) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.max.penultimate())
                 //            relative: 0
         }, {
             relative: m
@@ -402,7 +410,7 @@ Diagram.prototype.getTarget.IntLS = function(type, key) {
         x = alpha_box.min.last();
         y = alpha_box.min.penultimate();
         cell.move([{
-            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.min.penultimate() + 1) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.min.penultimate() + 1)
+            relative: this.getSlice(key.last()).getSlice(alpha_box.min.last()).target_size(alpha_box.max.penultimate()) - this.getSlice(key.last()).getSlice(alpha_box.min.last()).source_size(alpha_box.max.penultimate())
         }, {
             relative: m
         }, {
@@ -469,7 +477,8 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     var g1_target = this.target_size(key.last());
     var space_above = (key.last() < this.cells.length - g1_target);
     var space_below = (key.last() >= g1_source);
-    var space_left = (cell.box.min.last() > 0);
+    var space_left = (box.min.last() >= box.max.penultimate() - box.min.penultimate());
+    //var space_left = (cell.box.min.last() > 0);
     var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
     //var space_right = (cell.box.min.last() + slice.target_size(key.penultimate()) < slice.cells.length);
 
@@ -728,12 +737,14 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 key.last() - steps_back]);
     }
     if (type.tail('L-SI0')) {
-        edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
+        edge_box = this.getLocationBoundingBox([box.max.penultimate(),
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]); // We need the '+1' to account for the cell itself, not just the 'pull-throughs'
     }
     if (type.tail('LI0-S')) {
-        edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
+        edge_box = this.getLocationBoundingBox([
+                //box.min.penultimate() + 1,
+                box.max.penultimate(),
                 box.min.last() + (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps_back]);
     }
@@ -743,7 +754,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 key.last() + steps_front + 1]);
     }
     if (type.tail('R-S')) {
-        edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
+        edge_box = this.getLocationBoundingBox([box.max.penultimate(),
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() - steps_back]);
     }
@@ -758,7 +769,7 @@ Diagram.prototype.getInterchangerBoundingBox.IntLS = function(type, key) {
                 key.last() - steps_back]);
     }
     if (type.tail('RI0-SI0')) {
-        edge_box = this.getLocationBoundingBox([box.min.penultimate() + 1,
+        edge_box = this.getLocationBoundingBox([box.max.penultimate(),
                 box.min.last() - (box.max.penultimate() - box.min.penultimate()),
                 key.last() + steps_front + 1]);
     }
