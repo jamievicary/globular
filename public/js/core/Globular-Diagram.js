@@ -605,14 +605,20 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
     return sub;
 };
 
-// Find the ID of the first cell that appears in the diagram
+// Find the ID of the last cell that appears in the diagram
 Diagram.prototype.getLastId = function() {
     var d = this;
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
+    /*
     return {
         id: d.cells[d.cells.length - 1].id,
+        dimension: d.getDimension()
+    };
+    */
+    return {
+        id: d.cells[0].id,
         dimension: d.getDimension()
     };
 }

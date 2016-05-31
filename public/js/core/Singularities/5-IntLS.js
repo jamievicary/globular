@@ -435,6 +435,7 @@ Diagram.prototype.rewritePasteData.IntLS = function(type, key) {
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLS = function(drag) {
     if (drag.directions == null) return [];
+    if (drag.shiftKey) return [];
     var up = drag.directions[0] > 0;
     var key = [drag.coordinates[0]];
     var options = this.getDragOptions(up ? ['Int-L-SI0', 'IntI0-L-SI0', 'Int-R-SI0', 'IntI0-R-SI0', 'Int-LI0-SI0', 'IntI0-LI0-SI0', 'Int-RI0-SI0', 'IntI0-RI0-SI0'] : ['Int-L-S', 'IntI0-L-S', 'Int-R-S', 'IntI0-R-S', 'Int-LI0-S', 'IntI0-LI0-S', 'Int-RI0-S', 'IntI0-RI0-S'],
@@ -627,17 +628,18 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
 
     } else {
-        if (x < 0 || key.last() - steps_back < 0 || (x >= this.getSlice(key.last() - steps_back).cells.length && g1_source != 0)) {
-            return false;
+        if ((x < 0)
+                || (key.last() - steps_back < 0)
+                || ((this.getSlice(key.last() - steps_back).cells.length <= x) && (g1_source != 0))) {
+           return false;
         }
+        if (this.getSlice(key.last() - steps_back).cells.length <= x + n - 2) return false;
         var expanded_list = this.getSlice(key.last() - steps_back).expand(subtype, {
             up: x,
             across: y,
             length: l
         }, n, m);
-        if (!expanded_list) {
-            return false;
-        }
+        if (!expanded_list) return false;
         var source = expanded_list.concat([cell]);
         key_start = source.length - 1;
 

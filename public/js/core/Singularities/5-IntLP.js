@@ -42,6 +42,7 @@ Diagram.prototype.rewritePasteData.IntLP = function(type, key) {
 
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLP = function(drag) {
+    if (drag.shiftKey) return [];
     var options = this.getDragOptions(['Int-L-P', 'Int-L-PI0', 'Int-R-P', 'Int-R-PI0', 'IntI0-L-P', 'IntI0-L-PI0', 'IntI0-R-P', 'IntI0-R-PI0'], [drag.coordinates[0]]);
 
     // Collect the possible options

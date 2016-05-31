@@ -133,6 +133,7 @@ Diagram.prototype.rewritePasteData.IntLT = function(type, key) {
 // Interpret drag of this type
 Diagram.prototype.interpretDrag.IntLT = function(drag) {
     if (drag.directions == null) return [];
+    if (drag.shiftKey) return [];
     var right = drag.directions[1] > 0;
     var key = [drag.coordinates[0]];
     var options = this.getDragOptions(right ? ['Int-L-TI0', 'Int-R-TI0', 'Int-LI0-TI0', 'Int-RI0-TI0', 'IntI0-L-TI0', 'IntI0-R-TI0', 

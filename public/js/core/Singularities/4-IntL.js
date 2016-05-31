@@ -26,7 +26,9 @@ Diagram.prototype.expand.IntL = function(type, data, n, m) {
     var l = data.length;
     var list_one = new Array(); 
     
-    if(n === 0 || m === 0) return [];
+    // Some basic checks
+    if (n === 0 || m === 0) return [];
+    if (x >= this.cells.length) return false;
 
     var list = new Array();
     var new_l = l + (this.target_size(x) - this.source_size(x));
@@ -140,6 +142,7 @@ Diagram.prototype.expansionStepsUp.IntL = function(box, side_wires) {
 Diagram.prototype.interpretDrag.IntL = function(drag) {
     if (drag.directions == null) return [];
     if (drag.coordinates.length > 1) return [];
+    if (drag.shiftKey) return [];
     var up = drag.directions[0] > 0;
     var right = drag.directions[1] > 0;
     var key = [drag.coordinates[0]];

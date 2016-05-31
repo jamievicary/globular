@@ -124,7 +124,8 @@ Diagram.prototype.interpretDrag = function(drag) {
         var new_drag = {
             boundary: drag.boundary,
             coordinates: drag.coordinates.slice(0, drag.coordinates.length - 1),
-            directions: (drag.directions == null ? null : drag.directions.slice())
+            directions: (drag.directions == null ? null : drag.directions.slice()),
+            shiftKey: drag.shiftKey
         };
         options = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
         for (var i=0; i<options.length; i++) {
@@ -138,35 +139,39 @@ Diagram.prototype.interpretDrag = function(drag) {
         }
     }
 
-    // Check for the case that we can cancel inverse cells
+    // If we're clicking, then find a match natively in the current diagram    
+    //if (drag.directions == null) {
 
-    var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
-    options = options.concat(inverse_action);
-
-    // Check other singularity types
-    for (var family in SingularityData) {
-        if (!SingularityData.hasOwnProperty(family)) continue;
-
-        // Get the data for this singularity family
-        var data = SingularityData[family];
-
-        // Don't bother testing if the dimension of the diagram is too low for this singularity type
-        if (this.getDimension() < data.dimension - 1) continue;
-
-        // See if this family can interpret the drag
-        var t = performance.now();
-        var r = ((this.interpretDrag[family]).bind(this))(drag);
-        //console.log('interpretDrag[' + family + '] time: ' + (performance.now() - t) + 'ms');
-        var msg = "interpretDrag." + family + ": allowed ";
-        var found_possibilities = false;
-        for (var i=0; i<r.length; i++) {
-            if (r[i].possible) options.push(r[i]);
-            msg += (found_possibilities ? ", " : "") + r[i].id;
-            found_possibilities = true;
+        // Check for the case that we can cancel inverse cells
+    
+        var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag);
+        options = options.concat(inverse_action);
+    
+        // Check other singularity types
+        for (var family in SingularityData) {
+            if (!SingularityData.hasOwnProperty(family)) continue;
+    
+            // Get the data for this singularity family
+            var data = SingularityData[family];
+    
+            // Don't bother testing if the dimension of the diagram is too low for this singularity type
+            if (this.getDimension() < data.dimension - 1) continue;
+    
+            // See if this family can interpret the drag
+            var t = performance.now();
+            var r = ((this.interpretDrag[family]).bind(this))(drag);
+            //console.log('interpretDrag[' + family + '] time: ' + (performance.now() - t) + 'ms');
+            var msg = "interpretDrag." + family + ": allowed ";
+            var found_possibilities = false;
+            for (var i=0; i<r.length; i++) {
+                if (r[i].possible) options.push(r[i]);
+                msg += (found_possibilities ? ", " : "") + r[i].id;
+                found_possibilities = true;
+            }
+            if (found_possibilities) console.log(msg);
+            else console.log("interpretDrag." + family + ": no interchangers allowed");
         }
-        if (found_possibilities) console.log(msg);
-        else console.log("interpretDrag." + family + ": no interchangers allowed");
-    }
+    //}
 
     return options;
 }
@@ -177,7 +182,7 @@ Diagram.prototype.getDragOptions = function(list, key) {
         var type = list[i];
         options.push({
             id: type,
-            key: key,
+            key: key.slice(),
             possible: this.interchangerAllowed(type, key)
         });
     }

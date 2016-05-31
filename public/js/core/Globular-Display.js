@@ -167,6 +167,7 @@ Display.prototype.gridToLogical_0 = function(grid_coord) {
         allow_boundary: this.getBoundaryFlags()
     });
     position.dimension = this.diagram.getDimension();
+    position.shiftKey = grid_coord.shiftKey;
     return position;
 }
 
@@ -188,6 +189,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
             allow_boundary: this.getBoundaryFlags()
         });
         position.dimension = this.diagram.getDimension();
+        position.shiftKey = grid_coord.shiftKey;
         return position;
     }
 
@@ -219,6 +221,7 @@ Display.prototype.gridToLogical_1 = function(grid_coord) {
             }])
         });
         position.dimension = this.diagram.getDimension() - 1;
+        position.shiftKey = grid_coord.shiftKey;
         return position;
     }
 
@@ -258,6 +261,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
             allow_boundary: this.getBoundaryFlags()
         });
         position.dimension = this.diagram.getDimension();
+        position.shiftKey = grid_coord.shiftKey;
         return position;
     }
 
@@ -268,8 +272,8 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     var edges_to_left = 0;
     for (var i = 0; i < this.data.edges.length; i++) {
         var edge = this.data.edges[i];
-        if (edge.start_height >= height) continue;
-        if (edge.finish_height < height) continue;
+        if (edge.start_height > height) continue;
+        if (edge.finish_height <= height) continue;
         // How close is this edge?
         var d = grid_coord.x - edge.x;
         // If the edge is to the right, ignore it
@@ -294,6 +298,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
             }])
         });
         position.dimension = this.diagram.getDimension() - 1;
+        position.shiftKey = grid_coord.shiftKey;
         return position;
     }
 
@@ -314,6 +319,7 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
         }])
     });
     position.dimension = this.diagram.getDimension() - 2;
+    position.shiftKey = grid_coord.shiftKey;
     return position;
 }
 
@@ -369,6 +375,7 @@ Display.prototype.pixelsToGrid = function(event) {
     var grid = {};
     grid.x = (event.offsetX - pan.x) / sizes.realZoom;
     grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
+    grid.shiftKey = event.shiftKey;
     //console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
     //this.gridToPixels(grid);
     return grid;
@@ -688,20 +695,35 @@ Display.prototype.remove_highlight = function() {
 
 Display.prototype.highlight_action = function(action, boundary) {
 
+    // Decide what to actually highlight. If we're cancelling something on the boundary, highlight that instead.
+    var real_boundary, real_action;
+    if (action.preattachment == null) {
+        real_boundary = boundary;
+        real_action = action;
+    } else {
+        real_boundary = boundary;
+        if (action.preattachment.boundary != null) {
+            if (real_boundary == null) real_boundary = {depth:0};
+            real_boundary.depth += action.preattachment.boundary.depth;
+            real_boundary.type = action.preattachment.boundary.type;
+        }
+        real_action = action.preattachment;
+    }
+
     // Get bounding box for entire action
     var slice = this.diagram;
-    if (boundary != null) {
-        for (var i = 0; i < boundary.depth - 1; i++) {
+    if (real_boundary != null) {
+        for (var i = 0; i < real_boundary.depth - 1; i++) {
             slice = slice.getSourceBoundary();
         }
-        if (boundary.type == 's') slice = slice.getSourceBoundary();
+        if (real_boundary.type == 's') slice = slice.getSourceBoundary();
         else slice = slice.getTargetBoundary();
     }
-    var boundary_box = slice.getBoundingBox(action);
+    var boundary_box = slice.getBoundingBox(real_action);
     if (boundary_box == null) return;
 
     // Get display data for bounding box
-    var display_data = this.diagram.getLocationBoundaryBox(boundary, boundary_box, this.padCoordinates([]).reverse());
+    var display_data = this.diagram.getLocationBoundaryBox(real_boundary, boundary_box, this.padCoordinates([]).reverse());
     if (display_data == null) return;
 
     this.highlight_box(display_data.box, display_data.boundary);
@@ -763,7 +785,7 @@ Display.prototype.render = function(preserve_view) {
         evt.preventDefault();
     })
     this.data = data;
-    //timer.Report();
+    timer.Report();
     this.panzoom = svgPanZoom(this.container.find('svg')[0]);
     if (pan != null) {
         this.panzoom.zoom(zoom);
