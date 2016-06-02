@@ -76,8 +76,8 @@ Display.prototype.mousemove = function(event) {
     this.updatePopup({
         logical: this.gridToLogical(new_grid),
         pixels: {
-            x: event.offsetX,
-            y: event.offsetY
+            x: event.originalEvent.layerX,
+            y: event.originalEvent.layerY
         }
     });
     //timer.Report();
@@ -373,8 +373,8 @@ Display.prototype.pixelsToGrid = function(event) {
     var pan = this.panzoom.getPan();
     var sizes = this.panzoom.getSizes();
     var grid = {};
-    grid.x = (event.offsetX - pan.x) / sizes.realZoom;
-    grid.y = b.bottom + (pan.y - event.offsetY) / sizes.realZoom;
+    grid.x = (event.originalEvent.layerX - pan.x) / sizes.realZoom;
+    grid.y = (pan.y - event.originalEvent.layerY) / sizes.realZoom;
     grid.shiftKey = event.shiftKey;
     //console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
     //this.gridToPixels(grid);
