@@ -24,6 +24,90 @@ function dimensionHelper(processesDim, diagramDim, historyOn) {
     }
 }
 
+Project.prototype.applyStochasticProcess = function() {
+
+    if (this.diagram == null) return;
+    if (this.diagram.getDimension() != 2) return;
+    var process_dimension = 3;
+
+    // List possible cell attachments
+    var attachments = [];
+    var processes = this.signature.getNCells(process_dimension);
+    for (var i = 0; i < processes.length; i++) {
+        var generator = this.signature.getGenerator(processes[i]);
+        var results = this.diagram.enumerate(generator.source, true);
+        var rate = generator.name.match(/#(\d+\.?\d*)/);
+        if (rate == null) {
+            rate = 1;
+        } else {
+            rate = Number(rate[1]);
+        }
+        for (var j=0; j<results.length; j++) {
+            var r = results[j];
+            if (r.equivalence_class_size == undefined) r.equivalence_class_size = 1;
+            attachments.push({id: processes[i], key: r, time: timeSampler(rate / r.equivalence_class_size)});
+        }
+    }
+
+    // List possible interchangers
+    var interchanger_rate = 0.1;
+    var interchangers = this.diagram.getInterchangers();
+    for (var i = 0; i < interchangers.length; i++) {
+        var interchanger = interchangers[i];
+        attachments.push({
+            key: interchanger.key,
+            id: interchanger.id,
+            time: timeSampler(interchanger_rate /*/ interchangers.length*/)
+        });
+    }
+    
+    if (attachments.length == 0) return; // Nothing to do
+
+    // Choose the next event to occur
+    var least = Number.MAX_VALUE;
+    var index = 0;
+    for (var x = 0; x < attachments.length; x++) {
+        var event = attachments[x];
+        if (event.time < least) {
+            least = event.time;
+            index = x;
+        }
+    }
+
+    // Get the chosen action
+    var action = attachments[index];
+    action.adjustments = action.key.adjustments || [];
+    
+    // Do the adjustments
+    var x_offset = 0;
+    var event = action.key;
+    for (var a = 0; a < action.adjustments.length; a++) {
+        var adjustment = action.adjustments[a];
+        // properties: adjustment.height, adjustment.side = 'left' or 'right'
+        var id = (adjustment.side == 'left' ? 'Int' : 'IntI0');
+        for (var h = event[1] + adjustment.height - 1; h >= event[1] + a; h--) {
+            var cell = {id: id, key: (adjustment.side == 'left' ? [h] : [h+1])};
+            console.log('adjustment: ' + JSON.stringify(cell));
+            this.diagram.rewrite(cell, false);
+        }
+        if (adjustment.side == 'left') {
+            var rewrite = gProject.signature.getGenerator(adjustment.id);
+            x_offset += rewrite.target.cells.length - rewrite.source.cells.length;
+        }
+    }
+
+    // Now prform the actual rewrite
+    var rewrite = {
+        id: action.id,
+        key: (event.length == 1 ? event : [event[0] + x_offset, event[1] + action.adjustments.length])
+    };
+    console.log(JSON.stringify(rewrite));
+    this.diagram.rewrite(rewrite, false);
+    gProject.renderDiagram();
+    //this.saveState();
+}
+
+/*
 Project.prototype.applyStochasticProcess = function(numIterations) {
 
     var diagram_dimension = this.diagram.getDimension();
@@ -107,7 +191,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
             eventsWithTimes.push({
                 event: interchanger.key,
                 id: interchanger.id,
-                time: timeSampler(interchanger_rate /*/ interchangers.length*/)
+                time: timeSampler(interchanger_rate)
             });
         }
 
@@ -152,13 +236,12 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                         console.log('adjustment: ' + JSON.stringify(cell));
                         this.diagram.rewrite(cell, false);
                     }
-                    /*
-                    for (var h = event[1] + a; h < adjustment.height; h++) {
-                        var cell = this.diagram.constructInterchangerAtHeight(id, h);
-                        console.log(JSON.stringify(cell));
-                        this.diagram.rewrite(cell, false);
-                    }
-                    */
+                    
+                    //for (var h = event[1] + a; h < adjustment.height; h++) {
+                    //    var cell = this.diagram.constructInterchangerAtHeight(id, h);
+                    //    console.log(JSON.stringify(cell));
+                    //    this.diagram.rewrite(cell, false);
+                    //}                    
                     if (adjustment.side == 'left') {
                         var rewrite = gProject.signature.getGenerator(adjustment.id);
                         x_offset += rewrite.target.cells.length - rewrite.source.cells.length;
@@ -180,6 +263,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
     gProject.renderDiagram();
     this.saveState();
 }
+*/
 
 Project.prototype.displayInterchangers = function() {
 
@@ -232,26 +316,18 @@ Diagram.prototype.getInterchangers = function() {
 
     var t0 = performance.now();
     var interchangers = new Array();
-    for (var i = 0; i < this.cells.length - 1; i++) {
-        var temp_coordinates = this.cells[i].key.slice(0);
-        temp_coordinates.push(i);
-        if (this.interchangerAllowed({
-                id: 'Int',
-                key: temp_coordinates
-            })) {
+    for (var i = 0; i < this.cells.length; i++) {
+        if (this.interchangerAllowed('Int', [i])) {
             interchangers.push({
                 id: "Int",
-                key: temp_coordinates,
+                key: [i],
                 tension_change: 0 //this.computeTensionChange(i, i + 1)
             });
         }
-        if (this.interchangerAllowed({
-                id: 'IntI0',
-                key: temp_coordinates
-            })) {
+        if (this.interchangerAllowed('IntI0', [i])) {
             interchangers.push({
-                id: "IntI",
-                key: temp_coordinates,
+                id: "IntI0",
+                key: [i],
                 tension_change: 0 //this.computeTensionChange(i + 1, i)
             });
         }

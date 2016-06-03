@@ -163,8 +163,8 @@ $(document).ready(function() {
             gProject.keepBottomUI();
         } else if (key == 'p') {
             gProject.keepTopUI();
-        //} else if (key == 'p') {
-        //    gProject.applyStochasticProcess(1);
+        } else if (key == 'z') {
+            gProject.applyStochasticProcess(1);
         //} else if (key == 'z') {
         //    gProject.displayInterchangers();
         } else if (key == 'h') {

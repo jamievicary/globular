@@ -274,7 +274,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             var matches_found = 0;
             var x_offset = 0;
             while (matches_found < matches_needed) {
-                //for (var j = 0; j < matched_diagram.cells.length; j++) {
 
                 // If we've gone past the end of the diagram, then we've failed to find a match
                 if (i + matches_found + adjustments.length == this.cells.length) {
@@ -347,52 +346,19 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
                 console.log('Found ' + adjustments.length + ' loose matches');
             }
 
-            /*
-            for (var j = 0; j < matched_diagram.cells.length; j++) {
-                if (matched_diagram.cells[j].id != this.cells[i + j].id) {
-                    current_match = null;
-                    break;
-                }
-                if (matched_diagram.getCoordinates(matched_diagram.cells[j]).length !=
-                    this.getCoordinates(this.cells[i + j]).length) {
-                    console.log("enumerate - strange condition triggered");
-                    current_match = null;
-                    break;
-                }
-                else {
-                    for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.cells[j]).length; k++) {
-                        if (matched_diagram.getCoordinates(matched_diagram.cells[j])[k] !=
-                            this.getCoordinates(this.cells[i + j])[k] - current_match[k]) {
-                            current_match = null;
-                            break;
-                        }
-                    }
-                }
-                if (current_match === null) {
-                    break;
-                }
-            }
-            */
             // If the current match passed all the checks, it is added to the list of matches
             if (current_match != null) {
                 matches.push(current_match);
             }
-
         }
+        
         // No need to rewrite the platform at the final pass of the loop
-        if (i === loopCount - 1) {
-            break;
-        }
-
-        // Rewrites the intermediate boundary to allow to search for matches at the next platform
-        //intermediate_boundary.rewrite(this.cells[i]);
-        //intermediate_boundary = this.getSlice(i + 1);
+        if (i === loopCount - 1) break;
     }
 
-    /*
     // For a 2-diagram, record data about match locations to enable suppression of equivalent rewrites.
     // Only applies for 2-diagrams, when the matched diagram is an identity.
-    if ((this.getDimension() == 2) && (matched_diagram.cells.length == 0)) {
+    if ((this.getDimension() == 2) && (matched_diagram.cells.length == 0) && loose) {
         var length = matched_diagram.source.cells.length;
         var matches_by_coordinate = {};
         var match_equivalence_classes = [];
@@ -459,7 +425,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             }
         }
     }
-    */
 
     return matches;
 };
