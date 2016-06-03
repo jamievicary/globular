@@ -701,7 +701,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     color_widget.onImmediateChange = function() {
         project.setColourUI(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
-        //project.renderCellsAbove(generator.id);
+        project.renderCellsAbove(generator.id);
         project.renderDiagram();
     };
     div_detail.appendChild(input_color);
