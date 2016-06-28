@@ -569,7 +569,7 @@ Project.prototype.currentString = function(minimize) {
     this.view_controls = MainDisplay.getControls();
 
     var result = globular_stringify(this, minimize);
-
+    //download('rawstring.json', result);
     //timer.Report();
     return result;
 }

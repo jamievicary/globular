@@ -194,7 +194,7 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
         loose = false;
     }
 
-    var matched_diagram_shape = matched_diagram.getFullDimensions();
+    var matched_diagram_shape = loose ? matched_diagram.getFullDimensions() : null;
 
     // For a match of 0-diagrams, returns an empty match, as there are no boundaries to be passed
     if (this.dimension === 0) {
