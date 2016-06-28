@@ -431,6 +431,7 @@ Project.prototype.performActionUI = function(option, drag) {
 }
 
 Project.prototype.saveState = function() {
+    return;
     if ($('#allow-undo-checkbox').is(':checked')) {
         history.pushState({
             string: this.currentString(),
@@ -567,7 +568,10 @@ Project.prototype.currentString = function(minimize) {
     var timer = new Timer("Project.currentString");
     // Store the viewbox controls
     this.view_controls = MainDisplay.getControls();
-
+    
+    // Clear main diagram
+    if (this.diagram != null) this.diagram.clearAllSliceCaches();
+    
     var result = globular_stringify(this, minimize);
     //download('rawstring.json', result);
     //timer.Report();

@@ -215,9 +215,8 @@ $(document).ready(function() {
     $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
 
     // Create the 'Allow undo' checkbox
-    $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>')
-        .appendTo($('#project-menu'));
-    $('#allow-undo-checkbox').prop('checked', true);
+    //$('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>').appendTo($('#project-menu'));
+    //$('#allow-undo-checkbox').prop('checked', true);
 
     // Create the 'Loading Workspace' div
     $('<div>').attr('id', 'loading-window').appendTo(document.body).hide();
