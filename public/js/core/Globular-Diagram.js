@@ -582,16 +582,16 @@ Diagram.prototype.getLastId = function() {
     while (d.cells.length == 0) {
         d = d.getSourceBoundary();
     }
-    /*
     return {
         id: d.cells[d.cells.length - 1].id,
         dimension: d.getDimension()
     };
-    */
+    /*
     return {
         id: d.cells[0].id,
         dimension: d.getDimension()
     };
+    */
 }
 
 // Find the colour of the first cell that appears in the diagram

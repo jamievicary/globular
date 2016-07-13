@@ -498,7 +498,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             // Draw the interchanger. First, decide which strand goes on top
             var e1_bot, e2_bot, e1_top, e2_top;
-            var p = (vertex.type == 'Int' ? 0 : 1);
+            var p = (vertex.type == 'Int' ? 1 : 0);
             var q = 1 - p;
             e1_bot = data.edges[vertex.source_edges[p]];
             e2_bot = data.edges[vertex.source_edges[q]];
@@ -1725,7 +1725,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
             if (box.min.last() == box.max.last()) {
                 if (box.min.last() == 0) {
                     left = b.left;
-                    right = data.edges[edges[0]].x - 0.5;
+                    right = edges.length == 0 ? b.right : data.edges[edges[0]].x - 0.5;
                 } else if (box.max.last() == edges.length) {
                     left = data.edges[edges.last()].x + 0.5;
                     right = b.right;

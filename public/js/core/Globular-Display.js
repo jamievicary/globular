@@ -315,7 +315,7 @@ Display.prototype.pixelsToLogical_2 = function(pixels) {
             relevant_edges = vertex.target_edges;
             local_edge_index = element_index_2;
         }
-        if (vertex.type == 'IntI0') local_edge_index = 1 - local_edge_index;
+        if (vertex.type == 'Int') local_edge_index = 1 - local_edge_index;
         var edge_index = relevant_edges[local_edge_index];
         //var vertex_height_fraction = decimal_part(vertex.intersection.centre[1]);
         //var effective_height = Math.floor(vertex_height_fraction + (grid_coord.y - b.bottom));
