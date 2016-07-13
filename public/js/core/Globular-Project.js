@@ -431,13 +431,14 @@ Project.prototype.performActionUI = function(option, drag) {
 }
 
 Project.prototype.saveState = function() {
-    return;
+    var t = new Timer('Pushed state onto history stack')
     if ($('#allow-undo-checkbox').is(':checked')) {
         history.pushState({
             string: this.currentString(),
             p_id: global_p_id
         }, "", "");
     }
+    t.Report();
 }
 
 // Makes this signature an empty signature of level (n+1)

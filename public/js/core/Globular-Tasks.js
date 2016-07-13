@@ -228,5 +228,12 @@ function cps_finalize() {
     $("#add-0-cell-opt").click(function() {
         gProject.addZeroCell();
     });
-    gProject.saveState();
+    
+    // Save the state in the history stack, as long as we're not in fact
+    // loading a project from the history.
+    if (historical_state) {
+        historical_state = false;
+    } else {
+        gProject.saveState();
+    }
 }

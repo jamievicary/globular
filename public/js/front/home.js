@@ -7,6 +7,7 @@ var MainDisplay = null;
 var global_p_id = '';
 var timeout = null;
 var new_project_text = '';
+var historical_state = false;
 
 //function for producing all pop ups/errors
 var original_msg_html = '<br><div id="msg-close-opt-err" class="msg-close-opt">Close</div>';
@@ -216,8 +217,8 @@ $(document).ready(function() {
     $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
 
     // Create the 'Allow undo' checkbox
-    //$('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>').appendTo($('#project-menu'));
-    //$('#allow-undo-checkbox').prop('checked', true);
+    $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>').appendTo($('#project-menu'));
+    $('#allow-undo-checkbox').prop('checked', true);
 
     // Create the 'Loading Workspace' div
     $('<div>').attr('id', 'loading-window').appendTo(document.body).hide();
@@ -296,9 +297,9 @@ $(document).ready(function() {
     // Click handler on main diagram
     // Handle navigation by forward and back buttons
     window.onpopstate = function(event) {
-        if (event.state === null) {
-            // do nothing
-        } else if (event.state === "") {
+        if (event.state === null)  return;
+        historical_state = true;
+        if (event.state === "") {
             render_project_front(null);
             $("#diagram-title").val("My workspace");
         } else {
