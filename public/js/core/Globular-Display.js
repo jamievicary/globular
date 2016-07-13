@@ -2,6 +2,7 @@
 /*global gProject*/
 /*global Timer*/
 /*global detectLeftButton*/
+/*global $*/
 
 /*
     A Display class for rendering diagrams.
@@ -21,6 +22,7 @@ function Display(container, diagram) {
     this.select_zone = null;
     this.suppress_input = null;
     this.view_input = null;
+    this.custom_view = false;
     this.slices = [];
     var self = this;
     $(container).mousedown(function(event) {
@@ -45,6 +47,21 @@ Display.prototype.enableMouse = function() {
     this.container.css('pointer-events', 'all');
 }
 
+// Extract local and global pixel coordinates of an event
+function eventToPixels(event) {
+    return {
+        global: {
+            x: event.clientX,
+            y: event.clientY
+        },
+        local: {
+            x: event.originalEvent.layerX,
+            y: event.originalEvent.layerY
+        }
+    };
+
+}
+
 Display.prototype.mousedown = function(event) {
 
     // Only interact with left mouse button
@@ -52,15 +69,21 @@ Display.prototype.mousedown = function(event) {
 
     if (!gProject.initialized) return;
     if (this.diagram == null) return;
+
+    // Check we're within the bounds    
     var b = $(this.container)[0].bounds;
     if (b == undefined) return;
-    var logical = this.pixelsToGrid(event);
+    var pixels = eventToPixels(event);
+    var logical = this.pixelsToGrid(pixels);
     if (logical == undefined) return;
     if (logical.x < b.left) return;
     if (logical.x > b.right) return;
     if (logical.y < b.bottom) return;
     if (logical.y > b.top) return;
-    this.select_grid = logical;
+
+    // Store the screen coordinates of the click (can't store by reference as object is not static)
+    this.select_pixels = eventToPixels(event);
+    console.log("Click at x=" + this.select_pixels.x + ", y=" + this.select_pixels.y);
 }
 
 var min_drag = 0.25;
@@ -72,44 +95,44 @@ Display.prototype.mousemove = function(event) {
 
     //console.log('grid.x = ' + new_grid.x + ', grid.y = ' + new_grid.y);
 
-    var new_grid = this.pixelsToGrid(event);
+    //var pixels = {x: event.originalEvent.layerX, y: event.originalEvent.layerY};
+    var pixels = eventToPixels(event);
     this.updatePopup({
-        logical: this.gridToLogical(new_grid),
-        pixels: {
-            x: event.originalEvent.layerX,
-            y: event.originalEvent.layerY
-        }
+        logical: this.pixelsToLogical(pixels),
+        pixels: pixels
     });
-    //timer.Report();
 
-    if (this.select_grid == null) return;
+    if (this.select_pixels == null) return;
     if (!detectLeftButton(event)) {
-        this.select_grid = null;
+        this.select_pixels = null;
         return;
     }
 
-    var dx = new_grid.x - this.select_grid.x;
-    var dy = new_grid.y - this.select_grid.y;
+    var dx = -(this.select_pixels.global.x - pixels.global.x);
+    var dy = this.select_pixels.global.y - pixels.global.y;
 
     //console.log("distance = " + Math.sqrt(dx*dx+dy*dy));
-    if (dx * dx + dy * dy < 0.3 * 0.3) {
+    var threshold = 50;
+
+
+    if (dx * dx + dy * dy < threshold * threshold) {
         //console.log("Haven't moved far enough");
         return;
     }
 
 
-    var data = this.gridToLogical(this.select_grid);
-    this.select_grid = null;
+    var data = this.pixelsToLogical(this.select_pixels);
+    this.select_pixels = null;
 
     // Clicking a 2d picture
     if (this.data.dimension == 2) {
         if (data.dimension == this.diagram.getDimension() - 1) {
             // Clicking on an edge
-            if (Math.abs(dx) < 0.25) return;
+            if (Math.abs(dx) < 0.7 * threshold) return;
             data.directions = [dx > 0 ? +1 : -1];
         } else if (data.dimension == this.diagram.getDimension()) {
             // Clicking on a vertex
-            if (Math.abs(dy) < 0.25) return;
+            if (Math.abs(dy) < 0.7 * threshold) return;
             data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
         }
 
@@ -142,12 +165,224 @@ Display.prototype.updatePopup = function(data) {
     var pos = $('#diagram-canvas').position();
     popup.html(description)
         .css({
-            left: 5 + pos.left + data.pixels.x,
-            top: data.pixels.y - 28,
+            left: 5 + pos.left + data.pixels.local.x,
+            top: data.pixels.local.y - 28,
             position: 'absolute'
         });
 }
 
+Display.prototype.pixelsToLogical = function(pixels) {
+    if (pixels == null) return null;
+    if (this.data == null) return null;
+    if (this.data.dimension == 0) return this.pixelsToLogical_0(pixels);
+    if (this.data.dimension == 1) return this.pixelsToLogical_1(pixels);
+    if (this.data.dimension == 2) return this.pixelsToLogical_2(pixels);
+}
+
+Display.prototype.pixelsToLogical_0 = function(pixels) {
+    var grid_coord = this.pixelsToGrid(pixels);
+    var elt = document.elementFromPoint(pixels.global.x, pixels.global.y);
+    var element_type = elt.getAttributeNS(null, 'element_type');
+    var element_index = Number(elt.getAttributeNS(null, 'element_index'));
+
+    if (element_type == 'vertex') {
+        var vertex = this.data.vertex;
+        var padded = this.padCoordinates([0]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags()
+        });
+        position.dimension = this.diagram.getDimension();
+        position.shiftKey = grid_coord.shiftKey;
+        return position;
+    }
+}
+
+Display.prototype.pixelsToLogical_1 = function(pixels) {
+
+    var grid_coord = this.pixelsToGrid(pixels);
+    var elt = document.elementFromPoint(pixels.global.x, pixels.global.y);
+    var element_type = elt.getAttributeNS(null, 'element_type');
+    var element_index = Number(elt.getAttributeNS(null, 'element_index'));
+
+    if (element_type == 'vertex') {
+        var vertex = this.data.vertices[element_index];
+        var padded = this.padCoordinates([vertex.level]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags()
+        });
+        position.dimension = this.diagram.getDimension();
+        position.shiftKey = grid_coord.shiftKey;
+        return position;
+    }
+
+    var b = $(this.container)[0].bounds;
+    var allow_s = Math.abs(grid_coord.x - b.left) < 0.25;
+    var allow_t = Math.abs(grid_coord.x - b.right) < 0.25;
+
+    if (element_type == 'edge') {
+        var edge = this.data.edges[element_index];
+        var padded = this.padCoordinates([edge.level, 0]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s,
+                target: allow_t
+            }])
+        });
+        position.dimension = this.diagram.getDimension() - 1;
+        position.shiftKey = grid_coord.shiftKey;
+        return position;
+    }
+
+    return null;
+}
+
+Display.prototype.pixelsToLogical_2 = function(pixels) {
+
+    var grid_coord = this.pixelsToGrid(pixels);
+
+    // Get boundary distance
+    var b = $(this.container)[0].bounds;
+    var allow_s1 = Math.abs(grid_coord.y - b.bottom) < 0.25;
+    var allow_t1 = Math.abs(grid_coord.y - b.top) < 0.25;
+    var allow_s2 = Math.abs(grid_coord.x - b.left) < 0.25;
+    var allow_t2 = Math.abs(grid_coord.x - b.right) < 0.25;
+
+    //var dummies = $('.dummy');
+    //dummies.css('display', 'none');
+    var elt = document.elementFromPoint(pixels.global.x, pixels.global.y);
+    //dummies.css('display', 'inline');
+    var element_type = elt.getAttributeNS(null, 'element_type');
+    var element_index = Number(elt.getAttributeNS(null, 'element_index'));
+    var element_index_2 = Number(elt.getAttributeNS(null, 'element_index_2'));
+
+    if (element_type == 'vertex') {
+        var padded = this.padCoordinates([element_index]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags()
+        });
+        position.dimension = this.diagram.getDimension();
+        position.shiftKey = pixels.shiftKey;
+        position.origin = element_type;
+        return position;
+    }
+
+    var height = Math.floor(grid_coord.y + 0.5 - b.bottom);
+    //if (this.data.vertices.length == 0) height = 0;
+    height = Math.min(height, this.data.vertices.length);
+
+    if (element_type == 'edge') {
+        // We know which edge, and we know the height
+        var edge = this.data.edges[element_index];
+
+        // Adjust height to correct for phenomenon that edges can 'protrude'
+        // above and below their true vertical bounds.
+        if (edge.finish_vertex != null) height = Math.min(height, edge.finish_vertex);
+        if (edge.start_vertex != null) height = Math.max(height, edge.start_vertex + 1);
+
+        // Correct when there are no vertices
+        // ???
+
+        var edges_at_height_index = this.data.edges_at_level[height].indexOf(element_index);
+        var edges_to_left = edges_at_height_index + 1;
+        var padded = this.padCoordinates([height, edges_to_left - 1]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s1,
+                target: allow_t1
+            }])
+        });
+        position.dimension = this.diagram.getDimension() - 1;
+        position.shiftKey = pixels.shiftKey;
+        position.origin = element_type;
+        return position;
+    }
+
+    if (element_type == 'interchanger_edge') {
+        var vertex = this.data.vertices[element_index];
+        var relevant_edges;
+        var local_edge_index;
+        var effective_height = Math.floor(grid_coord.y + 1 - b.bottom);
+        if (grid_coord.y <= vertex.intersection.centre[1]) {
+            relevant_edges = vertex.source_edges;
+            local_edge_index = 1 - element_index_2;
+            effective_height--;
+        } else {
+            relevant_edges = vertex.target_edges;
+            local_edge_index = element_index_2;
+        }
+        if (vertex.type == 'IntI0') local_edge_index = 1 - local_edge_index;
+        var edge_index = relevant_edges[local_edge_index];
+        //var vertex_height_fraction = decimal_part(vertex.intersection.centre[1]);
+        //var effective_height = Math.floor(vertex_height_fraction + (grid_coord.y - b.bottom));
+        var edges_at_height_index = this.data.edges_at_level[effective_height].indexOf(edge_index);
+        var edges_to_left = edges_at_height_index + 1;
+        var padded = this.padCoordinates([effective_height, edges_to_left - 1]);
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s1,
+                target: allow_t1
+            }])
+        });
+        if (position.coordinates.last() < 0) debugger;
+        position.dimension = this.diagram.getDimension() - 1;
+        position.shiftKey = pixels.shiftKey;
+        position.origin = element_type;
+        return position;
+    }
+
+    if (element_type == 'region') {
+        /*
+            There's insufficient data in the region SVG object to determine
+            the logical position. So we should do something a bit clever,
+            possibly involving using the equation for a cubic to see if we're
+            to the left or right of a region.
+            
+            For now, what we have is good enough.
+        */
+
+        // Establish edges_to_left
+        var edges_to_left;
+        for (edges_to_left = 0; edges_to_left < this.data.edges_at_level[height].length; edges_to_left++) {
+            var edge_index = this.data.edges_at_level[height][edges_to_left];
+            if (this.data.edges[edge_index].x > grid_coord.x) break;
+        }
+
+        // The user has clicked on a region
+        //var depth = this.visible_diagram.getSlice([edges_to_left, height]).cells.length - 1; // no need to copy slice
+        //if (depth < 0) depth = 0;
+        var entity_coords = this.visible_diagram.realizeCoordinate([0, edges_to_left, height]).reverse();
+        //entity_coords.reverse();
+        //var padded = this.padCoordinates([height, edges_to_left, depth]);
+        var padded = this.padCoordinates(entity_coords);
+        //if (this.slices.length > 0 && this.slices[0].attr('max') == 0) padded[0] = 1; // fake being in the target
+        //console.log("Click on region at coordinates " + JSON.stringify(padded));
+        var position = this.diagram.getBoundaryCoordinates({
+            coordinates: padded,
+            allow_boundary: this.getBoundaryFlags().concat([{
+                source: allow_s1,
+                target: allow_t1
+            }, {
+                source: allow_s2,
+                target: allow_t2
+            }])
+        });
+        position.dimension = this.diagram.getDimension() - 2;
+        position.shiftKey = grid_coord.shiftKey;
+        position.origin = element_type;
+        return position;
+
+    }
+
+    return null;
+}
+
+/*
 Display.prototype.gridToLogical = function(grid) {
     if (grid == null) return null;
     if (this.data == null) return null;
@@ -155,7 +390,9 @@ Display.prototype.gridToLogical = function(grid) {
     if (this.data.dimension == 1) return this.gridToLogical_1(grid);
     if (this.data.dimension == 2) return this.gridToLogical_2(grid);
 }
+*/
 
+/*
 Display.prototype.gridToLogical_0 = function(grid_coord) {
     var vertex = this.data.vertex;
     var dx = grid_coord.x - vertex.x;
@@ -170,7 +407,9 @@ Display.prototype.gridToLogical_0 = function(grid_coord) {
     position.shiftKey = grid_coord.shiftKey;
     return position;
 }
+*/
 
+/*
 Display.prototype.gridToLogical_1 = function(grid_coord) {
 
     // Has the user clicked on a vertex?
@@ -322,12 +561,13 @@ Display.prototype.gridToLogical_2 = function(grid_coord) {
     position.shiftKey = grid_coord.shiftKey;
     return position;
 }
+*/
 
 Display.prototype.mouseup = function(event) {
-    if (this.select_grid == null) return;
-    var position = this.gridToLogical(this.select_grid);
+    if (this.select_pixels == null) return;
+    var position = this.pixelsToLogical(this.select_pixels);
     if (position == null) {
-        this.select_grid = null;
+        this.select_pixels = null;
         return;
     }
     position.directions = null;
@@ -367,14 +607,14 @@ Display.prototype.gridToPixels = function(grid) {
     return pixel;
 }
 
-Display.prototype.pixelsToGrid = function(event) {
+Display.prototype.pixelsToGrid = function(pixels) {
     var b = $(this.container)[0].bounds;
     if (b === undefined) return;
     var pan = this.panzoom.getPan();
     var sizes = this.panzoom.getSizes();
     var grid = {};
-    grid.x = (event.originalEvent.layerX - pan.x) / sizes.realZoom;
-    grid.y = (pan.y - event.originalEvent.layerY) / sizes.realZoom;
+    grid.x = (pixels.local.x - pan.x) / sizes.realZoom;
+    grid.y = (pan.y - pixels.local.y) / sizes.realZoom;
     grid.shiftKey = event.shiftKey;
     //console.log("grid.x:" + grid.x + ", grid.y:" + grid.y);
     //this.gridToPixels(grid);
@@ -703,7 +943,9 @@ Display.prototype.highlight_action = function(action, boundary) {
     } else {
         real_boundary = boundary;
         if (action.preattachment.boundary != null) {
-            if (real_boundary == null) real_boundary = {depth:0};
+            if (real_boundary == null) real_boundary = {
+                depth: 0
+            };
             real_boundary.depth += action.preattachment.boundary.depth;
             real_boundary.type = action.preattachment.boundary.type;
         }
@@ -764,6 +1006,7 @@ Display.prototype.get_current_slice = function() {
 }
 
 Display.prototype.render = function(preserve_view) {
+    if (!this.custom_view) preserve_view = false;
     var timer = new Timer("Display.render");
     var slice = this.diagram;
     for (var i = 0; i < this.slices.length; i++) {
@@ -786,7 +1029,15 @@ Display.prototype.render = function(preserve_view) {
     })
     this.data = data;
     timer.Report();
-    this.panzoom = svgPanZoom(this.container.find('svg')[0]);
+    var display_object = this;
+    this.panzoom = svgPanZoom(this.container.find('svg')[0], {
+        onZoom: function() {
+            display_object.custom_view = true
+        },
+        onPan: function() {
+            display_object.custom_view = true
+        }
+    });
     if (pan != null) {
         this.panzoom.zoom(zoom);
         this.panzoom.pan(pan);

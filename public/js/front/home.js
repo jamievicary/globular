@@ -1,4 +1,5 @@
 // Global project object
+/*global $*/
 var gProject = {
     initialized: false
 };

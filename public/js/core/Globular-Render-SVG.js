@@ -6,9 +6,11 @@
 
 // Parameter that sets the hardness of string diagram curves
 var shoulder_strength = 0.1;
-var circle_radius = 0.1;
+var circle_radius = 0.11;
+var line_width = 0.1;
 var highlight_colour = '#ffff00';
 var highlight_opacity = 0.8;
+var mask_index = 0;
 
 function globular_set_viewbox() {
     var container = $('#diagram-canvas');
@@ -74,6 +76,7 @@ function globular_render_0d(container, diagram, subdiagram) {
     var id_data = diagram.getLastId();
     circle.setAttributeNS(null, "fill", gProject.getColour(id_data));
     circle.setAttributeNS(null, "stroke", "none");
+    circle.setAttributeNS(null, "element_type", "vertex");
     d.g.appendChild(circle);
     $(container).append(d.svg);
     return {
@@ -115,7 +118,9 @@ function globular_render_1d(container, diagram, subdiagram) {
         });
         d.g.appendChild(SVG_create_path({
             string: path_string,
-            stroke: diagram.getSlice(i).getLastColour()
+            stroke: diagram.getSlice(i).getLastColour(),
+            element_type: 'edge',
+            element_index: i
         }));
         data.edges.push({
             start_x: start_x,
@@ -140,6 +145,8 @@ function globular_render_1d(container, diagram, subdiagram) {
             y: 0
         }),
         stroke: gProject.getColour(id_data),
+        element_type: 'edge',
+        element_index: diagram.cells.length
     }));
     data.edges.push({
         start_x: start_x,
@@ -165,6 +172,8 @@ function globular_render_1d(container, diagram, subdiagram) {
         circle.setAttributeNS(null, "r", circle_radius);
         circle.setAttributeNS(null, "fill", colour);
         circle.setAttributeNS(null, "stroke", "none");
+        circle.setAttributeNS(null, 'element_type', 'vertex');
+        circle.setAttributeNS(null, 'element_index', i);
         d.g.appendChild(circle);
         data.vertices.push({
             x: x,
@@ -217,7 +226,8 @@ function globular_render_2d(container, diagram, subdiagram) {
         d.g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
             //fill: gProject.getColour(diagram.source.source.cells[0].id)
-            fill: diagram.getLastColour()
+            fill: diagram.getLastColour(),
+            element_type: 'region'
         }));
         $(container).append(d.svg);
         $(container)[0].bounds = {
@@ -271,7 +281,8 @@ function globular_render_2d(container, diagram, subdiagram) {
     d.g.appendChild(SVG_create_path({
         string: path_string,
         //        fill: gProject.getColour(diagram.source.source.cells[0].id)
-        fill: color
+        fill: color,
+        element_type: 'region'
     }));
     $(container)[0].bounds = {
         left: -0.5,
@@ -364,6 +375,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
         path.setAttributeNS(null, "fill", colour);
+        path.setAttributeNS(null, "element_type", "region");
         path.region = edge;
         svg_paths.push({
             path: path,
@@ -463,8 +475,11 @@ function globular_render_2d(container, diagram, subdiagram) {
                 id: edge.type,
                 dimension: diagram.getDimension() - 1
             }));
-            path.setAttributeNS(null, "stroke-width", 0.1);
+            path.setAttributeNS(null, "stroke-width", line_width);
             path.setAttributeNS(null, "fill", "none");
+            path.setAttributeNS(null, "element_type", 'edge');
+            path.setAttributeNS(null, 'element_index', i)
+            //path.element_index = i;
             d.g.appendChild(path);
         }
     }
@@ -475,12 +490,15 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         var vertex = data.vertices[i];
         vertex.dimension = diagram.getDimension();
+        var circle_opacity = 1;
 
         if (vertex.type.is_basic_interchanger()) {
+            
+            circle_opacity = 0;
 
             // Draw the interchanger. First, decide which strand goes on top
             var e1_bot, e2_bot, e1_top, e2_top;
-            var p = (vertex.type == 'Int' ? 1 : 0);
+            var p = (vertex.type == 'Int' ? 0 : 1);
             var q = 1 - p;
             e1_bot = data.edges[vertex.source_edges[p]];
             e2_bot = data.edges[vertex.source_edges[q]];
@@ -513,7 +531,8 @@ function globular_render_2d(container, diagram, subdiagram) {
 
             // Draw lower path, possibly using an obscuring mask
             var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
-            var mask_id = "mask" + i;
+            //var mask_id = "mask" + i;
+            var mask_id = "mark" + (mask_index ++);
             if (obscure) {
                 // Add the obscuring mask, which is a fattened version of the upper line
                 var mask = $('<mask>', {
@@ -537,12 +556,14 @@ function globular_render_2d(container, diagram, subdiagram) {
                 });
                 mask.append(SVG_create_path({
                     string: transparent_str,
-                    fill: "white"
+                    fill: "white",
+                    element_type: 'mask_transparent'
                 }));
                 mask.append(SVG_create_path({
                     string: top_str,
-                    stroke_width: 0.2,
-                    stroke: "black"
+                    stroke_width: line_width * 2,
+                    stroke: "black",
+                    element_type: 'mask_top'
                 }));
                 //g.appendChild(mask[0]);
                 defs.append(mask);
@@ -563,15 +584,21 @@ function globular_render_2d(container, diagram, subdiagram) {
             d.g.appendChild(SVG_create_path({
                 string: bot_str,
                 stroke: lower_colour,
-                stroke_width: 0.1,
-                mask: (obscure ? "url(#" + mask_id + ")" : null)
+                stroke_width: line_width,
+                mask: (obscure ? "url(#" + mask_id + ")" : null),
+                element_type: 'interchanger_edge',
+                element_index: i,
+                element_index_2: 1
             }));
 
             // Draw upper path
             d.g.appendChild(SVG_create_path({
                 string: top_str,
                 stroke: upper_colour,
-                stroke_width: 0.1
+                stroke_width: line_width,
+                element_type: 'interchanger_edge',
+                element_index: i,
+                element_index_2: 0
             }));
 
             // Calculate the intersection data
@@ -591,12 +618,14 @@ function globular_render_2d(container, diagram, subdiagram) {
                 d.g.appendChild(SVG_create_circle({
                     x: e2_bot.x,
                     y: i,
-                    fill: upper_colour
+                    fill: upper_colour,
+                    class_name: 'dummy'
                 }));
                 d.g.appendChild(SVG_create_circle({
                     x: e1_bot.x,
                     y: i,
-                    fill: lower_colour
+                    fill: lower_colour,
+                    class_name: 'dummy'
                 }));
             }
             if (i != data.vertices.length - 1) {
@@ -604,28 +633,25 @@ function globular_render_2d(container, diagram, subdiagram) {
                 d.g.appendChild(SVG_create_circle({
                     x: e2_top.x,
                     y: i + 1,
-                    fill: upper_colour
+                    fill: upper_colour,
+                    class_name: 'dummy'
                 }));
                 d.g.appendChild(SVG_create_circle({
                     x: e1_top.x,
                     y: i + 1,
-                    fill: lower_colour
+                    fill: lower_colour,
+                    class_name: 'dummy'
                 }));
             }
-        } else {
-            /*
-            var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttributeNS(null, "cx", vertex.x);
-            circle.setAttributeNS(null, "cy", vertex.y);
-            circle.setAttributeNS(null, "r", circle_radius);
-            circle.setAttributeNS(null, "fill", gProject.getColour({id: vertex.type, dimension: diagram.getDimension()}));
-            circle.setAttributeNS(null, "stroke", "none");
-            d.g.appendChild(circle);
-            */
-            vertex.fill = gProject.getColour(vertex);
-            vertex.radius = 0.1;
-            d.g.appendChild(SVG_create_circle(vertex));
-        }
+        } //else {
+
+        vertex.fill = gProject.getColour(vertex);
+        vertex.radius = circle_radius;
+        vertex.element_type = 'vertex';
+        vertex.element_index = i;
+        vertex.fill_opacity = circle_opacity;
+        d.g.appendChild(SVG_create_circle(vertex));
+        //}
     }
 
     /*
@@ -848,6 +874,9 @@ function SVG_create_path(data) {
     path.setAttributeNS(null, "fill", data.fill);
     path.setAttributeNS(null, "stroke-opacity", data.stroke_opacity);
     path.setAttributeNS(null, "fill-opacity", data.fill_opacity);
+    if (data.element_index != undefined) path.setAttributeNS(null, 'element_index', data.element_index);
+    if (data.element_index_2 != undefined) path.setAttributeNS(null, 'element_index_2', data.element_index_2);
+    if (data.element_type != undefined) path.setAttributeNS(null, 'element_type', data.element_type);
     if (data.mask != null) path.setAttributeNS(null, "mask", data.mask);
     return path;
 }
@@ -860,6 +889,10 @@ function SVG_create_circle(data) {
     circle.setAttributeNS(null, "r", data.radius);
     circle.setAttributeNS(null, "fill", data.fill);
     circle.setAttributeNS(null, "stroke", "none");
+    if (data.fill_opacity != undefined) circle.setAttributeNS(null, 'fill-opacity', data.fill_opacity);
+    if (data.element_index != undefined) circle.setAttributeNS(null, 'element_index', data.element_index);
+    if (data.element_type != undefined) circle.setAttributeNS(null, 'element_type', data.element_type);
+    if (data.class_name != undefined) circle.setAttributeNS(null, 'class', data.class_name);
     //d.g.appendChild(circle);
     return circle;
 

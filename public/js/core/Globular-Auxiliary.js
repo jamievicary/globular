@@ -110,12 +110,14 @@ Array.prototype.end = function(n) {
     return this[this.length - 1 - n];
 }
 
-Array.prototype.last = function() {
-    return this[this.length - 1];
+Array.prototype.last = function(arg) {
+    if (arg != undefined) this[this.length - 1] = arg;
+    else return this[this.length - 1];
 };
 
-Array.prototype.penultimate = function() {
-    return this[this.length - 2];
+Array.prototype.penultimate = function(arg) {
+    if (arg != undefined) this[this.length - 2] = arg;
+    else return this[this.length - 2];
 };
 
 Array.prototype.incremented_array = function(value) {
@@ -379,6 +381,10 @@ function getBoundingBoxSource(box) {
     }
 }
 
+function boundingBoxesEqual(b1, b2) {
+    return (b1.min.vector_equals(b2.min) && b1.max.vector_equals(b2.max));
+}
+
 // Decompose the geometry of an interchanger vertex
 function bezier_decompose(p, q, r, s, i) {
     var centre = (p + q) / 2;
@@ -542,4 +548,8 @@ function download(filename, text) {
 
 function json_replacer(key, value) {
     return value;
+}
+
+function decimal_part(number) {
+    return number - Math.floor(number)
 }

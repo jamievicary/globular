@@ -165,7 +165,12 @@ body, html {
   background-color: #4cd2bb;
 }
 
-/* line 155, style.sass */
+/* line 154, style.sass */
+circle.dummy {
+  pointer-events: none;
+}
+
+/* line 157, style.sass */
 #main-menu li {
   float: left;
   list-style: none;
@@ -174,7 +179,7 @@ body, html {
   padding: 10px;
 }
 
-/* line 164, style.sass */
+/* line 166, style.sass */
 div.cell-group {
   color: black;
   background-color: #aaa;
@@ -184,7 +189,7 @@ div.cell-group {
   margin-bottom: 7px;
 }
 
-/* line 173, style.sass */
+/* line 175, style.sass */
 div.cell-opt {
   background-color: #888;
   color: #ffffff;
@@ -198,7 +203,7 @@ div.cell-opt {
   padding-right: 0px;
 }
 
-/* line 189, style.sass */
+/* line 191, style.sass */
 div.preview-icon {
   height: 67px;
   width: 67px;
@@ -207,23 +212,23 @@ div.preview-icon {
   margin-right: 7px;
 }
 
-/* line 196, style.sass */
+/* line 198, style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 199, style.sass */
+/* line 201, style.sass */
 div.cell-icon > svg {
   border-radius: 2px;
 }
 
-/* line 202, style.sass */
+/* line 204, style.sass */
 .cell-b-sect {
   text-align: center;
   top: 70px;
 }
 
-/* line 206, style.sass */
+/* line 208, style.sass */
 .match-cell-icon {
   height: 67px;
   width: 67px;
@@ -232,12 +237,12 @@ div.cell-icon > svg {
   float: left;
 }
 
-/* line 214, style.sass */
+/* line 216, style.sass */
 div.cell-icon-group {
   float: left;
 }
 
-/* line 217, style.sass */
+/* line 219, style.sass */
 div.cell-detail {
   overflow: hidden;
   height: 67px;
@@ -246,23 +251,23 @@ div.cell-detail {
   font-size: 13px;
 }
 
-/* line 224, style.sass */
+/* line 226, style.sass */
 div.cell-detail > label {
   position: absolute;
   height: 13px;
 }
 
-/* line 232, style.sass */
+/* line 234, style.sass */
 label.cell-invertible {
   top: 41px;
 }
 
-/* line 235, style.sass */
+/* line 237, style.sass */
 label.cell-single-thumbnail {
   top: 57px;
 }
 
-/* line 239, style.sass */
+/* line 241, style.sass */
 input[type=checkbox] {
   height: 13px;
   vertical-align: bottom;
@@ -271,7 +276,7 @@ input[type=checkbox] {
   padding-bottom: -5px;
 }
 
-/* line 252, style.sass */
+/* line 254, style.sass */
 .cell-label {
   width: calc(100% - 23px);
   border: none;
@@ -284,7 +289,7 @@ input[type=checkbox] {
   font-size: 13px;
 }
 
-/* line 263, style.sass */
+/* line 265, style.sass */
 .color-picker {
   width: calc(100% - 23px);
   margin-top: 4px;
@@ -298,12 +303,12 @@ input[type=checkbox] {
   font-size: 13px;
 }
 
-/* line 275, style.sass */
+/* line 277, style.sass */
 div.cell-icon > canvas {
   border-radius: 2px;
 }
 
-/* line 278, style.sass */
+/* line 280, style.sass */
 div.cell-icon {
   height: 67px;
   width: 67px;
@@ -313,12 +318,12 @@ div.cell-icon {
   float: left;
 }
 
-/* line 288, style.sass */
+/* line 290, style.sass */
 div.cell-icon:nth-child(2) {
   margin-left: 7px;
 }
 
-/* line 291, style.sass */
+/* line 293, style.sass */
 #drop_zone {
   width: calc(90% - 4px);
   margin-left: 5%;
@@ -329,19 +334,19 @@ div.cell-icon:nth-child(2) {
   border: 2px dashed #bbb;
 }
 
-/* line 300, style.sass */
+/* line 302, style.sass */
 #options-box {
   max-height: 80%;
   overflow-y: auto;
 }
 
-/* line 308, style.sass */
+/* line 310, style.sass */
 #options-list {
   overflow-x: hidden;
   text-align: left;
 }
 
-/* line 313, style.sass */
+/* line 315, style.sass */
 .stochastic-rate {
   width: 50px;
   outline-width: 0px;
@@ -354,14 +359,14 @@ div.cell-icon:nth-child(2) {
   height: 15px;
 }
 
-/* line 325, style.sass */
+/* line 327, style.sass */
 .target-rule-arrow {
   position: absolute;
   margin-left: 65px;
   top: 30px;
 }
 
-/* line 330, style.sass */
+/* line 332, style.sass */
 #view-p-desc {
   background-color: grey;
   color: white;
@@ -378,7 +383,7 @@ div.cell-icon:nth-child(2) {
   font-size: 70%;
 }
 
-/* line 345, style.sass */
+/* line 347, style.sass */
 #view-desc-plate {
   margin-left: 50px;
   background-color: grey;
@@ -387,7 +392,7 @@ div.cell-icon:nth-child(2) {
   padding: 10px;
 }
 
-/* line 352, style.sass */
+/* line 354, style.sass */
 #view-desc-body {
   width: 300px;
   float: right;
@@ -396,7 +401,7 @@ div.cell-icon:nth-child(2) {
   position: absolute;
 }
 
-/* line 359, style.sass */
+/* line 361, style.sass */
 #text-p-desc {
   height: 200px;
   resize: none;
@@ -409,13 +414,13 @@ div.cell-icon:nth-child(2) {
   letter-spacing: 1px;
 }
 
-/* line 370, style.sass */
+/* line 372, style.sass */
 #site-controller-body {
   border: 3px solid grey;
   height: 200px;
 }
 
-/* line 374, style.sass */
+/* line 376, style.sass */
 .text-field-style-1 {
   border: none;
   outline-width: 0px;
@@ -425,7 +430,7 @@ div.cell-icon:nth-child(2) {
   padding: 4px;
 }
 
-/* line 382, style.sass */
+/* line 384, style.sass */
 .text-area-style-1 {
   border: none;
   outline-width: 0px;
@@ -435,7 +440,7 @@ div.cell-icon:nth-child(2) {
   width: calc( 100% - 20px );
 }
 
-/* line 392, style.sass */
+/* line 394, style.sass */
 .submit-field-style-1 {
   width: 70px;
   border: none;
@@ -445,7 +450,7 @@ div.cell-icon:nth-child(2) {
   font-family: "Open Sans", sans-serif;
 }
 
-/* line 400, style.sass */
+/* line 402, style.sass */
 .box {
   display: none;
   background-color: #00b8ff;
@@ -462,7 +467,7 @@ div.cell-icon:nth-child(2) {
   left: calc( 50% - 125px );
 }
 
-/* line 416, style.sass */
+/* line 418, style.sass */
 .grand-box {
   width: 800px;
   height: 500px;
@@ -471,29 +476,29 @@ div.cell-icon:nth-child(2) {
   box-shadow: 0px 0px 20px dimgrey;
 }
 
-/* line 423, style.sass */
+/* line 425, style.sass */
 .zindex-error {
   z-index: 6;
 }
 
-/* line 426, style.sass */
+/* line 428, style.sass */
 #change-pass-form {
   padding: 3px;
   border-radius: 2px;
   margin: 0;
 }
 
-/* line 431, style.sass */
+/* line 433, style.sass */
 .cp-textfields {
   width: 80%;
 }
 
-/* line 434, style.sass */
+/* line 436, style.sass */
 #site-cont-header-loggedin {
   padding-bottom: 20px;
 }
 
-/* line 437, style.sass */
+/* line 439, style.sass */
 .msg-close-opt {
   font-size: 70%;
   color: salmon;
@@ -501,7 +506,7 @@ div.cell-icon:nth-child(2) {
   float: right;
 }
 
-/* line 443, style.sass */
+/* line 445, style.sass */
 #add-project-opt {
   background-color: grey;
   cursor: pointer;
@@ -511,7 +516,7 @@ div.cell-icon:nth-child(2) {
   border-radius: 2px;
 }
 
-/* line 451, style.sass */
+/* line 453, style.sass */
 div .delete_button {
   position: absolute;
   right: 5px;
@@ -519,7 +524,7 @@ div .delete_button {
   color: red;
 }
 
-/* line 457, style.sass */
+/* line 459, style.sass */
 #source-target-clear {
   position: absolute;
   right: 5px;
@@ -527,13 +532,13 @@ div .delete_button {
   color: red;
 }
 
-/* line 463, style.sass */
+/* line 465, style.sass */
 #main_view_control {
   background-color: #aaa;
   padding: 5px;
 }
 
-/* line 467, style.sass */
+/* line 469, style.sass */
 #diagram-title {
   color: black;
   height: 30px;
@@ -547,12 +552,12 @@ div .delete_button {
   margin-bottom: 7px;
 }
 
-/* line 480, style.sass */
+/* line 482, style.sass */
 .select-project {
   cursor: pointer;
 }
 
-/* line 483, style.sass */
+/* line 485, style.sass */
 #ajax-loading {
   background-image: url("../../images/loading-icon.gif");
   background-size: 60%;
@@ -563,14 +568,14 @@ div .delete_button {
   background-repeat: no-repeat;
 }
 
-/* line 492, style.sass */
+/* line 494, style.sass */
 #no-projects-open-e {
   font-size: 200%;
   text-align: center;
   margin-top: 30%;
 }
 
-/* line 497, style.sass */
+/* line 499, style.sass */
 .mini-opt-links {
   color: #ffffff;
   letter-spacing: 2px;
@@ -581,14 +586,14 @@ div .delete_button {
   cursor: pointer;
 }
 
-/* line 506, style.sass */
+/* line 508, style.sass */
 #add-0-cell-opt {
   margin-left: -112px;
   position: absolute;
   padding: 5px;
 }
 
-/* line 511, style.sass */
+/* line 513, style.sass */
 .del-project {
   color: salmon;
   display: inline-block;
@@ -596,7 +601,7 @@ div .delete_button {
   text-decoration: underline;
 }
 
-/* line 517, style.sass */
+/* line 519, style.sass */
 .del-confirm-field {
   border: none;
   border-radius: 2px;
@@ -610,7 +615,7 @@ div .delete_button {
   color: salmon;
 }
 
-/* line 529, style.sass */
+/* line 531, style.sass */
 .cancel-del {
   cursor: pointer;
   color: salmon;
@@ -619,7 +624,7 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 536, style.sass */
+/* line 538, style.sass */
 .cc-opt {
   cursor: pointer;
   position: absolute;
@@ -628,7 +633,7 @@ div .delete_button {
   left: 80px;
 }
 
-/* line 543, style.sass */
+/* line 545, style.sass */
 #no-cell-m-f {
   color: dimgrey;
   width: 200px;
@@ -636,7 +641,7 @@ div .delete_button {
   padding-top: 20px;
 }
 
-/* line 549, style.sass */
+/* line 551, style.sass */
 #slider {
   top: 70px;
   right: 10px;
@@ -644,31 +649,31 @@ div .delete_button {
   position: absolute;
 }
 
-/* line 556, style.sass */
+/* line 558, style.sass */
 #process-form {
   text-align: left;
   padding: 10px;
 }
 
-/* line 560, style.sass */
+/* line 562, style.sass */
 div.control.inline {
   position: absolute;
   right: 150px;
   top: 10px;
 }
 
-/* line 565, style.sass */
+/* line 567, style.sass */
 input.control {
   max-width: 15px;
 }
 
-/* line 572, style.sass */
+/* line 574, style.sass */
 #gallery-box {
   overflow: auto;
   background: #b0e0e6;
 }
 
-/* line 576, style.sass */
+/* line 578, style.sass */
 .gallery-pcomp {
   width: 97%;
   cursor: pointer;
@@ -679,7 +684,7 @@ input.control {
   padding: 10px;
 }
 
-/* line 585, style.sass */
+/* line 587, style.sass */
 #gg-title {
   background-color: #b0e0e6;
   color: #e88d8f;
@@ -689,14 +694,14 @@ input.control {
   position: fixed;
 }
 
-/* line 593, style.sass */
+/* line 595, style.sass */
 .pp-opts {
   width: 400px;
   height: 20px;
   padding-bottom: 5px;
 }
 
-/* line 598, style.sass */
+/* line 600, style.sass */
 .publish-project {
   cursor: pointer;
   float: left;
@@ -705,7 +710,7 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 605, style.sass */
+/* line 607, style.sass */
 .share-project-opt {
   cursor: pointer;
   float: left;
@@ -714,13 +719,13 @@ input.control {
   text-decoration: underline;
 }
 
-/* line 612, style.sass */
+/* line 614, style.sass */
 .delete-container {
   float: left;
   margin-left: 10px;
 }
 
-/* line 616, style.sass */
+/* line 618, style.sass */
 .pl-selects {
   border: none;
   outline-width: 0px;
@@ -729,7 +734,7 @@ input.control {
   width: 100px;
 }
 
-/* line 623, style.sass */
+/* line 625, style.sass */
 #pl-title {
   color: grey;
   font-size: 120%;
@@ -740,24 +745,24 @@ input.control {
   z-index: 1;
 }
 
-/* line 632, style.sass */
+/* line 634, style.sass */
 #change-list-type {
   width: 140px;
 }
 
-/* line 635, style.sass */
+/* line 637, style.sass */
 #plist {
   padding-top: 10px;
 }
 
-/* line 638, style.sass */
+/* line 640, style.sass */
 #pl-addnew {
   width: 200px;
   margin-left: 550px;
   position: absolute;
 }
 
-/* line 644, style.sass */
+/* line 646, style.sass */
 .AV-select {
   color: #fd7f70;
   position: absolute;
@@ -766,14 +771,14 @@ input.control {
   font-weight: bold;
 }
 
-/* line 651, style.sass */
+/* line 653, style.sass */
 #forgot-pass-opt {
   font-size: 70%;
   color: lightblue;
   cursor: pointer;
 }
 
-/* line 656, style.sass */
+/* line 658, style.sass */
 #diagram-popup {
   -moz-user-select: -moz-none;
   -ms-user-select: none;
@@ -787,7 +792,7 @@ input.control {
   padding-bottom: 3px;
 }
 
-/* line 666, style.sass */
+/* line 668, style.sass */
 #loading-window {
   width: 400px;
   height: 150px;
@@ -801,18 +806,18 @@ input.control {
   z-index: 10;
 }
 
-/* line 678, style.sass */
+/* line 680, style.sass */
 div.loading-detail {
   margin: 20px;
   overflow: hidden;
 }
 
-/* line 682, style.sass */
+/* line 684, style.sass */
 #loading-title {
   padding: 15px;
 }
 
-/* line 685, style.sass */
+/* line 687, style.sass */
 #source-target-window {
   position: absolute;
   right: 20;
@@ -823,7 +828,7 @@ div.loading-detail {
   width: 150px;
 }
 
-/* line 697, style.sass */
+/* line 699, style.sass */
 #source-target-diagram {
   height: 100px;
   width: 100px;
@@ -835,7 +840,7 @@ div.loading-detail {
   border-radius: 2px;
 }
 
-/* line 707, style.sass */
+/* line 709, style.sass */
 #source-target-diagram > svg {
   display: block;
   margin: 0 auto;

@@ -76,23 +76,25 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
 Diagram.prototype.interpretClickInverses = function(drag) {
 
     var cells = gProject.signature.getNCells(this.getDimension() + 1);
-    if (this.getDimension() == 0) drag.coordinates = [];
+    if (this.getDimension() == 0) drag.coordinates = []
+    var click_box = this.getLocationBoundingBox(drag.coordinates);
+
     var results = [];
     for (var i = 0; i < cells.length; i++) {
         // Does the source of this cell match at this location?
         var generator = gProject.signature.getGenerator(cells[i]);
+        
+        results = results.concat(this.getLocalMatches(click_box, generator.id, ''));
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0'));
+        if (!generator.flippable()) continue;
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I1'));
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0I1'));
+
+/*        
         //var checkbox = $('#invertible-' + generator.id);
         //if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
-            
-            /*
-                How to select the appropriate matches? If we use
-                    //if (!matches[j].tail(drag.coordinates)) continue;
-                then we are too permissive, and get lots of matches
-                that are not local to the click (e.g. applying 'rho^ inverse')
-            */
-            
             if (!matches[j].tail(drag.coordinates)) continue;
             //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
@@ -139,6 +141,7 @@ Diagram.prototype.interpretClickInverses = function(drag) {
                 possible: true
             });
         }
+*/
     }
     return results;
 };
