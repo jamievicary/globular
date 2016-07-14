@@ -288,10 +288,13 @@ $(document).ready(function() {
 
     // Prevent keypress bubbling when editing project name
     $("#diagram-title").keypress(function(e) {
-        e.stopPropagation()
+        e.stopPropagation();
     });
     $("input.text-field-style-1").keypress(function(e) {
-        e.stopPropagation()
+        e.stopPropagation();
+    });
+    $("#text-p-desc").keypress(function(e) {
+        e.stopPropagation();
     });
 
     // Click handler on main diagram
