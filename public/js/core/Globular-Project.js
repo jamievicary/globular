@@ -479,8 +479,9 @@ Project.prototype.selectGeneratorUI = function(id) {
                 boundaryType: "",
                 realBoundaryDepth: 0,
                 visibleBoundaryDepth: 0,
-                inclusion: rewrite_matches[i],
-                size: matched_diagram.getSourceBoundary().getFullDimensions()
+                //inclusion: rewrite_matches[i],
+                //size: matched_diagram.getSourceBoundary().getFullDimensions()
+                box: this.diagram.getBoundingBox({id: id, key: rewrite_matches[i]})
             }
         }
         var enumerationData = {
@@ -510,26 +511,27 @@ Project.prototype.selectGeneratorUI = function(id) {
     }
     var visible_slice = slice_pointer;
 
+    var inverse_id = id.toggle_inverse();
     // Are we viewing an entire target?
     if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth, id);
     }
 
     // Are we viewing an entire source?
     else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth, inverse_id);
     }
 
     // Can we attach to the apparent s or t of the visible diagram?
     else if (d == this.diagram.getDimension() - depth) {
-        matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth);
-        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth));
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth, inverse_id);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth, id));
     }
 
     // Can we attach to the apparent ss or tt of the visible diagram?
     else if (d == this.diagram.getDimension() - depth - 1) {
-        matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth);
-        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth));
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth, inverse_id);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth, id));
     }
 
     // Nothing possible
@@ -548,15 +550,16 @@ Project.prototype.selectGeneratorUI = function(id) {
 
 }
 
-Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth) {
+Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth, id) {
     var matches = subject_diagram.enumerate(matched_diagram);
     for (var i = 0; i < matches.length; i++) {
         matches[i] = {
             visibleBoundaryDepth: visible_boundary_depth,
             realBoundaryDepth: visible_boundary_depth + slice_depth,
             boundaryType: boundary_type,
-            inclusion: matches[i],
-            size: matched_diagram.getFullDimensions()
+            box: subject_diagram.getBoundingBox({id: id, key: matches[i]})
+            //inclusion: matches[i],
+            //size: matched_diagram.getFullDimensions()
         };
     }
     return matches;

@@ -926,8 +926,8 @@ Diagram.prototype.getLocalMatches = function(click_box, id, flip) {
     var match_diagram;
     if (flip == '') match_diagram = generator.source;
     else if (flip == 'I0') match_diagram = generator.target;
-    else if (flip == 'I1') match_diagram = generator.source.mirror(1);
-    else if (flip == 'I0I1') match_diagram = generator.target.mirror(1);
+    else if (flip == 'I1') match_diagram = generator.source.mirror(0);
+    else if (flip == 'I0I1') match_diagram = generator.target.mirror(0);
     var matches = this.enumerate(match_diagram);
     var results = [];
     for (var i = 0; i < matches.length; i++) {

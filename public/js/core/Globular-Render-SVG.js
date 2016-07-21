@@ -27,7 +27,16 @@ function globular_render(container, diagram, subdiagram, suppress) {
     } else if (diagram.getDimension() - suppress == 1) {
         return globular_render_1d(container, diagram, subdiagram);
     } else if (diagram.getDimension() - suppress >= 2) {
-        return globular_render_2d(container, diagram, subdiagram);
+        var data = globular_render_2d(container, diagram, subdiagram);
+        if (subdiagram != undefined) {
+            globular_add_highlight(container, data, subdiagram.box, {
+                boundary: {
+                    depth: subdiagram.visibleBoundaryDepth,
+                    type: subdiagram.boundaryType
+                }
+            }, diagram);
+        }
+        return data;
     }
 }
 
@@ -240,7 +249,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             dimension: 2,
             edges: [],
             vertices: [],
-            edges_at_level: [[],[]]
+            edges_at_level: [[], []]
         };
     }
 
@@ -479,7 +488,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             path.setAttributeNS(null, "fill", "none");
             path.setAttributeNS(null, "element_type", 'edge');
             path.setAttributeNS(null, 'element_index', i)
-            //path.element_index = i;
+                //path.element_index = i;
             d.g.appendChild(path);
         }
     }
@@ -493,7 +502,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         var circle_opacity = 1;
 
         if (vertex.type.is_basic_interchanger()) {
-            
+
             circle_opacity = 0;
 
             // Draw the interchanger. First, decide which strand goes on top
@@ -532,7 +541,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             // Draw lower path, possibly using an obscuring mask
             var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
             //var mask_id = "mask" + i;
-            var mask_id = "mark" + (mask_index ++);
+            var mask_id = "mark" + (mask_index++);
             if (obscure) {
                 // Add the obscuring mask, which is a fattened version of the upper line
                 var mask = $('<mask>', {
@@ -686,6 +695,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     }
     */
 
+    /*
     // Render the highlight
     if (subdiagram != undefined) {
         var delta = 0.0005;
@@ -728,20 +738,6 @@ function globular_render_2d(container, diagram, subdiagram) {
                 } else {
                     x2 = data.edges[edges[first_edge_index]].x - 0.1;
                 }
-                /*
-                if (first_edge_index == 0) {
-                    x1 = 0.15;
-                    x2 = 0.35;
-                }
-                else if (first_edge_index == edges.length) {
-                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
-                    x2 = data.edges[edges[first_edge_index - 1]].x + 0.35;
-                }
-                else {
-                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.15;
-                    x2 = data.edges[edges[first_edge_index]].x - 0.15;
-                }
-                */
             } else {
                 var x1 = data.edges[edges[first_edge_index]].x - 0.25;
                 var x2 = data.edges[edges[last_edge_index - 1]].x + 0.25;
@@ -770,16 +766,6 @@ function globular_render_2d(container, diagram, subdiagram) {
                 // between vertices
                 min_y = inc_y + 0.1;
                 max_y = inc_y - 0.1;
-                /*
-                if (inc_y == 0) {
-                    min_y = 0.25;
-                } else if (inc_y == data.vertices.length) {
-                    min_y = data.vertices.length - 0.25;
-                } else {
-                    min_y = inc_y;
-                }
-                max_y = min_y;
-                */
             } else {
                 // Min and max y-values fall on vertices
                 min_y = inc_y + 0.5;
@@ -849,6 +835,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }));
         }
     }
+    */
 
     // Add SVG object to container. We have to do it in this weird way because
     // otherwise the masks aren't recognized in Chrome v46.
@@ -1697,7 +1684,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     if (diagram.getDimension() < 2) return;
     var b = $(container)[0].bounds;
     var bottom, top, left, right;
-    
+
     if (boundary != null) {
         if (boundary.depth == 2) {
             if (boundary.type == 's') {
@@ -1747,7 +1734,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
         // Get top and bottom
         bottom = box.min.last() + b.bottom;
         top = box.max.last() + b.bottom;
-    
+
         // Get left and right
         var start_height = box.min.last();
         var finish_height = box.max.last();
@@ -1784,7 +1771,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
             left = Math.min(left, eff_left);
             right = Math.max(right, eff_right);
         }
-    
+
         // Correct for zero volume
         if (bottom == top) {
             top += 0.4;
@@ -1810,7 +1797,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
                 left = b.right - 0.5;
             }
         }
-        
+
         left += 0.125;
         right -= 0.125;
         bottom += 0.125;
@@ -1843,11 +1830,11 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
         string: path_string,
         fill: '#ffff00',
         fill_opacity: 0.5
-        /*,
-        stroke: '#ff0000',
-        stroke_opacity: 0.4,
-        stroke_width: 0.01
-        */
+            /*,
+            stroke: '#ff0000',
+            stroke_opacity: 0.4,
+            stroke_width: 0.01
+            */
     }));
     /*
     g[0].appendChild(SVG_create_path({

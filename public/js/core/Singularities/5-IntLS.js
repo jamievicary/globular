@@ -554,6 +554,10 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
         if (!(space_above && space_left && space_infront)) return false;
         if (!subslice.boundingBoxesSlideDownOnLeft(getBoundingBoxSource(box), subslice.getLocationBoundingBox([box.max.penultimate()]))) return false;
     } else debugger;
+    
+    // Verify that the first frame is correct
+    // Work out number of input/output legs of blob, as appropriate
+    // Check that all the appropriate crossings are in place
 
     var key_start;
     if (type.tail('I0')) {
@@ -565,9 +569,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             across: y,
             length: l
         }, n, m);
-        if (!expanded_list) {
-            return false;
-        }
+        if (!expanded_list) return false;
         var source = [cell].concat(expanded_list);
         key_start = 0;
 
