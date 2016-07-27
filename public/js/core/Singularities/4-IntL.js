@@ -165,19 +165,19 @@ Diagram.prototype.interpretDrag.IntL = function(drag) {
     if (right) {
         var r1 = options[0];
         var r2 = options[1];
-        if (r1.possible && r2.possible) return [r2]; // make the thing we pull be 'on top'
+        if (r1.possible && r2.possible) return [r1]; // make the thing we pull be 'on top'
         if (r1.possible && !r2.possible) return [r1];
         if (!r1.possible && r2.possible) return [r2];
-        if (options[3].possible) return [options[3]];
-        return [options[2]];
+        if (options[2].possible) return [options[2]];
+        return [options[3]];
     } else {
         var r1 = options[2];
         var r2 = options[3];
-        if (r1.possible && r2.possible) return [r2]; // make the thing we pull be 'on top'
+        if (r1.possible && r2.possible) return [r1]; // make the thing we pull be 'on top'
         if (r1.possible && !r2.possible) return [r1];
         if (!r1.possible && r2.possible) return [r2];
-        if (options[1].possible) return [options[1]];
-        return [options[0]];
+        if (options[0].possible) return [options[0]];
+        return [options[1]];
     }
 };
 

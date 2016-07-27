@@ -553,12 +553,13 @@ Project.prototype.selectGeneratorUI = function(id) {
 Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth, id) {
     var matches = subject_diagram.enumerate(matched_diagram);
     for (var i = 0; i < matches.length; i++) {
+        var match = matches[i];
         matches[i] = {
             visibleBoundaryDepth: visible_boundary_depth,
             realBoundaryDepth: visible_boundary_depth + slice_depth,
             boundaryType: boundary_type,
-            box: subject_diagram.getBoundingBox({id: id, key: matches[i]})
-            //inclusion: matches[i],
+            box: subject_diagram.getBoundingBox({id: id, key: matches[i]}),
+            inclusion: matches[i]
             //size: matched_diagram.getFullDimensions()
         };
     }

@@ -30,10 +30,10 @@ function globular_render(container, diagram, subdiagram, suppress) {
         var data = globular_render_2d(container, diagram, subdiagram);
         if (subdiagram != undefined) {
             globular_add_highlight(container, data, subdiagram.box, {
-                boundary: {
+//                boundary: {
                     depth: subdiagram.visibleBoundaryDepth,
                     type: subdiagram.boundaryType
-                }
+//                }
             }, diagram);
         }
         return data;
@@ -64,6 +64,7 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     //container.append(svg);
     svg.appendChild(g);
     g.setAttributeNS(null, "transform", "scale (1 -1)");
+    g.setAttributeNS(null, "class", "diagram_group");
     return {
         svg: svg,
         g: g
@@ -1808,7 +1809,8 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     var g = $(document.createElementNS("http://www.w3.org/2000/svg", "g"));
     g.addClass('highlight');
     var svg = $(container).children('svg');
-    svg.children('g').children('g').append(g);
+    //svg.children('g').children('g').append(g);
+    svg.find('g.diagram_group').append(g);
     var path_string =
         SVG_move_to({
             x: left,
