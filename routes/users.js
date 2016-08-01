@@ -165,7 +165,7 @@ exports.forgot_pass = function(req, res) {
 			fs.writeFile("database/users/" + email + "/data.json", data, function(err) {
 				req.session.fpcc = encrypt_hash(new_pass + "fhBIb76");
 				req.session.cookie.secure = false;
-				var cclink = "https://globular.science/fpcc/" + req.session.fpcc + "/" + email;
+				var cclink = "http://globular.science/fpcc/" + req.session.fpcc + "/" + email;
 				var mailgun = new Mailgun({
 					apiKey: mailGunKey,
 					domain: mailGunDomain
