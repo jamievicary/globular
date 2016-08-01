@@ -157,7 +157,9 @@ exports.forgot_pass = function(req, res) {
 		error = "There is no account with this email address.";
 	}
 	if (error === "") {
-		var new_pass = encrypt_hash("43vdji8t" + email + "IUbyV45v7Uytvi").substring(0, 8);
+		var randSalt = Math.floor(Math.random()).toString();
+		var new_pass = encrypt_hash("43vdji8t" + email + "IUbyV45v7Uytvi" + randSalt).substring(0, 8);
+		console.log(new_pass);
 		fs.readFile('database/users/' + email + "/data.json", 'utf-8', function(err, data) {
 			data = JSON.parse(data);
 			data.temp_fp_password = new_pass;
