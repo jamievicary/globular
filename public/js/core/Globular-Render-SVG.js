@@ -1685,7 +1685,11 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     if (diagram.getDimension() < 2) return;
     var b = $(container)[0].bounds;
     var bottom, top, left, right;
-
+    
+    if (boundary != null) {
+        if (boundary.depth == 0) boundary = null;
+    }
+    
     if (boundary != null) {
         if (boundary.depth == 2) {
             if (boundary.type == 's') {
@@ -1730,7 +1734,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
                 right += 0.25;
             }
         }
-    } else {
+    } else { // THE CASE THAT boundary == null
 
         // Get top and bottom
         bottom = box.min.last() + b.bottom;

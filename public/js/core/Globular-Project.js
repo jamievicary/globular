@@ -479,7 +479,7 @@ Project.prototype.selectGeneratorUI = function(id) {
                 boundaryType: "",
                 realBoundaryDepth: 0,
                 visibleBoundaryDepth: 0,
-                //inclusion: rewrite_matches[i],
+                inclusion: rewrite_matches[i],
                 //size: matched_diagram.getSourceBoundary().getFullDimensions()
                 box: this.diagram.getBoundingBox({id: id, key: rewrite_matches[i]})
             }
