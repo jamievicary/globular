@@ -355,6 +355,22 @@ exports.create_from_existing_project = function(existing_user_id, existing_p_id,
 
 };
 
+exports.clone_project = function(req, res) {
+    var p_id = req.body.p_id;
+	var user_id = req.session.user_id;
+
+    var updatingMeta = {
+        project_source: "(cloned from " + p_id + ")"
+    };
+    exports.create_from_existing_project(user_id, p_id, user_id, updatingMeta)
+    .then(function(){
+        res.send({
+            successcolor: 2,
+            msg: "Successfully cloned project."
+        });
+    });
+};
+
 exports.share_project = function(req, res) {
 	var emails = req.body.emails.split(",");
 	var p_id = req.body.p_id;

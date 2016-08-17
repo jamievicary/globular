@@ -439,7 +439,7 @@ $(document).ready(function() {
     $("#save-project-opt").click(function() {
         gProject.saveUI();
     });
-    
+
     $("#import-project-opt").click(function() {
         $('#upload-file').click();
     });
@@ -557,13 +557,15 @@ $(document).ready(function() {
                         delProjectHTML = "<div class = 'delete-container'><span class = 'del-project' id = 'del" + pIDu + "'>Delete</span><span id = 'indel-" + pIDu + "' style = 'display:none'><input id = 'dct-" + pIDu + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + pIDu + "' class = 'cancel-del'>x</span></span></div>";
                         publishOptHTML = "<span class = 'publish-project' id = 'pub" + pIDu + "'>Publish</span>";
                         shareOptHTML = "<span class = 'share-project-opt' id = 'share-p" + pIDu + "'>Share</span>";
-                        ppOptHTML = "<div class = 'pp-opts'>" + publishOptHTML + shareOptHTML + delProjectHTML + "</div>";
+                        cloneOptHTML = "<span class = 'clone-project-opt' id = 'clone-p" + pIDu + "'>Clone</span>";
+                        ppOptHTML = "<div class = 'pp-opts'>" + publishOptHTML + cloneOptHTML + shareOptHTML  + delProjectHTML + "</div>";
                     }
 
                     var listComponents = "<div id = '" + pIDu + "' class = 'gallery-pcomp' link = '" + pIDu + "'>" +
                         "<b style = 'color: dimgrey;font-size:115%;' id = 'title" + pIDu + "' class = 'gallery-comp-title'></b>" + addVersionSelectOptHTML + "<br>" +
                         datePubHTML + ppOptHTML +
                         authHTML +
+                        "<span style = 'color:#887f8d;' id = 'source" + pIDu + "'></span><br>" +
                         "<span style = 'color:#887f8d;' id = 'desc" + pIDu + "'></span><br>" +
                         versionOptionsHTML +
                         "</div>";
@@ -586,6 +588,7 @@ $(document).ready(function() {
                                     meta.project_desc = "No abstract";
                                 }
                                 $("#desc" + pID).html(meta.project_desc);
+                                $("#source" +pIDu).html(meta.project_source);
                             });
                         })(pID);
                     } else if (listType == 2 || listType == 3) {
@@ -601,6 +604,7 @@ $(document).ready(function() {
                                     meta.project_desc = "No abstract";
                                 }
                                 $("#desc" + pIDu).html(meta.project_desc);
+                                $("#source" +pIDu).html(meta.project_source);
                             });
                             $.get('/public/' + dateName + '/' + projectNo + '/data.json', function(data) {
                                 $("#date" + pIDu).html(data.date_published);
@@ -723,6 +727,14 @@ $(document).ready(function() {
                             });
                         });
                     });
+                    $(".clone-project-opt").click(function() {
+                        var p_id = $(this).attr("id").substring(7);
+                        $.post('clone_project', {
+                            p_id: p_id,
+                        }, function(result) {
+                            show_msg(result.msg, 5000, result.successcolor);
+                        });
+                    });
                 } else if (listType == 3 || listType == 2) {
                     $(".gallery-comp-title").click(function() {
                         global_p_id = $(this).attr("id").substring(5);
@@ -784,7 +796,7 @@ $(document).ready(function() {
                 optionsHTML = optionsHTML + "<option value = '" + result[i] + "'>" + result[i] + "</options>";
             }
             if (cDateNoDir == false) {
-                //if is new month but no projects yet (no dir made yet for new month) 
+                //if is new month but no projects yet (no dir made yet for new month)
                 optionsHTML = "<option value = '" + currentDateName + "'>" + currentDateName + "</options>" + optionsHTML;
             }
             $("#pl-title").html("The Globular Gallery <select id = 'change-gg-month' class = 'pl-selects'>" + optionsHTML + "</select>");

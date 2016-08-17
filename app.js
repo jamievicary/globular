@@ -163,6 +163,10 @@ app.post('/share_project', function(req, res) {
 	projects.share_project(req, res);
 });
 
+app.post('/clone_project', function(req, res) {
+	projects.clone_project(req, res);
+});
+
 
 app.post('/forgot_pass', function(req, res) {
 	users.forgot_pass(req, res);

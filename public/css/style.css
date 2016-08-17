@@ -719,6 +719,14 @@ input.control {
   text-decoration: underline;
 }
 
+.clone-project-opt {
+  cursor: pointer;
+  float: left;
+  margin-left: 10px;
+  color: dimgrey;
+  text-decoration: underline;
+}
+
 /* line 614, style.sass */
 .delete-container {
   float: left;
