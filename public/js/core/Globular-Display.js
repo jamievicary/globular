@@ -354,9 +354,9 @@ Display.prototype.pixelsToLogical_2 = function(pixels) {
         }
 
         // The user has clicked on a region
-        //var depth = this.visible_diagram.getSlice([edges_to_left, height]).cells.length - 1; // no need to copy slice
-        //if (depth < 0) depth = 0;
-        var entity_coords = this.visible_diagram.realizeCoordinate([0, edges_to_left, height]).reverse();
+        var depth = this.visible_diagram.getSlice([edges_to_left, height]).cells.length - 1; // no need to copy slice
+        if (depth < 0) depth = 0;
+        var entity_coords = this.visible_diagram.realizeCoordinate([depth, edges_to_left, height]).reverse();
         //entity_coords.reverse();
         //var padded = this.padCoordinates([height, edges_to_left, depth]);
         var padded = this.padCoordinates(entity_coords);
