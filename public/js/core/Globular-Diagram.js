@@ -70,6 +70,16 @@ Diagram.prototype.render = function(div, highlight) {
     globular_render(div, this, highlight);
 }
 
+//    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
+
+Diagram.prototype.downloadPNG = function(filename, highlight) {
+    var div = $('<div>').add_class('temporary_export_div').css('postion-left', width());
+    this.render(div[0], highlight);
+    download_SVG_as_PNG(div.children('svg')[0], null, filename);
+    div.remove();
+}
+
+
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
     if (cell == undefined) debugger;

@@ -652,6 +652,36 @@ Display.prototype.pixelsToGrid = function(pixels) {
     */
 }
 
+Display.prototype.exportSequence = function() {
+    
+    // If we're not ready, do nothing
+    if (!this.has_controls()) return;
+    
+    // Get name for this sequence
+    var filename = prompt("Please enter a name for this sequence", "images");
+    if (filename == null) filename = "images";
+
+    // If there are no slices, just export a PNG of the whole diagram
+    if (this.slices.length == 0) {
+        download_SVG_as_PNG(this.svg_element, this.getExportRegion(), filename + ".png");
+        return;
+    }
+    
+    // Apply all but the final slice
+    var slice = this.diagram;
+    for (var i = 0; i < this.slices.length-1; i++) {
+        slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
+    }
+    
+    // Apply every index of the final slice, and export them
+    for (var i=0; i<slice.cells.length; i++) {
+        var export_diagram = slice.getSlice[i];
+        export_diagram.downloadPNG(filename + " " + i + ".png", HIGHLIGHT);
+    }
+
+    var last_slice_control = this.slices.last();
+}
+
 Display.prototype.has_controls = function() {
     return ($(this.container).children('div.control').length > 0);
 }
