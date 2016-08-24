@@ -553,3 +553,11 @@ function json_replacer(key, value) {
 function decimal_part(number) {
     return number - Math.floor(number)
 }
+
+String.prototype.padToLength = function(n) {
+    var padded = this;
+    while (padded.length < n) {
+        padded = '0' + padded;
+    }
+    return padded;
+}

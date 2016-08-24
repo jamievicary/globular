@@ -173,6 +173,8 @@ $(document).ready(function() {
             gProject.storeTheoremUI();
         } else if (key == 'g') {
             gProject.downloadGraphic();
+        } else if (key == 'q') {
+            gProject.downloadSequence();
         }
 
         /*

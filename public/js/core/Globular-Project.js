@@ -1071,3 +1071,7 @@ Project.prototype.keepBottomUI = function() {
 Project.prototype.downloadGraphic = function() {
     download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
 }
+
+Project.prototype.downloadSequence = function() {
+    MainDisplay.downloadSequence();
+}

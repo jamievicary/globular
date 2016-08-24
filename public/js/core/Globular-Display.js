@@ -652,34 +652,46 @@ Display.prototype.pixelsToGrid = function(pixels) {
     */
 }
 
-Display.prototype.exportSequence = function() {
-    
+Display.prototype.downloadSequence = function() {
+
     // If we're not ready, do nothing
     if (!this.has_controls()) return;
-    
+
     // Get name for this sequence
-    var filename = prompt("Please enter a name for this sequence", "images");
-    if (filename == null) filename = "images";
+    var prefix = prompt("Please enter a name for this sequence", "graphic");
+    if (prefix == null) return;
 
     // If there are no slices, just export a PNG of the whole diagram
     if (this.slices.length == 0) {
         download_SVG_as_PNG(this.svg_element, this.getExportRegion(), filename + ".png");
         return;
     }
+
+    // Start the chain of slice downloads
+    this.downloadSlice(prefix, 0);
+
+}
+
+Display.prototype.downloadSlice = function(prefix, i) {
     
-    // Apply all but the final slice
+    // Move through all the slices and export them
     var slice = this.diagram;
-    for (var i = 0; i < this.slices.length-1; i++) {
-        slice = slice.getSlice(this.slices[i].val()); // no need to copy slice
-    }
-    
-    // Apply every index of the final slice, and export them
-    for (var i=0; i<slice.cells.length; i++) {
-        var export_diagram = slice.getSlice[i];
-        export_diagram.downloadPNG(filename + " " + i + ".png", HIGHLIGHT);
+    for (var j = 0; j < this.slices.length - 1; j++) {
+        slice = slice.getSlice(this.slices[j].val());
     }
 
-    var last_slice_control = this.slices.last();
+    // If we're being asked to render an invalid slice, give up
+    if (i > slice.cells.length) return;
+    var n = slice.cells.length.toString().length;
+
+    this.slices[this.slices.length - 1].val(i);
+    this.render();
+    this.highlight_slice(this.slices.length - 1);
+    var temp_this = this;
+    download_SVG_as_PNG(this.svg_element, this.getExportRegion(), prefix + " " + i.toString().padToLength(n) + ".png", undefined,
+        //(function(j){temp_this.downloadSlice(prefix, j + 1);})(i)
+        (function(i){this.downloadSlice(prefix, i+1)}).bind(this, i)
+    );
 }
 
 Display.prototype.has_controls = function() {
