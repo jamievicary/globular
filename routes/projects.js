@@ -1,4 +1,6 @@
-var fs = require('fs');
+var fs = require('fs'),
+    Promise = require('bluebird'),
+    _ = require('lodash');
 
 function get_new_private_project_id(email) {
 	var data = fs.readdirSync('database/users/' + email + '/projects');
@@ -9,6 +11,39 @@ function get_new_private_project_id(email) {
 		new_id = Math.max(new_id, Number(data[i]) + 1);
 	}
 	return new_id;
+}
+
+/*  FileLocationString, StringFormat -> Promise ()
+ *  Promisification of fs.readFile
+ */
+function readFileP(){
+    var args = Array.prototype.slice.call(arguments);
+
+    return Promise.fromCallback(function curried(cb){
+        args.push(cb);
+        return fs.readFile.apply(fs.readFile, args);
+    });
+}
+
+/*  FileLocationString -> Promise ()
+ *  Promisification of fs.writeFile
+ */
+function writeFileP(){
+    var args = Array.prototype.slice.call(arguments);
+    return Promise.fromCallback(function(cb){
+        args.push(cb);
+        return fs.writeFile.apply(fs.writeFile, args);
+    });
+}
+/*  FileLocationString, StringFormat -> Promise ()
+ *  Promisification of fs.readFile
+ */
+function createDirP(){
+    var args = Array.prototype.slice.call(arguments);
+    return Promise.fromCallback(function(cb){
+        args.push(cb);
+        return fs.mkdir.apply(fs.mkdir, args);
+    });
 }
 
 exports.get_projects = function(req, res) {
@@ -46,7 +81,7 @@ exports.get_project_list = function(req, res) {
 
 			//get all public projects - as list of  public project IDS e,g (1510.001, 1508.004)
 			var dateName = req.body.projectData;
-			
+
 			fs.readdir('database/projects/' + dateName, function(err, files) {
 				var pp_addresses = [];
 				if (files != undefined) {
@@ -133,7 +168,7 @@ exports.save_project_changes = function(req, res) {
 		project_desc: p_desc
 	});
 
-	// Save data and return success 	
+	// Save data and return success
 	fs.mkdir("database/users/" + user_id + "/projects/" + p_id, function() {
 		fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, function() {
 			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/meta.json", p_meta, function() {
@@ -276,6 +311,66 @@ exports.add_version_pp = function(req, res) {
 	});
 };
 
+/* UserId, ProjectId -> Promise [ProjectString, ProjectMetaString]
+ *   Reads given ProjectId for the given UserId and returns the project and project
+ *   meta strings.
+ */
+exports.read_project = function(user_id, p_id) {
+
+    var projectString = readFileP('database/users/' + user_id + '/projects/' + p_id + '/string.json', 'utf8');
+    var projectMeta = readFileP('database/users/' + user_id + '/projects/' + p_id + '/meta.json', 'utf8');
+
+    return Promise.all([projectString, projectMeta]);
+};
+
+
+/* UserIdEmail, ProjectString, ProjectMetaString -> Promise ()
+ *   Creates a new project using given UserEmail, ProjectString, and ProjectMetaString
+ */
+exports.write_project = function(user_email, projectString, projectMetaString) {
+
+    var new_id = get_new_private_project_id(user_email);
+
+    return createDirP('database/users/' + user_email + '/projects/' + new_id)
+        .then(function(){
+            return  writeFileP('database/users/' + user_email + '/projects/' + new_id + '/string.json',  projectString);
+        })
+        .then(function(){
+            return writeFileP('database/users/' + user_email + '/projects/' + new_id + '/meta.json', projectMetaString);
+        });
+};
+
+/*  UserEmail, ProjectId, UserEmail, Object -> Promise ()
+ *    Takes project from the first given user, and pushes the project to the second given user,
+ *    updating the meta data using the last given object.
+ */
+exports.create_from_existing_project = function(existing_user_id, existing_p_id, new_project_user_id, meta) {
+
+    return exports.read_project(existing_user_id, existing_p_id)
+        .spread(function(projectString, projectMetaString){
+            var newMeta = _.extend({}, JSON.parse(projectMetaString), meta);
+            var newMetaString = JSON.stringify(newMeta);
+            return exports.write_project(new_project_user_id, projectString, newMetaString);
+        });
+
+};
+
+exports.clone_project = function(req, res) {
+    var p_id = req.body.p_id;
+	var user_id = req.session.user_id;
+
+    var updatingMeta = {
+        project_source: "(cloned from " + p_id + ")"
+    };
+    exports.create_from_existing_project(user_id, p_id, user_id, updatingMeta)
+    .then(function(){
+        res.send({
+            successcolor: 2,
+            msg: "Successfully cloned project."
+        });
+    });
+};
+
 exports.share_project = function(req, res) {
 	var emails = req.body.emails.split(",");
 	var p_id = req.body.p_id;
@@ -300,7 +395,7 @@ exports.share_project = function(req, res) {
 		});
 		return;
 	}
-	
+
 	if (invalid_emails.length > 0) {
 		res.send({
 			successcolor: 1,
@@ -309,25 +404,15 @@ exports.share_project = function(req, res) {
 		return;
 	}
 
-	fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/string.json', 'utf8', function(err, string) {
-		fs.readFile('database/users/' + user_id + '/projects/' + p_id + '/meta.json', 'utf8', function(err, meta) {
-			meta = JSON.parse(meta);
-			meta.project_name = meta.project_name + " (shared by " + user_id + ")";
-			meta = JSON.stringify(meta);
-			for (var i in valid_emails) {
-				var email = valid_emails[i];
-				//console.log(err);
-				var new_id = get_new_private_project_id(email);
-				fs.mkdir('database/users/' + email + '/projects/' + new_id, function(err) {
-					fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/meta.json', meta);
-					fs.writeFileSync('database/users/' + email + '/projects/' + new_id + '/string.json', string);
-				});
-			}
-			res.send({
-				successcolor: 2,
-				msg: "Successfully shared project."
-			});
-		});
-	});
-
+    Promise.map(valid_emails, function(new_project_user_id){
+        var updatingMeta = {
+            project_source: "(shared by " + user_id + ")"
+        };
+        return exports.create_from_existing_project(user_id, p_id, new_project_user_id, updatingMeta);
+    }).then(function(){
+        res.send({
+            successcolor: 2,
+            msg: "Successfully shared project."
+        });
+    });
 };
