@@ -272,7 +272,6 @@ $(document).ready(function() {
     $("#view-p-desc").click(function() {
 
         if (dbltoggle % 2 == 0) {
-            $("#view-desc-body").show();
             $("#view-desc-body").animate({
                 marginTop: "-=225px"
             }, 500);
@@ -280,12 +279,10 @@ $(document).ready(function() {
         } else {
             $("#view-desc-body").animate({
                 marginTop: "+=225px"
-            }, 500, function() {
-                $("#view-desc-body").hide();
-            });
+            }, 500);
 
         }
-        dbltoggle = dbltoggle + 1;
+        dbltoggle += 1;
     });
 
     // Prevent keypress bubbling when editing project name
@@ -779,7 +776,6 @@ $(document).ready(function() {
         $.post('/get_all_datenames', function(result) {
             var optionsHTML = "";
             for (var i = result.length - 1; i >= 0; i--) {
-                console.log("if " + result[i] + " == " + currentDateName);
                 if (result[i] == currentDateName) {
                     cDateNoDir = true;
                 }
@@ -920,13 +916,9 @@ $(document).ready(function() {
     var pathName = window.location.pathname;
     pathName = pathName.substring(1);
     var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
-    if (regexResult != 0) {
-
-        // Public project not requested, so start with a blank page
-        render_page();
-
-    } else {
-
+    render_page();
+    if (regexResult == 0) {
+        
         // Public project requested
         var dateName = pathName.substring(0, 4);
         var posVersion = pathName.search(/([v])/);
@@ -940,6 +932,7 @@ $(document).ready(function() {
             projectNo = pathName.substring(5, posVersion);
         }
         console.log("Getting public project " + dateName + "." + projectNo);
+
         $.post('/get_public_project', {
             dateName: dateName,
             version: version,
