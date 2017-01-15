@@ -70,6 +70,25 @@ Diagram.prototype.render = function(div, highlight) {
     globular_render(div, this, highlight);
 }
 
+//    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
+
+Diagram.prototype.downloadPNG = function(filename, highlight) {
+    var div = $('<div>').addClass('temporary_export_div').css('position', 'absolute').css('left', 0).css('width', 100).css('height', 100);
+    var display = new Display($('#diagram-canvas'));
+    display.set_diagram(this, highlight);
+    display.render(div[0], highlight);
+    download_SVG_as_PNG(div.children('svg')[0], {
+        sx: 0,
+        sy: 0,
+        sWidth: 10,
+        sHeight: 10,
+        logical_width: 10,
+        logical_height: b.top - b.bottom
+    }, filename);
+    div.remove();
+}
+
+
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
     if (cell == undefined) debugger;
@@ -554,7 +573,7 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
 
     var in_source = allow_boundary.source && c.length > 1 && c[0] == 0;
     //var in_target = c.length > 1 && c[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
-    var in_target = allow_boundary.target && c.length > 1 /*&& c[0] == Math.max(1, this.cells.length)*/;
+    var in_target = allow_boundary.target && c.length > 1 /*&& c[0] == Math.max(1, this.cells.length)*/ ;
     if (sub.boundary != null) {
         sub.boundary.depth++;
     } else if (in_target) {
@@ -823,17 +842,17 @@ Diagram.prototype.OLDintersectBoundingBoxes = function(b1, b2) {
 }
 
 Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
-        var new_b1 = {
-            min: b1.min.slice(),
-            max: b1.max.slice()
-        };
-        var new_b2 = {
-            min: b2.min.slice(),
-            max: b2.max.slice()
-        };
-        return this.intersectBoundingBoxesRef(new_b1, new_b2);
-    }
-    
+    var new_b1 = {
+        min: b1.min.slice(),
+        max: b1.max.slice()
+    };
+    var new_b2 = {
+        min: b2.min.slice(),
+        max: b2.max.slice()
+    };
+    return this.intersectBoundingBoxesRef(new_b1, new_b2);
+}
+
 // Find intersections of bounding boxes by shrinking to a core
 Diagram.prototype.intersectBoundingBoxesRef = function(b1, b2) {
 
@@ -875,7 +894,7 @@ Diagram.prototype.intersectBoundingBoxesRef = function(b1, b2) {
         min: b2.min.slice(0, this.dimension - 1),
         max: b2.max.slice(0, this.dimension - 1)
     });
-    if (slice_intersection == null) return 
+    if (slice_intersection == null) return
     slice_intersection.min.push(b1.min.last());
     slice_intersection.max.push(b1.max.last());
     return slice_intersection;
@@ -1242,18 +1261,17 @@ Diagram.prototype.keepBefore = function(n) {
 // Pad the given coordinates as required to ensure there is an entity present
 Diagram.prototype.realizeCoordinate = function(coords) {
     var slice = this;
-    
+
     // Obtain the suggested slice
-    for (var i=0; i<coords.length - 1; i++) {
+    for (var i = 0; i < coords.length - 1; i++) {
         slice = slice.getSlice(coords[coords.length - 1 - i]);
     }
-    
+
     // For each extra dimension we have to dive to find an entity, pad the coords
     while (slice.cells.length == 0) {
         slice = slice.source;
         coords.unshift(0);
     }
-    
+
     return coords;
-}   
- 
+}

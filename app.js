@@ -86,13 +86,10 @@ app.post('/c-loggedin', function(req, res) {
 			status: "out"
 		});
 	}
-	console.log("s:" + req.session.fpcc);
 });
 
 app.post('/change-pass', function(req, res) {
-
 	users.change_pass(req, res);
-
 });
 
 
