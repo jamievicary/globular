@@ -24,7 +24,8 @@ class DisplaySVG {
     }
 
     dispose() {
-
+        this.container.empty();
+        this.container.off();
     }
 
     getMaximumDimension() {
@@ -467,7 +468,6 @@ Display.prototype.getExportRegion = function() {
 }
 */
 
-// TODO: Do this correctly
 function eventToPixels(event) {
     let box = event.currentTarget.getBoundingClientRect();
     let x = event.clientX - box.left;

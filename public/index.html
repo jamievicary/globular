@@ -24,11 +24,19 @@
 	<script src="/js/core/Globular-Stringify.js"></script>
 	<script src="/js/core/Globular-Stochastic.js"></script>
 	<script src="/js/core/Globular-Render.js"></script>
-	<!--<script src="/js/core/Globular-Render-THREE.js"></script>-->
+	<script src="/js/core/Globular-Render-3D.js"></script>
 	<script src="/js/core/Globular-Render-SVG.js"></script>
 	<script src="/js/core/Globular-Auxiliary.js"></script>
 	<script src="/js/core/Globular-Display.js"></script>
 	<script src="/js/core/Globular-Display-SVG.js"></script>
+	<script src="/js/core/Globular-Display-3D.js"></script>
+	<script src="/js/core/3D/bezier-surface.js"></script>
+	<script src="/js/core/3D/entity.js"></script>
+	<script src="/js/core/3D/geometry.js"></script>
+	<script src="/js/core/3D/layout.js"></script>
+	<script src="/js/core/3D/render.js"></script>
+	<script src="/js/core/3D/scaffold.js"></script>
+	<script src="/js/core/3D/span.js"></script>
 	<script src="/js/core/Singularities/0-Singularities.js"></script>
 	<script src="/js/core/Singularities/0-Inverses.js"></script>
 	<script src="/js/core/Singularities/3-Int.js"></script>
@@ -37,7 +45,7 @@
 	<script src="/js/core/Singularities/5-IntLN.js"></script>
 	<script src="/js/core/Singularities/5-IntLT.js"></script>
 	<script src="/js/core/Singularities/5-IntLP.js"></script>
-	<script src="/js/libs/OrbitControls-Ortho.js"></script>
+	<script src="/js/libs/EditorControls.js"></script>
 	<script src="/js/front/home.js"></script>
 	<script src="/js/libs/jquery.mousewheel.min.js"></script>
 	<script>
@@ -77,22 +85,27 @@
 				<div id="view-p-desc" style = 'width:130px;'>Project Abstract</div>
 			</div>
 			<div id="project-menu" style="display:none">
-				<li id="save-project-opt" class="workspace-button" p_id="">S<u>a</u>ve</li>
-				<li id="get-str-opt" class="workspace-button">E<u>x</u>port</li>
-				<li id="import-project-opt" class="workspace-button">Imp<u>o</u>rt</li>
-				<li id="clear-project-opt" class="diagram-button"><u>C</u>lear</li>
-				<li id="use-id-opt" class="diagram-button"><u>I</u>dentity</li>
-				<li id="use-s-opt" class="diagram-button"><u>S</u>ource</li>
-				<li id="use-t-opt" class="diagram-button"><u>T</u>arget</li>
-				<li id="restrict-opt" class="diagram-button"><u>R</u>estrict</li>
-				<li id="theorem-opt" class="diagram-button">T<u>h</u>eorem</li>
-				<li id="graphic-opt" class="diagram-button"><u>G</u>raphic</li>
+				<div id="save-project-opt" class="workspace-button" p_id="">S<u>a</u>ve</div>
+				<div id="get-str-opt" class="workspace-button">E<u>x</u>port</div>
+				<div id="import-project-opt" class="workspace-button">Imp<u>o</u>rt</div>
+				<div id="clear-project-opt" class="diagram-button"><u>C</u>lear</div>
+				<div id="use-id-opt" class="diagram-button"><u>I</u>dentity</div>
+				<div id="use-s-opt" class="diagram-button"><u>S</u>ource</div>
+				<div id="use-t-opt" class="diagram-button"><u>T</u>arget</div>
+				<div id="restrict-opt" class="diagram-button"><u>R</u>estrict</div>
+				<div id="theorem-opt" class="diagram-button">T<u>h</u>eorem</div>
+				<div id="graphic-opt" class="diagram-button"><u>G</u>raphic</div>
+				<select id="renderer-opt">
+					<option value="svg">2D</option>
+					<option value="3d">3D</option>
+				</select>
 				<!-- disabling stochastic code for now
-				<li id="run-process" class="diagram-button">Run Process</li>
-				<li id='sto-form' class="diagram-button">Stochastic
+				<div id="run-process" class="diagram-button">Run Process</div>
+				<div id='sto-form' class="diagram-button">Stochastic
 					<input type="checkbox" id="stochastic-cb">
-				</li>
+				</div>
 				-->
+
 				<div id="ajax-loading" style=""></div>
 			</div>
 			<div id="diagram-canvas" style="display: none;">

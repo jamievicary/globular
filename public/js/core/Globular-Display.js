@@ -21,6 +21,7 @@ class DisplayManager {
         this['_t'] = 'DisplayManager';
         this.container = $(container);
         this.display = null;
+        this.displayType = null;
         this.diagram = null;
         
         this.suppressInput = null;
@@ -30,13 +31,22 @@ class DisplayManager {
         this.createControls();
     }
 
-    setDisplay(display) {
-        if (this.display !== null) {
-            this.display.dispose();
+    setDisplay(type) {
+        if (this.displayType === type) {
+            return;
         }
 
-        this.display = display;
+        if (this.display !== null) {
+            this.display.dispose();
+            this.displayControls.empty();
+        }
+
+        this.display = type == "3d" ? new Display3D() : new DisplaySVG();
+        this.displayType = type;
         this.display.setup(this);
+        
+        this.updateControls(null, null);
+        this.display.setDiagram(this.diagram, false);
     }
 
     hasControls() {
@@ -117,6 +127,10 @@ class DisplayManager {
         });
         this.control.append(this.suppressInput);
         update_control_width(this.suppressInput);
+
+        // Create a container for display specific controls
+        this.displayControls = $("<div>").addClass("display_controls");
+        this.control.append(this.displayControls);
 
         // Construct the container for the slice controls
         this.sliceDiv = $('<div>').addClass('slice_container');

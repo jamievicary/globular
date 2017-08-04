@@ -25,6 +25,20 @@ function prefixLabels(object, prefix) {
     return object;
 }
 
+function flatMap(array, fn) {
+    return [].concat(...array.map(fn));
+}
+
+function cartesianProduct(...arrays) {
+    if (arrays.length == 0) {
+        return [[]];
+    } else {
+        let rightArray = cartesianProduct(...arrays.slice(1));
+        let leftArray = arrays[0];
+        return flatMap(leftArray, x => rightArray.map(xs => [x].concat(xs)));
+    }
+}
+
 // Suffix labels of an object
 function suffixLabels(arr, suffix) {
     var new_arr = [];
