@@ -226,7 +226,7 @@ Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'targe
     if (this.cacheSourceTarget == null) {
         this.cacheSourceTarget = {};
         this.cacheSourceTarget[boundary] = this.diagram.copy();
-        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
+        this.showSourceTargetPreview(MainDisplay.getVisibleDiagram(), boundary);
         this.clearDiagram();
         this.saveState();
         return;
@@ -235,7 +235,7 @@ Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'targe
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
         this.cacheSourceTarget[boundary] = this.diagram.copy();
-        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
+        this.showSourceTargetPreview(MainDisplay.getVisibleDiagram(), boundary);
         this.clearDiagram();
         this.saveState();
         return;
@@ -347,19 +347,12 @@ Project.prototype.dragCellUI = function(drag) {
 
         // Use a closure to specify the behaviour on selection
         (function(action) {
-            item.click(function() {
-                //$("#options-box").fadeOut(100);
+            item.click(e => {
                 $("#options-box").hide();
                 gProject.performActionUI(action, drag);
             }).hover(
-                // Mouse in
-                function() {
-                    MainDisplay.highlight_action(action, drag.boundary)
-                },
-                // Mouse out
-                function() {
-                    MainDisplay.remove_highlight();
-                });
+                e => MainDisplay.highlightAction(action, drag.boundary),
+                e => MainDisplay.removeHighlight());
         })(options[i]);
     }
     //$("#options-box").fadeIn(100);
@@ -464,7 +457,7 @@ Project.prototype.selectGeneratorUI = function(id) {
     }
 
     var matched_diagram = generator.getDiagram();
-    var slices_data = MainDisplay.get_current_slice();
+    var slices_data = MainDisplay.getSlices();
 
     if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
         // REWRITE
@@ -606,7 +599,7 @@ Project.prototype.renderGenerator = function(div, id) {
 Project.prototype.renderDiagram = function(data) {
     if (data == undefined) data = {};
     //MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
-    MainDisplay.set_diagram({diagram: this.diagram, drag: data.drag, controls: data.controls, preserve_view: data.preserve_view});
+    MainDisplay.setDiagram({diagram: this.diagram, drag: data.drag, controls: data.controls, preserve_view: data.preserve_view});
 };
 
 // Need to write this code
@@ -785,7 +778,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 var div_match = document.createElement('div');
                 $(div_match).addClass('preview-icon');
                 $(div_extra).append(div_match);
-                project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
+                project.render(div_match, MainDisplay.getVisibleDiagram(), null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
                         var ncell = new NCell({
@@ -813,7 +806,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                     $(div_match).hover(
                         // Mouse over preview thumbnail
                         function() {
-                            project.render('#diagram-canvas', MainDisplay.visible_diagram, null, match);
+                            project.render('#diagram-canvas', MainDisplay.getVisibleDiagram(), null, match);
                         },
                         // Mouse out of preview thumbnail
                         function() {
@@ -996,8 +989,8 @@ Project.prototype.addNCell = function(data) {
 };
 
 Project.prototype.restrictUI = function() {
-    if (MainDisplay.visible_diagram == null) return;
-    this.diagram = MainDisplay.visible_diagram.copy();
+    if (MainDisplay.getVisibleDiagram() == null) return;
+    this.diagram = MainDisplay.getVisibleDiagram().copy();
     this.renderDiagram();
     this.saveState()
 }
@@ -1038,15 +1031,17 @@ Project.prototype.saveUI = function() {
 
 Project.prototype.keepTopUI = function() {
     if (this.diagram == null) return;
+
+    let slices = MainDisplay.getSlices();
     
-    if (MainDisplay.slices.length == 0) {
+    if (slices.length == 0) {
         // Get cut location from mouse position
         if (MainDisplay.popup == null) return;
         var coordinate = MainDisplay.popup.coordinates[0]
         this.diagram.keepAfter(coordinate);
     } else {
         // Get cut location from first slice
-        this.diagram.keepAfter(Number(MainDisplay.slices[0].val()));
+        this.diagram.keepAfter(slices[0]);
     }
     
     this.renderDiagram();
@@ -1054,24 +1049,28 @@ Project.prototype.keepTopUI = function() {
 
 Project.prototype.keepBottomUI = function() {
     if (this.diagram == null) return;
+
+    let slices = MainDisplay.getSlices();
     
-    if (MainDisplay.slices.length == 0) {
+    if (slices.length == 0) {
         // Get cut location from mouse position
         if (MainDisplay.popup == null) return;
         var coordinate = MainDisplay.popup.coordinates[0]
         this.diagram.keepBefore(coordinate);
     } else {
         // Get cut location from first slice
-        this.diagram.keepBefore(Number(MainDisplay.slices[0].val()));
+        this.diagram.keepBefore(slices[0]);
     }
     
     this.renderDiagram();
 }
 
 Project.prototype.downloadGraphic = function() {
+    throw new Error("Only execute this when the display is SVG");
     download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
 }
 
 Project.prototype.downloadSequence = function() {
-    MainDisplay.downloadSequence();
+    throw new Error("downloadSequence");
+    //MainDisplay.downloadSequence();
 }

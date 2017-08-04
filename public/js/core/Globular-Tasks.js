@@ -88,7 +88,6 @@ function cps_load_project(string) {
 
 function cps_constructor(string) {
     gProject = null;
-    MainDisplay.visible_diagram = null;
     gProject = new Project(string);
     if (gProject.signature.getNCells(0).length == 0) gProject.addZeroCell();
 }

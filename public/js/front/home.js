@@ -86,7 +86,7 @@ function render_project_front(s) {
     $('#loading-window').empty();
     loading_detail_level = 0;
     loading_detail_array = [];
-    MainDisplay.diagram = null;
+    MainDisplay.setDiagram(null);
 
     function close_project() {
         $("#diagram-canvas").fadeOut(1000);
@@ -140,7 +140,8 @@ function render_project_front(s) {
 $(document).ready(function() {
 
     globular_prepare_renderer();
-    MainDisplay = new Display($('#diagram-canvas'));
+    MainDisplay = new DisplayManager($('#diagram-canvas'));
+    MainDisplay.setDisplay(new DisplaySVG());
 
     // Handle key presses
     $(document).keypress(function(event) {
