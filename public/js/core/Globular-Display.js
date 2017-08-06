@@ -216,8 +216,8 @@ class DisplayManager {
             var input = this.sliceInputs[i];
             var val = input.val();
             if (controls != null) {
-                if (controls.sliceInputs[i] != null) {
-                    val = controls.sliceInputs[i];
+                if (controls.slices[i] != null) {
+                    val = controls.slices[i];
                 }
             }
             input.val(Math.min(val, Math.max(slice.cells.length, 1)));

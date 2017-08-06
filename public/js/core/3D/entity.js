@@ -1,9 +1,10 @@
-class Entity {
+class CellEntity {
 
-    constructor(source, target, cone = true) {
+    constructor(key, source, target, meta = null) {
+        this.key = key;
         this.source = source;
         this.target = target;
-        this.cone = cone;
+        this.meta = meta;
     }
 
     static of(diagram, level) {
@@ -36,9 +37,30 @@ class Entity {
         let targetSpan = new Span(targetStart, targetEnd);
 
         // Cone?
-        let cone = cell.id != "Int" && cell.id != "IntI0";
+        //let cone = cell.id != "Int" && cell.id != "IntI0";
 
-        return new Entity(sourceSpan, targetSpan, cone);
+        // Key
+        let key = cell.box.min.concat([level]);
+        console.log("KEY", key);
+
+        // Meta information
+        let meta = getMeta(diagram, level);
+
+        return new CellEntity(key, sourceSpan, targetSpan, meta);
+    }
+
+    static topProjected(diagram) {
+        while (true) {
+            if (diagram.cells.length > 0) {
+                let meta = getMeta(diagram, diagram.cells.length - 1);
+                let source = new Span(0, 0);
+                let target = new Span(0, 0);
+                let key = [];
+                return new CellEntity(key, source, target, meta);
+            } else {
+                diagram = diagram.getSourceBoundary();
+            }
+        }
     }
 
 }

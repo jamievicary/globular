@@ -5,7 +5,7 @@ class Scaffold {
         this.cells = cells;
         this.slices = slices;
         this.halfSlices = halfSlices;
-        this.size = this.cells.length;
+        this.size = dimension > 0 ? this.cells.length : 1;
 
         if (dimension > 0 && this.slices.length != this.cells.length + 1) {
             throw new Error("Span and slice mismatch in scaffold.");
@@ -16,41 +16,28 @@ class Scaffold {
 
     static of(diagram, maxDimension = Infinity) {
         let dimension = Math.min(maxDimension, diagram.getDimension());
-        let cells = [];
-        let slices = [];
-        let halfSlices = [];
 
         if (dimension == 0) {
-            return new Scaffold0();
-        }/* else if (dimension == 1) {
-            return new Scaffold1(diagram.cells.length);
-        }*/
-
-        if (dimension == 0) {
-            // Only one cell
-            cells = [null];
-        } else if (dimension == 1) {
-            // All cells have the trivial span
-            let sourceSpan = Object.freeze(new Span(0, 1));
-            let targetSpan = Object.freeze(new Span(0, 1));
-            cells = diagram.cells.map(cell => new Entity(sourceSpan, targetSpan));
-        } else {
-            // All cells
-            cells = diagram.cells.map((cell, level) => Entity.of(diagram, level));
+            let entity = CellEntity.topProjected(diagram);
+            return new Scaffold(0, [entity], null, null);
         }
 
-        // In non-zero dimension, the scaffold has slices and half-slices. We calculate
-        // these eagerly and cache them to avoid duplicating work.
-        if (dimension > 0) {
-            // Generate all slices
-            for (let level = 0; level <= cells.length; level++) {
-                slices.push(Scaffold.of(diagram.getSlice(level), dimension - 1));
-            }
+        // All cells
+        let cells = [];
+        for (let level = 0; level < diagram.cells.length; level++) {
+            cells.push(CellEntity.of(diagram, level));
+        }
 
-            // Generate all half-slices
-            for (let level = 0; level < cells.length; level++) {
-                halfSlices.push(Scaffold.makeHalfSlice(slices[level], cells[level]));
-            }
+        // Generate all slices
+        let slices = [];
+        for (let level = 0; level <= diagram.cells.length; level++) {
+            slices.push(Scaffold.of(diagram.getSlice(level), dimension - 1));
+        }
+
+        // Generate all half-slices
+        let halfSlices = [];
+        for (let level = 0; level < diagram.cells.length; level++) {
+            halfSlices.push(Scaffold.makeHalfSlice(slices[level], cells[level]));
         }
 
         return new Scaffold(dimension, cells, slices, halfSlices);
@@ -58,13 +45,13 @@ class Scaffold {
 
     static makeHalfSlice(slice, cell) {
         if (slice.size > 0) {
-            if (cell.cone || slice.dimension != 2) {
-                return slice.mergeOne(cell.source);
-            } else {
-                 return slice.mergeSwap(cell.source.min);
-            }
+            //if (cell.cone || slice.dimension != 2) {
+            return slice.mergeOne(cell.source, cell.key, cell.meta);
+            // } else {
+            //      return slice.mergeSwap(cell.source.min);
+            // }
         } else {
-            return slice.mergeOne(new Span(0, 0));
+            return slice.mergeOne(new Span(0, 0), cell.key);
         }
     }
 
@@ -78,12 +65,12 @@ class Scaffold {
         return this.cells[toLevel - 1].target.moveDown(cells);
     }
 
-    mergeOne(heightSpan) {
+    mergeOne(heightSpan, key, meta) {
         if (this.dimension == 0) {
             return this;
         } else if (heightSpan.min == heightSpan.max) {
             let span = this.dimension == 1 ? new Span(0, 1) : new Span(0, 0);
-            let cell = new Entity(span, span);
+            let cell = new CellEntity(key, span, span, meta);
             let halfSlice = Scaffold.makeHalfSlice(this.slices[heightSpan.min], cell);
 
             let cells = this.cells.slice();
@@ -99,7 +86,9 @@ class Scaffold {
         } else {
             let source = this.sourceSpan(heightSpan.min, heightSpan.max);
             let target = this.targetSpan(heightSpan.min, heightSpan.max);
-            let cell = this.dimension == 1 ? new Entity(new Span(0, 1), new Span(0, 1)) :  new Entity(source, target);
+            let cell = this.dimension == 1
+                ? new CellEntity(key, new Span(0, 1), new Span(0, 1), meta)
+                : new CellEntity(key, source, target, meta);
  
             let cells = this.cells.slice();
             cells.splice(heightSpan.min, heightSpan.max - heightSpan.min, cell);
@@ -116,6 +105,7 @@ class Scaffold {
     }
 
     merge(heightSpans) {
+        throw new Error("TODO: merge");
         heightSpans.sort((a, b) => a.min - b.min);
 
         let diagram = this;
@@ -131,6 +121,7 @@ class Scaffold {
     }
 
     mergeSwap(height) {
+        throw new Error("TODO: Merge swap");
         // let target = this.cells[height].target;
         // let source = this.cells[height + 1].source;
 
@@ -149,7 +140,6 @@ class Scaffold {
         if (spanB.min >= this.cells[height].target.min) {
             spanB = spanB.move(this.cells[height].source.size() - this.cells[height].target.size());
         }
-        console.log(spanB);
 
         let halfSlice = slices[height].merge([spanA, spanB]);
         // Scaffold.makeHalfSlice(slices[heightSpan.min], cells[heightSpan.min]);
@@ -164,29 +154,11 @@ class Scaffold {
             return [];
         }
 
-        path = [];
-
         let height = point.last();
         let newHeight = height;
         let rest = point.slice(0, -1);
 
-        // At an empty span?
-        let spanEmpty = heightSpans.find(s => s.size() == 0 && s.min == height);
-        if (!!spanEmpty) {
-            // let orientation = path[path.length - 1];
-            let span = new Span(0, 0); // TODO: This is not true, we need a proper box
-            let slice = this.getSlice(height);
-            rest = slice.move([span], rest, path.slice(0, -1));
-
-            /*if (orientation) {
-                newHeight = height;
-            } else {
-                newHeight = height + 1;
-            }*/
-            newHeight = height + 0.5;
-
-            return rest.concat([newHeight]);
-        }
+        
 
         // Inside a span?
         let spanInterior = heightSpans.find(s => s.min < height && s.max > height);
@@ -202,10 +174,6 @@ class Scaffold {
         let spansBefore = heightSpans.filter(s => s.max <= height);
         for (let span of spansBefore) {
             newHeight -= span.size() - 1;
-        }
-
-        if (rest === null) {
-            return null;
         }
 
         return rest.concat([newHeight]);
@@ -245,6 +213,7 @@ class Scaffold {
     }*/
 
     moveSwap(swapHeight, point) {
+        throw new Error("TODO: Move swap");
         let height = point.last();
         let rest = point.slice(0, -1);
         let newHeight = height;
@@ -337,44 +306,6 @@ class Scaffold {
             throw new Error(`Scaffold has no cell at level ${level}.`);
         }
         return this.cells[level];
-    }
-
-}
-
-
-class Scaffold0 {
-
-    constructor() {
-        this.dimension = 0;
-        this.size = 1;
-    }
-
-    move(heightSpan, point) {
-        return [];
-    }
-
-    allPoints() {
-        return [[]];
-    }
-
-    getSlice(level) {
-        throw new Error("Scaffolds of dimension 0 have no slices.");
-    }
-
-    getCell(level) {
-        if (level >= this.size) {
-            throw new Error(`Scaffold has no cell at level ${level}.`);
-        }
-        let span = new Span(0, 0);
-        return new Entity(span, span);
-    }
-
-    merge() {
-        return this;
-    }
-
-    mergeOne() {
-        return this;
     }
 
 }

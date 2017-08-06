@@ -166,11 +166,14 @@ class Display3D {
         let effectiveDimension = Math.min(3, diagram.getDimension() - this.manager.getSuppress());
         let scaffold = Scaffold.of(diagram, effectiveDimension);
 
+        window.last_diagram = diagram;
+        window.last_scaffold = scaffold;
+
         // Create 3D geometry from scaffold
-        let geometry = getGeometry3D(diagram, scaffold).geometry;
+        let geometry = getGeometry3D(scaffold).geometry;
 
         // Layout the geometry
-        layoutGeometry3D(scaffold, geometry);
+        // layoutGeometry3D(scaffold, geometry);
         geometry.scale(40, 40, 40);
 
         // Create three.js scene from geometry
