@@ -134,12 +134,5 @@ const renderCombinedCells = (cells, options) => {
 
     combined.geometry.mergeVertices();
     combined.geometry.computeVertexNormals();
-
-    //let wfh = new THREE.WireframeHelper(combined, 0x000000);
-
-    let group = new THREE.Group();
-    group.add(combined);
-    //group.add(wfh);
-
-    return group;
+    return combined;
 }

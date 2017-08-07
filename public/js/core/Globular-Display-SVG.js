@@ -95,7 +95,7 @@ class DisplaySVG {
         if (dx * dx + dy * dy < threshold * threshold) {
             return;
         }
-        
+
         var data = this.selectPosition;
         this.selectPixels = null;
         this.selectPosition = null;
@@ -337,16 +337,10 @@ class DisplaySVG {
     }
 
     updatePopup(data) {
-        let popup = $('#diagram-popup');
-        if (this.update_in_progress || data.logical == null) {
-            popup.remove();
+        if (data.logical == null) {
+            this.manager.hidePopup();
             this.popup = null;
             return;
-        }
-
-        // Create popup if necessary
-        if (popup.length == 0) {
-            popup = $('<div>').attr('id', 'diagram-popup').appendTo('#diagram-canvas');
         }
 
         this.popup = data.logical;
@@ -355,7 +349,7 @@ class DisplaySVG {
         let boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
         let description = cell.id.getFriendlyName() + ' @ ' + boundary_string + JSON.stringify(data.logical.coordinates);
         let pos = $('#diagram-canvas').position();
-        popup.html(description).css({
+        this.manager.showPopup(description, {
             left: 5 + pos.left + data.pixels.x,
             top: data.pixels.y - 28,
             position: 'absolute'

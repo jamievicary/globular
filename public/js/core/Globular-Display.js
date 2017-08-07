@@ -371,6 +371,22 @@ class DisplayManager {
         return { project, slices };
     }
 
+    showPopup(text, style) {
+        let popup = $('#diagram-popup');
+
+        // Create popup if necessary
+        if (popup.length == 0) {
+            popup = $('<div>').attr('id', 'diagram-popup').appendTo('#diagram-canvas');
+        }
+
+        // Update content and style
+        popup.html(text).css(style);
+    }
+
+    hidePopup() {
+        $('#diagram-popup').remove();
+    }
+
 }
 
 

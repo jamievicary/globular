@@ -50,11 +50,17 @@ class Display3D {
         this.controls = new THREE.EditorControls(this.camera, this.container[0]);
         this.controls.addEventListener("change", this.onCameraMove);
 
+        // Create raycaster
+        this.raycaster = new THREE.Raycaster();
+
         // Reset the position of the camera
         this.resetCameraPosition();
 
         // Resize listener
         $(window).resize(this.onResize);
+
+        // Additional listeners on the container
+        this.container.mousemove(this.onMouseMove);
     }
 
     dispose() {
@@ -107,7 +113,43 @@ class Display3D {
     }
 
     onMouseMove(event) {
+        if (this.diagram === null) {
+            return;
+        }
 
+        // Cast a ray to obtain all diagram elements beneath the cursor
+        let mouseVector = this.getMouseVector(event);
+        this.raycaster.setFromCamera(mouseVector, this.camera);
+        let intersections = this.raycaster.intersectObjects(this.diagramScene.children);
+
+        // Extract the diagram elements and sort them by dimension
+        let objects = intersections.map(x => x.object.name);
+        objects.sort((a, b) => b.meta.dimension - a.meta.dimension);
+
+        // Pick the cell of lowest dimension
+        if (objects.length == 0) {
+            this.manager.hidePopup();
+            return;
+        }
+        let object = objects[0];
+        let cell = object.meta.cell;
+
+        // 
+        this.manager.showPopup(`${cell.id.getFriendlyName()}`, {
+            position: "absolute",
+            left: event.clientX,
+            top: event.clientY
+        });
+    }
+
+    getMouseVector(event) {
+        let { width, height } = this.getBounds();
+        let pixels = eventToPixels(event);
+        return new THREE.Vector3(
+            (pixels.x / width) * 2 - 1,
+            -(pixels.y / height) * 2 + 1,
+            0.5
+        );
     }
 
     getMaximumDimension() {
@@ -169,6 +211,7 @@ class Display3D {
     }
 
     highlightBox(box, boundary) {
+        console.log(box, boundary);
     }
 
     removeHighlight() {

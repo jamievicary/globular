@@ -585,6 +585,7 @@ Project.prototype.addZeroCell = function() {
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
+    if (div == "#diagram-canvas") debugger;
     diagram.render(div, highlight);
 }
 
@@ -806,11 +807,17 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                     $(div_match).hover(
                         // Mouse over preview thumbnail
                         function() {
-                            project.render('#diagram-canvas', MainDisplay.getVisibleDiagram(), null, match);
+                            let box = match.box;
+                            let boundary = {
+                                depth: match.visibleBoundaryDepth,
+                                type: match.boundaryType
+                            }
+                            MainDisplay.highlightBox(box, boundary);
+                            //project.render('#diagram-canvas', MainDisplay.getVisibleDiagram(), null, match);
                         },
                         // Mouse out of preview thumbnail
                         function() {
-                            project.renderDiagram();
+                            MainDisplay.removeHighlight();
                         }
                     )
                 })(match_array[i]);
