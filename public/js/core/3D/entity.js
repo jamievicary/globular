@@ -40,8 +40,7 @@ class CellEntity {
         //let cone = cell.id != "Int" && cell.id != "IntI0";
 
         // Key
-        let key = cell.box.min.concat([level]);
-        console.log("KEY", key);
+        let key = cell.box.min;
 
         // Meta information
         let meta = getMeta(diagram, level);
@@ -61,6 +60,28 @@ class CellEntity {
                 diagram = diagram.getSourceBoundary();
             }
         }
+    }
+
+}
+
+class IdentityEntity {
+
+    constructor() {}
+
+    get source() {
+        throw new Error();
+    }
+
+    get target() {
+        throw new Error();
+    }
+
+    get key() {
+        throw new Error();
+    }
+
+    get meta() {
+        throw new Error();
     }
 
 }

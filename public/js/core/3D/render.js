@@ -10,7 +10,8 @@ const getMaterial = (meta, dimension) => {
     // }
 
     let color = gProject.getColour(id);
-    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide, transparent: true });
+    // , transparent: true
+    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide });
 
     if (dimension == 2) {
         material.opacity = 0.6;
@@ -67,8 +68,22 @@ const renderVertex = (points, material) => {
     return [mesh];
 };
 
+/*
+const getControlPoints = (from, to) => {
+    let yMiddle = (to.y + from.y) / 2;
+    let zMiddle = (to.z + from.z) / 2;
+    let cp0 = new THREE.Vector3(from.x, yMiddle, zMiddle);
+    let cp1 = new THREE.Vector3(to.x, yMiddle, zMiddle);
+    return [cp0, cp1];
+}
+*/
+
 const renderLine = (points, material) => {
     let lineCurve = new THREE.LineCurve3(points[0], points[1]);
+
+    //let cp = getControlPoints(points[0], points[1]);
+    //let lineCurve = new THREE.CubicBezierCurve3(points[0], cp[0], cp[1], points[1]);
+
     let geometry = new THREE.TubeBufferGeometry(lineCurve, 1, 1, 16, false);
     let mesh = new THREE.Mesh(geometry, material);
 
@@ -85,6 +100,20 @@ const renderLineCap = (point, material) => {
 }
 
 const renderPlane = (points, material) => {
+    /*let cp13 = getControlPoints(points[1], points[3]);
+    let cp02 = getControlPoints(points[0], points[2]);
+    let cpRow0 = getControlPoints(points[0], points[1]);
+    let cpRow1 = getControlPoints(cp02[0], cp13[0]);
+    let cpRow2 = getControlPoints(cp02[1], cp13[1]);
+    let cpRow3 = getControlPoints(points[2], points[3]);
+
+    let controlPoints = [
+        points[0], cpRow0[0], cpRow0[1], points[1],
+        cp02[0], cpRow1[0], cpRow1[1], cp13[0],
+        cp02[1], cpRow2[0], cpRow2[1], cp13[1],
+        points[2], cpRow3[0], cpRow3[1], points[3]
+    ];*/
+
     let controlPoints = [
         points[0], points[0], points[1], points[1],
         points[0], points[0], points[1], points[1],
@@ -92,7 +121,7 @@ const renderPlane = (points, material) => {
         points[2], points[2], points[3], points[3]
     ];
 
-    let geometry = new BezierSurfaceGeometry(controlPoints, 4);
+    let geometry = new BezierSurfaceGeometry(controlPoints, 2);
     let mesh = new THREE.Mesh(geometry, material);
     return [mesh];
 }
@@ -105,5 +134,12 @@ const renderCombinedCells = (cells) => {
     }
     combined.geometry.mergeVertices();
     combined.geometry.computeVertexNormals();
-    return combined;
+
+    //let wfh = new THREE.WireframeHelper(combined, 0x000000);
+
+    let group = new THREE.Group();
+    group.add(combined);
+    // group.add(wfh);
+
+    return group;
 }

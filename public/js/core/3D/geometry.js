@@ -106,13 +106,13 @@ class Cell {
  * @param {Scaffold} scaffold 
  * @return 
  */
-const getGeometry3D = (scaffold) => {
+const getGeometry3D = (scaffold, topDimension = true) => {
     if (scaffold.dimension == 0) {
         let geometry = getGeometryBase(scaffold);
         return { geometry, sliceGeometries: null };
     } else {
         let sliceGeometries = getSliceGeometries(scaffold);
-        let geometry = getGeometryStep(scaffold, sliceGeometries);
+        let geometry = getGeometryStep(scaffold, sliceGeometries, topDimension);
         return { geometry, sliceGeometries };
     }
 }
@@ -122,7 +122,7 @@ const getSliceGeometries = (scaffold) => {
 
     for (let level = 0; level <= scaffold.size; level++) {
         let scaffoldSlice = scaffold.getSlice(level);
-        let sliceGeometry = getGeometry3D(scaffoldSlice).geometry;
+        let sliceGeometry = getGeometry3D(scaffoldSlice, false).geometry;
         sliceGeometries.push(sliceGeometry);
     }
 
@@ -155,7 +155,7 @@ const getGeometryBase = (scaffold) => {
  * @param {Geometry[]} sliceGeometries
  * @return {Diagram}
  */
-const getGeometryStep = (scaffold, sliceGeometries) => {
+const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
     let geometry = new Geometry();
 
     // Generate the geometry level-wise
@@ -163,12 +163,52 @@ const getGeometryStep = (scaffold, sliceGeometries) => {
         // Add a vertex for the cell at this level
         //let meta = getMeta(diagram, level);
         let cell = scaffold.getCell(level); //CellBoundary.of(diagram, level);
-        let meta = cell.meta;
+        
 
         /*   */
-        let cone = true; // cell.cone || scaffold.dimension != 3;
+        if (cell instanceof CellEntity) {
+            let bottom = topDimension ? level : level + 0.25;
+            let middle = level + 0.5;
+            let top = topDimension ? level + 1 : level + 0.75;
 
-        if (!cone) {
+            // Lift the source and target slice geometries as prescribed by the scaffold.
+            let sourceScaffold = scaffold.getSlice(level);
+            let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
+                let target = sourceScaffold.move([cell.source], point, path.last(), cell.key);
+                return (target === null) ? null : target.concat([middle]);
+            });
+
+            let targetScaffold = scaffold.getSlice(level + 1);
+            let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
+                let target = targetScaffold.move([cell.target], point, path.last(), cell.key);
+                return (target === null) ? null : target.concat([middle]);
+            }, true);
+            
+            geometry.append(sourceGeometry, targetGeometry);
+            geometry.add(getVertex(scaffold, level), cell.meta);
+        } else {
+            throw new Error("Unknown cell type.");
+        }
+    }
+
+    // Generate the quater-slice geometry
+    if (!topDimension) {
+        for (let level = 0; level <= scaffold.size; level++) {
+            let sliceGeometry = sliceGeometries[level];
+            let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]));
+            let overhangTop = sliceGeometry.lift(level + 0.25, point => point.concat([level]), true);
+            geometry.append(overhangBottom, overhangTop);
+        }
+    }
+
+    // if (scaffold.size == 0) {
+    //     return sliceGeometries[0].lift(0, point => point.concat([0]));
+    // }
+
+    return geometry;
+}
+
+/*
             // Lift the source and target slice geometries as prescribed by the scaffold.
             let sourceScaffold = scaffold.getSlice(level);
             let sourceGeometry = sliceGeometries[level].lift(level, (point, path) => {
@@ -182,37 +222,9 @@ const getGeometryStep = (scaffold, sliceGeometries) => {
                 return (target === null) ? null : target.concat([level + 0.5]);
             }, true);
             geometry.append(sourceGeometry, targetGeometry);
-        } else {
-            // Lift the source and target slice geometries as prescribed by the scaffold.
-            let sourceScaffold = scaffold.getSlice(level);
-            let sourceGeometry = sliceGeometries[level].lift(level, (point, path) => {
-                let target = sourceScaffold.move([cell.source], point, path);
-                return (target === null) ? null : target.concat([level + 0.5]);
-            });
-
-            let targetScaffold = scaffold.getSlice(level + 1);
-            let targetGeometry = sliceGeometries[level + 1].lift(level + 1, (point, path) => {
-                let target = targetScaffold.move([cell.target], point, path);
-                return (target === null) ? null : target.concat([level + 0.5]);
-            }, true);
-            
-            geometry.append(sourceGeometry, targetGeometry);
-        }
-
-        if (cone) {
-            geometry.add(getVertex(scaffold, level), meta);
-        }
-    }
-
-    if (scaffold.size == 0) {
-        return sliceGeometries[0].lift(0, point => point.concat([0]));
-    }
-
-    return geometry;
-}
+*/
 
 /**
- * Recursively obtain the scaffold coordinates of the vertex at a given level.
  * 
  * @param {Scaffold} scaffold 
  * @param {int} level 
@@ -222,7 +234,8 @@ const getVertex = (scaffold, level) => {
     if (scaffold.dimension == 0) {
         return [];
     }
-    return scaffold.cells[level].key.slice(-scaffold.dimension).map(x => x + 0.5);
+    let key = scaffold.cells[level].key.concat([level]);
+    return key.slice(-scaffold.dimension).map(x => x + 0.5);
 }
 
 /**

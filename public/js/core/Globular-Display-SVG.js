@@ -54,6 +54,7 @@ class DisplaySVG {
 
         // Store the screen coordinates of the click
         this.selectPixels = pixels;
+        this.selectPosition = this.getLogicalLocation(event);
     }
 
     onMouseUp(event) {
@@ -62,7 +63,7 @@ class DisplaySVG {
         let position = this.getLogicalLocation(event);
         if (position == null) {
             this.selectPixels = null;
-            this.selectPosition = position;
+            this.selectPosition = null;
             return;
         }
 
@@ -102,11 +103,11 @@ class DisplaySVG {
 
         // Clicking a 2d picture
         if (this.data.dimension == 2) {
-            if (data.dimension == this.diagram.getDimension() - 1) {
+            if (this.data.dimension == this.diagram.getDimension() - 1) {
                 // Clicking on an edge
                 if (Math.abs(dx) < 0.7 * threshold) return;
                 data.directions = [dx > 0 ? +1 : -1];
-            } else if (data.dimension == this.diagram.getDimension()) {
+            } else if (this.data.dimension == this.diagram.getDimension()) {
                 // Clicking on a vertex
                 if (Math.abs(dy) < 0.7 * threshold) return;
                 data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
@@ -229,7 +230,7 @@ class DisplaySVG {
         if (type == 'edge' || type == 'interchanger_edge') {
             let edgesToLeft = type == "edge"
                 ? this.edgesLeftOfEdge(index, height)
-                : this.edgesLeftOfInterchanger(index, height, coords);
+                : this.edgesLeftOfInterchanger(index, index2, height, coords);
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
 
@@ -279,7 +280,7 @@ class DisplaySVG {
         return this.data.edges_at_level[height].indexOf(index) + 1;
     }
 
-    edgesLeftOfInterchanger(index, height, coords) {
+    edgesLeftOfInterchanger(index, index2, height, coords) {
         // The interchanger is a vertex, but appears in the rendering as the crossing of
         // two edges. Hence we first must identify the edge that was actually clicked,
         // which is one of the two source or target edges, depending on the height of
@@ -291,11 +292,11 @@ class DisplaySVG {
 
         if (coords.y <= vertex.intersection.centre[1]) {
             relevantEdges = vertex.source_edges;
-            localEdgeIndex = 1 - elementIndex2;
+            localEdgeIndex = 1 - index2;
             effectiveHeight--;
         } else {
             relevantEdges = vertex.target_edges;
-            localEdgeIndex = elementIndex2;
+            localEdgeIndex = index2;
         }
 
         // In case of an Int interchanger, we got it the wrong way around

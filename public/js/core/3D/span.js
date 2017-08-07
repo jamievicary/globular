@@ -9,6 +9,11 @@ class Span {
         return this.max - this.min;
     }
 
+    equals(span) {
+        if (!(span instanceof Span)) return false;
+        return span.min === this.min && span.max === this.max;
+    }
+
     move(offset) {
         let min = this.min + offset;
         let max = this.max + offset;
@@ -41,7 +46,7 @@ class Span {
         return new Span(min, max);
     }
 
-    inside(x, left, right) {
+    /*inside(x, left, right) {
         return !this.left(x, left) && !this.right(x, right);
     }
 
@@ -51,7 +56,7 @@ class Span {
 
     right(x, closed) {
         return x > this.max || (!closed && x == this.min);
-    }
+    }*/
 
     collapsed() {
         return new Span(this.min, this.min + 1);
@@ -62,6 +67,18 @@ class Span {
             return this.move(1 - span.size());
         } else {
             return this;
+        }
+    }
+
+    pad() {
+        if (this.size() == 0) {
+            let min = this.min * 2;
+            let max = this.max * 2 + 1;
+            return new Span(min, max);
+        } else {
+            let min = this.min * 2;
+            let max = this.max * 2 + 1;
+            return new Span(min, max);
         }
     }
 

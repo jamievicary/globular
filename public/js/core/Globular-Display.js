@@ -295,7 +295,7 @@ class DisplayManager {
         if (boundary_box == null) return;
 
         // Get display data for bounding box
-        var display_data = this.diagram.getLocationBoundaryBox(real_boundary, boundary_box, this.padCoordinates([]).reverse());
+        var display_data = this.diagram.getLocationBoundaryBox(real_boundary, boundary_box, this.getSlices().reverse());
         if (display_data == null) return;
 
         this.highlightBox(display_data.box, display_data.boundary);
