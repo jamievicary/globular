@@ -70,6 +70,42 @@ class Display3D {
         $(window).off("resize", this.onResize);
     }
 
+    createControls() {
+        let controls = $("<div>").attr("id", "controls-3d");
+
+        this.surfacesControl = $("<input>")
+            .attr("type", "checkbox")
+            .prop("checked", true)
+            .attr("id", "controls-3d-surfaces")
+            .change(e => this.render(true));
+
+        this.layersControl = $("<input>")
+            .attr("type", "checkbox")
+            .prop("checked", false)
+            .attr("id", "controls-3d-layers")
+            .change(e => this.render(true));
+
+        this.transparencyControl = $("<input>")
+            .attr("type", "checkbox")
+            .prop("checked", false)
+            .attr("id", "controls-3d-transparency")
+            .change(e => this.render(true));
+
+        let surfacesControl = $("<div>");
+        surfacesControl.append(this.surfacesControl, "Show surfaces");
+        controls.append(surfacesControl);
+
+        let layersControl = $("<div>");
+        layersControl.append(this.layersControl, "Show layers");
+        controls.append(layersControl);
+
+        let transparencyControl = $("<div>");
+        transparencyControl.append(this.transparencyControl, "Transparency");
+        controls.append(transparencyControl);
+
+        this.manager.displayControls.append(controls);
+    }
+
     onMouseMove(event) {
 
     }
@@ -151,6 +187,18 @@ class Display3D {
         this.renderCanvas();
     }
 
+    showSurfacesFlag() {
+        return this.surfacesControl.prop("checked");
+    }
+
+    showLayersFlag() {
+        return this.layersControl.prop("checked");
+    }
+
+    transparencyFlag() {
+        return this.transparencyControl.prop("checked");
+    }
+
     updateDiagramScene() {
         // Clear diagram scene
         this.diagramScene.remove(...this.diagramScene.children);
@@ -162,46 +210,58 @@ class Display3D {
             return;
         }
 
+        // Create the diagram geometry
+        let { diagramGeometry, sliceGeometries } = this.createDiagramGeometry();
+        let geometry = new Geometry();
+        geometry.append(diagramGeometry);
+
+        // Filter out surfaces
+        if (!this.showSurfacesFlag()) {
+            geometry = geometry.filterCells(cell => cell.dimension != 2);
+        }
+
+        // Show the layers
+        if (this.showLayersFlag()) {
+            geometry.append(...sliceGeometries);
+        }
+
+        // Create three.js scene from geometry
+        let options = { transparency: this.transparencyFlag() };
+        this.diagramScene.add(...renderGeometry3D(geometry, options).children);
+    }
+
+    createDiagramGeometry() {
+        // TODO: Cache this
+
+        // Obtain the diagram that should be visible in this display
         let diagram = this.manager.getVisibleDiagram();
 
-        // Create a scaffold for the diagram
+        // Calculate the dimension of the visible diagram under the current projection
         let effectiveDimension = Math.min(3, diagram.getDimension() - this.manager.getSuppress());
 
-        timer = new Timer("Scaffold");
+        // Create a scaffold for the projected diagram
         let scaffold = Scaffold.of(diagram, effectiveDimension);
-        timer.Report();
-
+        
+        // TODO: Remove this debug info
         window.last_diagram = diagram;
         window.last_scaffold = scaffold;
 
         // Create 3D geometry from scaffold
-        timer = new Timer("Geometry");
-        let geometry = getGeometry3D(scaffold).geometry;
-        geometry.move(p => p.map(x => {
-            let quarter = getQuarter(x);
-            switch (quarter) {
-                case 0:
-                case 1:
-                    return Math.floor(x);
-                case 2:
-                    return x;
-                case 3:
-                    return Math.ceil(x);
-            }
-        }));
-        timer.Report();
+        let { geometry, sliceGeometries } = getGeometry3D(scaffold);
 
-        // Layout the geometry
-        timer = new Timer("Layout");
+        // Postprocess the geometries
+        roundGeometryQuarters(geometry);
         layoutGeometry3D(scaffold, geometry);
-        timer.Report();
-
         geometry.scale(40, 40, 80);
 
-        // Create three.js scene from geometry
-        timer = new Timer("Render");
-        this.diagramScene.add(...renderGeometry3D(geometry).children);
-        timer.Report();
+        sliceGeometries.forEach((sliceGeometry, level) => {
+            sliceGeometry.move(p => p.concat([level]));
+            roundGeometryQuarters(sliceGeometry);
+            layoutGeometry3D(scaffold, sliceGeometry);
+            sliceGeometry.scale(40, 40, 80);
+        });
+
+        return { diagramGeometry: geometry, sliceGeometries };
     }
 
 }

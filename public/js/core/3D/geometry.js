@@ -203,21 +203,6 @@ const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
     return geometry;
 }
 
-/*
-            // Lift the source and target slice geometries as prescribed by the scaffold.
-            let sourceScaffold = scaffold.getSlice(level);
-            let sourceGeometry = sliceGeometries[level].lift(level, (point, path) => {
-                let target = sourceScaffold.moveSwap(cell.source.min, point, path);
-                return (target === null) ? null : target.concat([level + 0.5]);
-            });
-
-            let targetScaffold = scaffold.getSlice(level + 1);
-            let targetGeometry = sliceGeometries[level + 1].lift(level + 1, (point, path) => {
-                let target = targetScaffold.moveSwap(cell.target.min, point, path);
-                return (target === null) ? null : target.concat([level + 0.5]);
-            }, true);
-            geometry.append(sourceGeometry, targetGeometry);
-*/
 
 /**
  * 
@@ -266,4 +251,19 @@ const arrayEquals = (a, b) => {
         }
         return true;
     }
+}
+
+const roundGeometryQuarters = (geometry) => {
+    geometry.move(p => p.map(x => {
+        let quarter = getQuarter(x);
+        switch (quarter) {
+            case 0:
+            case 1:
+                return Math.floor(x);
+            case 2:
+                return x;
+            case 3:
+                return Math.ceil(x);
+        }
+    }));
 }

@@ -100,6 +100,9 @@ class DisplayManager {
         // Remove any existing controls
         $(this.container).children('div.control').remove();
 
+        // Create no controls if there is no active display
+        if (this.display === null) return;
+
         // Choose popout mode if the display is small
         let popout = (c.width() < 100 || c.height() < 100);
 
@@ -137,6 +140,9 @@ class DisplayManager {
         this.sliceDiv.append(document.createTextNode('Slice '));
         this.control.append(this.sliceDiv);
         this.sliceInputs = [];
+
+        // Create the display specific controls
+        this.display.createControls();
     }
 
     updateSliceContainer(drag, controls) {

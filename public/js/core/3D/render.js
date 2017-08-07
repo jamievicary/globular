@@ -1,16 +1,16 @@
 // TODO: Cache material
 //let materialCache = {};
 
-const getMaterial = (meta, dimension) => {
+const getMaterial = (meta, dimension, options) => {
     let id = { id: meta.cell.id, dimension: meta.dimension };
 
     // let cacheKey = id.id + ":" + id.dimension;
     // if (materialCache.hasOwnProperty(cacheKey)) {
     //     return materialCache[cacheKey];
     // }
-
+    let { transparency } = options;
     let color = gProject.getColour(id);
-    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide, transparent: true });
+    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide, transparent: transparency });
 
     if (dimension == 2) {
         material.opacity = 0.6;
@@ -21,12 +21,12 @@ const getMaterial = (meta, dimension) => {
     return material;
 };
 
-const renderGeometry3D = (geometry) => {
+const renderGeometry3D = (geometry, options) => {
     // Render vertices and lines
     let group = new THREE.Group();
     geometry.cells
         .filter(cell => cell.dimension < 2)
-        .forEach(cell => group.add(...renderCell(cell)));
+        .forEach(cell => group.add(...renderCell(cell, options)));
 
     // Group planes by id
     let planes = {};
@@ -40,15 +40,15 @@ const renderGeometry3D = (geometry) => {
     // Combine and render the planes
     for (let id in planes) {
         if (!planes.hasOwnProperty(id)) continue;
-        group.add(renderCombinedCells(planes[id]));
+        group.add(renderCombinedCells(planes[id], options));
     }
 
     return group;
 }
 
-const renderCell = (cell) => {
+const renderCell = (cell, options) => {
     let points = cell.vertices.map(vertex => new THREE.Vector3(...vertex));
-    let material = getMaterial(cell.meta, cell.dimension);
+    let material = getMaterial(cell.meta, cell.dimension, options);
 
     let renderers = [renderVertex, renderLine, renderPlane];
     if (cell.dimension > renderers.length) {
@@ -125,21 +125,21 @@ const renderPlane = (points, material) => {
     return [mesh];
 }
 
-const renderCombinedCells = (cells) => {
-    let combined = renderCell(cells[0])[0];
+const renderCombinedCells = (cells, options) => {
+    let combined = renderCell(cells[0], options)[0];
 
     for (let i = 1; i < cells.length; i++) {
-        combined.geometry.merge(renderCell(cells[i])[0].geometry);
+        combined.geometry.merge(renderCell(cells[i], options)[0].geometry);
     }
 
     combined.geometry.mergeVertices();
     combined.geometry.computeVertexNormals();
 
-    let wfh = new THREE.WireframeHelper(combined, 0x000000);
+    //let wfh = new THREE.WireframeHelper(combined, 0x000000);
 
     let group = new THREE.Group();
     group.add(combined);
-    group.add(wfh);
+    //group.add(wfh);
 
     return group;
 }
