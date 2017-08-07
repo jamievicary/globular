@@ -95,19 +95,18 @@ class DisplaySVG {
         if (dx * dx + dy * dy < threshold * threshold) {
             return;
         }
-
-
+        
         var data = this.selectPosition;
         this.selectPixels = null;
         this.selectPosition = null;
 
         // Clicking a 2d picture
         if (this.data.dimension == 2) {
-            if (this.data.dimension == this.diagram.getDimension() - 1) {
+            if (data.dimension == this.diagram.getDimension() - 1) {
                 // Clicking on an edge
                 if (Math.abs(dx) < 0.7 * threshold) return;
                 data.directions = [dx > 0 ? +1 : -1];
-            } else if (this.data.dimension == this.diagram.getDimension()) {
+            } else if (data.dimension == this.diagram.getDimension()) {
                 // Clicking on a vertex
                 if (Math.abs(dy) < 0.7 * threshold) return;
                 data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
@@ -151,7 +150,7 @@ class DisplaySVG {
     }
 
     createControls() {
-        
+
     }
 
     updatePanzoom(preserveView) {
@@ -231,13 +230,24 @@ class DisplaySVG {
         // Determine the height of the vertex nearest to the clicked height.
         let height = Math.min(Math.floor(coords.y + 0.5), this.data.vertices.length);
 
-        if (type == 'edge' || type == 'interchanger_edge') {
-            let edgesToLeft = type == "edge"
-                ? this.edgesLeftOfEdge(index, height)
-                : this.edgesLeftOfInterchanger(index, index2, height, coords);
+        if (type == 'edge') {
+            let edge = this.data.edges[index];
+                
+            // Adjust height to correct for phenomenon that edges can 'protrude'
+            // above and below their true vertical bounds.
+            if (edge.finish_vertex != null) height = Math.min(height, edge.finish_vertex);
+            if (edge.start_vertex != null) height = Math.max(height, edge.start_vertex + 1);
+
+            let edgesToLeft = this.data.edges_at_level[height].indexOf(index) + 1;
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
+            return this.createLocation([height, edgesToLeft - 1], boundaryFlags, type);
+        }
 
+        if (type == "interchanger_edge") {
+            let edgesToLeft = this.edgesLeftOfInterchanger(index, index2, height, coords);
+            let fringe = this.getFringe(coords);
+            let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
             return this.createLocation([height, edgesToLeft - 1], boundaryFlags, type);
         }
 
@@ -272,16 +282,6 @@ class DisplaySVG {
         }
 
         return null;
-    }
-
-    edgesLeftOfEdge(index, height) {
-        let edge = this.data.edges[index];
-
-        // Adjust height to correct for phenomenon that edges can 'protrude'
-        // above and below their true vertical bounds.
-        if (edge.finish_vertex != null) height = Math.min(height, edge.finish_vertex);
-        if (edge.start_vertex != null) height = Math.max(height, edge.start_vertex + 1);
-        return this.data.edges_at_level[height].indexOf(index) + 1;
     }
 
     edgesLeftOfInterchanger(index, index2, height, coords) {
