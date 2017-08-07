@@ -169,7 +169,6 @@ class Display3D {
     }
 
     highlightBox(box, boundary) {
-
     }
 
     removeHighlight() {
@@ -254,12 +253,16 @@ class Display3D {
         layoutGeometry3D(scaffold, geometry);
         geometry.scale(40, 40, 80);
 
-        sliceGeometries.forEach((sliceGeometry, level) => {
-            sliceGeometry.move(p => p.concat([level]));
-            roundGeometryQuarters(sliceGeometry);
-            layoutGeometry3D(scaffold, sliceGeometry);
-            sliceGeometry.scale(40, 40, 80);
-        });
+        if (scaffold.dimension > 0) {
+            sliceGeometries.forEach((sliceGeometry, level) => {
+                sliceGeometry.move(p => p.concat([level]));
+                roundGeometryQuarters(sliceGeometry);
+                layoutGeometry3D(scaffold, sliceGeometry);
+                sliceGeometry.scale(40, 40, 80);
+            });
+        } else {
+            sliceGeometries = [];
+        }
 
         return { diagramGeometry: geometry, sliceGeometries };
     }
