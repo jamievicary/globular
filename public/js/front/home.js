@@ -69,7 +69,6 @@ function render_project_front(s) {
     $('#loading-window').appendTo($('#gallery-box').parent()).show();
     $("#cell-body").html("");
     $("#my-projects-box").fadeOut();
-    $('#diagram-canvas').empty();
     $(window).unbind('resize');
     $(window).bind('resize', function() {
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
