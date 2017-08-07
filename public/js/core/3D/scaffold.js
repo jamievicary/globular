@@ -47,13 +47,13 @@ class Scaffold {
 
     static makeHalfSlice(slice, cell) {
         if (slice.size > 0) {
-            //if (cell.cone || slice.dimension != 2) {
-            return slice.mergeOne(cell.source, cell.key, cell.meta);
-            // } else {
-            //      return slice.mergeSwap(cell.source.min);
-            // }
+            if (!cell.meta.swap || slice.dimension != 2) {
+                return slice.mergeNormal(cell.source, cell.key, cell.meta);
+            } else {
+                return slice.mergeSwap(cell.source.min, cell.key, cell.meta);
+            }
         } else {
-            return slice.mergeOne(new Span(0, 0), cell.key, cell.meta);
+            return slice.mergeNormal(new Span(0, 0), cell.key, cell.meta);
         }
     }
 
@@ -67,7 +67,7 @@ class Scaffold {
         return this.cells[toLevel - 1].target.moveDown(cells);
     }
 
-    mergeOne(heightSpan, key, meta) {
+    mergeNormal(heightSpan, key, meta) {
         if (this.dimension == 0) {
             return this;
         } else if (heightSpan.min == heightSpan.max) {
@@ -106,30 +106,26 @@ class Scaffold {
         }
     }
 
-    merge(heightSpans) {
-        throw new Error("TODO: merge");
+    mergeMulti(heightSpans, keys, metas) {
         heightSpans.sort((a, b) => a.min - b.min);
 
         let diagram = this;
         let offset = 0;
 
-        for (let span of heightSpans) {
+        for (let i = 0; i < heightSpans.length; i++) {
+            let span = heightSpans[i];
             span = span.move(offset);
             offset += 1 - span.size();
-            diagram = diagram.mergeOne(span);
+            diagram = diagram.mergeNormal(span, keys[i], metas[i]);
         }
 
         return diagram;
     }
 
-    mergeSwap(height) {
-        throw new Error("TODO: Merge swap");
-        // let target = this.cells[height].target;
-        // let source = this.cells[height + 1].source;
-
+    mergeSwap(height, key, meta) {
         let source = this.sourceSpan(height, height + 2);
         let target = this.targetSpan(height, height + 2);
-        let cell = new Entity(source, target);
+        let cell = new CellEntity(key, source, target, meta);
 
         let cells = this.cells.slice();
         cells.splice(height, 2, cell);
@@ -143,15 +139,26 @@ class Scaffold {
             spanB = spanB.move(this.cells[height].source.size() - this.cells[height].target.size());
         }
 
-        let halfSlice = slices[height].merge([spanA, spanB]);
-        // Scaffold.makeHalfSlice(slices[heightSpan.min], cells[heightSpan.min]);
+        let keys = [this.cells[height].key, this.cells[height + 1].key];
+        let metas = [this.cells[height].meta, this.cells[height + 1].meta];
+        let halfSlice = slices[height].mergeMulti([spanA, spanB], keys, metas);
         let halfSlices = this.halfSlices.slice();
         halfSlices.splice(height, 2, halfSlice);
 
         return new Scaffold(this.dimension, cells, slices, halfSlices);
     }
 
-    move(heightSpans, point, boundary, key, dodge = true) {
+    moveCell(cell, point, boundary) {
+        let heightSpan = boundary == "s" ? cell.source : cell.target;
+
+        if (this.dimension == 2 && cell.meta.swap) {
+            return this.moveSwap(heightSpan.min, point, cell.key);
+        } else {
+            return this.moveNormal([heightSpan], point, cell.key);
+        }
+    }
+
+    moveNormal(heightSpans, point, key, dodge = true) {
         if (this.dimension == 0) {
             return [];
         }
@@ -168,14 +175,12 @@ class Scaffold {
 
             if (spanInterior.min <= height && spanInterior.max >= height && spanInterior.size() > 0) {
                 let span = this.getSpan(spanInterior.min, spanInterior.max, height);
-                rest = slice.move([span], rest, false, key.slice(0, -1));
+                rest = slice.moveNormal([span], rest, key.slice(0, -1));
                 newHeight = spanInterior.min + 0.5;
-                return rest.concat([newHeight]);
             } else if (spanInterior.size() == 0 && spanInterior.min == height) {
                 let span = new Span(0.5 + key.last(), 0.5 + key.last());
-                rest = slice.move([span], rest, false, key.slice(0, -1), false);
+                rest = slice.moveNormal([span], rest, key.slice(0, -1), false);
                 newHeight = spanInterior.min + (dodge ? 0.5 : 0);
-                return rest.concat([newHeight]);
             }
         }
 
@@ -190,76 +195,34 @@ class Scaffold {
         return rest.concat([newHeight]);
     }
 
-    onlyIdentities(fromHeight, toHeight) {
-        return this.cells.slice(fromHeight, toHeight).findIndex(cell => cell instanceof CellEntity) < 0;
-    }
-
-    /*move(heightSpan, point) {
-        if (this.dimension == 0) {
-            return [];
-        }
-
-        let height = point.last();
-        let newHeight = height;
-        let rest = point.slice(0, -1);
-
-        //let spansBefore = heightSpans.filter(s => s.max <= height);
-
-        if (heightSpan.min < height && heightSpan.max > height) {
-            // Interior or parallel
-            let slice = this.getSlice(height);
-            let span = this.getSpan(heightSpan.min, heightSpan.max, height);
-            rest = slice.move(span, rest);
-            newHeight = heightSpan.min + 0.5;
-        } else if (heightSpan.max <= height) {
-            // Above
-            newHeight -= heightSpan.max - heightSpan.min - 1;
-        }
-
-        if (rest === null) {
-            return null;
-        }
-
-        if (heightSpan.max == heightSpan.min && height == heightSpan.min) {
-            return null;
-        }
-
-        return rest.concat([newHeight]);
-    }*/
-
-    moveSwap(swapHeight, point) {
-        throw new Error("TODO: Move swap");
+    moveSwap(swapHeight, point, key) {
         let height = point.last();
         let rest = point.slice(0, -1);
         let newHeight = height;
         let lowerCell = this.cells[swapHeight];
         let upperCell = this.cells[swapHeight + 1];
 
-        
-
         if (height == swapHeight + 0.5) {
             let slice = this.getSlice(height);
             let spanA = lowerCell.target.collapsed();
             let spanB = upperCell.source.withCollapse(lowerCell.target);
-            rest = slice.move([spanA, spanB], rest);
+            rest = slice.moveNormal([spanA, spanB], rest, key.slice(0, -1));
             newHeight = swapHeight + 0.5;
-
-        } else if (height == swapHeight + 1) {
+        } else if (height >= swapHeight + 0.75 && height <= swapHeight + 1.25) {
             let slice = this.getSlice(height);
             let spanA = upperCell.source;
             let spanB = lowerCell.target;
-            rest = slice.move([spanA, spanB], rest);
+            rest = slice.moveNormal([spanA, spanB], rest, key.slice(0, -1));
             newHeight = swapHeight + 0.5;
         } else if (height == swapHeight + 1.5) {
             let slice = this.getSlice(height);
             let spanA = upperCell.source.collapsed();
             let spanB = lowerCell.target.withCollapse(upperCell.source);
-            rest = slice.move([spanA, spanB], rest);
+            rest = slice.moveNormal([spanA, spanB], rest, key.slice(0, -1));
             newHeight = swapHeight + 0.5;
         }
         
-        
-        if (height >= swapHeight + 2) {
+        if (height >= swapHeight + 1.75) {
             newHeight -= 1;
         }
 
@@ -355,11 +318,19 @@ class Scaffold0 {
         return [];
     }
 
-    merge() {
+    moveNormal() {
+        return [];
+    }
+
+    moveCell() {
+        return [];
+    }
+
+    mergeMulti() {
         return this;
     }
 
-    mergeOne() {
+    mergeNormal() {
         return this;
     }
 

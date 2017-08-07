@@ -5,6 +5,8 @@ class CellEntity {
         this.source = source;
         this.target = target;
         this.meta = meta;
+
+        if (!key) throw new Error("Can't construct cell entity with undefined key.");
     }
 
     static of(diagram, level) {
@@ -36,14 +38,15 @@ class CellEntity {
         let targetEnd = targetStart + targetLength;
         let targetSpan = new Span(targetStart, targetEnd);
 
-        // Cone?
-        //let cone = cell.id != "Int" && cell.id != "IntI0";
+        // Is swap cell?
+        let swap = cell.id == "Int" || cell.id == "IntI0";
 
         // Key
         let key = cell.box.min;
 
         // Meta information
         let meta = getMeta(diagram, level);
+        meta.swap = swap;
 
         return new CellEntity(key, sourceSpan, targetSpan, meta);
     }

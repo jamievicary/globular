@@ -10,8 +10,7 @@ const getMaterial = (meta, dimension) => {
     // }
 
     let color = gProject.getColour(id);
-    // , transparent: true
-    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide });
+    let material = new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide, transparent: true });
 
     if (dimension == 2) {
         material.opacity = 0.6;
@@ -132,14 +131,15 @@ const renderCombinedCells = (cells) => {
     for (let i = 1; i < cells.length; i++) {
         combined.geometry.merge(renderCell(cells[i])[0].geometry);
     }
+
     combined.geometry.mergeVertices();
     combined.geometry.computeVertexNormals();
 
-    //let wfh = new THREE.WireframeHelper(combined, 0x000000);
+    let wfh = new THREE.WireframeHelper(combined, 0x000000);
 
     let group = new THREE.Group();
     group.add(combined);
-    // group.add(wfh);
+    group.add(wfh);
 
     return group;
 }

@@ -46,18 +46,6 @@ class Span {
         return new Span(min, max);
     }
 
-    /*inside(x, left, right) {
-        return !this.left(x, left) && !this.right(x, right);
-    }
-
-    left(x, closed) {
-        return x < this.min || (!closed && x == this.min);
-    }
-
-    right(x, closed) {
-        return x > this.max || (!closed && x == this.min);
-    }*/
-
     collapsed() {
         return new Span(this.min, this.min + 1);
     }

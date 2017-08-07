@@ -160,34 +160,29 @@ const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
 
     // Generate the geometry level-wise
     for (let level = 0; level < scaffold.size; level++) {
-        // Add a vertex for the cell at this level
-        //let meta = getMeta(diagram, level);
-        let cell = scaffold.getCell(level); //CellBoundary.of(diagram, level);
+        let cell = scaffold.getCell(level);
         
+        let bottom = topDimension ? level : level + 0.25;
+        let middle = level + 0.5;
+        let top = topDimension ? level + 1 : level + 0.75;
 
-        /*   */
-        if (cell instanceof CellEntity) {
-            let bottom = topDimension ? level : level + 0.25;
-            let middle = level + 0.5;
-            let top = topDimension ? level + 1 : level + 0.75;
+        // Lift the source and target slice geometries as prescribed by the scaffold.
+        let sourceScaffold = scaffold.getSlice(level);
+        let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
+            let target = sourceScaffold.moveCell(cell, point, "s");
+            return target.concat([middle]);
+        });
 
-            // Lift the source and target slice geometries as prescribed by the scaffold.
-            let sourceScaffold = scaffold.getSlice(level);
-            let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
-                let target = sourceScaffold.move([cell.source], point, path.last(), cell.key);
-                return (target === null) ? null : target.concat([middle]);
-            });
+        let targetScaffold = scaffold.getSlice(level + 1);
+        let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
+            let target = targetScaffold.moveCell(cell, point, "t");
+            return target.concat([middle]);
+        }, true);
+        
+        geometry.append(sourceGeometry, targetGeometry);
 
-            let targetScaffold = scaffold.getSlice(level + 1);
-            let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
-                let target = targetScaffold.move([cell.target], point, path.last(), cell.key);
-                return (target === null) ? null : target.concat([middle]);
-            }, true);
-            
-            geometry.append(sourceGeometry, targetGeometry);
+        if (!cell.meta.swap) {
             geometry.add(getVertex(scaffold, level), cell.meta);
-        } else {
-            throw new Error("Unknown cell type.");
         }
     }
 
