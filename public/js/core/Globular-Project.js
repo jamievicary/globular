@@ -1073,11 +1073,15 @@ Project.prototype.keepBottomUI = function() {
 }
 
 Project.prototype.downloadGraphic = function() {
-    throw new Error("Only execute this when the display is SVG");
-    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
+    let display = MainDisplay.display;
+    if (display !== null && display instanceof DisplaySVG) {
+        download_SVG_as_PNG(display.svgElement, display.getExportRegion(), "image.png");
+    }
 }
 
 Project.prototype.downloadSequence = function() {
-    throw new Error("downloadSequence");
-    //MainDisplay.downloadSequence();
+    let display = MainDisplay.display;
+    if (display !== null && display instanceof DisplaySVG) {
+        display.downloadSequence();
+    }
 }

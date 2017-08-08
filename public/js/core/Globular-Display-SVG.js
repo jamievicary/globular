@@ -368,15 +368,15 @@ class DisplaySVG {
     }
 
     gridToPixels(grid) {
+        let b = this.getBounds();
         let pan = this.panzoom.getPan();
         let sizes = this.panzoom.getSizes();
-        pixel.x = grid.x * sizes.realZoom + pan.x;
-        pixel.y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
-        return pixel;
+        let x = grid.x * sizes.realZoom + pan.x;
+        let y = (b.bottom - grid.y) * sizes.realZoom + pan.y;
+        return { x, y };
     }
 
     pixelsToGrid(pixels) {
-        let b = this.getBounds();
         let pan = this.panzoom.getPan();
         let sizes = this.panzoom.getSizes();
         let x = (pixels.x - pan.x) / sizes.realZoom;
@@ -397,75 +397,66 @@ class DisplaySVG {
             this.visibleDiagram);
     }
 
-}
+    downloadSequence() {
+        // If we're not ready, do nothing
+        if (!this.manager.hasControls()) return;
 
-/*
-Display.prototype.downloadSequence = function() {
+        // Get name for this sequence
+        var prefix = prompt("Please enter a name for this sequence", "graphic");
+        if (prefix == null) return;
 
-    // If we're not ready, do nothing
-    if (!this.has_controls()) return;
+        // If there are no slices, just export a PNG of the whole diagram
+        if (this.manager.getSlices().length == 0) {
+            download_SVG_as_PNG(this.svgElement, this.getExportRegion(), filename + ".png");
+            return;
+        }
 
-    // Get name for this sequence
-    var prefix = prompt("Please enter a name for this sequence", "graphic");
-    if (prefix == null) return;
-
-    // If there are no slices, just export a PNG of the whole diagram
-    if (this.slices.length == 0) {
-        download_SVG_as_PNG(this.svg_element, this.getExportRegion(), filename + ".png");
-        return;
+        // Start the chain of slice downloads
+        this.downloadSlice(prefix, 0);
     }
 
-    // Start the chain of slice downloads
-    this.downloadSlice(prefix, 0);
+    downloadSlice(prefix, i) {
+        // Move through all the slices and export them
+        let slice = this.diagram;
+        let slices = this.manager.getSlices();
+        for (let j = 0; j < slices.length - 1; j++) {
+            slice = slice.getSlice(slices[j]);
+        }
 
-}
+        // If we're being asked to render an invalid slice, give up
+        if (i > slice.cells.length) return;
+        let n = slice.cells.length.toString().length;
 
-Display.prototype.downloadSlice = function(prefix, i) {
-    
-    // Move through all the slices and export them
-    var slice = this.diagram;
-    for (var j = 0; j < this.slices.length - 1; j++) {
-        slice = slice.getSlice(this.slices[j].val());
+        this.render();
+        this.highlight_slice(slices.length - 1);
+        let temp_this = this;
+        download_SVG_as_PNG(this.svgElement, this.getExportRegion(), prefix + " " + i.toString().padToLength(n) + ".png", undefined,
+            //(function(j){temp_this.downloadSlice(prefix, j + 1);})(i)
+            (function(i){this.downloadSlice(prefix, i+1)}).bind(this, i)
+        );
     }
 
-    // If we're being asked to render an invalid slice, give up
-    if (i > slice.cells.length) return;
-    var n = slice.cells.length.toString().length;
+    getExportRegion() {
+        var b = this.getBounds();
+        var top_left = this.gridToPixels({
+            x: b.left,
+            y: b.top
+        });
+        var bottom_right = this.gridToPixels({
+            x: b.right,
+            y: b.bottom
+        });
+        return {
+            sx: top_left.x,
+            sy: top_left.y,
+            sWidth: bottom_right.x - top_left.x,
+            sHeight: bottom_right.y - top_left.y,
+            logical_width: b.right - b.left,
+            logical_height: b.top - b.bottom
+        };
+    }
 
-    this.slices[this.slices.length - 1].val(i);
-    this.render();
-    this.highlight_slice(this.slices.length - 1);
-    var temp_this = this;
-    download_SVG_as_PNG(this.svg_element, this.getExportRegion(), prefix + " " + i.toString().padToLength(n) + ".png", undefined,
-        //(function(j){temp_this.downloadSlice(prefix, j + 1);})(i)
-        (function(i){this.downloadSlice(prefix, i+1)}).bind(this, i)
-    );
 }
-
-*/
-
-/*
-Display.prototype.getExportRegion = function() {
-    var b = $(this.container)[0].bounds;
-    if (b === undefined) return;
-    var top_left = this.gridToPixels({
-        x: b.left,
-        y: b.top
-    });
-    var bottom_right = this.gridToPixels({
-        x: b.right,
-        y: b.bottom
-    });
-    return {
-        sx: top_left.x,
-        sy: top_left.y,
-        sWidth: bottom_right.x - top_left.x,
-        sHeight: bottom_right.y - top_left.y,
-        logical_width: b.right - b.left,
-        logical_height: b.top - b.bottom
-    };
-}
-*/
 
 function eventToPixels(event) {
     let box = event.currentTarget.getBoundingClientRect();
