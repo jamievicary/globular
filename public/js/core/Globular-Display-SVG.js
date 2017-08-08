@@ -262,7 +262,7 @@ class DisplaySVG {
             // Count the edges that are to the left of the coordinates
             let edgesAtLevel = this.data.edges_at_level[height];
             let edgesToLeft = edgesAtLevel.filter(edge => this.data.edges[edge].x <= coords.x).length;
-            edgesToLeft = Math.max(0, edgesToLeft - 1);
+            edgesToLeft = Math.max(0, edgesToLeft);
 
             // When the diagram is projected, we view it sideways with the topmost slice
             // on top; the lower slices are not visible in the diagram. Hence we always
