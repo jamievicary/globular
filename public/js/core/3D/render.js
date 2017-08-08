@@ -136,3 +136,39 @@ const renderCombinedCells = (cells, options) => {
     combined.geometry.computeVertexNormals();
     return combined;
 }
+
+const renderHighlightBox = (base, size) => {
+    base = new THREE.Vector3(...base);
+    size = new THREE.Vector3(...size);
+
+    let vertices = [
+        new THREE.Vector3(base.x, base.y, base.z),
+        new THREE.Vector3(base.x + size.x, base.y, base.z),
+        new THREE.Vector3(base.x + size.x, base.y + size.y, base.z),
+        new THREE.Vector3(base.x, base.y + size.y, base.z),
+        new THREE.Vector3(base.x, base.y, base.z + size.z),
+        new THREE.Vector3(base.x + size.x, base.y, base.z + size.z),
+        new THREE.Vector3(base.x + size.x, base.y + size.y, base.z + size.z),
+        new THREE.Vector3(base.x, base.y + size.y, base.z + size.z)
+    ];
+
+    let geometry = new THREE.Geometry();
+    geometry.vertices.push(
+        vertices[0], vertices[1],
+        vertices[1], vertices[2],
+        vertices[2], vertices[3],
+        vertices[3], vertices[0],
+        vertices[4], vertices[5],
+        vertices[5], vertices[6],
+        vertices[6], vertices[7],
+        vertices[7], vertices[4],
+        vertices[0], vertices[4],
+        vertices[1], vertices[5],
+        vertices[2], vertices[6],
+        vertices[3], vertices[7]
+    );
+
+    let material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    let line = new THREE.LineSegments(geometry, material);
+    return line;
+}

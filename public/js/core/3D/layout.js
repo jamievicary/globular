@@ -12,36 +12,6 @@ const layoutGeometry3D = (scaffold, geometry) => {
     let cache = {};
     geometry.move(point => layoutPoint(scaffold, point, cache, ""));
 }
-/*
-const getMean = (xs) => {
-    if (xs.length == 0) {
-        throw new Error("Can't calculate mean of zero vectors.");
-    }
-
-    let result = xs[0];
-    for (let i = 1; i < xs.length; i++) {
-        for (let j = 0; j < result.length; j++) {
-            result[j] += xs[i][j];
-        }
-    }
-
-    for (let i = 0; i < result.length; i++) {
-        result[i] /= xs.length;
-    }
-
-    return result;
-}*/
-/*
-const arrayEquals = (a, b) => {
-    if (a.length != b.length) {
-        return false;
-    } else {
-        for (let i = 0; i < a.length; i++) {
-            if (a[i] != b[i]) return false;
-        }
-        return true;
-    }
-}*/
 
 /**
  * Translates scaffold coordinates to centered coordinates.
@@ -53,6 +23,11 @@ const arrayEquals = (a, b) => {
 const layoutPoint = (scaffold, point, cache, path = "") => {
     if (scaffold.dimension == 0) {
         return [];
+    } else if (scaffold.size == 0) {
+        let slice = scaffold.getSlice(0);
+        let rest = layoutPoint(slice, point.slice(0, -1), cache, path + ":0");
+        let height = point.last();
+        return rest.concat([height]);
     }
 
     // Cached?
@@ -62,9 +37,10 @@ const layoutPoint = (scaffold, point, cache, path = "") => {
     }
 
     // Calculate
-    let level = point.last();
+    let level = roundQuarter(point.last());
+    let quarter = getQuarter(level);
     
-    if (level > Math.floor(level)) {
+    if (quarter == 2 && scaffold.cells.length > 0) {
         let cell = scaffold.getCell(Math.floor(level));
 
         if (!(cell instanceof IdentityEntity)) {
@@ -98,6 +74,7 @@ const layoutPoint = (scaffold, point, cache, path = "") => {
 
 const collectOrigins = (point, slice, cell, boundary) => {
     let origins = [];
+    point = point.map(roundQuarter);
 
     for (let p of slice.allPoints()) {
         let moved = slice.moveCell(cell, p, boundary);
@@ -110,4 +87,16 @@ const collectOrigins = (point, slice, cell, boundary) => {
 
 const getHeight = (level, size) => {
     return level - 0.5 * size;
+}
+
+const roundQuarter = (x) => {
+    let quarter = getQuarter(x);
+
+    if (quarter == 1) {
+        return Math.floor(x);
+    } else if (quarter == 3) {
+        return Math.ceil(x);
+    } else {
+        return x;
+    }
 }

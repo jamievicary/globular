@@ -59,6 +59,9 @@ class Display3D {
         // Resize listener
         $(window).resize(this.onResize);
 
+        // No highlight
+        this.highlight = null;
+
         // Additional listeners on the container
         this.container.mousemove(this.onMouseMove);
     }
@@ -212,20 +215,28 @@ class Display3D {
 
     highlightBox(box, boundary) {
         console.log(box, boundary);
+        //this.highlight = getHighlightBox3D(this.scaffold, box, boundary);
+        //renderHighlightBox([0, 0, 0], [1, 1, 1]);
+        //this.scene.add(this.highlight);
+        this.renderCanvas();
     }
 
     removeHighlight() {
-
+        this.scene.remove(this.highlight);
+        this.highlight = null;
+        this.renderCanvas();
     }
 
     setDiagram(diagram, preserveView = false) {
         this.diagram = diagram;
         this.render(preserveView);
+        this.renderCanvas();
     }
 
     render(preserveView = false) {
         this.updateDiagramScene();
         if (!preserveView) this.resetCameraPosition();
+        this.removeHighlight();
         this.renderCanvas();
     }
 
@@ -283,6 +294,7 @@ class Display3D {
 
         // Create a scaffold for the projected diagram
         let scaffold = Scaffold.of(diagram, effectiveDimension);
+        this.scaffold = scaffold;
         
         // TODO: Remove this debug info
         window.last_diagram = diagram;
@@ -292,14 +304,14 @@ class Display3D {
         let { geometry, sliceGeometries } = getGeometry3D(scaffold);
 
         // Postprocess the geometries
-        roundGeometryQuarters(geometry);
+        //roundGeometryQuarters(geometry);
         layoutGeometry3D(scaffold, geometry);
         geometry.scale(40, 40, 80);
 
         if (scaffold.dimension > 0) {
             sliceGeometries.forEach((sliceGeometry, level) => {
                 sliceGeometry.move(p => p.concat([level]));
-                roundGeometryQuarters(sliceGeometry);
+                //roundGeometryQuarters(sliceGeometry);
                 layoutGeometry3D(scaffold, sliceGeometry);
                 sliceGeometry.scale(40, 40, 80);
             });
@@ -307,7 +319,62 @@ class Display3D {
             sliceGeometries = [];
         }
 
+        console.log(geometry);
+
         return { diagramGeometry: geometry, sliceGeometries };
     }
 
+}
+
+const getHighlightBox3D = (scaffold, box, boundary) => {
+    // TODO: Make this work for projected diagrams!
+    // TODO: This is a bit naive by just using a box, because the layout
+    // algorithm does not have the same nice invariants as the SVG layout
+
+    let base = [];
+    let size = [];
+    let slice = scaffold;
+
+    if (boundary !== null && boundary.depth > 0) {
+        for (let i = 0; i < boundary.depth - 1; i++) {
+            slice = slice.getSlice(0);
+            base.unshift(0);
+            size.unshift(0);
+        }
+
+        let level = boundary.type == "s" ? 0 : slice.cells.length;
+        slice = slice.getSlice(level);
+        base.unshift(level);
+        size.unshift(0);
+    }
+
+    let boxDiff = [];
+    for (let i = 0; i < box.min.length; i++) {
+        boxDiff.push(box.max[i] - box.min[i]);
+    }
+
+    base = box.min.concat(base);
+    size = boxDiff.concat(size);
+
+    console.log(base);
+    base = layoutPoint(scaffold, base, base, {});
+    console.log(base);
+
+    base = base.concat([0, 0, 0]).slice(0, 3);
+    size = size.concat([0, 0, 0]).slice(0, 3);
+
+    base[0] *= 40;
+    base[1] *= 40;
+    base[2] *= 80;
+
+    size[0] *= 40;
+    size[1] *= 40;
+    size[2] *= 80;
+
+    base = base.map(x => x - 5);
+    size = size.map(x => x + 10);
+
+    console.log(base, size);
+
+    return renderHighlightBox(base, size);
 }

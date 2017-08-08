@@ -186,8 +186,8 @@ const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
         }
     }
 
-    // Generate the quater-slice geometry
-    if (!topDimension) {
+    // Generate the quarter-slice geometry
+    if (!topDimension || scaffold.size == 0) {
         for (let level = 0; level <= scaffold.size; level++) {
             let sliceGeometry = sliceGeometries[level];
             let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]));
@@ -195,10 +195,6 @@ const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
             geometry.append(overhangBottom, overhangTop);
         }
     }
-
-    // if (scaffold.size == 0) {
-    //     return sliceGeometries[0].lift(0, point => point.concat([0]));
-    // }
 
     return geometry;
 }
