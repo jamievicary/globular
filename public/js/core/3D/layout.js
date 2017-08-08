@@ -1,3 +1,24 @@
+class LayoutCache {
+
+    constructor() {
+        this.cache = {};
+    }
+
+    get(path, point) {
+        return this.cache[this.getName(path, point)];
+    }
+
+    set(path, point, result) {
+        this.cache[this.getName(path, point)] = result;
+        return result;
+    }
+
+    getName(path, point) {
+        return path.join(":") + ";" + point.join(":");
+    }
+
+}
+
 /**
  * Translates a geometry in scaffold coordinates to more aesthetic,
  * centred coordinates; the original geometry is modified.
@@ -9,8 +30,8 @@
  * @param {Geometry} geometry
  */
 const layoutGeometry3D = (scaffold, geometry) => {
-    let cache = {};
-    geometry.move(point => layoutPoint(scaffold, point, cache, ""));
+    let cache = new LayoutCache;
+    geometry.move(point => layoutPoint(scaffold, point, cache, []));
 }
 
 /**
@@ -20,21 +41,19 @@ const layoutGeometry3D = (scaffold, geometry) => {
  * @param {number[]} point 
  * @return {number[]}
  */
-const layoutPoint = (scaffold, point, cache, path = "") => {
+const layoutPoint = (scaffold, point, cache, path = []) => {
     if (scaffold.dimension == 0) {
         return [];
     } else if (scaffold.size == 0) {
         let slice = scaffold.getSlice(0);
-        let rest = layoutPoint(slice, point.slice(0, -1), cache, path + ":0");
+        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([0]));
         let height = point.last();
         return rest.concat([height]);
     }
 
     // Cached?
-    let cacheName = path + ";" + point.join(":");
-    if (cache[cacheName]) {
-        return cache[cacheName];
-    }
+    let cached = cache.get(path, point);
+    if (cached) return cached;
 
     // Calculate
     let level = roundQuarter(point.last());
@@ -43,33 +62,29 @@ const layoutPoint = (scaffold, point, cache, path = "") => {
     if (quarter == 2 && scaffold.cells.length > 0) {
         let cell = scaffold.getCell(Math.floor(level));
 
-        if (!(cell instanceof IdentityEntity)) {
-            let sourceSlice = scaffold.getSlice(Math.floor(level));
-            let targetSlice = scaffold.getSlice(Math.ceil(level));
+        let sourceSlice = scaffold.getSlice(Math.floor(level));
+        let targetSlice = scaffold.getSlice(Math.ceil(level));
 
-            let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell, "s");
-            let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell, "t");
+        let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell, "s");
+        let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell, "t");
 
-            sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path + ":" + Math.floor(level)));
-            targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path + ":" + Math.ceil(level)));
+        sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path.concat([Math.floor(level)])));
+        targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path.concat([Math.ceil(level)])));
 
-            let sourceMean = sourceOrigins.length > 0 ? [getMean(sourceOrigins)] : [];
-            let targetMean = targetOrigins.length > 0 ? [getMean(targetOrigins)] : [];
+        let sourceMean = sourceOrigins.length > 0 ? [getMean(sourceOrigins)] : [];
+        let targetMean = targetOrigins.length > 0 ? [getMean(targetOrigins)] : [];
 
-            if (sourceMean.length > 0 || targetMean.length > 0) {
-                let rest = getMean(sourceMean.concat(targetMean));
-                let height = getHeight(level, scaffold.size);
-                cache[cacheName] = rest.concat([height]);
-                return rest.concat([height]);
-            }
+        if (sourceMean.length > 0 || targetMean.length > 0) {
+            let rest = getMean(sourceMean.concat(targetMean));
+            let height = getHeight(level, scaffold.size);
+            return cache.set(path, point, rest.concat([height]));
         }
     }
 
     let slice = scaffold.getSlice(level);
-    let rest = layoutPoint(slice, point.slice(0, -1), cache, path + ":" + level);
+    let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]));
     let height = getHeight(level, scaffold.size);
-    cache[cacheName] = rest.concat([height]);
-    return rest.concat([height]);
+    return cache.set(path, point, rest.concat([height]));
 }
 
 const collectOrigins = (point, slice, cell, boundary) => {
