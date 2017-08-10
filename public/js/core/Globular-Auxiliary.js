@@ -489,7 +489,7 @@ var LZ4 = require('lz4');
 function globular_lz4_compress(string) {
     var timer = new Timer('globular_lz4_compress');
     console.log('  string.length = ' + string.length);
-    var uncompressed = string + string;
+    var uncompressed = string + string; // WHY??
     var input = new Buffer(uncompressed);
     var output = new Buffer(LZ4.encodeBound(input.length));
     var compressedSize = LZ4.encodeBlock(input, output);
@@ -527,12 +527,18 @@ function globular_lz4_decompress(object) {
 }
 
 function Uint8ToString(u8a) {
+    var decoder = new TextDecoder('utf8');
+    var decoded = decoder.decode(u8a);
+    //var b64encoded = btoa(decoded);
+    return decoded;
+    /*
     var CHUNK_SZ = 0x8000;
     var c = [];
     for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
         c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
     }
     return c.join("");
+    */
 }
 
 function download(filename, text) {

@@ -96,7 +96,7 @@ Display.prototype.mousemove = function(event) {
 
     //var pixels = {x: event.originalEvent.layerX, y: event.originalEvent.layerY};
     var pixels = eventToPixels(event);
-    console.log(JSON.stringify(pixels));
+    //console.log(JSON.stringify(pixels));
     //console.log('grid.x = ' + new_grid.x + ', grid.y = ' + new_grid.y);
     this.updatePopup({
         logical: this.pixelsToLogical(pixels),

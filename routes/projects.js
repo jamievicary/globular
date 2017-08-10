@@ -1,4 +1,5 @@
 var fs = require('fs');
+var Step = require('step');
 
 function get_new_private_project_id(email) {
 	var data = fs.readdirSync('database/users/' + email + '/projects');
@@ -6,7 +7,7 @@ function get_new_private_project_id(email) {
 	for (var i = 0; i < data.length; i++) {
 		var id = Number(data[i]);
 		if (isNaN(id)) continue;
-		new_id = Math.max(new_id, Number(data[i]) + 1);
+		new_id = Math.max(new_id, id + 1);
 	}
 	return new_id;
 }
@@ -132,6 +133,26 @@ exports.save_project_changes = function(req, res) {
 		project_desc: p_desc
 	});
 
+	Step(
+		function stepA() {
+			fs.mkdir("database/users/" + user_id + "/projects/" + p_id, this);
+		},
+		function stepB(err) {
+			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, this);
+		},
+		function stepC(err) {
+			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/meta.json", p_meta, this);
+		},
+		function stepD(err) {
+			res.send({
+				success: true,
+				p_id: p_id,
+				msg: "Success"
+			});			
+		}
+	);
+
+	/*
 	// Save data and return success 	
 	fs.mkdir("database/users/" + user_id + "/projects/" + p_id, function() {
 		fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, function() {
@@ -144,7 +165,7 @@ exports.save_project_changes = function(req, res) {
 			});
 		});
 	});
-
+*/
 
 };
 
