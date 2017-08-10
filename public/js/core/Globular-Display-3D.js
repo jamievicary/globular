@@ -302,7 +302,7 @@ class Display3D {
         window.last_scaffold = scaffold;
 
         // Create 3D geometry from scaffold
-        let { geometry, sliceGeometries } = getGeometry3D(scaffold, effectiveDimension);
+        let { geometry, sliceGeometries } = getGeometry3D(scaffold);
 
         // Postprocess the geometries
         //roundGeometryQuarters(geometry);
@@ -319,8 +319,6 @@ class Display3D {
         } else {
             sliceGeometries = [];
         }
-
-        console.log(geometry);
 
         return { diagramGeometry: geometry, sliceGeometries };
     }

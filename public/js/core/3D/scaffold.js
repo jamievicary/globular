@@ -12,18 +12,32 @@ class Scaffold {
         if (this.dimension == 0 && this.entities.length != 1) debugger;
 
         for (let entity of entities) {
-            if (entity.dimension != this.dimension) {
+            if (this.dimension > 0 && entity.dimension != this.dimension) {
                 throw new Error(`Scaffold of dimension ${this.dimension} can not contain entity of dimension ${entity.dimension}.`);
             }
         }
     }
 
-    static of(diagram) {
-        let source = diagram.getDimension() != 0 ? Scaffold.of(diagram.source) : null;
+    static of(diagram, dimension = null) {
+        dimension = dimension === null ? diagram.getDimension() : dimension;
 
+        if (dimension == 0) {
+            let entity = null;
+            let slice = diagram;
+            while (entity == null) {
+                if (slice.cells.length > 0) {
+                    entity = Entity.of(slice, slice.cells.length - 1);
+                } else {
+                    slice = slice.getSourceBoundary();
+                }
+            }
+            return new Scaffold(null, [entity]);
+        }
+
+        let source = Scaffold.of(diagram.source, dimension - 1);
         let entities = [];
         for (let level = 0; level < diagram.cells.length; level++) {
-            entities.push(Entity.of(diagram, level));
+            entities.push(Entity.of(diagram, level, dimension));
         }
 
         return new Scaffold(source, entities);
@@ -53,7 +67,7 @@ class Scaffold {
         return new Scaffold(this.source, entities);
     }
 
-    getSlice(level, codimension = 0) {
+    getSlice(level) {
         if (this.dimension == 0) {
             throw new Error("Scaffold of dimension 0 has no slices.");
         }
@@ -79,9 +93,8 @@ class Scaffold {
 
             // Rewrite previous full slice
             let entity = this.entities[rounded];
-            if (codimension != 1) entity = entity.toNormal();
-            let slice = this.getSlice(rounded, codimension);
-            slice = entity.rewriteHalf(slice, codimension == 0);
+            let slice = this.getSlice(rounded);
+            slice = entity.rewriteHalf(slice);
             this.halfSlices[rounded] = slice;
             return slice;
         }
@@ -90,7 +103,7 @@ class Scaffold {
         if (this.slices[rounded]) return this.slices[rounded];
 
         // Rewrite previous slice
-        let slice = this.getSlice(rounded - 1, codimension);
+        let slice = this.getSlice(rounded - 1);
         slice = slice.rewrite(this.entities[rounded - 1]);
         this.slices[rounded] = slice;
         return slice;
@@ -128,18 +141,18 @@ class Scaffold {
         return new Scaffold(source, entities);
     }
 
-    moveEntity(entity, boundaryType, point, codimension) {
-        if (entity.meta.interchange > 0 && codimension == 0) {
-            return this.moveInterchange(entity, boundaryType, point, codimension);
+    moveEntity(entity, boundaryType, point) {
+        if (entity.meta.interchange > 0 && this.dimension == 2) {
+            return this.moveInterchange(entity, boundaryType, point);
         } else {
             let boundary = boundaryType == "s" ? entity.source : entity.target;
             return this.move([
                 { inclusion: entity.inclusion, boundary }
-            ], point, codimension);
+            ], point);
         }
     }
 
-    moveInterchange(entity, boundaryType, point, codimension) {
+    moveInterchange(entity, boundaryType, point) {
         let boundary = boundaryType == "s" ? entity.source : entity.target;
 
         let bottom = boundary.entities[0];
@@ -167,16 +180,16 @@ class Scaffold {
             rest = slice.move([
                 { inclusion: bottom.inclusion, boundary: b },
                 { inclusion: top.inclusion, boundary: a}
-            ], rest, codimension + 1);
+            ], rest);
             newHeight = entity.height + 0.5;
         } else if (height >= entity.height + 0.75 && height <= entity.height + 1.25) {
-            let slice = this.getSlice(height, codimension);
+            let slice = this.getSlice(height);
             let a = top.source;
             let b = bottom.target;
             rest = slice.move([
                 { inclusion: top.inclusion, boundary: a },
                 { inclusion: bottom.inclusion, boundary: b }
-            ], rest, codimension + 1);
+            ], rest);
             newHeight = entity.height + 0.5;
         } else if (height == entity.height + 1.5) {
             if (!inverse) {
@@ -190,7 +203,7 @@ class Scaffold {
             rest = slice.move([
                 { inclusion: top.inclusion, boundary: a },
                 { inclusion: bottom.inclusion, boundary: b }
-            ], rest, codimension + 1);
+            ], rest);
             newHeight = entity.height + 0.5;
         }
 
@@ -201,7 +214,7 @@ class Scaffold {
         return rest.concat([newHeight]);
     }
 
-    move(included, point, codimension, dodge = true) {
+    move(included, point, dodge = true) {
         // Does this really depend on the current scaffold?
 
         if (point.length == 0) {
@@ -228,13 +241,13 @@ class Scaffold {
 
             // Inside the height of the box?
             if (span.min < height + 0.25 && span.max > height - 0.25) {
-                let slice = this.getSlice(height, codimension);
-                let boundarySlice = boundary.getSlice(height - inclusion[inclusion.length - 1], codimension);
+                let slice = this.getSlice(height);
+                let boundarySlice = boundary.getSlice(height - inclusion[inclusion.length - 1]);
                 let inclusionSlice = inclusion.slice(0, -1);
                 rest = slice.move([{
                     inclusion: inclusionSlice,
                     boundary: boundarySlice
-                }], rest, codimension + 1);
+                }], rest);
                 newHeight = span.min + 0.5;
                 break;
             }

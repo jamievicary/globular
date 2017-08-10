@@ -40,23 +40,22 @@ class Entity extends AbstractEntity {
         return this.source === null ? 0 : this.source.dimension + 1;
     }
 
-    static of(diagram, level) {
-        let dimension = diagram.getDimension();
-
+    static of(diagram, level, dimension) {
         let cell = diagram.cells[level];
         let meta = getMeta(diagram, level);
-        let inclusion = Box.sourceOf(diagram, level).min.slice(-dimension + 1);
+        let inclusion = Box.sourceOf(diagram, level).min;
+        inclusion = inclusion.slice(inclusion.length - dimension + 1);
 
         let { source, target } = getBoundaryDiagrams(diagram, level);
-        source = source ? Scaffold.of(source) : null;
-        target = target ? Scaffold.of(target) : null;
+        source = dimension > 0 ? Scaffold.of(source, dimension - 1) : null;
+        target = dimension > 0 ? Scaffold.of(target, dimension - 1) : null;
 
         return new Entity(inclusion, source, target, meta);
     }
 
-    rewriteHalf(scaffold, topLevel) {
+    rewriteHalf(scaffold) {
         // Is interchanger entity?
-        if (this.meta.interchange > 0 && topLevel) {
+        if (this.meta.interchange > 0 && scaffold.dimension == 2) {
             let inverse = this.meta.interchange == 2;
 
             let bottom = scaffold.entities[this.height];

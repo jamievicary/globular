@@ -106,25 +106,23 @@ class Cell {
  * @param {Scaffold} scaffold 
  * @return 
  */
-const getGeometry3D = (scaffold, dimension, codimension = 0) => {
-    if (dimension > scaffold.dimension) debugger;
-
-    if (dimension == 0) {
+const getGeometry3D = (scaffold, codimension = 0) => {
+    if (scaffold.dimension == 0) {
         let geometry = getGeometryBase(scaffold);
         return { geometry, sliceGeometries: null };
     } else {
-        let sliceGeometries = getSliceGeometries(scaffold, dimension, codimension);
-        let geometry = getGeometryStep(scaffold, sliceGeometries, dimension, codimension);
+        let sliceGeometries = getSliceGeometries(scaffold, codimension);
+        let geometry = getGeometryStep(scaffold, sliceGeometries, codimension);
         return { geometry, sliceGeometries };
     }
 }
 
-const getSliceGeometries = (scaffold, dimension, codimension) => {
+const getSliceGeometries = (scaffold, codimension) => {
     let sliceGeometries = [];
 
     for (let level = 0; level <= scaffold.size; level++) {
-        let scaffoldSlice = scaffold.getSlice(level, codimension);
-        let sliceGeometry = getGeometry3D(scaffoldSlice, dimension - 1, codimension + 1).geometry;
+        let scaffoldSlice = scaffold.getSlice(level);
+        let sliceGeometry = getGeometry3D(scaffoldSlice, codimension + 1).geometry;
         sliceGeometries.push(sliceGeometry);
     }
 
@@ -156,7 +154,7 @@ const getGeometryBase = (scaffold) => {
  * @param {Geometry[]} sliceGeometries
  * @return {Diagram}
  */
-const getGeometryStep = (scaffold, sliceGeometries, dimension, codimension) => {
+const getGeometryStep = (scaffold, sliceGeometries, codimension) => {
     let geometry = new Geometry();
     let topDimension = codimension == 0;
 
@@ -169,24 +167,24 @@ const getGeometryStep = (scaffold, sliceGeometries, dimension, codimension) => {
         let top = topDimension ? level + 1 : level + 0.75;
 
         // Lift the source and target slice geometries as prescribed by the scaffold.
-        let sourceScaffold = scaffold.getSlice(level, codimension);
+        let sourceScaffold = scaffold.getSlice(level);
         let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
-            let target = sourceScaffold.moveEntity(entity, "s", point, codimension);
+            let target = sourceScaffold.moveEntity(entity, "s", point);
             return target.concat([middle]);
         });
 
-        let targetScaffold = scaffold.getSlice(level + 1, codimension);
+        let targetScaffold = scaffold.getSlice(level + 1);
         let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
-            let target = targetScaffold.moveEntity(entity, "t", point, codimension);
+            let target = targetScaffold.moveEntity(entity, "t", point);
             //if (target.concat([middle]).join(":") == "2.5:1.5:1.5") debugger;
             return target.concat([middle]);
         }, true);
         
         geometry.append(sourceGeometry, targetGeometry);
 
-        //if (entity.meta.swap == 0) {
-            geometry.add(getVertex(scaffold, level, dimension), entity.meta);
-        //}
+        if (entity.meta.interchange == 0) {
+            geometry.add(getVertex(scaffold, level), entity.meta);
+        }
     }
 
     // Generate the quarter-slice geometry
