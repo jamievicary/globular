@@ -138,8 +138,9 @@ exports.register_user = function(req, res) {
 				});
 			});
 
-		});
+		}); 
 
+		//.
 	} else {
 		console.log(errors);
 		res.send({
