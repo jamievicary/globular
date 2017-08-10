@@ -106,23 +106,25 @@ class Cell {
  * @param {Scaffold} scaffold 
  * @return 
  */
-const getGeometry3D = (scaffold, topDimension = true) => {
-    if (scaffold.dimension == 0) {
+const getGeometry3D = (scaffold, dimension, codimension = 0) => {
+    if (dimension > scaffold.dimension) debugger;
+
+    if (dimension == 0) {
         let geometry = getGeometryBase(scaffold);
         return { geometry, sliceGeometries: null };
     } else {
-        let sliceGeometries = getSliceGeometries(scaffold);
-        let geometry = getGeometryStep(scaffold, sliceGeometries, topDimension);
+        let sliceGeometries = getSliceGeometries(scaffold, dimension, codimension);
+        let geometry = getGeometryStep(scaffold, sliceGeometries, dimension, codimension);
         return { geometry, sliceGeometries };
     }
 }
 
-const getSliceGeometries = (scaffold) => {
+const getSliceGeometries = (scaffold, dimension, codimension) => {
     let sliceGeometries = [];
 
     for (let level = 0; level <= scaffold.size; level++) {
-        let scaffoldSlice = scaffold.getSlice(level);
-        let sliceGeometry = getGeometry3D(scaffoldSlice, false).geometry;
+        let scaffoldSlice = scaffold.getSlice(level, codimension);
+        let sliceGeometry = getGeometry3D(scaffoldSlice, dimension - 1, codimension + 1).geometry;
         sliceGeometries.push(sliceGeometry);
     }
 
@@ -138,10 +140,9 @@ const getSliceGeometries = (scaffold) => {
 const getGeometryBase = (scaffold) => {
     let geometry = new Geometry();
 
-    if (scaffold.dimension == 0) {
-        let meta = scaffold.cells[0].meta;
-        geometry.add(getVertex(scaffold, 0), meta);
-    }
+    // TODO: Get meta differently here
+    let meta = scaffold.getEntity(0).meta;
+    geometry.add(getVertex(scaffold, 0, 0), meta);
 
     return geometry;
 }
@@ -155,35 +156,37 @@ const getGeometryBase = (scaffold) => {
  * @param {Geometry[]} sliceGeometries
  * @return {Diagram}
  */
-const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
+const getGeometryStep = (scaffold, sliceGeometries, dimension, codimension) => {
     let geometry = new Geometry();
+    let topDimension = codimension == 0;
 
     // Generate the geometry level-wise
     for (let level = 0; level < scaffold.size; level++) {
-        let cell = scaffold.getCell(level);
+        let entity = scaffold.getEntity(level);
         
         let bottom = topDimension ? level : level + 0.25;
         let middle = level + 0.5;
         let top = topDimension ? level + 1 : level + 0.75;
 
         // Lift the source and target slice geometries as prescribed by the scaffold.
-        let sourceScaffold = scaffold.getSlice(level);
+        let sourceScaffold = scaffold.getSlice(level, codimension);
         let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
-            let target = sourceScaffold.moveCell(cell, point, "s");
+            let target = sourceScaffold.moveEntity(entity, "s", point, codimension);
             return target.concat([middle]);
         });
 
-        let targetScaffold = scaffold.getSlice(level + 1);
+        let targetScaffold = scaffold.getSlice(level + 1, codimension);
         let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
-            let target = targetScaffold.moveCell(cell, point, "t");
+            let target = targetScaffold.moveEntity(entity, "t", point, codimension);
+            //if (target.concat([middle]).join(":") == "2.5:1.5:1.5") debugger;
             return target.concat([middle]);
         }, true);
         
         geometry.append(sourceGeometry, targetGeometry);
 
-        if (!cell.meta.swap) {
-            geometry.add(getVertex(scaffold, level), cell.meta);
-        }
+        //if (entity.meta.swap == 0) {
+            geometry.add(getVertex(scaffold, level, dimension), entity.meta);
+        //}
     }
 
     // Generate the quarter-slice geometry
@@ -206,12 +209,12 @@ const getGeometryStep = (scaffold, sliceGeometries, topDimension) => {
  * @param {int} level 
  * @return {number[]}
  */
-const getVertex = (scaffold, level) => {
-    if (scaffold.dimension == 0) {
+const getVertex = (scaffold, level, dimension) => {
+    if (dimension == 0) {
         return [];
     }
-    let key = scaffold.cells[level].key.concat([level]);
-    return key.slice(-scaffold.dimension).map(x => x + 0.5);
+    let key = scaffold.getEntity(level).inclusion.concat([level]);
+    return key.slice(-dimension).map(x => x + 0.5);
 }
 
 /**
@@ -224,7 +227,10 @@ const getVertex = (scaffold, level) => {
  */
 const getMeta = (diagram, level) => {
     let cell = diagram.cells[level];
-    return { dimension: diagram.getDimension(), cell };
+    let interchange = 0;
+    if (cell.id == "Int") interchange = 1;
+    if (cell.id == "IntI0") interchange = 2;
+    return { dimension: diagram.getDimension(), cell, interchange };
 }
 
 

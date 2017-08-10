@@ -165,14 +165,6 @@ String.prototype.last = function() {
     return this.substr(this.length - 1, 1);
 }
 
-Array.prototype.fill = function(value, length) {
-    this.length = 0;
-    for (var i = 0; i < length; i++) {
-        this[i] = value;
-    }
-    return this;
-};
-
 String.prototype.is_basic_interchanger = function() {
     return (this == 'Int' || this == 'IntI0');
 };

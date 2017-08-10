@@ -291,6 +291,7 @@ class Display3D {
 
         // Calculate the dimension of the visible diagram under the current projection
         let effectiveDimension = Math.min(3, diagram.getDimension() - this.manager.getSuppress());
+        console.log(effectiveDimension);
 
         // Create a scaffold for the projected diagram
         let scaffold = Scaffold.of(diagram, effectiveDimension);
@@ -301,14 +302,14 @@ class Display3D {
         window.last_scaffold = scaffold;
 
         // Create 3D geometry from scaffold
-        let { geometry, sliceGeometries } = getGeometry3D(scaffold);
+        let { geometry, sliceGeometries } = getGeometry3D(scaffold, effectiveDimension);
 
         // Postprocess the geometries
         //roundGeometryQuarters(geometry);
         layoutGeometry3D(scaffold, geometry);
         geometry.scale(40, 40, 80);
 
-        if (scaffold.dimension > 0) {
+        if (effectiveDimension > 0) {
             sliceGeometries.forEach((sliceGeometry, level) => {
                 sliceGeometry.move(p => p.concat([level]));
                 //roundGeometryQuarters(sliceGeometry);

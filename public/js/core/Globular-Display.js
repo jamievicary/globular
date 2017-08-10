@@ -98,7 +98,7 @@ class DisplayManager {
         let c = this.container;
 
         // Remove any existing controls
-        $(this.container).children('div.control').remove();
+        this.removeControls();
 
         // Create no controls if there is no active display
         if (this.display === null) return;
@@ -143,6 +143,10 @@ class DisplayManager {
 
         // Create the display specific controls
         this.display.createControls();
+    }
+
+    removeControls() {
+        $(this.container).children('div.control').remove();
     }
 
     updateSliceContainer(drag, controls) {
@@ -324,6 +328,8 @@ class DisplayManager {
 
         if (data.diagram != null) {
             this.updateControls(data.drag, data.controls);
+        } else {
+            this.removeControls();
         }
 
         this.display.setDiagram(data.diagram, data.preserve_view);
