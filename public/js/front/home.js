@@ -54,11 +54,12 @@ function render_frontend(state) {
         $("div.enable_if-in").show();
         $("div.enable_if-out").hide();
     }
-    //if (window.location.pathname.length < 3) {
-    if (!gProject.initialized) {
-        console.log('Rendering uninitialized workspace');
-        render_project_front('');
-        $("#diagram-title").val("My workspace");
+    if (window.location.pathname.length < 3) {
+        if (!gProject.initialized) {
+            console.log('Rendering uninitialized workspace');
+            render_project_front('');
+            $("#diagram-title").val("My workspace");
+        }
     }
 }
 
