@@ -335,6 +335,13 @@ $(document).ready(function() {
         });
     }
 
+    // Handle pressing enter on login form
+    $('#login_pass,#login_email').keydown(function(e) {
+      if(e.keyCode == 13) { // enter key
+        $('#login-button').trigger('click');
+        return false;
+      }
+    });
 
     //login trigger
     $("#login-button").click(function() {
