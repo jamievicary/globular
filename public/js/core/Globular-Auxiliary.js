@@ -519,9 +519,9 @@ function globular_lz4_decompress(object) {
     for (var i = 0, strLen = str.length; i < strLen; i++) {
         bufView[i] = str.charCodeAt(i);
     }
-    var uncompressed = new Buffer(object.original_length);
-    var size = LZ4.decodeBlock(bufView, uncompressed);
-    var uncompressed_string = Uint8ToString(uncompressed);
+    var uncompressed_uint8 = new Buffer(object.original_length);
+    var size = LZ4.decodeBlock(bufView, uncompressed_uint8);
+    var uncompressed_string = Uint8ToString(uncompressed_uint8);
     timer.Report();
     return uncompressed_string;
 }
@@ -540,7 +540,6 @@ function Uint8ToString(u8a) {
     return c.join("");
     */
 }
-
 function download(filename, text) {
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));

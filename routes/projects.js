@@ -17,11 +17,11 @@ exports.get_projects = function(req, res) {
 }
 
 exports.get_project_list = function(req, res) {
-	var listType = parseInt(req.body.listType);
+	var listType = req.body.listType;
 	var user_id = req.session.user_id;
 	switch (listType) {
-		case 1:
-			// get users private projects - as linear array of project IDS e.g (1,2,4).
+		case 'user private':
+			// get user's private projects as an array of project indices, eg [1, 2, 4]
 			fs.readdir('database/users/' + user_id + '/projects', function(err, all_ids) {
 				console.log(err);
 				res.send({
@@ -31,8 +31,8 @@ exports.get_project_list = function(req, res) {
 				});
 			});
 			break;
-		case 2:
-			//get users public projects - as list of public project IDS e,g (1510.001, 1508.004)
+		case 'user public':
+			// get user's public projects as list of public project IDs, eg ['1510.001', '1508.004']
 			fs.readFile('database/users/' + user_id + '/data.json', 'utf8', function(err, result) {
 				console.log(result);
 				result = JSON.parse(result);
@@ -43,9 +43,8 @@ exports.get_project_list = function(req, res) {
 				});
 			});
 			break;
-		case 3:
-
-			//get all public projects - as list of  public project IDS e,g (1510.001, 1508.004)
+		case 'all public':
+			// get all public projects as list of public project IDs, eg ['1510.001', '1508.004']
 			var dateName = req.body.projectData;
 			fs.readdir('database/projects/' + dateName, function(err, files) {
 				var pp_addresses = [];

@@ -506,12 +506,17 @@ $(document).ready(function() {
     function render_project_list(listType, projectData) {
 
         $("#plist").html("");
-        if (listType == 2 || listType == 3) {
+        if (listType == 'user public' || listType == 'all public') {
             $("#pl-addnew").html("");
         }
         //$("#gallery-box").fadeIn();
         var gallerybox = $('#gallery-box');
         gallerybox.show();
+        /*
+        1 = 'user private'
+        2 = 'user public'
+        3 = 'all public'
+        */
 
         $.post("/get_project_list", {
             listType: listType,
@@ -532,18 +537,17 @@ $(document).ready(function() {
                     var versions = [];
                     var ppOptHTML = "";
                     var addVersionSelectOptHTML = "";
-                    if (listType == 2 || listType == 3) {
+                    if (listType == 'user public' || listType == 'all public') {
                         var dateName = pID.substring(0, 4);
                         var projectNo = pID.substring(5);
 
                         pIDu = dateName + "_" + projectNo;
                         datePubHTML = "Date published: <span id = 'date" + pIDu + "'></span><br>";
                         authHTML = "Authors: <span id = 'authors" + pIDu + "'></span><br>";
-                        if (listType != 1) {
+                        if (listType != 'user private') {
                             versionOptionsHTML = "View version: <span id = 'version-list" + pIDu + "'></span>";
-
                         }
-                        if (projectData.substring(0, 2) == "av" && listType == 2) {
+                        if (projectData.substring(0, 2) == "av" && listType == 'user public') {
                             addVersionSelectOptHTML = "<span id = 'AV-select" + pIDu + "' class = 'AV-select'>SELECT</span>";
                             $(".AV-select").animate({
                                 letterSpacing: "3px"
@@ -560,7 +564,7 @@ $(document).ready(function() {
                                 }, 700);
                             }, 1400);
                         }
-                    } else if (listType == 1) {
+                    } else if (listType == 'user private') {
                         delProjectHTML = "<div class = 'delete-container'><span class = 'del-project' id = 'del" + pIDu + "'>Delete</span><span id = 'indel-" + pIDu + "' style = 'display:none'><input id = 'dct-" + pIDu + "' type = 'text' placeholder = 'Type \"delete\" to confirm' class = 'del-confirm-field'> <span id = 'cancel-del-" + pIDu + "' class = 'cancel-del'>x</span></span></div>";
                         publishOptHTML = "<span class = 'publish-project' id = 'pub" + pIDu + "'>Publish</span>";
                         shareOptHTML = "<span class = 'share-project-opt' id = 'share-p" + pIDu + "'>Share</span>";
@@ -583,7 +587,7 @@ $(document).ready(function() {
                 for (var i = 0; i <= project_ids.length - 1; i++) {
                     var pID = project_ids[i];
                     var pIDu = project_ids[i].replace('.', '_');
-                    if (listType == 1) {
+                    if (listType == 'user private') {
                         (function(pID) {
                             var user_id = result.user_id;
 
@@ -595,7 +599,7 @@ $(document).ready(function() {
                                 $("#desc" + pID).html(meta.project_desc);
                             });
                         })(pID);
-                    } else if (listType == 2 || listType == 3) {
+                    } else if (listType == 'user public' || listType == 'all public') {
                         (function(pIDu, pID) {
                             var Edata;
                             var dateName = project_ids[i].substring(0, 4);
@@ -617,7 +621,6 @@ $(document).ready(function() {
                             $.post('/get_pp_versions', {
                                 pid: pIDu
                             }, function(result) {
-
                                 for (var i = 0; i <= result.length - 1; i++) {
                                     $("#version-list" + pIDu).append("<a href = '/" + pID + result[i] + "'>" + result[i] + "</a>,");
                                 }
@@ -627,7 +630,7 @@ $(document).ready(function() {
                     }
                 }
 
-                if (listType == 1) {
+                if (listType == 'user private') {
 
                     // select/open a private project
                     $(".gallery-comp-title").click(function() {
@@ -711,7 +714,7 @@ $(document).ready(function() {
                             show_msg("Please select which public workspace you would like to add this version to...", 20000, 3);
 
                             $("#change-list-type").val("3").change();
-                            render_project_list(2, "av" + p_id);
+                            render_project_list('user public', "av" + p_id);
                         });
                     });
                     $(".share-project-opt").click(function() {
@@ -730,7 +733,7 @@ $(document).ready(function() {
                             });
                         });
                     });
-                } else if (listType == 3 || listType == 2) {
+                } else if (listType == 'user public' || listType == 'all public') {
                     $(".gallery-comp-title").click(function() {
                         global_p_id = $(this).attr("id").substring(5);
                         var dateName = global_p_id.substring(0, 4);
@@ -749,7 +752,7 @@ $(document).ready(function() {
                             gProject.saveState();
                         });
                     });
-                    if (listType == 2 && projectData.substring(0, 2) == "av") {
+                    if (listType == 'user public' && projectData.substring(0, 2) == "av") {
                         $(".AV-select").click(function() {
                             var public_id = $(this).attr("id").substring(9);
                             var private_id = projectData.substring(2);
@@ -762,7 +765,7 @@ $(document).ready(function() {
                             }, function(result) {
                                 if (result == "success") {
                                     show_msg("Successfully added new version.", 3000, 2);
-                                    render_project_list(1, "");
+                                    render_project_list('user private', "");
                                 }
                             });
                         });
@@ -794,9 +797,9 @@ $(document).ready(function() {
                 optionsHTML = "<option value = '" + currentDateName + "'>" + currentDateName + "</options>" + optionsHTML;
             }
             $("#pl-title").html("The Globular Gallery <select id = 'change-gg-month' class = 'pl-selects'>" + optionsHTML + "</select>");
-            render_project_list(3, currentDateName);
+            render_project_list('all public', currentDateName);
             $("#change-gg-month").change(function() {
-                render_project_list(3, $(this).val());
+                render_project_list('all public', $(this).val());
             });
         });
     });
@@ -858,8 +861,8 @@ $(document).ready(function() {
             });
         }
 
-        $("#pl-title").html("Your <select id = 'change-list-type' class = 'pl-selects'><option value = '1'>Private</option><option value = '2'>Published</option></select> Workspaces ");
-        render_project_list(1, "");
+        $("#pl-title").html("Your <select id = 'change-list-type' class = 'pl-selects'><option value = 'user private'>Private</option><option value = 'user public'>Published</option></select> Workspaces ");
+        render_project_list('user private', "");
         var addNewProjectHTML = "<div id='add-project-opt'>" +
             "<div id = 'addp-title'>New workspace +</div>" +
             "<input type='text' placeholder='Workspace name' id='ap-name' class='text-field-style-1' style='width: 90%;margin-top:15px;'>" +
