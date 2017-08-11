@@ -1,0 +1,1 @@
+putty -ssh nodejs@globular.science -m "windows_deploy_cmd.txt" -t
