@@ -140,7 +140,7 @@ $(document).ready(function() {
 
     globular_prepare_renderer();
     MainDisplay = new DisplayManager($('#diagram-canvas'));
-    MainDisplay.setDisplay(new DisplaySVG());
+    MainDisplay.setDisplay("2d-svg");
 
     // Handle key presses
     $(document).keypress(function(event) {

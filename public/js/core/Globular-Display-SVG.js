@@ -153,6 +153,10 @@ class DisplaySVG {
 
     }
 
+    updateControls() {
+        
+    }
+
     updatePanzoom(preserveView) {
         preserveView = this.customView && preserveView;
 

@@ -29,9 +29,9 @@ class LayoutCache {
  * @param {Scaffold} scaffold 
  * @param {Geometry} geometry
  */
-const layoutGeometry3D = (scaffold, geometry) => {
+const layoutGeometry3D = (scaffold, geometry, skip = 0) => {
     let cache = new LayoutCache;
-    geometry.move(point => layoutPoint(scaffold, point, cache, []));
+    geometry.move(point => layoutPoint(scaffold, point, cache, [], skip));
 }
 
 /**
@@ -41,12 +41,17 @@ const layoutGeometry3D = (scaffold, geometry) => {
  * @param {number[]} point 
  * @return {number[]}
  */
-const layoutPoint = (scaffold, point, cache, path = [], depth = 0) => {
+const layoutPoint = (scaffold, point, cache, path = [], skip = 0, depth = 0) => {
     if (point.length == 0) {
         return [];
+    } else if (skip > depth) {
+        let level = roundQuarter(point.last());
+        let slice = scaffold.getSlice(level);
+        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]), skip, depth + 1);
+        return rest.concat([level]);
     } else if (scaffold.size == 0) {
-        let slice = scaffold.getSlice(0, depth);
-        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([0]), depth + 1);
+        let slice = scaffold.getSlice(0);
+        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([0]), skip, depth + 1);
         let height = point.last();
         return rest.concat([height]);
     }
@@ -68,8 +73,8 @@ const layoutPoint = (scaffold, point, cache, path = [], depth = 0) => {
         let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell, "s");
         let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell, "t");
 
-        sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path.concat([Math.floor(level)]), depth + 1));
-        targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path.concat([Math.ceil(level)]), depth + 1));
+        sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path.concat([Math.floor(level)]), skip, depth + 1));
+        targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path.concat([Math.ceil(level)]), skip, depth + 1));
 
         let sourceMean = sourceOrigins.length > 0 ? [getMean(sourceOrigins)] : [];
         let targetMean = targetOrigins.length > 0 ? [getMean(targetOrigins)] : [];
@@ -82,7 +87,7 @@ const layoutPoint = (scaffold, point, cache, path = [], depth = 0) => {
     }
 
     let slice = scaffold.getSlice(level);
-    let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]), depth + 1);
+    let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]), skip, depth + 1);
     let height = getHeight(level, scaffold.size);
     return cache.set(path, point, rest.concat([height]));
 }

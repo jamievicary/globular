@@ -3,8 +3,12 @@ class BezierSurfaceGeometry extends THREE.Geometry {
 
     constructor(points, segments) {
         super();
+
+        // Store parameters
         this.type = "BezierSurfaceGeometry";
         this.parameters = { points, segments };
+
+        // Create from buffer geometry
         this.fromBufferGeometry(new BezierSurfaceBufferGeometry(points, segments));
         this.mergeVertices();
     }
@@ -15,29 +19,39 @@ class BezierSurfaceBufferGeometry extends THREE.BufferGeometry {
 
     constructor(points, segments) {
         super();
+
+        // Store parameters
         this.type = "BezierSurfaceBufferGeometry";
         this.parameters = { points, segments };
 
-        let surface = cubicBezierSurface(points);
+        // Create and fill the buffers
+        this.createBuffers();
+        this.generateIndices();
+        this.generateSurface();
+        this.generateUVs();
 
-        // Build buffers
-        let vertices = [];
-        let normals = [];
-        let uvs = [];
+        // Set geometry
+        this.addAttribute("position", this.vertexBuffer);
+        this.addAttribute("uv", this.uvsBuffer);
+        this.computeVertexNormals();
+    }
 
-        for (let i = 0; i <= segments; i++) {
-            for (let j = 0; j <= segments; j++) {
-                let u = i / segments;
-                let v = j / segments;
-                let { vertex, normal } = surface(u, v);
-                
-                vertices.push(vertex.x, vertex.y, vertex.z);
-                normals.push(normal.x, normal.y, normal.z);
-                uvs.push(u, v);
-            }
-        }
+    createBuffers() {
+        let { segments } = this.parameters;
 
-        // Build indices
+        // Vertices buffer
+        let verticesSize = (segments + 1) * (segments + 1) * 3;
+        this.vertexBuffer = new THREE.Float32BufferAttribute(new Float32Array(verticesSize), 3);
+        this.vertexBuffer.dynamic = true;
+
+        // UV buffer
+        let uvsSize = (segments + 1) * (segments + 1) * 2;
+        this.uvsBuffer = new THREE.Float32BufferAttribute(new Float32Array(uvsSize), 2);
+        this.uvsBuffer.dynamic = true;
+    }
+
+    generateIndices() {
+        let { segments } = this.parameters;
         let indices = [];
 
         for (let i = 0; i < segments; i++) {
@@ -52,53 +66,68 @@ class BezierSurfaceBufferGeometry extends THREE.BufferGeometry {
             }
         }
 
-        // Set geometry
         this.setIndex(indices);
-        this.addAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-        //this.addAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-        this.addAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-        this.computeVertexNormals();
     }
 
-}
+    generateSurface() {
+        let { segments } = this.parameters;
+        let bufferOffset = 0;
+        let vertex = new THREE.Vector3();
 
-const cubicBezierSurface = (points) => (u, v) => {
-    let vertex = new THREE.Vector3();
-    let normalU = new THREE.Vector3();
-    let normalV = new THREE.Vector3();
+        for (let i = 0; i <= segments; i++) {
+            for (let j = 0; j <= segments; j++) {
+                this.sampleVertex(vertex, i / segments, j / segments);
+                this.vertexBuffer.array.set([vertex.x, vertex.y, vertex.z], bufferOffset);
 
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            let a = cubicBernstein[i](u);
-            let b = cubicBernstein[j](v);
-            let point = points[i + j * 4];
-
-            // Compute vertex
-            vertex.add(point.clone().multiplyScalar(a * b));
-
-            // Compute normal
-            let da = cubicBernsteinDiff[i](u);
-            let db = cubicBernsteinDiff[j](v);
-
-            normalU.add(point.clone().multiplyScalar(da * b));
-            normalV.add(point.clone().multiplyScalar(a * db));
+                bufferOffset += 3;
+            }
         }
     }
 
-    normalU.cross(normalV);
-    return { vertex, normal: normalU };
+    generateUVs() {
+        let { segments } = this.parameters;
+        let bufferOffset = 0;
+
+        for (let i = 0; i <= segments; i++) {
+            for (let j = 0; j <= segments; j++) {
+                let u = i / segments;
+                let v = j / segments;
+                this.uvsBuffer.array.set([u, v], bufferOffset);
+                bufferOffset += 2;
+            }
+        }
+    }
+
+    sampleVertex(vertex, u, v) {
+        let { points } = this.parameters;
+        vertex.set(0, 0, 0);
+
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                let a = this.cubicBernstein(i, u);
+                let b = this.cubicBernstein(j, v);
+                let point = points[i + j * 4];
+                vertex.addScaledVector(point, a * b);
+            }
+        }
+    }
+
+    cubicBernstein(i, x) {
+        switch (i) {
+            case 0: return (1 - x) * (1 - x) * (1 - x);
+            case 1: return 3 * (1 - x) * (1 - x) * x;
+            case 2: return 3 * (1 - x) * x * x;
+            case 3: return x * x * x;
+        }
+    }
+
+    update(points) {
+        this.parameters.points = points;
+
+        this.generateSurface();
+        this.computeVertexNormals();
+
+        this.vertexBuffer.needsUpdate = true;
+    }
+
 }
-
-const cubicBernstein = [
-    x => 1 * (1 - x) * (1 - x) * (1 - x),
-    x => 3 * (1 - x) * (1 - x) * x,
-    x => 3 * (1 - x) * x * x,
-    x => 1 * x * x * x
-];
-
-const cubicBernsteinDiff = [
-    x => -3 * (1 - x) * (1 - x),
-    x => -6 * (1 - x) * x + 3 * (1 - x) * (1 - x),
-    x => -3 * x * x + 6 * (1 - x) * x,
-    x => 3 * x * x
-];

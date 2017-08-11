@@ -29,7 +29,7 @@ class Geometry {
      * @param {*} meta Metadata to identify the associated diagram cell.
      */
     add(vertex, meta) {
-        this.cells.push(new Cell(0, [vertex], meta));
+        this.cells.push(new GeometryCell(0, [vertex], meta));
     }
 
     /**
@@ -69,9 +69,18 @@ class Geometry {
         return new Geometry(cells);
     }
 
+    filterEmpty() {
+        return this.filterCells(cell => {
+            let heights = cell.vertices.map(v => v[v.length - 1]);
+            let min = Math.min(...heights);
+            let max = Math.max(...heights);
+            return min < max || cell.dimension == 0;
+        });
+    }
+
 }
 
-class Cell {
+class GeometryCell {
 
     constructor(dimension, vertices, meta) {
         this.dimension = dimension;
@@ -96,7 +105,7 @@ class Cell {
             return null;
         }
 
-        return new Cell(this.dimension + 1, vertices, this.meta);
+        return new GeometryCell(this.dimension + 1, vertices, this.meta);
     }
 
 }
@@ -123,7 +132,7 @@ const getSliceGeometries = (scaffold, codimension) => {
     for (let level = 0; level <= scaffold.size; level++) {
         let scaffoldSlice = scaffold.getSlice(level);
         let sliceGeometry = getGeometry3D(scaffoldSlice, codimension + 1).geometry;
-        sliceGeometries.push(sliceGeometry);
+        sliceGeometries.push(sliceGeometry.filterEmpty());
     }
 
     return sliceGeometries;
@@ -176,7 +185,6 @@ const getGeometryStep = (scaffold, sliceGeometries, codimension) => {
         let targetScaffold = scaffold.getSlice(level + 1);
         let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
             let target = targetScaffold.moveEntity(entity, "t", point);
-            //if (target.concat([middle]).join(":") == "2.5:1.5:1.5") debugger;
             return target.concat([middle]);
         }, true);
         
@@ -266,4 +274,41 @@ const roundGeometryQuarters = (geometry) => {
                 return Math.ceil(x);
         }
     }));
+}
+
+const getTimeSliceGeometry = (geometry, time) => {
+    let cells = [];
+
+    for (let cell of geometry.cells) {
+        // Can't take slices of vertices
+        if (cell.dimension == 0) continue;
+
+        // Obtain the start and end vertices of the cell
+        let length = cell.vertices.length;
+        let start = cell.vertices.slice(0, length / 2);
+        let end = cell.vertices.slice(length / 2);
+
+        // Interpolate the vertices
+        let display = true;
+        let vertices = [];
+        for (let i = 0; i < start.length; i++) {
+            let timeStart = start[i].last();
+            let timeEnd = end[i].last();
+            
+            if (timeStart > time || time > timeEnd) {
+                display = false;
+                break;
+            };
+
+            let relativeTime = (time - timeStart) / (timeEnd - timeStart);
+            vertices.push(interpolateVectors(start[i].slice(0, -1), end[i].slice(0, -1), relativeTime));
+        }
+
+        if (!display) continue;
+
+        // Create the sliced cell
+        cells.push(new GeometryCell(cell.dimension - 1, vertices, cell.meta));
+    }
+
+    return new Geometry(cells);
 }

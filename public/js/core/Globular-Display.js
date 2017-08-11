@@ -21,6 +21,7 @@ class DisplayManager {
         this['_t'] = 'DisplayManager';
         this.container = $(container);
         this.display = null;
+        this.displayControls = null;
         this.displayType = null;
         this.diagram = null;
         
@@ -38,15 +39,20 @@ class DisplayManager {
 
         if (this.display !== null) {
             this.display.dispose();
-            this.displayControls.empty();
+            if (this.displayControls !== null) this.displayControls.empty();
         }
 
-        this.display = type == "3d" ? new Display3D() : new DisplaySVG();
+        if (type === "2d-svg") this.display = new DisplaySVG();
+        else if (type === "2d-animated") this.display = new Display3D(2, true);
+        else if (type === "3d") this.display = new Display3D(3, false);
+        else if (type === "3d-animated") this.display = new Display3D(3, true);
+        else throw new Error(`Unsupported display type ${type}.`);
+
         this.displayType = type;
         this.display.setup(this);
         
-        this.updateControls(null, null);
-        this.display.setDiagram(this.diagram, false);
+        this.removeControls();
+        this.setDiagram({ diagram: this.diagram, preserve_view: false });
     }
 
     hasControls() {
@@ -86,6 +92,9 @@ class DisplayManager {
 
         // Update the slice controls
         this.updateSliceContainer(drag, controls);
+
+        // Update the display controls
+        if (this.display) this.display.updateControls();
     }
 
     changeControls() {

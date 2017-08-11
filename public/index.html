@@ -31,12 +31,11 @@
 	<script src="/js/core/Globular-Display-SVG.js"></script>
 	<script src="/js/core/Globular-Display-3D.js"></script>
 	<script src="/js/core/3D/bezier-surface.js"></script>
+	<script src="/js/core/3D/tube-geometry.js"></script>
 	<script src="/js/core/3D/entity.js"></script>
 	<script src="/js/core/3D/geometry.js"></script>
 	<script src="/js/core/3D/layout.js"></script>
-	<script src="/js/core/3D/render.js"></script>
 	<script src="/js/core/3D/scaffold.js"></script>
-	<script src="/js/core/3D/span.js"></script>
 	<script src="/js/core/Singularities/0-Singularities.js"></script>
 	<script src="/js/core/Singularities/0-Inverses.js"></script>
 	<script src="/js/core/Singularities/3-Int.js"></script>
@@ -47,6 +46,7 @@
 	<script src="/js/core/Singularities/5-IntLP.js"></script>
 	<script src="/js/libs/EditorControls.js"></script>
 	<script src="/js/front/home.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.3.5/Tween.min.js"></script>
 	<script src="/js/libs/jquery.mousewheel.min.js"></script>
 	<script>
 	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -95,10 +95,14 @@
 				<div id="restrict-opt" class="diagram-button"><u>R</u>estrict</div>
 				<div id="theorem-opt" class="diagram-button">T<u>h</u>eorem</div>
 				<div id="graphic-opt" class="diagram-button"><u>G</u>raphic</div>
-				<select id="renderer-opt">
-					<option value="svg">2D</option>
-					<option value="3d">3D</option>
-				</select>
+				<div>
+					<select id="renderer-opt">
+						<option value="2d-svg">2D (SVG)</option>
+						<option value="2d-animated">2D (Animated)</option>
+						<option value="3d">3D</option>
+						<option value="3d-animated">3D (Animated)</option>
+					</select>
+				</div>
 				<!-- disabling stochastic code for now
 				<div id="run-process" class="diagram-button">Run Process</div>
 				<div id='sto-form' class="diagram-button">Stochastic

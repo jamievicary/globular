@@ -1,27 +1,6 @@
-class AbstractEntity {
-
-    get height() {
-        return this.inclusion.length == 0 ? 0 : this.inclusion[this.inclusion.length - 1];
-    }
-
-    getSourceBox() {
-        let box = this.source.getBox();
-        box = box.move(this.inclusion);
-        return box;
-    }
-
-    getTargetBox() {
-        let box = this.target.getBox();
-        box = box.move(this.inclusion);
-        return box;
-    }
-
-}
-
-class Entity extends AbstractEntity {
+class Entity {
 
     constructor(inclusion, source, target, meta) {
-        super();
         this.inclusion = inclusion;
         this.source = source;
         this.target = target;
@@ -38,6 +17,10 @@ class Entity extends AbstractEntity {
 
     get dimension() {
         return this.source === null ? 0 : this.source.dimension + 1;
+    }
+
+    get height() {
+        return this.inclusion.length == 0 ? 0 : this.inclusion[this.inclusion.length - 1];
     }
 
     static of(diagram, level, dimension) {
@@ -105,16 +88,11 @@ class Entity extends AbstractEntity {
         return new Scaffold(this.source, [entity]);
     }
 
-    toNormal() {
-        return this;
-    }
-
 }
 
-class ParallelEntity extends AbstractEntity {
+class ParallelEntity {
 
     constructor(inclusion, left, right, source, target, meta) {
-        super();
         this.inclusion = inclusion;
         this.left = left;
         this.right = right;
@@ -147,6 +125,10 @@ class ParallelEntity extends AbstractEntity {
         return this.source.dimension + 1;
     }
 
+    get height() {
+        return this.inclusion[this.inclusion.length - 1];
+    }
+
     pad(vector) {
         let inclusion = padArray(this.inclusion, vector);
         return new ParallelEntity(inclusion, this.left, this.right, this.source, this.target, this.meta);
@@ -160,10 +142,6 @@ class ParallelEntity extends AbstractEntity {
         let inclusion = Array(this.source.dimension).fill(0);
         let entity = new ParallelEntity(inclusion, this.left, this.right, this.source, this.target, this.meta);
         return new Scaffold(this.source, [entity]);
-    }
-
-    toNormal() {
-        return new Entity(this.inclusion, this.source, this.target, this.meta);
     }
 
 }
@@ -183,42 +161,66 @@ class Box {
         this.max = max;
     }
 
-    get depth() {
-        return this.min.length;
-    }
-
+    /**
+     * Add a span to this box's end.
+     *
+     * @param {Span} span The span to add.
+     * @return {Box} The lifted box.
+     */
     lift(span) {
         let min = this.min.concat([span.min]);
         let max = this.max.concat([span.max]);
         return new Box(min, max);
     }
 
+    /**
+     * Remove one span from this box's end.
+     *
+     * @return {Box} The rest of the box.
+     */
     rest() {
         let min = this.min.slice(0, -1);
         let max = this.max.slice(0, -1);
         return new Box(min, max);
     }
 
+    /**
+     * Obtain the topmost span of this box.
+     *
+     * @return {Span}
+     */
     span() {
         let min = this.min.length > 0 ? this.min.last() : 0;
         let max = this.max.length > 0 ? this.max.last() : 0;
         return new Span(min, max);
     }
 
-    move(vector, scale = 1) {
-        if (vector.length != this.min.length) debugger;
-
+    /**
+     * Move the box by the specified vector, beginning from the end.
+     * The vector can be shorter than the box.
+     *
+     * @param {int[]} vector Amount to move the box.
+     * @return {Box} The moved box.
+     */
+    move(vector) {
         let min = this.min.slice();
         let max = this.max.slice();
 
         for (let i = 0; i < vector.length; i++) {
-            min[min.length - i - 1] += scale * vector[vector.length - i - 1];
-            max[max.length - i - 1] += scale * vector[vector.length - i - 1];
+            min[min.length - i - 1] += vector[vector.length - i - 1];
+            max[max.length - i - 1] += vector[vector.length - i - 1];
         }
 
         return new Box(min, max);
     }
 
+    /**
+     * Obtain the source boundary box of a cell.
+     *
+     * @param {Diagram} diagram Diagram that contains the cell.
+     * @param {int} level Level of the cell in the diagram.
+     * @return {Box} Source boundary box of the cell.
+     */
     static sourceOf(diagram, level) {
         if (diagram.getDimension() == 0) {
             return Box.empty();
@@ -228,24 +230,22 @@ class Box {
         return new Box(min, max);
     }
 
-    static targetOf(diagram, level) {
-        debugger;
-        if (diagram.getDimension() == 0) {
-            return Box.empty();
-        }
-
-        let cell = diagram.cells[level];
-        cell = diagram.getInverseCell(cell);
-        let { min, max } = diagram.mirror(0).getBoundingBox(cell);
-        return new Box(min, max);
-    }
-
+    /**
+     * @return {Box} Empty box.
+     */
     static empty() {
         return new Box([], []);
     }
 
 }
 
+/**
+ * Obtain the source and target diagrams of a cell.
+ *
+ * @param {Diagram} diagram Diagram that contains the cell.
+ * @param {int} level Level of the cell in the diagram.
+ * @return {*} Object with the "source" and "target" diagram of the cell.
+ */
 const getBoundaryDiagrams = (diagram, level) => {
     if (diagram.getDimension() == 0) {
         return { source: null, target: null };
@@ -253,7 +253,6 @@ const getBoundaryDiagrams = (diagram, level) => {
 
     let cell = diagram.cells[level];
     if (cell.id.is_interchanger()) {
-        if (cell.id == "IntI0-L") debugger;
         let sourceBox = Box.sourceOf(diagram, level);
         let source = restrictDiagram(diagram.getSlice(level).copy(), sourceBox);
         let target = restrictDiagram(diagram.getSlice(level + 1).copy(), sourceBox);
@@ -266,19 +265,35 @@ const getBoundaryDiagrams = (diagram, level) => {
         return { source, target };
     }
 }
- 
+
+/**
+ * Restrict a diagram to the inside of a bounding box.
+ *
+ * Diagram and box must have the same dimension.
+ *
+ * Does not modify the original diagram.
+ *
+ * @param {Diagram} diagram The diagram to restrict.
+ * @param {Box} box The bounding box.
+ * @return {Diagram} The restricted diagram.
+ */
 const restrictDiagram = (diagram, box) => {
+    // Base case: 0-diagrams can't be restricted further
     if (diagram.dimension == 0) {
         return diagram;
     }
 
+    // Obtain the new source slice and recursively restrict
+    // it to the rest of the box
     let span = box.span();
-
     let source = restrictDiagram(diagram.getSlice(span.min).copy(), box.rest());
+
+    // Restrict the cells to the box
     let cells = diagram.cells.slice(span.min, span.max).map(cell => cell.copy());
 
+    // Update the cells' key and bounding box appropriately to accomodate
+    // for the changed source diagram
     let slice = source.copy();
-
     for (let cell of cells) {
         cell.pad(box.rest().min.map(x => -x));
         cell.box = slice.getBoundingBox(cell);
@@ -286,4 +301,29 @@ const restrictDiagram = (diagram, box) => {
     }
 
     return new Diagram(source, cells);
+}
+
+class Span {
+
+    constructor(min, max) {
+        this.min = min;
+        this.max = max;
+    }
+
+    get size() {
+        return this.max - this.min;
+    }
+
+    static union(...spans) {
+        let min = Infinity;
+        let max = -Infinity;
+
+        for (let span of spans) {
+            min = Math.min(min, span.min);
+            max = Math.max(max, span.max);
+        }
+
+        return new Span(min, max);
+    }
+
 }

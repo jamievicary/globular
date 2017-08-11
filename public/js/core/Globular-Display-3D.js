@@ -6,10 +6,12 @@
  */
 class Display3D {
     
-    constructor() {
+    constructor(visibleDimensions, animated) {
         this.container = null;
         this.renderer = null;
         this.scene = null;
+        this.visibleDimensions = visibleDimensions;
+        this.animated = animated;
 
         this.onResize = this.onResize.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
@@ -30,8 +32,7 @@ class Display3D {
 
         // Scene
         this.scene = new THREE.Scene();
-        this.diagramScene = new THREE.Scene();
-        this.scene.add(this.diagramScene);
+        this.diagramScene = null;
 
         // Camera
         let { fov, aspect, near, far } = this.getCameraInfo();
@@ -80,6 +81,7 @@ class Display3D {
     }
 
     createControls() {
+        console.log("Create 3D controls");
         let controls = $("<div>").attr("id", "controls-3d");
 
         this.surfacesControl = $("<input>")
@@ -100,19 +102,45 @@ class Display3D {
             .attr("id", "controls-3d-transparency")
             .change(e => this.render(true));
 
-        let surfacesControl = $("<div>");
-        surfacesControl.append(this.surfacesControl, "Show surfaces");
-        controls.append(surfacesControl);
+        this.timeSliceControl = $("<input>")
+            .attr("type", "range")
+            .prop("value", 0)
+            .attr("min", 0)
+            .change(e => this.updateTime());
 
-        let layersControl = $("<div>");
-        layersControl.append(this.layersControl, "Show layers");
-        controls.append(layersControl);
+        if (!this.animated) {
+            let surfacesControl = $("<div>");
+            surfacesControl.append(this.surfacesControl, "Show surfaces");
+            controls.append(surfacesControl);
+        }
+
+        if (!this.animated) {
+            let layersControl = $("<div>");
+            layersControl.append(this.layersControl, "Show layers");
+            controls.append(layersControl);
+        }
 
         let transparencyControl = $("<div>");
         transparencyControl.append(this.transparencyControl, "Transparency");
         controls.append(transparencyControl);
 
+        if (this.animated) {
+            let timeSliceControl = $("<div>");
+            timeSliceControl.append(this.timeSliceControl);
+            controls.append(timeSliceControl);
+        }
+
         this.manager.displayControls.append(controls);
+        this.updateControls();
+    }
+
+    updateControls() {
+        // Set correct bounds for time slice control if the display is animated
+        if (this.animated && this.diagram) {
+            let max = this.diagram.cells.length * 20;
+            console.log("Time: ", max);
+            this.timeSliceControl.attr("max", max);
+        }
     }
 
     onMouseMove(event) {
@@ -123,11 +151,11 @@ class Display3D {
         // Cast a ray to obtain all diagram elements beneath the cursor
         let mouseVector = this.getMouseVector(event);
         this.raycaster.setFromCamera(mouseVector, this.camera);
-        let intersections = this.raycaster.intersectObjects(this.diagramScene.children);
+        let intersections = this.raycaster.intersectObjects(this.diagramScene.scene.children);
 
         // Extract the diagram elements and sort them by dimension
         let objects = intersections.map(x => x.object.name);
-        objects.sort((a, b) => b.meta.dimension - a.meta.dimension);
+        objects.sort((a, b) => a.meta.dimension - b.meta.dimension);
 
         // Pick the cell of lowest dimension
         if (objects.length == 0) {
@@ -156,7 +184,9 @@ class Display3D {
     }
 
     getMaximumDimension() {
-        return 3;
+        let dimension = this.visibleDimensions;
+        if (this.animated) dimension++;
+        return dimension;
     }
 
     onCameraMove() {
@@ -229,6 +259,8 @@ class Display3D {
 
     setDiagram(diagram, preserveView = false) {
         this.diagram = diagram;
+        this.time = { time: 0 };
+        this.updateControls();
         this.render(preserveView);
         this.renderCanvas();
     }
@@ -252,11 +284,39 @@ class Display3D {
         return this.transparencyControl.prop("checked");
     }
 
+    currentTimeSlice() {
+        return this.timeSliceControl.val() / 20;
+    }
+
+    updateTime() {
+        if (this.diagramScene) {
+            if (this.timeTween) this.timeTween.stop();
+            this.timeTween = new TWEEN.Tween(this.time)
+                .to({ time: this.currentTimeSlice() }, 1000)
+                .onComplete(() => this.timeTween = null)
+                .start();
+            this.startRenderLoop();
+        }
+    }
+
+    startRenderLoop() {
+        let loop = () => {
+            TWEEN.update();
+            this.diagramScene.setTime(this.time.time);
+            this.renderCanvas();
+
+            if (this.timeTween) {
+                window.requestAnimationFrame(loop);
+            }
+        }
+        loop();
+    }
+
     updateDiagramScene() {
         // Clear diagram scene
-        this.diagramScene.remove(...this.diagramScene.children);
-
-        let timer;
+        if (this.diagramScene) {
+            this.scene.remove(this.diagramScene.scene);
+        }
 
         // Only create a diagram scene if there is a diagram
         if (this.diagram === null) {
@@ -268,19 +328,26 @@ class Display3D {
         let geometry = new Geometry();
         geometry.append(diagramGeometry);
 
-        // Filter out surfaces
-        if (!this.showSurfacesFlag()) {
-            geometry = geometry.filterCells(cell => cell.dimension != 2);
-        }
-
-        // Show the layers
-        if (this.showLayersFlag()) {
-            geometry.append(...sliceGeometries);
-        }
-
-        // Create three.js scene from geometry
+        // Obtain renderer options
         let options = { transparency: this.transparencyFlag() };
-        this.diagramScene.add(...renderGeometry3D(geometry, options).children);
+
+        // Animated or static?
+        if (this.animated) {
+            // TODO: Allow layers and surfaces options
+            this.diagramScene = new DynamicDiagramScene3D(geometry, options);
+        } else {
+            if (!this.showSurfacesFlag()) {
+                geometry = geometry.filterCells(cell => cell.dimension != 2);
+            }
+
+            if (this.showLayersFlag()) {
+                geometry.append(...sliceGeometries);
+            }
+
+            this.diagramScene = new StaticDiagramScene3D(geometry, options);
+        }
+
+        this.scene.add(this.diagramScene.scene);
     }
 
     createDiagramGeometry() {
@@ -290,7 +357,9 @@ class Display3D {
         let diagram = this.manager.getVisibleDiagram();
 
         // Calculate the dimension of the visible diagram under the current projection
-        let effectiveDimension = Math.min(3, diagram.getDimension() - this.manager.getSuppress());
+        let effectiveDimension = Math.min(
+            this.getMaximumDimension(),
+            diagram.getDimension() - this.manager.getSuppress());
         console.log(effectiveDimension);
 
         // Create a scaffold for the projected diagram
@@ -305,14 +374,21 @@ class Display3D {
         let { geometry, sliceGeometries } = getGeometry3D(scaffold);
 
         // Postprocess the geometries
-        //roundGeometryQuarters(geometry);
-        layoutGeometry3D(scaffold, geometry);
-        geometry.scale(40, 40, 80);
+        let skip = this.animated ? 1 : 0;
+        layoutGeometry3D(scaffold, geometry, skip);
+
+        if (this.visibleDimensions == 3) {
+            geometry.scale(40, 40, 80, 1);
+        } else {
+            geometry.scale(40, 40, 1);
+        }
+
+        // TEST: Get time slice geometry
+        //geometry = getTimeSliceGeometry(geometry, this.currentTimeSlice());
 
         if (effectiveDimension > 0) {
             sliceGeometries.forEach((sliceGeometry, level) => {
                 sliceGeometry.move(p => p.concat([level]));
-                //roundGeometryQuarters(sliceGeometry);
                 layoutGeometry3D(scaffold, sliceGeometry);
                 sliceGeometry.scale(40, 40, 80);
             });
