@@ -137,7 +137,7 @@ class Display3D {
     updateControls() {
         // Set correct bounds for time slice control if the display is animated
         if (this.animated && this.diagram) {
-            let max = this.diagram.cells.length * 20;
+            let max = this.manager.getVisibleDiagram().cells.length * 20;
             console.log("Time: ", max);
             this.timeSliceControl.attr("max", max);
         }
@@ -155,7 +155,7 @@ class Display3D {
 
         // Extract the diagram elements and sort them by dimension
         let objects = intersections.map(x => x.object.name);
-        objects.sort((a, b) => a.meta.dimension - b.meta.dimension);
+        objects.sort((a, b) => b.meta.dimension - a.meta.dimension);
 
         // Pick the cell of lowest dimension
         if (objects.length == 0) {

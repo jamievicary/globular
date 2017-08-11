@@ -1,4 +1,40 @@
 
+class DiagramMaterials {
+
+    constructor() {
+        this.materials = {};
+    }
+
+    /**
+     * The material to be used for a cell.
+     *
+     * @param {*} meta Meta information of the geometric cell.
+     * @param {int} dimension Dimension of the geometric cell.
+     * @param {*} options Renderer options.
+     */
+    getMaterial(meta, dimension, options) {
+        if (this.materials.hasOwnProperty(meta.cell.id)) return this.materials[meta.cell.id];
+
+        let id = { id: meta.cell.id, dimension: meta.dimension };
+        let { transparency } = options;
+        let color = gProject.getColour(id);
+
+        let material = new THREE.MeshLambertMaterial({
+            color: color,
+            side: THREE.DoubleSide,
+            transparent: dimension == 2 && transparency
+        });
+
+        if (dimension == 2) {
+            material.opacity = 0.6;
+        }
+
+        this.materials[meta.cell.id] = material;
+        return material;
+    }
+
+}
+
 /**
  * Static three.js scene generated from geometry.
  *
@@ -12,13 +48,16 @@ class StaticDiagramScene3D {
 
     constructor(geometry, options) {
         this.scene = new THREE.Scene();
+        let materials = new DiagramMaterials();
         let surfaces = {};
         options.unbufferedSurfaces = true;
         
         for (let cell of geometry.cells) {
             if (cell.dimension > 2) continue;
             let points = cell.vertices.map(v => new THREE.Vector3(...v));
-            let rendered = getRenderedCell3D(cell.dimension, points, cell.meta, options);
+
+            let material = materials.getMaterial(cell.meta, cell.dimension, options);
+            let rendered = getRenderedCell3D(cell.dimension, points, cell.meta, material, options);
 
             // Collect the surfaces and group them by id
             if (cell.dimension == 2) {
@@ -70,6 +109,7 @@ class DynamicDiagramScene3D {
         this.scene = new THREE.Scene();
         this.cells = [];
         this.visible = [];
+        let materials = new DiagramMaterials();
 
         for (let i = 0; i < geometry.cells.length; i++) {
             let cell = geometry.cells[i];
@@ -87,7 +127,8 @@ class DynamicDiagramScene3D {
             let timeStart = Math.min(...heights);
             let timeEnd = Math.max(...heights);
 
-            let rendered = getRenderedCell3D(cell.dimension - 1, pointsStart, cell.meta, options);
+            let material = materials.getMaterial(cell.meta, cell.dimension, options);
+            let rendered = getRenderedCell3D(cell.dimension - 1, pointsStart, cell.meta, material, options);
 
             this.cells.push({
                 pointsStart,
@@ -149,31 +190,6 @@ class DynamicDiagramScene3D {
 }
 
 /**
- * The material to be used for a cell.
- *
- * @param {*} meta Meta information of the geometric cell.
- * @param {int} dimension Dimension of the geometric cell.
- * @param {*} options Renderer options.
- */
-const getCellMaterial = (meta, dimension, options) => {
-    let id = { id: meta.cell.id, dimension: meta.dimension };
-    let { transparency } = options;
-    let color = gProject.getColour(id);
-
-    let material = new THREE.MeshLambertMaterial({
-        color: color,
-        side: THREE.DoubleSide,
-        transparent: dimension == 2 && transparency
-    });
-
-    if (dimension == 2) {
-        material.opacity = 0.6;
-    }
-
-    return material;
-}
-
-/**
  * The rendered cell for a diagram cell.
  *
  * @param {int} dimension Dimension of the geometric cell.
@@ -181,8 +197,7 @@ const getCellMaterial = (meta, dimension, options) => {
  * @param {*} meta Meta information of the geometric cell.
  * @param {*} options Renderer options.
  */
-const getRenderedCell3D = (dimension, points, meta, options) => {
-    let material = getCellMaterial(meta, dimension, options);
+const getRenderedCell3D = (dimension, points, meta, material, options) => {
     meta = { dimension, meta };
     
     switch (dimension) {
@@ -215,7 +230,7 @@ class RenderedLine3D {
         let curve = this.getCurve(points);
         this.tubeGeometry = new DynamicTubeBufferGeometry(curve, 1, 1, 16);
         this.tubeMesh = new THREE.Mesh(this.tubeGeometry, material);
-        this.tubeMesh.frustrumCulled = false;
+        this.tubeMesh.frustumCulled = false;
         this.tubeMesh.name = meta;
 
         this.capGeometry = new THREE.SphereGeometry(1, 16, 16);
@@ -257,7 +272,7 @@ class RenderedSurface3D {
         }
 
         this.surface = new THREE.Mesh(this.surfaceGeometry, material);
-        this.surface.frustrumCulled = false;
+        this.surface.frustumCulled = false;
         this.surface.name = meta;
         this.objects = [this.surface];
     }

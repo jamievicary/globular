@@ -94,7 +94,7 @@ class DisplayManager {
         this.updateSliceContainer(drag, controls);
 
         // Update the display controls
-        if (this.display) this.display.updateControls();
+        this.display.updateControls();
     }
 
     changeControls() {
