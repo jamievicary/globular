@@ -114,8 +114,8 @@ class DisplayManager {
 
         /*
         // Choose popout mode if the display is small
-        let popout = (c.width() < 100 || c.height() < 100);
         */
+        let popout = (c.width() < 100 || c.height() < 100);
         
         //var pixels = {x: event.originalEvent.layerX, y: event.originalEvent.layerY};
         var pixels = eventToPixels(event);
