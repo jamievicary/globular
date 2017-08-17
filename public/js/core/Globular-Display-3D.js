@@ -352,10 +352,11 @@ class Display3D {
     }
 
     getMaximumCellDimension() {
-        if (this.maxDimension == 3) {
+        if (this.visibleDimensions == 3) {
             let dimension = 2;
             if (this.animated) dimension++;
-        } else if (this.maxDimension == 2) {
+            return dimension;
+        } else if (this.visibleDimension == 2) {
             return 3;
         }
     }
