@@ -326,10 +326,8 @@ class Display3D {
         // Create the diagram geometry
         let { diagramGeometry, sliceGeometries } = this.createDiagramGeometry();
         let geometry = new Geometry();
+        console.log(diagramGeometry);
         geometry.append(diagramGeometry);
-        console.log(geometry.cells.length);
-        geometry = geometry.filterEmpty(geometry);
-        console.log(geometry.cells.length);
 
         // Obtain renderer options
         let options = { transparency: this.transparencyFlag() };
@@ -353,6 +351,15 @@ class Display3D {
         this.scene.add(this.diagramScene.scene);
     }
 
+    getMaximumCellDimension() {
+        if (this.maxDimension == 3) {
+            let dimension = 2;
+            if (this.animated) dimension++;
+        } else if (this.maxDimension == 2) {
+            return 3;
+        }
+    }
+
     createDiagramGeometry() {
         // TODO: Cache this
 
@@ -373,8 +380,9 @@ class Display3D {
         window.last_scaffold = scaffold;
 
         // Create 3D geometry from scaffold
-        let maxDimension = this.getMaximumDimension() - 1;
+        let maxDimension = this.getMaximumCellDimension();
         let { geometry, sliceGeometries } = getGeometry3D(scaffold, maxDimension);
+        console.log(maxDimension);
 
         // Postprocess the geometries
         let skip = this.animated ? 1 : 0;
