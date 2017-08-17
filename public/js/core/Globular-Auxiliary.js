@@ -495,37 +495,7 @@ var LZ4 = require('lz4');
 function globular_lz4_compress(string) {
     var timer = new Timer('globular_lz4_compress');
     console.log('  string.length = ' + string.length);
-    var uncompressed = string + string; // WHY??
-    var input = new Buffer(uncompressed);
-    var output = new Buffer(LZ4.encodeBound(input.length));
-    var compressedSize = LZ4.encodeBlock(input, output);
-    console.log('  compressedSize = ' + compressedSize);
-    if (compressedSize == 0) return {
-        uncompressed: string
-    };
-    //output = output.slice(0, compressedSize);
-    var compressed_output = new Uint8Array(compressedSize);
-    //output, 0, compressedSize);
-    for (var i=0; i<compressedSize; i++) {
-        compressed_output[i] = output[i];
-    }
-
-    var compressed_string = Uint8ToStringVersion2(compressed_output);
-    console.log('  compressed_string.length = ' + compressed_string.length);
-    var b64 = btoa(compressed_string);
-    console.log('  b64.length = ' + b64.length);
-    timer.Report();
-    return {
-        compressed: b64,
-        original_length: string.length
-    };
-}
-
-/*
-function globular_lz4_compress(string) {
-    var timer = new Timer('globular_lz4_compress');
-    console.log('  string.length = ' + string.length);
-    var uncompressed = string + string; // WHY??
+    var uncompressed = string + string;
     var input = new Buffer(uncompressed);
     var output = new Buffer(LZ4.encodeBound(input.length));
     var compressedSize = LZ4.encodeBlock(input, output);
@@ -544,39 +514,6 @@ function globular_lz4_compress(string) {
         original_length: string.length
     };
 }
-*/
-
-/*
-function globular_lz4_compress(string) {
-    var timer = new Timer('globular_lz4_compress');
-    console.log('  string.length = ' + string.length);
-    var uncompressed = string + string; // WHY??
-    var input = new Buffer(uncompressed);
-    var output = new Buffer(LZ4.encodeBound(input.length));
-    var compressedSize = LZ4.encodeBlock(input, output);
-    console.log('  compressedSize = ' + compressedSize);
-    if (compressedSize == 0) return {
-        uncompressed: string
-    };
-    output = output.slice(0, compressedSize);
-    var compressed_output = new Uint8Array(compressedSize);
-    //output, 0, compressedSize);
-    for (var i=0; i<compressedSize; i++) {
-        compressed_output[i] = output[i];
-    }
-    //compressed_output = output.slice(0, compressedSize);
-    console.log("Compressed data", compressed_output);
-    var compressed_string = Uint8ToString(compressed_output, encoding_ascii);
-    console.log('  compressed_string.length = ' + compressed_string.length);
-    var b64 = btoa(compressed_string);
-    console.log('  b64.length = ' + b64.length);
-    timer.Report();
-    return {
-        compressed: b64,
-        original_length: string.length
-    };
-}
-*/
 
 function globular_lz4_decompress(object) {
     var timer = new Timer('globular_lz4_decompress');
@@ -588,30 +525,14 @@ function globular_lz4_decompress(object) {
     for (var i = 0, strLen = str.length; i < strLen; i++) {
         bufView[i] = str.charCodeAt(i);
     }
-    var uncompressed_uint8 = new Buffer(object.original_length);
-    var size = LZ4.decodeBlock(bufView, uncompressed_uint8);
-    var uncompressed_string = Uint8ToString(uncompressed_uint8, 'utf8');
+    var uncompressed = new Buffer(object.original_length);
+    var size = LZ4.decodeBlock(bufView, uncompressed);
+    var uncompressed_string = Uint8ToString(uncompressed);
     timer.Report();
     return uncompressed_string;
 }
 
-var encoding_ascii = 'iso-8859-2';
-function Uint8ToString(u8a, encoding) {
-    var decoder = new TextDecoder(encoding);
-    var decoded = decoder.decode(u8a);
-    //var b64encoded = btoa(decoded);
-    return decoded;
-    /*
-    var CHUNK_SZ = 0x8000;
-    var c = [];
-    for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
-        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
-    }
-    return c.join("");
-    */
-}
-
-function Uint8ToStringVersion2(u8a) {
+function Uint8ToString(u8a) {
     var CHUNK_SZ = 0x8000;
     var c = [];
     for (var i = 0; i < u8a.length; i += CHUNK_SZ) {

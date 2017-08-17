@@ -112,21 +112,8 @@ class DisplayManager {
         // Create no controls if there is no active display
         if (this.display === null) return;
 
-        /*
         // Choose popout mode if the display is small
-        */
         let popout = (c.width() < 100 || c.height() < 100);
-        
-        //var pixels = {x: event.originalEvent.layerX, y: event.originalEvent.layerY};
-        var pixels = eventToPixels(event);
-        //console.log(JSON.stringify(pixels));
-        //console.log('grid.x = ' + new_grid.x + ', grid.y = ' + new_grid.y);
-        /*
-        this.updatePopup({
-            logical: this.pixelsToLogical(pixels),
-            pixels: pixels
-        });
-        */
 
         // Construct the main control div
         this.control = $('<div>')

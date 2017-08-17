@@ -127,6 +127,9 @@ class DynamicDiagramScene3D {
             let timeStart = Math.min(...heights);
             let timeEnd = Math.max(...heights);
 
+            // Skip cells that have an empty time interval in which they are visible
+            if (timeStart === timeEnd) continue;
+
             let material = materials.getMaterial(cell.meta, cell.dimension, options);
             let rendered = getRenderedCell3D(cell.dimension - 1, pointsStart, cell.meta, material, options);
 
@@ -165,7 +168,7 @@ class DynamicDiagramScene3D {
             let points = this.getPoints(cell, time);
             cell.rendered.update(points);
             cell.rendered.objects.forEach(object => { object.visible = true; });
-            this.visible.push(...cell.rendered.objects)
+            this.visible.push(...cell.rendered.objects);
         }
     }
 

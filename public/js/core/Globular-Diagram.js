@@ -750,6 +750,21 @@ Diagram.prototype.getBoundary = function(path) {
     if (boundary.type == 't') return this.getTargetBoundary();
 }
 
+Diagram.prototype.getSpanBoundingBox = function(from, to) {
+    let box = null;
+
+    for (let level = from; level < to; level++) {
+        let sourceBox = this.getSlice(level).getBoundingBox(this.cells[level]);
+
+        sourceBox.min.push(level);
+        sourceBox.max.push(level + 1);
+
+        box = this.unionBoundingBoxes(box, sourceBox);
+    }
+
+    return box;
+}
+
 // Take the union of two bounding boxes on (projections of) this diagram
 Diagram.prototype.unionBoundingBoxes = function(b1, b2) {
 

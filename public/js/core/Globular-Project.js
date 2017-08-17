@@ -29,8 +29,7 @@ function Project(string) {
     if (string.compressed == undefined) {
         uncompressed = string;
     } else {
-        var temp = globular_lz4_decompress(string);
-        uncompressed = JSON.parse(temp);
+        uncompressed = JSON.parse(globular_lz4_decompress(string));
     }
     var new_project = globular_destringify(uncompressed);
     for (var name in new_project) {

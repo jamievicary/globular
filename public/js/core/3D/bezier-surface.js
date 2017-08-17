@@ -107,6 +107,7 @@ class BezierSurfaceBufferGeometry extends THREE.BufferGeometry {
                 let a = this.cubicBernstein(i, u);
                 let b = this.cubicBernstein(j, v);
                 let point = points[i + j * 4];
+
                 vertex.addScaledVector(point, a * b);
             }
         }

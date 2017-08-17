@@ -70,8 +70,8 @@ const layoutPoint = (scaffold, point, cache, path = [], skip = 0, depth = 0) => 
         let sourceSlice = scaffold.getSlice(Math.floor(level));
         let targetSlice = scaffold.getSlice(Math.ceil(level));
 
-        let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell, "s");
-        let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell, "t");
+        let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell.sourceAction());
+        let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell.targetAction());
 
         sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path.concat([Math.floor(level)]), skip, depth + 1));
         targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path.concat([Math.ceil(level)]), skip, depth + 1));
@@ -92,12 +92,12 @@ const layoutPoint = (scaffold, point, cache, path = [], skip = 0, depth = 0) => 
     return cache.set(path, point, rest.concat([height]));
 }
 
-const collectOrigins = (point, slice, cell, boundary) => {
+const collectOrigins = (point, slice, action) => {
     let origins = [];
     point = point.map(roundQuarter);
 
     for (let p of slice.allPoints()) {
-        let moved = slice.moveEntity(cell, boundary, p);
+        let moved = EntityAction.perform(action, p);
         if (moved !== null && arrayEquals(moved, point)) {
             origins.push(p);
         }

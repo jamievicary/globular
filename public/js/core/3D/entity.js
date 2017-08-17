@@ -1,157 +1,244 @@
 class Entity {
 
-    constructor(inclusion, source, target, meta) {
-        this.inclusion = inclusion;
+    static of(diagram, level, dimension) {
+        let cell = diagram.cells[level];
+        let meta = getMeta(diagram, level);
+
+        let { source, target } = getBoundaryDiagrams(diagram, level);
+        source = dimension > 0 ? Scaffold.of(source, dimension - 1) : null;
+        target = dimension > 0 ? Scaffold.of(target, dimension - 1) : null;
+
+        let embedding = Embedding.of(diagram, level, dimension);
+
+        if (dimension >= 3 && meta.interchange > 0) {
+            let forward = meta.interchange == 1;
+            return new InterchangerEntity(embedding, source, target, forward, meta);
+        }  else {
+            return new ConeEntity(embedding, source, target, meta);
+        }
+    }
+
+    constructor(embedding, source, target, meta) {
+        this.embedding = embedding;
         this.source = source;
         this.target = target;
         this.meta = meta;
-
-        if (source !== null && inclusion.length != source.dimension) debugger;
-
-        if (this.source !== null && this.target.dimension != this.source.dimension) {
-            throw new Error("Dimensions of an entity's source and target must agree.");
-        }
-
-        this.inclusion.forEach(i => { if (i < 0) debugger; });
     }
 
     get dimension() {
         return this.source === null ? 0 : this.source.dimension + 1;
     }
 
-    get height() {
-        return this.inclusion.length == 0 ? 0 : this.inclusion[this.inclusion.length - 1];
+    halfSpliceData() {
+        throw new Error("Entity must implement halfSpliceData.");
+    }
+
+    pad(positive, negative) {
+        throw new Error("Entity must implement pad.");
+    }
+
+}
+
+/**
+ * Entity that forms a cone over its source and target diagrams.
+ *
+ * For a half rewrite, the source is replaced by a single entity that represents
+ * the cusp of the cone. On points, this entity acts by a `ConeAction` that moves
+ * the points of the source or target to the cone's cusp.
+ */
+class ConeEntity extends Entity {
+
+    constructor(embedding, source, target, meta) {
+        super(embedding, source, target, meta);
+    }
+
+    halfSpliceData() {
+        let embedding = this.embedding.rest();
+        let source = this.source.source;
+        let target = this.source.target;
+        let entity = new ConeEntity(embedding, source, target, this.meta);
+        return [entity];
+    }
+
+    pad(positive, negative = null) {
+        let embedding = this.embedding.pad(positive, negative);
+        return new ConeEntity(embedding, this.source, this.target, this.meta);
+    }
+
+    sourceAction() {
+        return new ConeAction(this.embedding, this.source);
+    }
+
+    targetAction() {
+        return new ConeAction(this.embedding, this.target);
+    }
+
+}
+
+/**
+ * Entity that swaps the height of two entities, corresponding to a type I
+ * homotopy generator.
+ *
+ * For a half rewrite, a parallel entity is generated that combines both
+ * interchanged entities on one level. On points, this entity acts by a
+ * `InterchangerAction`.
+ *
+ * Interchanger entities can be oriented forwards or backwards: In forwards
+ * orientation, the lower entity is located to the right of the upper in the
+ * 2-projection of the source slice, and vice versa in the backwards
+ * orientation. In forwards orientation, the entity produces a parallel entity
+ * in swap mode on the half slice.
+ */
+class InterchangerEntity extends Entity {
+
+    constructor(embedding, source, target, forward, meta) {
+        super(embedding, source, target, meta);
+        this.forward = forward;
+
+        if (this.dimension < 3) {
+            throw new Error("Interchanger entities must have at least dimension 3.");
+        }
+    }
+
+    halfSpliceData() {
+        let lower = this.source.entities[0];
+        let upper = this.source.entities[1];
+        let entity = ParallelEntity.make(lower, upper, this.forward, this.meta);
+        return [entity];
+    }
+
+    pad(positive, negative = null) {
+        let embedding = this.embedding.pad(positive, negative);
+        return new InterchangerEntity(embedding, this.source, this.target, this.forward, this.meta);
+    }
+
+    sourceAction() {
+        return new InterchangerAction(this.embedding, this.source, this.forward);
+    }
+
+    targetAction() {
+        return new InterchangerAction(this.embedding, this.target, !this.forward);
+    }
+
+}
+
+/**
+ * Entity that combines two entities on one level, provided they act on disjoint
+ * source and target diagrams. The two entities must have had no intervening
+ * entities in between them.
+ *
+ * A parallel entity has two modes: In swap mode, the left entity has been above
+ * the right one, while in normal mode it has been below. This is important for
+ * adjusting the embeddings accordingly in face of varying source and target sizes.
+ */
+class ParallelEntity extends Entity {
+
+    static make(lower, upper, swap, meta) {
+        let left = !swap ? lower : upper;
+        let right = !swap ? upper : lower;
+
+        // Create source scaffold by concatenating sources
+        let sourceEntities = left.source.entities.concat(right.source.entities);
+        let source = new Scaffold(left.source.source, sourceEntities);
+
+        // Create target scaffold by concatenating targets
+        let targetEntities = left.target.entities.concat(right.target.entities);
+        let target = new Scaffold(left.target.source, targetEntities);
+
+        let embedding = left.embedding;
+
+        return new ParallelEntity(embedding, left, right, source, target, swap, meta);
+    }
+
+    constructor(embedding, left, right, source, target, swap, meta) {
+        super(embedding, source, target, meta);
+        this.left = left;
+        this.right = right;
+        this.swap = swap;
+    }
+
+    halfSpliceData() {
+        let left = this.left.halfSpliceData();
+        let right = this.right.halfSpliceData();
+        return left.concat(right);
+    }
+
+    pad(positive, negative = null) {
+        return new ParallelEntity(
+            this.embedding.pad(by),
+            this.lower.pad(positive, negative),
+            this.upper.pad(positive, negative),
+            this.source, this.target,
+            this.swap,
+            this.meta
+        );
+    }
+
+    sourceAction() {
+        let left = this.left;
+        let right = this.right;
+
+        if (!this.swap) {
+            right = right.pad(left.source.getBox().max, left.target.getBox().max);
+        }
+
+        return new ParallelAction(left.sourceAction(), right.sourceAction());
+    }
+
+    targetAction() {
+        let left = this.left;
+        let right = this.right;
+
+        if (this.swap) {
+            right = right.pad(left.target.getBox().max, left.source.getBox().max);
+        }
+
+        return new ParallelAction(left.targetAction(), right.targetAction());
+    }
+
+}
+
+class Embedding {
+
+    constructor(heights) {
+        this.heights = heights;
+    }
+
+    height() {
+        return this.heights.length == 0 ? 0 : this.heights[this.heights.length - 1];
+    }
+
+    rest() {
+        return new Embedding(this.heights.slice(0, -1));
+    }
+
+    pad(positive, negative = null) {
+        positive = positive instanceof Embedding ? positive.heights : positive;
+        negative = negative instanceof Embedding ? negative.heights : negative;
+
+        let heights = this.heights.slice();
+        for (let i = 0; i < positive.length; i++) {
+            let diff = positive[positive.length - i - 1];
+
+            if (negative != null) {
+                diff -= negative[negative.length - i - 1];
+            }
+
+            heights[heights.length - i - 1] += diff;
+        }
+        return new Embedding(heights);
     }
 
     static of(diagram, level, dimension) {
-        let cell = diagram.cells[level];
-        let meta = getMeta(diagram, level);
-        let inclusion = Box.sourceOf(diagram, level).min;
-        inclusion = inclusion.slice(inclusion.length - dimension + 1);
-
-        let { source, target } = getBoundaryDiagrams(diagram, level);
-        source = dimension > 0 ? Scaffold.of(source, dimension - 1) : null;
-        target = dimension > 0 ? Scaffold.of(target, dimension - 1) : null;
-
-        return new Entity(inclusion, source, target, meta);
+        let heights = Box.sourceOf(diagram, level).min;
+        heights = heights.slice(heights.length - dimension + 1);
+        return new Embedding(heights);
     }
 
-    rewriteHalf(scaffold) {
-        // Is interchanger entity?
-        if (this.meta.interchange > 0 && scaffold.dimension == 2) {
-            let inverse = this.meta.interchange == 2;
-
-            let bottom = scaffold.entities[this.height];
-            let top = scaffold.entities[this.height + 1];
-
-            if (inverse) {
-                let diff = bottom.source.size - bottom.target.size;
-                top = top.pad([diff]);
-            }
-
-            bottom = bottom.pad(this.inclusion.slice(0, -1).map(x => -x));
-            top = top.pad(this.inclusion.slice(0, -1).map(x => -x));
-
-            let inclusion = Array(this.dimension - 2).fill(0);
-            let entity = ParallelEntity.of(inclusion, top, bottom, this.meta);
-            return scaffold.splice(this.inclusion, this.source.size, entity);
-        }
-
-
-        let entity = this.collapse();
-        // Splice the entity into the scaffold
-        return scaffold.splice(this.inclusion, this.source.size, entity);
+    static corner(dimension) {
+        return new Embedding(Array(dimension).fill(0));
     }
 
-    collapse() {
-        let inclusion = [];
-        let source = null;
-        let target = null;
-
-        if (this.source.dimension > 0) {
-            source = this.source.source;
-            target = this.source.target;
-            inclusion = Array(source.dimension).fill(0);
-        }
-        
-        return new Entity(inclusion, source, target, this.meta);
-    }
-
-    pad(vector) {
-        let inclusion = padArray(this.inclusion, vector);
-        return new Entity(inclusion, this.source, this.target, this.meta);
-    }
-
-    toScaffold() {
-        let inclusion = Array(this.source.dimension).fill(0);
-        let entity = new Entity(inclusion, this.source, this.target, this.meta);
-        return new Scaffold(this.source, [entity]);
-    }
-
-}
-
-class ParallelEntity {
-
-    constructor(inclusion, left, right, source, target, meta) {
-        this.inclusion = inclusion;
-        this.left = left;
-        this.right = right;
-        this.source = source;
-        this.target = target;
-        this.meta = meta;
-
-        this.inclusion.forEach(i => { if (i < 0) debugger; });
-
-        if (this.inclusion.length != this.source.dimension) debugger;
-    }
-
-    static of(inclusion, entityA, entityB, meta) {
-        // Sort by height
-        let swap = entityA.height > entityB.height;
-        let left = swap ? entityB : entityA;
-        let right = swap ? entityA : entityB;
-
-        // Make source and target scaffolds
-        let sourceEntities = left.source.entities.concat(right.source.entities);
-        let targetEntities = left.target.entities.concat(right.target.entities);
-
-        let source = new Scaffold(left.source.source, sourceEntities);
-        let target = new Scaffold(left.target.source, targetEntities);
-
-        return new ParallelEntity(inclusion, left, right, source, target, meta);
-    }
-
-    get dimension() {
-        return this.source.dimension + 1;
-    }
-
-    get height() {
-        return this.inclusion[this.inclusion.length - 1];
-    }
-
-    pad(vector) {
-        let inclusion = padArray(this.inclusion, vector);
-        return new ParallelEntity(inclusion, this.left, this.right, this.source, this.target, this.meta);
-    }
-
-    rewriteHalf(scaffold) {
-        return scaffold.splice(this.inclusion, this.source.size, this.left.collapse(), this.right.collapse());
-    }
-
-    toScaffold() {
-        let inclusion = Array(this.source.dimension).fill(0);
-        let entity = new ParallelEntity(inclusion, this.left, this.right, this.source, this.target, this.meta);
-        return new Scaffold(this.source, [entity]);
-    }
-
-}
-
-const padArray = (a, b) => {
-    a = a.slice();
-    for (let i = 0; i < b.length; i++) {
-        a[a.length - i - 1] += b[b.length - i - 1];
-    }
-    return a;
 }
 
 class Box {
@@ -235,6 +322,14 @@ class Box {
      */
     static empty() {
         return new Box([], []);
+    }
+
+    minEmbedding() {
+        return new Embedding(this.min);
+    }
+
+    maxEmbedding() {
+        return new Embedding(this.max);
     }
 
 }

@@ -58,8 +58,8 @@ class Geometry {
      * @param {*} base 
      * @param {*} fn 
      */
-    lift(base, fn, flip = false) {
-        let cells = this.cells.map(cell => cell.lift(base, fn, flip));
+    lift(base, fn, flip = false, maxDimension = -1) {
+        let cells = this.cells.map(cell => cell.lift(base, fn, flip, maxDimension));
         cells = cells.filter(cell => cell !== null);
         return new Geometry(cells);
     }
@@ -71,10 +71,7 @@ class Geometry {
 
     filterEmpty() {
         return this.filterCells(cell => {
-            let heights = cell.vertices.map(v => v[v.length - 1]);
-            let min = Math.min(...heights);
-            let max = Math.max(...heights);
-            return min < max || cell.dimension == 0;
+            return !cell.isTrivial();
         });
     }
 
@@ -96,7 +93,11 @@ class GeometryCell {
         this.vertices = this.vertices.map(fn);
     }
 
-    lift(base, fn, flip) {
+    lift(base, fn, flip, maxDimension = -1) {
+        if (maxDimension >= 0 && this.dimension >= maxDimension) {
+            return null;
+        }
+
         let baseVertices = this.vertices.map(v => v.concat([base]));
         let liftVertices = this.vertices.map((v, i) => fn(v, getPath(i, this.vertices.length)));
         let vertices = flip ? liftVertices.concat(baseVertices) : baseVertices.concat(liftVertices);
@@ -108,6 +109,34 @@ class GeometryCell {
         return new GeometryCell(this.dimension + 1, vertices, this.meta);
     }
 
+    isTrivial() {
+        let vertexStrings = this.vertices.map(v => v.join(":"));
+
+        switch(this.dimension) {
+        case 0:
+            return false;
+
+        case 1:
+            return containsDuplicates(vertexStrings);
+
+        case 2:
+            return containsDuplicates(vertexStrings.slice(1)) &&
+                containsDuplicates(vertexStrings.slice(0, -1));
+
+        default:
+            return false;
+        }
+    }
+
+}
+
+const containsDuplicates = (array) => {
+    for (let i = 1; i < array.length; i++) {
+        for (let j = 0; j < i; j++) {
+            if (array[j] == array[i]) return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -115,23 +144,23 @@ class GeometryCell {
  * @param {Scaffold} scaffold 
  * @return 
  */
-const getGeometry3D = (scaffold, codimension = 0) => {
+const getGeometry3D = (scaffold, maxDimension, codimension = 0) => {
     if (scaffold.dimension == 0) {
         let geometry = getGeometryBase(scaffold);
         return { geometry, sliceGeometries: null };
     } else {
-        let sliceGeometries = getSliceGeometries(scaffold, codimension);
-        let geometry = getGeometryStep(scaffold, sliceGeometries, codimension);
+        let sliceGeometries = getSliceGeometries(scaffold, maxDimension, codimension);
+        let geometry = getGeometryStep(scaffold, sliceGeometries, maxDimension, codimension);
         return { geometry, sliceGeometries };
     }
 }
 
-const getSliceGeometries = (scaffold, codimension) => {
+const getSliceGeometries = (scaffold, maxDimension, codimension) => {
     let sliceGeometries = [];
 
     for (let level = 0; level <= scaffold.size; level++) {
         let scaffoldSlice = scaffold.getSlice(level);
-        let sliceGeometry = getGeometry3D(scaffoldSlice, codimension + 1).geometry;
+        let sliceGeometry = getGeometry3D(scaffoldSlice, maxDimension, codimension - 1).geometry;
         sliceGeometries.push(sliceGeometry.filterEmpty());
     }
 
@@ -163,46 +192,50 @@ const getGeometryBase = (scaffold) => {
  * @param {Geometry[]} sliceGeometries
  * @return {Diagram}
  */
-const getGeometryStep = (scaffold, sliceGeometries, codimension) => {
+const getGeometryStep = (scaffold, sliceGeometries, maxDimension, codimension) => {
     let geometry = new Geometry();
     let topDimension = codimension == 0;
 
     // Generate the geometry level-wise
     for (let level = 0; level < scaffold.size; level++) {
         let entity = scaffold.getEntity(level);
-        
-        let bottom = topDimension ? level : level + 0.25;
+
+        let bottom = topDimension ? level : level;
         let middle = level + 0.5;
-        let top = topDimension ? level + 1 : level + 0.75;
+        let top = topDimension ? level + 1 : level + 1;
 
         // Lift the source and target slice geometries as prescribed by the scaffold.
-        let sourceScaffold = scaffold.getSlice(level);
         let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
-            let target = sourceScaffold.moveEntity(entity, "s", point);
+            let target = EntityAction.perform(entity.sourceAction(), point);
             return target.concat([middle]);
-        });
-
-        let targetScaffold = scaffold.getSlice(level + 1);
+        }, false, maxDimension);
         let targetGeometry = sliceGeometries[level + 1].lift(top, (point, path) => {
-            let target = targetScaffold.moveEntity(entity, "t", point);
+            let target = EntityAction.perform(entity.targetAction(), point);
             return target.concat([middle]);
-        }, true);
-        
+        }, true, maxDimension);
+
         geometry.append(sourceGeometry, targetGeometry);
 
-        if (entity.meta.interchange == 0) {
+        if (entity instanceof ConeEntity) {
             geometry.add(getVertex(scaffold, level), entity.meta);
         }
+
+        // TODO: Vertices for parallel entities?
     }
 
     // Generate the quarter-slice geometry
     if (!topDimension || scaffold.size == 0) {
-        for (let level = 0; level <= scaffold.size; level++) {
-            let sliceGeometry = sliceGeometries[level];
-            let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]));
-            let overhangTop = sliceGeometry.lift(level + 0.25, point => point.concat([level]), true);
-            geometry.append(overhangBottom, overhangTop);
-        }
+        let overhangBottom = sliceGeometries[0].lift(-0.25, point => point.concat([0]), false, maxDimension);
+        let overhangTop = sliceGeometries[sliceGeometries.length - 1].lift(scaffold.size + 0.25, point => point.concat([scaffold.size]), true, maxDimension);
+        geometry.append(overhangBottom, overhangTop);
+
+        // const genQuarter = (level) => {
+        //     let sliceGeometry = sliceGeometries[level];
+        //     let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]), false, maxDimension);
+        //     let overhangTop = sliceGeometry.lift(level + 0.25, point => point.concat([level]), true, maxDimension);
+        //     geometry.append(overhangBottom, overhangTop);
+        // }
+        // genQuarter(0);
     }
 
     return geometry;
@@ -219,7 +252,7 @@ const getVertex = (scaffold, level, dimension) => {
     if (dimension == 0) {
         return [];
     }
-    let key = scaffold.getEntity(level).inclusion.concat([level]);
+    let key = scaffold.getEntity(level).embedding.heights.concat([level]);
     return key.slice(-dimension).map(x => x + 0.5);
 }
 
@@ -274,41 +307,4 @@ const roundGeometryQuarters = (geometry) => {
                 return Math.ceil(x);
         }
     }));
-}
-
-const getTimeSliceGeometry = (geometry, time) => {
-    let cells = [];
-
-    for (let cell of geometry.cells) {
-        // Can't take slices of vertices
-        if (cell.dimension == 0) continue;
-
-        // Obtain the start and end vertices of the cell
-        let length = cell.vertices.length;
-        let start = cell.vertices.slice(0, length / 2);
-        let end = cell.vertices.slice(length / 2);
-
-        // Interpolate the vertices
-        let display = true;
-        let vertices = [];
-        for (let i = 0; i < start.length; i++) {
-            let timeStart = start[i].last();
-            let timeEnd = end[i].last();
-            
-            if (timeStart > time || time > timeEnd) {
-                display = false;
-                break;
-            };
-
-            let relativeTime = (time - timeStart) / (timeEnd - timeStart);
-            vertices.push(interpolateVectors(start[i].slice(0, -1), end[i].slice(0, -1), relativeTime));
-        }
-
-        if (!display) continue;
-
-        // Create the sliced cell
-        cells.push(new GeometryCell(cell.dimension - 1, vertices, cell.meta));
-    }
-
-    return new Geometry(cells);
 }

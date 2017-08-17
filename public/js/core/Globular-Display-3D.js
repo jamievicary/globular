@@ -327,6 +327,9 @@ class Display3D {
         let { diagramGeometry, sliceGeometries } = this.createDiagramGeometry();
         let geometry = new Geometry();
         geometry.append(diagramGeometry);
+        console.log(geometry.cells.length);
+        geometry = geometry.filterEmpty(geometry);
+        console.log(geometry.cells.length);
 
         // Obtain renderer options
         let options = { transparency: this.transparencyFlag() };
@@ -360,18 +363,18 @@ class Display3D {
         let effectiveDimension = Math.min(
             this.getMaximumDimension(),
             diagram.getDimension() - this.manager.getSuppress());
-        console.log(effectiveDimension);
 
         // Create a scaffold for the projected diagram
         let scaffold = Scaffold.of(diagram, effectiveDimension);
         this.scaffold = scaffold;
-        
+
         // TODO: Remove this debug info
         window.last_diagram = diagram;
         window.last_scaffold = scaffold;
 
         // Create 3D geometry from scaffold
-        let { geometry, sliceGeometries } = getGeometry3D(scaffold);
+        let maxDimension = this.getMaximumDimension() - 1;
+        let { geometry, sliceGeometries } = getGeometry3D(scaffold, maxDimension);
 
         // Postprocess the geometries
         let skip = this.animated ? 1 : 0;
@@ -382,9 +385,6 @@ class Display3D {
         } else {
             geometry.scale(40, 40, 1);
         }
-
-        // TEST: Get time slice geometry
-        //geometry = getTimeSliceGeometry(geometry, this.currentTimeSlice());
 
         if (effectiveDimension > 0) {
             sliceGeometries.forEach((sliceGeometry, level) => {
