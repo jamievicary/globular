@@ -244,6 +244,8 @@ THREE.EditorControls = function ( object, domElement ) {
 
             for ( var i in touches ) {
 
+                if (!touches.hasOwnProperty(i)) continue;
+
                 if ( closest.distanceTo( touch ) > touches[ i ].distanceTo( touch ) ) closest = touches[ i ];
 
             }
