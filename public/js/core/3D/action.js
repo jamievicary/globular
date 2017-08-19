@@ -16,7 +16,8 @@ class EntityAction {
         // Is the point inside of the action's height range?
         if (action.height <= height && height <= action.height + action.size) {
             // Recurse into the slice action
-            rest = EntityAction.perform(action.getSlice(height - action.height), rest);
+            let moved = EntityAction.perform(action.getSlice(height - action.height), rest);
+            if (moved !== null) rest = moved;
         }
 
         // Update the height according to the action
@@ -124,7 +125,7 @@ class InterchangerAction extends EntityAction {
             }
 
             if (!this.forward) {
-                upperAction = upperAction.pad(lowerAction.getBox().max, lower.target.getBox().max);
+                upperAction = upperAction.pad(lowerAction.getBox().max, lower.targetBox().max);
             }
 
             return ParallelAction.make(lowerAction, upperAction, this.forward);
@@ -145,7 +146,7 @@ class InterchangerAction extends EntityAction {
             }
 
             if (this.forward) {
-                lowerAction = lowerAction.pad(upperAction.getBox().max, upper.source.getBox().max);
+                lowerAction = lowerAction.pad(upperAction.getBox().max, upper.sourceBox().max);
             }
 
             return ParallelAction.make(lowerAction, upperAction, this.forward);
@@ -199,10 +200,6 @@ class ParallelAction extends EntityAction {
 
     constructor(lower, upper) {
         super(lower.dimension);
-        if (upper.height != lower.height + lower.size) {
-            throw new Error(`Parallel actions must be consecutive.`);
-        }
-
         this.lower = lower;
         this.upper = upper;
     }
@@ -214,12 +211,12 @@ class ParallelAction extends EntityAction {
         }
 
         // Slice in upper action
-        if (level >= this.lower.size && level <= this.lower.size + this.upper.size) {
-            return this.upper.getSlice(level - this.lower.size);
+        if (level >= this.upper.height - this.height && level <= this.height + this.size) {
+            return this.upper.getSlice(level - this.upper.height + this.height);
         }
 
         // Outside of the action
-        throw new Error(`Parallel action does not have slice at level ${level}.`);
+        return null;
     }
 
     updateHeight(height) {
@@ -229,13 +226,18 @@ class ParallelAction extends EntityAction {
         }
 
         // Inside the lower action
-        if (height < this.lower.height + this.lower.size) {
+        if (height <= this.lower.height + this.lower.size) {
             return this.height + 0.5;
+        }
+
+        // Between the actions
+        if (height < this.upper.height) {
+            return height - this.lower.size + 1;
         }
 
         // Inside the upper action
         if (height <= this.upper.height + this.upper.size) {
-            return this.height + 1.5;
+            return this.upper.height - this.lower.size + 1.5;
         }
 
         // Above both actions

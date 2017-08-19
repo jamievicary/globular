@@ -249,7 +249,7 @@ class DisplayManager {
     highlightSlice(index) {
         // Get bounding box for entire action
         var location = this.getSlices();
-        var box = this.diagram.getLocationBoundingBox(location);
+        var box = this.diagram.getLocationBoundingBox(location.reverse());
         if (box == null) return; // no box to display
 
         // Get display data for bounding box

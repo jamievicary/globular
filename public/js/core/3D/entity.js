@@ -23,6 +23,10 @@ class Entity {
         this.source = source;
         this.target = target;
         this.meta = meta;
+
+        if (this.dimension > 0 && embedding.heights.length != this.dimension - 1) {
+            throw new Error(`Entity of dimension ${this.dimension} must have embedding of length ${this.dimension - 1}.`);
+        }
     }
 
     get dimension() {
@@ -35,6 +39,14 @@ class Entity {
 
     pad(positive, negative) {
         throw new Error("Entity must implement pad.");
+    }
+
+    sourceBox() {
+        return this.source.getBox().move(this.embedding.heights);
+    }
+
+    targetBox() {
+        return this.target.getBox().move(this.embedding.heights);
     }
 
 }
@@ -101,9 +113,7 @@ class InterchangerEntity extends Entity {
     }
 
     halfSpliceData() {
-        let lower = this.source.entities[0];
-        let upper = this.source.entities[1];
-        let entity = ParallelEntity.make(lower, upper, this.forward, this.meta);
+        let entity = ParallelEntity.make(this.embedding.rest(), this.source, this.forward, this.meta);
         return [entity];
     }
 
@@ -133,19 +143,15 @@ class InterchangerEntity extends Entity {
  */
 class ParallelEntity extends Entity {
 
-    static make(lower, upper, swap, meta) {
+    static make(embedding, scaffold, swap, meta) {
+        let lower = scaffold.entities[0].pad(embedding);
+        let upper = scaffold.entities[1].pad(embedding);
+
         let left = !swap ? lower : upper;
         let right = !swap ? upper : lower;
 
-        // Create source scaffold by concatenating sources
-        let sourceEntities = left.source.entities.concat(right.source.entities);
-        let source = new Scaffold(left.source.source, sourceEntities);
-
-        // Create target scaffold by concatenating targets
-        let targetEntities = left.target.entities.concat(right.target.entities);
-        let target = new Scaffold(left.target.source, targetEntities);
-
-        let embedding = left.embedding;
+        let source = scaffold.source;
+        let target = scaffold.target;
 
         return new ParallelEntity(embedding, left, right, source, target, swap, meta);
     }
@@ -160,12 +166,16 @@ class ParallelEntity extends Entity {
     halfSpliceData() {
         let left = this.left.halfSpliceData();
         let right = this.right.halfSpliceData();
-        return left.concat(right);
+
+        let between = this.source.entities.slice(this.left.source.size, this.source.entities.length - this.right.source.size);
+        between = between.map(e => e.pad(this.embedding));
+
+        return [].concat(left, between, right);
     }
 
     pad(positive, negative = null) {
         return new ParallelEntity(
-            this.embedding.pad(by),
+            this.embedding.pad(positive, negative),
             this.lower.pad(positive, negative),
             this.upper.pad(positive, negative),
             this.source, this.target,

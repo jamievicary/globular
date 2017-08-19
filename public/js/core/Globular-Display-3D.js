@@ -383,7 +383,6 @@ class Display3D {
         // Create 3D geometry from scaffold
         let maxDimension = this.getMaximumCellDimension();
         let { geometry, sliceGeometries } = getGeometry3D(scaffold, maxDimension);
-        console.log(maxDimension);
 
         // Postprocess the geometries
         let skip = this.animated ? 1 : 0;
