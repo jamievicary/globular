@@ -236,7 +236,7 @@ class RenderedLine3D {
         this.tubeMesh.frustumCulled = false;
         this.tubeMesh.name = meta;
 
-        this.capGeometry = new THREE.SphereGeometry(1, 16, 16);
+        this.capGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
         this.startCapMesh = new THREE.Mesh(this.capGeometry, material);
         this.endCapMesh = new THREE.Mesh(this.capGeometry, material);
         this.startCapMesh.position.copy(points[0]);

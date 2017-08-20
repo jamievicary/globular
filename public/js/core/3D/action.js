@@ -221,22 +221,22 @@ class ParallelAction extends EntityAction {
 
     updateHeight(height) {
         // Before even the lower action
-        if (height < this.lower.height) {
+        if (height < this.lower.height - 0.25) {
             return height;
         }
 
         // Inside the lower action
-        if (height <= this.lower.height + this.lower.size) {
+        if (height < this.lower.height + this.lower.size) {
             return this.height + 0.5;
         }
 
         // Between the actions
-        if (height < this.upper.height) {
+        if (height <= this.upper.height) {
             return height - this.lower.size + 1;
         }
 
         // Inside the upper action
-        if (height <= this.upper.height + this.upper.size) {
+        if (height <= this.upper.height + this.upper.size + 0.25) {
             return this.upper.height - this.lower.size + 1.5;
         }
 

@@ -1,112 +1,31 @@
-class LayoutCache {
-
-    constructor() {
-        this.cache = {};
-    }
-
-    get(path, point) {
-        return this.cache[this.getName(path, point)];
-    }
-
-    set(path, point, result) {
-        this.cache[this.getName(path, point)] = result;
-        return result;
-    }
-
-    getName(path, point) {
-        return path.join(":") + ";" + point.join(":");
-    }
-
-}
-
 /**
- * Translates a geometry in scaffold coordinates to more aesthetic,
- * centred coordinates; the original geometry is modified.
- * 
- * The geometry must have been generated for the diagram with the
- * supplied scaffold.
- * 
- * @param {Scaffold} scaffold 
+ * Translates a geometry in scaffold coordinates to more aesthetic, coordinates;
+ * the original geometry is modified.
+ *
+ * The geometry must have been generated for the diagram with the supplied
+ * scaffold.
+ *
+ * @param {Scaffold} scaffold
  * @param {Geometry} geometry
  */
 const layoutGeometry3D = (scaffold, geometry, skip = 0) => {
-    let cache = new LayoutCache;
-    geometry.move(point => layoutPoint(scaffold, point, cache, [], skip));
-}
+    // Construct the layout builder
+    let builder = slice => new TrivialLayout(slice);
+    for (let d = 2; d <= scaffold.dimension; d++) {
+        builder = (b => slice => new FixpointLayout(slice, b, 0.5))(builder);
+    }
 
-/**
- * Translates scaffold coordinates to centered coordinates.
- * 
- * @param {Diagram} scaffold 
- * @param {number[]} point 
- * @return {number[]}
- */
-const layoutPoint = (scaffold, point, cache, path = [], skip = 0, depth = 0) => {
-    if (point.length == 0) {
-        return [];
-    } else if (skip > depth) {
-        let level = roundQuarter(point.last());
-        let slice = scaffold.getSlice(level);
-        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]), skip, depth + 1);
-        return rest.concat([level]);
-    } else if (scaffold.size == 0) {
-        let slice = scaffold.getSlice(0);
-        let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([0]), skip, depth + 1);
-        let height = point.last();
+    // Build the layout
+    let layout = builder(scaffold);
+
+    // Layout the geometry
+    geometry.move(point => {
+        if (point.length == 0) return point;
+
+        let rest = layout.layoutPoint(point);
+        let height = roundQuarter(point[point.length - 1]);
         return rest.concat([height]);
-    }
-
-    // Cached?
-    let cached = cache.get(path, point);
-    if (cached) return cached;
-
-    // Calculate
-    let level = roundQuarter(point.last());
-    let quarter = getQuarter(level);
-    
-    if (quarter == 2 && scaffold.size > 0) {
-        let cell = scaffold.getEntity(Math.floor(level));
-
-        let sourceSlice = scaffold.getSlice(Math.floor(level));
-        let targetSlice = scaffold.getSlice(Math.ceil(level));
-
-        let sourceOrigins = collectOrigins(point.slice(0, -1), sourceSlice, cell.sourceAction());
-        let targetOrigins = collectOrigins(point.slice(0, -1), targetSlice, cell.targetAction());
-
-        sourceOrigins = sourceOrigins.map(p => layoutPoint(sourceSlice, p, cache, path.concat([Math.floor(level)]), skip, depth + 1));
-        targetOrigins = targetOrigins.map(p => layoutPoint(targetSlice, p, cache, path.concat([Math.ceil(level)]), skip, depth + 1));
-
-        let sourceMean = sourceOrigins.length > 0 ? [getMean(sourceOrigins)] : [];
-        let targetMean = targetOrigins.length > 0 ? [getMean(targetOrigins)] : [];
-
-        if (sourceMean.length > 0 || targetMean.length > 0) {
-            let rest = getMean(sourceMean.concat(targetMean));
-            let height = getHeight(level, scaffold.size);
-            return cache.set(path, point, rest.concat([height]));
-        }
-    }
-
-    let slice = scaffold.getSlice(level);
-    let rest = layoutPoint(slice, point.slice(0, -1), cache, path.concat([level]), skip, depth + 1);
-    let height = getHeight(level, scaffold.size);
-    return cache.set(path, point, rest.concat([height]));
-}
-
-const collectOrigins = (point, slice, action) => {
-    let origins = [];
-    point = point.map(roundQuarter);
-
-    for (let p of slice.allPoints()) {
-        let moved = EntityAction.perform(action, p);
-        if (moved !== null && arrayEquals(moved, point)) {
-            origins.push(p);
-        }
-    }
-    return origins;
-}
-
-const getHeight = (level, size) => {
-    return level - 0.5 * size;
+    });
 }
 
 const roundQuarter = (x) => {
@@ -119,4 +38,193 @@ const roundQuarter = (x) => {
     } else {
         return x;
     }
+}
+
+class FixpointLayout {
+
+    constructor(scaffold, base, padding) {
+        this.scaffold = scaffold;
+        this.layout = [];
+        this.padding = padding;
+
+        this.base = [];
+        for (let level = 0; level <= this.scaffold.size; level += 0.5) {
+            this.base.push(base(scaffold.getSlice(level)));
+        }
+
+        for (let level = 0; level <= this.scaffold.size; level += 1) {
+            this.layout.push(Array(this.scaffold.getSlice(level).size * 4 + 5).fill(0));
+        }
+
+        this.computeLinks();
+
+        let max = 1000;
+        let done = false;
+        for (let i = 0; i < max; i++) {
+            if (!this.step()) {
+                done = true;
+                break;
+            }
+        }
+    }
+
+    computeLinks() {
+        this.sourceLinks = [];
+        this.targetLinks = [];
+
+        for (let level = 0; level < this.scaffold.size; level++) {
+            this.sourceLinks.push(this.computeLinksLevel(level, "s"));
+            this.targetLinks.push(this.computeLinksLevel(level, "t"));
+        }
+    }
+
+    heightToIndex(height) {
+        return (height + 0.5) / 0.25;
+    }
+
+    computeLinksLevel(level, boundary) {
+        let entity = this.scaffold.entities[level];
+        let action = boundary == "s" ? entity.sourceAction() : entity.targetAction();
+
+        let halfSize = this.scaffold.getSlice(level + 0.5).size;
+        let links = Array(halfSize * 4 + 5).fill(null).map(() => new Set());
+
+        let sliceLevel = boundary == "s" ? level : level + 1;
+        let sliceSize = this.scaffold.getSlice(sliceLevel).size;
+
+        for (let height = -0.5; height <= sliceSize + 0.5; height += 0.25) {
+            let updated = action.updateHeight(height);
+            links[this.heightToIndex(updated)].add(this.heightToIndex(height));
+        }
+
+        return links.map(set => [...set]);
+    }
+
+    step() {
+        let problem = false;
+
+        // Ensure points are padded enough horizontally
+        for (let i = 0; i < this.layout.length; i++) {
+            let line = this.layout[i];
+
+            for (let j = 1; j < line.length; j++) {
+                let padding = (j % 4 == 0 || j % 4 == 1) && (j > 1 && j < line.length - 3) ? this.padding : 0;
+                let minimum = line[j - 1] + padding;
+
+                if (line[j] < minimum) {
+                    problem = true;
+                    line[j] = minimum;
+                }
+            }
+        }
+
+        for (let level = 0; level < this.scaffold.size; level++) {
+            let sourceLinks = this.sourceLinks[level];
+            let targetLinks = this.targetLinks[level];
+
+            for (let i = 0; i < sourceLinks.length; i++) {
+                let sourceLink = sourceLinks[i];
+                let targetLink = targetLinks[i];
+
+                if (sourceLink.length == 0 && targetLink.length != 0) {
+                    debugger;
+                }
+
+                if (sourceLink.length == 0 || targetLink.length == 0) continue;
+
+                let sourceAverage = 0;
+                for (let j = 0; j < sourceLink.length; j++) {
+                    sourceAverage += this.layout[level][sourceLink[j]];
+                }
+                sourceAverage = sourceAverage / sourceLink.length;
+
+                let targetAverage = 0;
+                for (let j = 0; j < targetLink.length; j++) {
+                    targetAverage += this.layout[level + 1][targetLink[j]];
+                }
+                targetAverage = targetAverage / targetLink.length;
+
+                let diff = Math.abs(sourceAverage - targetAverage);
+                if (diff > 0.01) {
+                    problem = true;
+
+                    let link = sourceAverage > targetAverage ? targetLink : sourceLink;
+                    let line = sourceAverage > targetAverage ? this.layout[level + 1] : this.layout[level];
+
+                    for (let j = 0; j < link.length; j++) {
+                        line[link[j]] += diff;
+                    }
+                }
+            }
+        }
+
+        return problem;
+    }
+
+    getSlice(level) {
+        if (level <= 0) {
+            return this.base[0];
+        } else if (level >= this.scaffold.size) {
+            return this.base[this.base.length - 1];
+        }
+
+        return this.base[roundQuarter(level) * 2];
+    }
+
+    layoutPoint(point) {
+        let x = point.penultimate();
+        let y = point.last();
+
+        let rest = this.getSlice(y).layoutPoint(point.slice(0, -1));
+
+        y = roundQuarter(y);
+        if (y < 0) {
+            y = 0;
+        } else if (y > this.scaffold.size) {
+            y = this.scaffold.size;
+        }
+
+        if (x < 0) {
+            return rest.concat([x]);
+        } else if (x > this.scaffold.getSlice(y).size) {
+            x = this.layout[Math.floor(y)].last() + (x - this.scaffold.getSlice(y).size);
+            return rest.concat([x]);
+        }
+
+        if (Math.floor(y) + 0.5 == y) {
+            let level = Math.floor(y);
+            let sourceLink = this.sourceLinks[level][this.heightToIndex(x)];
+            let targetLink = this.targetLinks[level][this.heightToIndex(x)];
+
+            if (sourceLink.length == 0 || targetLink.length == 0) {
+                throw new Error(`Point (${point.join(", ")}) can't be laid out.`);
+            }
+
+            let average = 0;
+            for (let j = 0; j < sourceLink.length; j++) {
+                average += this.layout[level][sourceLink[j]];
+            }
+            for (let j = 0; j < targetLink.length; j++) {
+                average += this.layout[level + 1][targetLink[j]];
+            }
+            average = average / (sourceLink.length + targetLink.length);
+
+            return rest.concat([average]);
+        } else {
+            return rest.concat([this.layout[y][this.heightToIndex(x)]]);
+        }
+    }
+
+}
+
+class TrivialLayout {
+
+    constructor(base) {
+        this.base = base;
+    }
+
+    layoutPoint(p) {
+        return p.slice(0, -1);
+    }
+
 }

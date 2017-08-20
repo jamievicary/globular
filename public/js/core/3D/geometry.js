@@ -200,9 +200,9 @@ const getGeometryStep = (scaffold, sliceGeometries, maxDimension, codimension) =
     for (let level = 0; level < scaffold.size; level++) {
         let entity = scaffold.getEntity(level);
 
-        let bottom = topDimension ? level : level;
+        let bottom = topDimension ? level : level + 0.25;
         let middle = level + 0.5;
-        let top = topDimension ? level + 1 : level + 1;
+        let top = topDimension ? level + 1 : level + 0.75;
 
         // Lift the source and target slice geometries as prescribed by the scaffold.
         let sourceGeometry = sliceGeometries[level].lift(bottom, (point, path) => {
@@ -219,23 +219,21 @@ const getGeometryStep = (scaffold, sliceGeometries, maxDimension, codimension) =
         if (entity instanceof ConeEntity) {
             geometry.add(getVertex(scaffold, level), entity.meta);
         }
-
-        // TODO: Vertices for parallel entities?
     }
 
     // Generate the quarter-slice geometry
     if (!topDimension || scaffold.size == 0) {
-        let overhangBottom = sliceGeometries[0].lift(-0.25, point => point.concat([0]), false, maxDimension);
-        let overhangTop = sliceGeometries[sliceGeometries.length - 1].lift(scaffold.size + 0.25, point => point.concat([scaffold.size]), true, maxDimension);
-        geometry.append(overhangBottom, overhangTop);
+        for (let level = 0; level <= scaffold.size; level++) {
+            let sliceGeometry = sliceGeometries[level];
+            let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]), false, maxDimension);
+            let overhangTop = sliceGeometry.lift(level + 0.25, point => point.concat([level]), true, maxDimension);
+            geometry.append(overhangBottom, overhangTop);
+        }
 
-        // const genQuarter = (level) => {
-        //     let sliceGeometry = sliceGeometries[level];
-        //     let overhangBottom = sliceGeometry.lift(level - 0.25, point => point.concat([level]), false, maxDimension);
-        //     let overhangTop = sliceGeometry.lift(level + 0.25, point => point.concat([level]), true, maxDimension);
-        //     geometry.append(overhangBottom, overhangTop);
-        // }
-        // genQuarter(0);
+        // Generate additional padding geometry at the beginning and en
+        let n = scaffold.size;
+        geometry.append(sliceGeometries[0].lift(-0.5, point => point.concat([-0.25]), false, maxDimension));
+        geometry.append(sliceGeometries[n].lift(n + 0.5, point => point.concat([n + 0.25]), true, maxDimension));
     }
 
     return geometry;

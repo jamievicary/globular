@@ -78,13 +78,14 @@ class Scaffold {
         let quarter = getQuarter(level);
         let rounded = roundQuarter(level);
 
-        if (rounded < 0 || rounded > this.size) {
-            throw new Error(`Scaffold of size ${this.size} does not have a slice at ${level}.`);
+        // Source boundary?
+        if (rounded <= 0) {
+            return this.source;
         }
 
-        // Source boundary?
-        if (rounded == 0) {
-            return this.source;
+        // Target boundary?
+        if (rounded > this.size) {
+            return this.target;
         }
 
         // Half slice?
