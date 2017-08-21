@@ -165,7 +165,6 @@ class Display3D {
         let object = objects[0];
         let cell = object.meta.cell;
 
-        // 
         this.manager.showPopup(`${cell.id.getFriendlyName()}`, {
             position: "absolute",
             left: event.clientX,
@@ -351,7 +350,7 @@ class Display3D {
         this.scene.add(this.diagramScene.scene);
     }
 
-    getMaximumCellDimension() {
+    get maximumCellDimension() {
         if (this.visibleDimensions == 3) {
             let dimension = 2;
             if (this.animated) dimension++;
@@ -367,29 +366,25 @@ class Display3D {
         // Obtain the diagram that should be visible in this display
         let diagram = this.manager.getVisibleDiagram();
 
-        // Calculate the dimension of the visible diagram under the current projection
+        // Calculate the dimension of the diagram to display under the current
+        // projection; this might be different than the dimensions visible at
+        // once due to animations.
         let effectiveDimension = Math.min(
             this.getMaximumDimension(),
             diagram.getDimension() - this.manager.getSuppress());
 
         // Create a scaffold for the projected diagram
         let scaffold = Scaffold.of(diagram, effectiveDimension);
-        this.scaffold = scaffold;
+        let { geometry, sliceGeometries } = getGeometry3D(scaffold, this.maximumCellDimension);
 
-        // TODO: Remove this debug info
-        window.last_diagram = diagram;
-        window.last_scaffold = scaffold;
-
-        // Create 3D geometry from scaffold
-        let maxDimension = this.getMaximumCellDimension();
-        let { geometry, sliceGeometries } = getGeometry3D(scaffold, maxDimension);
-
-        // Postprocess the geometries
-        let skip = this.animated ? 1 : 0;
-        layoutGeometry3D(scaffold, geometry, skip);
+        // Postprocess the main geometry
+        geometry.cells.forEach(cell => {
+            cell.meta = Object.assign({}, cell.meta, { visibleDimensions: this.visibleDimensions});
+        });
+        layoutGeometry3D(scaffold, geometry);
 
         if (this.visibleDimensions == 3) {
-            geometry.scale(40, 40, 80, 1);
+            geometry.scale(60, 40, 80, 1);
         } else {
             geometry.scale(40, 40, 1);
         }
@@ -397,8 +392,18 @@ class Display3D {
         if (effectiveDimension > 0) {
             sliceGeometries.forEach((sliceGeometry, level) => {
                 sliceGeometry.move(p => p.concat([level]));
+                sliceGeometry.cells.forEach(cell => {
+                    cell.meta = Object.assign({}, cell.meta, { visibleDimensions: this.visibleDimensions - 1 });
+                });
+
+                geometry.cells.forEach(cell => cell.meta = Object.assign({}, cell.meta, { visibleDimensions: this.visibleDimensions})) ;
                 layoutGeometry3D(scaffold, sliceGeometry);
-                sliceGeometry.scale(40, 40, 80);
+
+                if (this.visibleDimensions == 3) {
+                    sliceGeometry.scale(60, 40, 80, 1);
+                } else {
+                    sliceGeometry.scale(40, 40, 1);
+                }
             });
         } else {
             sliceGeometries = [];
@@ -407,57 +412,4 @@ class Display3D {
         return { diagramGeometry: geometry, sliceGeometries };
     }
 
-}
-
-const getHighlightBox3D = (scaffold, box, boundary) => {
-    // TODO: Make this work for projected diagrams!
-    // TODO: This is a bit naive by just using a box, because the layout
-    // algorithm does not have the same nice invariants as the SVG layout
-
-    let base = [];
-    let size = [];
-    let slice = scaffold;
-
-    if (boundary !== null && boundary.depth > 0) {
-        for (let i = 0; i < boundary.depth - 1; i++) {
-            slice = slice.getSlice(0);
-            base.unshift(0);
-            size.unshift(0);
-        }
-
-        let level = boundary.type == "s" ? 0 : slice.cells.length;
-        slice = slice.getSlice(level);
-        base.unshift(level);
-        size.unshift(0);
-    }
-
-    let boxDiff = [];
-    for (let i = 0; i < box.min.length; i++) {
-        boxDiff.push(box.max[i] - box.min[i]);
-    }
-
-    base = box.min.concat(base);
-    size = boxDiff.concat(size);
-
-    console.log(base);
-    base = layoutPoint(scaffold, base, base, {});
-    console.log(base);
-
-    base = base.concat([0, 0, 0]).slice(0, 3);
-    size = size.concat([0, 0, 0]).slice(0, 3);
-
-    base[0] *= 40;
-    base[1] *= 40;
-    base[2] *= 80;
-
-    size[0] *= 40;
-    size[1] *= 40;
-    size[2] *= 80;
-
-    base = base.map(x => x - 5);
-    size = size.map(x => x + 10);
-
-    console.log(base, size);
-
-    return renderHighlightBox(base, size);
 }

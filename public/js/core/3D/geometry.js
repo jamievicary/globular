@@ -139,11 +139,6 @@ const containsDuplicates = (array) => {
     return false;
 }
 
-/**
- * 
- * @param {Scaffold} scaffold 
- * @return 
- */
 const getGeometry3D = (scaffold, maxDimension, codimension = 0) => {
     if (scaffold.dimension == 0) {
         let geometry = getGeometryBase(scaffold);

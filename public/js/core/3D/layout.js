@@ -66,6 +66,8 @@ class FixpointLayout {
                 break;
             }
         }
+
+        if (!done) console.log("Layout ran out of steam...");
     }
 
     computeLinks() {

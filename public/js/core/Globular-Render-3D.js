@@ -2,7 +2,7 @@
 class DiagramMaterials {
 
     constructor() {
-        this.materials = {};
+        this.materials = new Map();
     }
 
     /**
@@ -13,7 +13,7 @@ class DiagramMaterials {
      * @param {*} options Renderer options.
      */
     getMaterial(meta, dimension, options) {
-        if (this.materials.hasOwnProperty(meta.cell.id)) return this.materials[meta.cell.id];
+        if (this.materials.has(meta.cell.id)) return this.materials.get(meta.cell.id);
 
         let id = { id: meta.cell.id, dimension: meta.dimension };
         let { transparency } = options;
@@ -25,11 +25,12 @@ class DiagramMaterials {
             transparent: dimension == 2 && transparency
         });
 
-        if (dimension == 2) {
-            material.opacity = 0.6;
+        if (dimension == 2 && transparency) {
+            material.depthWrite = false;
+            material.blending = THREE.MultiplyBlending;
         }
 
-        this.materials[meta.cell.id] = material;
+        this.materials.set(meta.cell.id, material);
         return material;
     }
 
@@ -51,15 +52,19 @@ class StaticDiagramScene3D {
         let materials = new DiagramMaterials();
         let surfaces = {};
         options.unbufferedSurfaces = true;
-        
+
+        this.surfaces = [];
+
         for (let cell of geometry.cells) {
-            if (cell.dimension > 2) continue;
+            // if (cell.dimension > 2) continue;
             let points = cell.vertices.map(v => new THREE.Vector3(...v));
 
             let material = materials.getMaterial(cell.meta, cell.dimension, options);
             let rendered = getRenderedCell3D(cell.dimension, points, cell.meta, material, options);
 
             // Collect the surfaces and group them by id
+            // if (cell.dimension == 2) this.surfaces.push(rendered);
+
             if (cell.dimension == 2) {
                 let id = cell.meta.cell.id;
                 if (!surfaces.hasOwnProperty(id)) {
@@ -130,7 +135,7 @@ class DynamicDiagramScene3D {
             // Skip cells that have an empty time interval in which they are visible
             if (timeStart === timeEnd) continue;
 
-            let material = materials.getMaterial(cell.meta, cell.dimension, options);
+            let material = materials.getMaterial(cell.meta, cell.dimension - 1, options);
             let rendered = getRenderedCell3D(cell.dimension - 1, pointsStart, cell.meta, material, options);
 
             this.cells.push({
@@ -189,7 +194,7 @@ class DynamicDiagramScene3D {
 
         return points;
     }
-    
+
 }
 
 /**
@@ -227,16 +232,37 @@ class RenderedVertex3D {
 
 }
 
+const lineControlPoints = (start, end, dimension, f = 1) => {
+    let d = new THREE.Vector3();
+    d.subVectors(end, start);
+
+    d.x = d.x != 0 && dimension <= 1 ? d.x : 0;
+    d.y = d.y != 0 && dimension <= 2 ? d.y : 0;
+    d.z = d.z != 0 && dimension <= 3 ? d.z : 0;
+
+    d.multiplyScalar(1/3);
+
+    let p = new THREE.Vector3();
+    p.copy(start);
+    p.addScaledVector(d, 1);
+
+    let q = new THREE.Vector3();
+    q.copy(end);
+    q.addScaledVector(d, -1);
+
+    return [p, q];
+}
+
 class RenderedLine3D {
 
     constructor(points, material, meta, options) {
-        let curve = this.getCurve(points);
-        this.tubeGeometry = new DynamicTubeBufferGeometry(curve, 1, 1, 16);
+        let curve = this.getCurve(points, meta.meta.visibleDimensions);
+        this.tubeGeometry = new DynamicTubeBufferGeometry(curve, 6, 1, 8);
         this.tubeMesh = new THREE.Mesh(this.tubeGeometry, material);
         this.tubeMesh.frustumCulled = false;
         this.tubeMesh.name = meta;
 
-        this.capGeometry = new THREE.SphereBufferGeometry(1, 16, 16);
+        this.capGeometry = new THREE.SphereBufferGeometry(1, 16, 8);
         this.startCapMesh = new THREE.Mesh(this.capGeometry, material);
         this.endCapMesh = new THREE.Mesh(this.capGeometry, material);
         this.startCapMesh.position.copy(points[0]);
@@ -250,8 +276,11 @@ class RenderedLine3D {
         this.objects.push(this.endCapMesh);
     }
 
-    getCurve(points) {
-        return new THREE.LineCurve3(points[0], points[1]);
+    getCurve(points, visibleDimensions) {
+        let x = points[0];
+        let y = points[1];
+        let [p, q] = lineControlPoints(x, y, visibleDimensions);
+        return new THREE.CubicBezierCurve3(x, p, q, y);
     }
 
     update(points) {
@@ -269,9 +298,9 @@ class RenderedSurface3D {
         let controlPoints = this.getControlPoints(points);
 
         if (options.unbufferedSurfaces) {
-            this.surfaceGeometry = new BezierSurfaceGeometry(controlPoints, 2);
+            this.surfaceGeometry = new BezierSurfaceGeometry(controlPoints, 6);
         } else {
-            this.surfaceGeometry = new BezierSurfaceBufferGeometry(controlPoints, 2);
+            this.surfaceGeometry = new BezierSurfaceBufferGeometry(controlPoints, 6);
         }
 
         this.surface = new THREE.Mesh(this.surfaceGeometry, material);
@@ -281,11 +310,37 @@ class RenderedSurface3D {
     }
 
     getControlPoints(points) {
+        let p00 = points[0];
+        let p03 = points[2];
+        let p30 = points[1];
+        let p33 = points[3];
+
+        let [p10, p20] = lineControlPoints(p00, p30, 2);
+        let [p13, p23] = lineControlPoints(p03, p33, 2);
+
+        let zdiff = p03.z - p00.z;
+
+        let line0 = [p00, p10, p20, p30];
+        let [p01, p11, p21, p31] = line0.map(p => {
+            let q = new THREE.Vector3();
+            q.copy(p);
+            q.z += zdiff / 3;
+            return q;
+        });
+
+        let line3 = [p03, p13, p23, p33];
+        let [p02, p12, p22, p32] = line3.map(p => {
+            let q = new THREE.Vector3();
+            q.copy(p);
+            q.z -= zdiff / 3;
+            return q;
+        });
+
         return [
-            points[0], points[0], points[1], points[1],
-            points[0], points[0], points[1], points[1],
-            points[2], points[2], points[3], points[3],
-            points[2], points[2], points[3], points[3]
+            p00, p10, p20, p30,
+            p01, p11, p21, p31,
+            p02, p12, p22, p32,
+            p03, p13, p23, p33
         ];
     }
 
