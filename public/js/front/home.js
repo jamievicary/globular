@@ -463,10 +463,6 @@ $(document).ready(function() {
         gProject.exportUI();
     });
 
-    $("#renderer-opt").change((e) => {
-        MainDisplay.setDisplay($(e.target).val());
-    });
-
     $("#msg-close-opt-profile").click(function() {
         $("#profile-box").fadeOut();
     });
