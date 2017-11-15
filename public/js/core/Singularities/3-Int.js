@@ -32,10 +32,19 @@ Diagram.prototype.expand.Int = function(type, x, n, m) {
 Diagram.prototype.reorganiseCrossings.Int = function(type, x, n, m) {
 
     var list = new Array();
-    for (var i = 1; i < m; i++) {
-        list = list.concat(this.expand(x + i, i * (n - 1), 1));
-    }
-    list = list.concat(this.reorganiseCrossings(type, x + m), n - 1, m);
+//    if(n === 0 &&  m === 0) {return list;}
+   // if((n === 0 && m != 0) || (n != 0 && m === 0)) {return false;}
+
+        for (var i = 1; i < m; i++) {
+            if(n > 0){
+                list = list.concat(this.expand(type, x + i, i * (n - 1), 1));
+            }
+                
+        }
+        if(n > 1){
+            list = list.concat(this.reorganiseCrossings(type, x + m, n - 1, m));
+        }
+
     return list;
 }
 
@@ -73,6 +82,65 @@ Diagram.prototype.interpretDrag.Int = function(drag) {
     if (r.left.possible && r.right.possible) return (drag.directions[1] < 0 ? [r.left] : [r.right]);
     if (r.left.possible) return [r.left];
     return [r.right];
+    /*
+    if (drag.directions == null) return [];
+    if (drag.coordinates.length > 1) return [];
+    var r = {};
+    var h = drag.coordinates[0];
+    if (drag.directions[0] > 0) {
+        r.left = {
+            id: 'Int',
+            key: [h],
+            possible: this.interchangerAllowed('Int', [h])
+        };
+        r.right = {
+            id: 'IntI0',
+            key: [h+1],
+            possible: this.interchangerAllowed('IntI0', [h+1])
+        }
+    } else {
+        r.right = {
+            id: 'Int',
+            key: [h-1],
+            possible: this.interchangerAllowed('Int', [h-1])
+        };
+        r.left = {
+            id: 'IntI0',
+            key: [h],
+            possible: this.interchangerAllowed('IntI0', [h])
+        }
+    }
+    */
+    /*
+    if (drag.directions[0] > 0) {
+        r.left = {
+            id: 'IntI0',
+            key: [h + 1],
+            possible: this.interchangerAllowed('IntI0', [h + 1])
+        };
+        r.right = {
+            id: 'Int',
+            key: [h],
+            possible: this.interchangerAllowed('Int', [h])
+        };
+    } else {
+        r.left = {
+            id: 'Int',
+            key: [h - 1],
+            possible: this.interchangerAllowed('Int', [h - 1])
+        };
+        r.right = {
+            id: 'IntI0',
+            key: [h],
+            possible: this.interchangerAllowed('IntI0', [h])
+        };
+    }
+    // Return the best match in a permissive way
+    if (!r.left.possible && !r.right.possible) return [];
+    if (r.left.possible && r.right.possible) return (drag.directions[1] < 0 ? [r.left] : [r.right]);
+    if (r.left.possible) return [r.left];
+    return [r.right];
+    */
 }
 
 Diagram.prototype.tidyKey.Int = function(type, key) {

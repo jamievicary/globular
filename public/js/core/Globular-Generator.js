@@ -41,7 +41,7 @@ Generator.prototype.prepare = function() {
 }
 
 Generator.prototype.getDiagram = function() {
-    var key = [].fill(0, this.source == null ? 0 : this.source.getDimension());
+    var key = Array(this.source == null ? 0 : this.source.getDimension()).fill(0);
     return new Diagram(this.source == null ? null : this.source.copy(), [new NCell({id: this.id, key: key.slice(), box: this.getBoundingBox()})]);
 }
 
@@ -104,7 +104,7 @@ Generator.prototype.copy = function() {
 
 Generator.prototype.getBoundingBox = function() {
     var box = {
-        min: [].fill(0, this.getDimension() - 1),
+        min: Array(Math.max(0, this.getDimension() - 1)).fill(0),
         max: this.getSourceLengths()
     };
     //box.max.push(1);

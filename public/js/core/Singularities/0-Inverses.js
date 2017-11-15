@@ -76,23 +76,25 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
 Diagram.prototype.interpretClickInverses = function(drag) {
 
     var cells = gProject.signature.getNCells(this.getDimension() + 1);
-    if (this.getDimension() == 0) drag.coordinates = [];
+    if (this.getDimension() == 0) drag.coordinates = []
+    var click_box = this.getLocationBoundingBox(drag.coordinates);
+
     var results = [];
     for (var i = 0; i < cells.length; i++) {
         // Does the source of this cell match at this location?
         var generator = gProject.signature.getGenerator(cells[i]);
+        
+        results = results.concat(this.getLocalMatches(click_box, generator.id, ''));
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0'));
+        if (!generator.flippable()) continue;
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I1'));
+        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0I1'));
+
+/*        
         //var checkbox = $('#invertible-' + generator.id);
         //if (!checkbox.is(':checked')) continue;
         var matches = this.enumerate(generator.source);
         for (var j = 0; j < matches.length; j++) {
-            
-            /*
-                How to select the appropriate matches? If we use
-                    //if (!matches[j].tail(drag.coordinates)) continue;
-                then we are too permissive, and get lots of matches
-                that are not local to the click (e.g. applying 'rho^ inverse')
-            */
-            
             if (!matches[j].tail(drag.coordinates)) continue;
             //if (!matches[j].vector_equals(drag.coordinates)) continue;
             results.push({
@@ -139,12 +141,34 @@ Diagram.prototype.interpretClickInverses = function(drag) {
                 possible: true
             });
         }
+*/
     }
     return results;
 };
 
 Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
+}
+
+Diagram.prototype.expand.Inverses = function(type, x, n, o) {
+    
+    var list = new Array();
+    
+    if(type.tail('EI0')){
+        for(var i = 1; i <= n; i++){
+            list.push(new NCell({id: type, key: [x + n - i]}));
+        }
+    }
+    else{
+        var k = x[0];
+        if(type.substr(0, 5) === 'IntI0' /*&& o === -1*/){k++}
+        for(var i = 0; i < n; i++){
+            list.push(new NCell({id: type, key: [k, x[1] + i]}));
+            k += o;
+        }   
+    }
+    
+    return list;
 }
 
 Diagram.prototype.getInverseKey.Inverses = function(type, key) {
@@ -175,6 +199,7 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
         var slice = this.getSlice(key.last());
         //var base_key = slice.tidyKey(base_type, key.slice(0, key.length - 1));
         var base_key = key.slice(0, key.length - 1);
+        //if(base_type === 'IntI0'){base_key.increment_last(1)}
         box = this.getSlice(key.last()).getBoundingBox({
             id: base_type,
             key: base_key
@@ -192,8 +217,18 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
 
     var height = key.last();
 
-    // If we're inserting from the identity, just assume it's fine
-    if (type.tail('-E')) return true;
+    if(type.tail('Int-E')){
+        var slice = this.getSlice(height);
+        if(key.penultimate() + 1 >= slice.cells.length){return false;}
+        return true;
+    }
+    else if(type.tail('IntI0-E')){
+        var slice = this.getSlice(height);
+        if(key.penultimate() + 1 > slice.cells.length){return false;}
+        if(key.penultimate() < 1){return false;}
+        return true;
+    }
+    else if (type.tail('-E')) return true;
 
     // Can't cancel out an inverse cell if we're at the top of the diagram
     if (height == this.cells.length) return false;

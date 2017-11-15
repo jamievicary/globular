@@ -1,4 +1,5 @@
 var fs = require('fs');
+var Step = require('step');
 
 function get_new_private_project_id(email) {
 	var data = fs.readdirSync('database/users/' + email + '/projects');
@@ -6,7 +7,7 @@ function get_new_private_project_id(email) {
 	for (var i = 0; i < data.length; i++) {
 		var id = Number(data[i]);
 		if (isNaN(id)) continue;
-		new_id = Math.max(new_id, Number(data[i]) + 1);
+		new_id = Math.max(new_id, id + 1);
 	}
 	return new_id;
 }
@@ -16,11 +17,11 @@ exports.get_projects = function(req, res) {
 }
 
 exports.get_project_list = function(req, res) {
-	var listType = parseInt(req.body.listType);
+	var listType = req.body.listType;
 	var user_id = req.session.user_id;
 	switch (listType) {
-		case 1:
-			// get users private projects - as linear array of project IDS e.g (1,2,4).
+		case 'user private':
+			// get user's private projects as an array of project indices, eg [1, 2, 4]
 			fs.readdir('database/users/' + user_id + '/projects', function(err, all_ids) {
 				console.log(err);
 				res.send({
@@ -30,8 +31,8 @@ exports.get_project_list = function(req, res) {
 				});
 			});
 			break;
-		case 2:
-			//get users public projects - as list of public project IDS e,g (1510.001, 1508.004)
+		case 'user public':
+			// get user's public projects as list of public project IDs, eg ['1510.001', '1508.004']
 			fs.readFile('database/users/' + user_id + '/data.json', 'utf8', function(err, result) {
 				console.log(result);
 				result = JSON.parse(result);
@@ -42,11 +43,9 @@ exports.get_project_list = function(req, res) {
 				});
 			});
 			break;
-		case 3:
-
-			//get all public projects - as list of  public project IDS e,g (1510.001, 1508.004)
+		case 'all public':
+			// get all public projects as list of public project IDs, eg ['1510.001', '1508.004']
 			var dateName = req.body.projectData;
-			
 			fs.readdir('database/projects/' + dateName, function(err, files) {
 				var pp_addresses = [];
 				if (files != undefined) {
@@ -133,6 +132,26 @@ exports.save_project_changes = function(req, res) {
 		project_desc: p_desc
 	});
 
+	Step(
+		function stepA() {
+			fs.mkdir("database/users/" + user_id + "/projects/" + p_id, this);
+		},
+		function stepB(err) {
+			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, this);
+		},
+		function stepC(err) {
+			fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/meta.json", p_meta, this);
+		},
+		function stepD(err) {
+			res.send({
+				success: true,
+				p_id: p_id,
+				msg: "Success"
+			});			
+		}
+	);
+
+	/*
 	// Save data and return success 	
 	fs.mkdir("database/users/" + user_id + "/projects/" + p_id, function() {
 		fs.writeFile('database/users/' + user_id + "/projects/" + p_id + "/string.json", p_string, function() {
@@ -145,7 +164,7 @@ exports.save_project_changes = function(req, res) {
 			});
 		});
 	});
-
+*/
 
 };
 

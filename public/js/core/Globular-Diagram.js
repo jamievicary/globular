@@ -70,6 +70,25 @@ Diagram.prototype.render = function(div, highlight) {
     globular_render(div, this, highlight);
 }
 
+//    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
+
+Diagram.prototype.downloadPNG = function(filename, highlight) {
+    var div = $('<div>').addClass('temporary_export_div').css('position', 'absolute').css('left', 0).css('width', 100).css('height', 100);
+    var display = new Display($('#diagram-canvas'));
+    display.set_diagram(this, highlight);
+    display.render(div[0], highlight);
+    download_SVG_as_PNG(div.children('svg')[0], {
+        sx: 0,
+        sy: 0,
+        sWidth: 10,
+        sHeight: 10,
+        logical_width: 10,
+        logical_height: b.top - b.bottom
+    }, filename);
+    div.remove();
+}
+
+
 // Rewrites a subdiagram of this diagram
 Diagram.prototype.rewrite = function(cell) {
     if (cell == undefined) debugger;
@@ -90,7 +109,7 @@ Diagram.prototype.rewrite = function(cell) {
         source_size = rewrite.source.cells.length;
         target = rewrite.target.copy();
         insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
-        
+
         /* OLD
         var rewrite = gProject.signature.getGenerator(cell.id.getBaseType());
         source_size = (cell.id.last() == 'I' ? rewrite.target.cells.length : rewrite.source.cells.length);
@@ -111,6 +130,7 @@ Diagram.prototype.rewrite = function(cell) {
 
     // Update the slice cache
     if (this.sliceCache != null) {
+        this.sliceCache = [];
         this.sliceCache.splice(insert_position, source_size);
         for (var i = 0; i < target.cells.length; i++) {
             this.sliceCache.splice(insert_position + i, 0, null);
@@ -122,9 +142,6 @@ Diagram.prototype.rewrite = function(cell) {
     for (var i = 0; i < target.cells.length; i++) {
         var new_cell = target.cells[i];
         if (!cell.id.is_interchanger()) {
-            if (new_cell.id.substr(0, 3) == 'Int') {
-                var z = 1;
-            }
             new_cell.pad(cell.key.slice(0, cell.key.length - 1));
         }
         new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
@@ -135,6 +152,38 @@ Diagram.prototype.rewrite = function(cell) {
     return this;
 }
 
+Diagram.prototype.multipleInterchangerRewrite = function(rewrite_array) {
+
+    if (rewrite_array === false) {
+        return false;
+    }
+
+    for (var i = 0; i < rewrite_array.length; i++) {
+        if (this.interchangerAllowed(rewrite_array[i].id, rewrite_array[i].key)) {
+            this.rewrite(rewrite_array[i]);
+        } else {
+            return false;
+        }
+    }
+    return true;
+
+}
+
+Diagram.prototype.expandWrapper = function(type, x, k) {
+
+    if (x < 0 || x >= this.cells.length) {
+        return false;
+    }
+    var y = this.cells[x].key.last();
+    if (this.cells[x].id === 'IntI0') {
+        y--;
+    } // Special code to deal with the key for IntI0
+    return this.expand(type, {
+        up: x,
+        across: y,
+        length: this.source_size(x)
+    }, 1, k);
+}
 
 /*
     Returns a copy of this diagram. This is obtained by recursively copying the source boundary and then
@@ -170,7 +219,7 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
         loose = false;
     }
 
-    var matched_diagram_shape = matched_diagram.getFullDimensions();
+    var matched_diagram_shape = loose ? matched_diagram.getFullDimensions() : null;
 
     // For a match of 0-diagrams, returns an empty match, as there are no boundaries to be passed
     if (this.dimension === 0) {
@@ -250,7 +299,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             var matches_found = 0;
             var x_offset = 0;
             while (matches_found < matches_needed) {
-                //for (var j = 0; j < matched_diagram.cells.length; j++) {
 
                 // If we've gone past the end of the diagram, then we've failed to find a match
                 if (i + matches_found + adjustments.length == this.cells.length) {
@@ -323,52 +371,19 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
                 console.log('Found ' + adjustments.length + ' loose matches');
             }
 
-            /*
-            for (var j = 0; j < matched_diagram.cells.length; j++) {
-                if (matched_diagram.cells[j].id != this.cells[i + j].id) {
-                    current_match = null;
-                    break;
-                }
-                if (matched_diagram.getCoordinates(matched_diagram.cells[j]).length !=
-                    this.getCoordinates(this.cells[i + j]).length) {
-                    console.log("enumerate - strange condition triggered");
-                    current_match = null;
-                    break;
-                }
-                else {
-                    for (var k = 0; k < matched_diagram.getCoordinates(matched_diagram.cells[j]).length; k++) {
-                        if (matched_diagram.getCoordinates(matched_diagram.cells[j])[k] !=
-                            this.getCoordinates(this.cells[i + j])[k] - current_match[k]) {
-                            current_match = null;
-                            break;
-                        }
-                    }
-                }
-                if (current_match === null) {
-                    break;
-                }
-            }
-            */
             // If the current match passed all the checks, it is added to the list of matches
             if (current_match != null) {
                 matches.push(current_match);
             }
-
         }
+
         // No need to rewrite the platform at the final pass of the loop
-        if (i === loopCount - 1) {
-            break;
-        }
-
-        // Rewrites the intermediate boundary to allow to search for matches at the next platform
-        //intermediate_boundary.rewrite(this.cells[i]);
-        //intermediate_boundary = this.getSlice(i + 1);
+        if (i === loopCount - 1) break;
     }
 
-    /*
     // For a 2-diagram, record data about match locations to enable suppression of equivalent rewrites.
     // Only applies for 2-diagrams, when the matched diagram is an identity.
-    if ((this.getDimension() == 2) && (matched_diagram.cells.length == 0)) {
+    if ((this.getDimension() == 2) && (matched_diagram.cells.length == 0) && loose) {
         var length = matched_diagram.source.cells.length;
         var matches_by_coordinate = {};
         var match_equivalence_classes = [];
@@ -435,7 +450,6 @@ Diagram.prototype.enumerate = function(matched_diagram, loose) {
             }
         }
     }
-    */
 
     return matches;
 };
@@ -559,7 +573,7 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
 
     var in_source = allow_boundary.source && c.length > 1 && c[0] == 0;
     //var in_target = c.length > 1 && c[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
-    var in_target = allow_boundary.target && c.length > 1 && c[0] == Math.max(1, this.cells.length);
+    var in_target = allow_boundary.target && c.length > 1 /*&& c[0] == Math.max(1, this.cells.length)*/ ;
     if (sub.boundary != null) {
         sub.boundary.depth++;
     } else if (in_target) {
@@ -581,7 +595,7 @@ Diagram.prototype.getBoundaryCoordinates = function(params /*internal, fakeheigh
     return sub;
 };
 
-// Find the ID of the first cell that appears in the diagram
+// Find the ID of the last cell that appears in the diagram
 Diagram.prototype.getLastId = function() {
     var d = this;
     while (d.cells.length == 0) {
@@ -591,6 +605,12 @@ Diagram.prototype.getLastId = function() {
         id: d.cells[d.cells.length - 1].id,
         dimension: d.getDimension()
     };
+    /*
+    return {
+        id: d.cells[0].id,
+        dimension: d.getDimension()
+    };
+    */
 }
 
 // Find the colour of the first cell that appears in the diagram
@@ -730,6 +750,21 @@ Diagram.prototype.getBoundary = function(path) {
     if (boundary.type == 't') return this.getTargetBoundary();
 }
 
+Diagram.prototype.getSpanBoundingBox = function(from, to) {
+    let box = null;
+
+    for (let level = from; level < to; level++) {
+        let sourceBox = this.getSlice(level).getBoundingBox(this.cells[level]);
+
+        sourceBox.min.push(level);
+        sourceBox.max.push(level + 1);
+
+        box = this.unionBoundingBoxes(box, sourceBox);
+    }
+
+    return box;
+}
+
 // Take the union of two bounding boxes on (projections of) this diagram
 Diagram.prototype.unionBoundingBoxes = function(b1, b2) {
 
@@ -776,10 +811,16 @@ Diagram.prototype.pullBackMinMax = function(top_height, bottom_height, min, max)
     };
 };
 
-Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
+Diagram.prototype.OLDintersectBoundingBoxes = function(b1, b2) {
 
     // Deal with the case that one of the boxes is empty
     if (b1 == null || b2 == null) return null;
+
+    // If we're in dimension zero, if neither box is empty, then return the nonempty bounding box
+    if (this.getDimension() == 0) return {
+        min: [],
+        max: []
+    };
 
     // Base case
     if (b1.min.length == 1) {
@@ -813,6 +854,65 @@ Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
     new_box.min.unshift(Math.max(mm1.min, mm2.min));
     new_box.max.unshift(Math.min(mm1.max, mm2.max));
     return new_box;
+}
+
+Diagram.prototype.intersectBoundingBoxes = function(b1, b2) {
+    var new_b1 = {
+        min: b1.min.slice(),
+        max: b1.max.slice()
+    };
+    var new_b2 = {
+        min: b2.min.slice(),
+        max: b2.max.slice()
+    };
+    return this.intersectBoundingBoxesRef(new_b1, new_b2);
+}
+
+// Find intersections of bounding boxes by shrinking to a core
+Diagram.prototype.intersectBoundingBoxesRef = function(b1, b2) {
+
+    // Deal with the case that one of the boxes is empty
+    if (b1 == null || b2 == null) return null;
+
+    // If we're in dimension zero, if neither box is empty, then return the nonempty bounding box
+    if (this.getDimension() == 0) return {
+        min: [],
+        max: []
+    };
+
+    // Return null if they are nonintersecting just based on final coordinates
+    if (b1.min.last() > b2.max.last()) return null;
+    if (b2.min.last() > b1.max.last()) return null;
+
+    // Reduce height of bounding boxes where they protrude above the other
+    while (b1.max.last() > b2.max.last()) b1.max[b1.max.length - 1]--;
+    while (b2.max.last() > b1.max.last()) b2.max[b2.max.length - 1]--;
+
+    // Raise height of bounding boxes where they descend below the other
+    if (b1.min.last() < b2.min.last()) {
+        var adj = this.pullUpMinMax(b2.min.last(), b1.min.last(), b1.min.penultimate(), b1.max.penultimate())
+        b1.max.penultimate(adj.max);
+        b1.min.last(b2.min.last());
+    }
+    if (b2.min.last() < b1.min.last()) {
+        var adj = this.pullUpMinMax(b1.min.last(), b2.min.last(), b2.min.penultimate(), b2.max.penultimate())
+        b2.max.penultimate(adj.max);
+        b2.min.last(b1.min.last());
+    }
+
+    // Boxes b1 and b2 should now have the same final min and max values.
+    var slice = this.getSlice(b1.min.last());
+    var slice_intersection = slice.intersectBoundingBoxes({
+        min: b1.min.slice(0, this.dimension - 1),
+        max: b1.max.slice(0, this.dimension - 1)
+    }, {
+        min: b2.min.slice(0, this.dimension - 1),
+        max: b2.max.slice(0, this.dimension - 1)
+    });
+    if (slice_intersection == null) return
+    slice_intersection.min.push(b1.min.last());
+    slice_intersection.max.push(b1.max.last());
+    return slice_intersection;
 }
 
 Diagram.prototype.pullUpMinMax = function(top_height, bottom_height, min, max) {
@@ -854,6 +954,37 @@ Diagram.prototype.boundingBoxesSlideDownOnLeft = function(lower, upper) {
     return upper.max.penultimate() <= pull_up.min;
 }
 
+// Get all the ways that a cell matches, local to a given click
+Diagram.prototype.getLocalMatches = function(click_box, id, flip) {
+    var generator = gProject.signature.getGenerator(id);
+    var match_diagram;
+    if (flip == '') match_diagram = generator.source;
+    else if (flip == 'I0') match_diagram = generator.target;
+    else if (flip == 'I1') match_diagram = generator.source.mirror(0);
+    else if (flip == 'I0I1') match_diagram = generator.target.mirror(0);
+    var matches = this.enumerate(match_diagram);
+    var results = [];
+    for (var i = 0; i < matches.length; i++) {
+        var match_box = this.getBoundingBox({
+            id: id + flip,
+            key: matches[i]
+        });
+        var intersection = this.intersectBoundingBoxes(click_box, match_box);
+        if (intersection == null) continue;
+        var small_intersection = intersection.min.vector_equals(intersection.max);
+        if (small_intersection) {
+            // Only accept if intersection equals click_box
+            if (!boundingBoxesEqual(intersection, click_box)) continue;
+        }
+        results.push({
+            id: id + flip,
+            key: matches[i],
+            possible: true
+        });
+    }
+    return results;
+}
+
 // Get the cell at a particular location in the diagram
 Diagram.prototype.getCell = function(location) {
     var level = location.shift();
@@ -865,10 +996,14 @@ Diagram.prototype.getCell = function(location) {
     return slice.cells[level];
 }
 
-// Get the bounding box surrounding a object
+// Get the bounding box surrounding a diagram component
 Diagram.prototype.getLocationBoundingBox = function(location) {
     if (!globular_is_array(location)) location = [location];
     else location = location.slice();
+    if (this.dimension == 0) return {
+        min: [],
+        max: []
+    };
     if (location.length == 0) debugger;
     var box = this.getSliceBoundingBox(location);
     if (box == null) return null;
@@ -1078,11 +1213,12 @@ Diagram.prototype.usesCell = function(generator) {
     for (var i = 0; i < this.cells.length; i++) {
         if (this.cells[i].id.getSignatureType() == generator.id) return true;
     }
-    
+
     // Check whether the source uses it
-    if (this.source != null) if (this.source.usesCell(generator)) return true;
-    
-    // If not, we're clear
+    if (this.source != null)
+        if (this.source.usesCell(generator)) return true;
+
+        // If not, we're clear
     return false;
 
     /*
@@ -1118,7 +1254,7 @@ Diagram.prototype.mirror = function(n) {
 
 // Flips the diagram in the nth way
 Diagram.prototype.flip = function(n) {
-    
+
 }
 
 Diagram.prototype.keepAfter = function(n) {
@@ -1135,4 +1271,22 @@ Diagram.prototype.keepBefore = function(n) {
     var new_cache = this.sliceCache.slice(0, n);
     this.cells = new_cells;
     this.sliceCache = new_cache;
+}
+
+// Pad the given coordinates as required to ensure there is an entity present
+Diagram.prototype.realizeCoordinate = function(coords) {
+    var slice = this;
+
+    // Obtain the suggested slice
+    for (var i = 0; i < coords.length - 1; i++) {
+        slice = slice.getSlice(coords[coords.length - 1 - i]);
+    }
+
+    // For each extra dimension we have to dive to find an entity, pad the coords
+    while (slice.cells.length == 0) {
+        slice = slice.source;
+        coords.unshift(0);
+    }
+
+    return coords;
 }

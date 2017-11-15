@@ -138,7 +138,7 @@ exports.register_user = function(req, res) {
 				});
 			});
 
-		});
+		}); 
 
 	} else {
 		console.log(errors);
@@ -157,7 +157,9 @@ exports.forgot_pass = function(req, res) {
 		error = "There is no account with this email address.";
 	}
 	if (error === "") {
-		var new_pass = encrypt_hash("43vdji8t" + email + "IUbyV45v7Uytvi").substring(0, 8);
+		var randSalt = Math.floor(Math.random()).toString();
+		var new_pass = encrypt_hash("43vdji8t" + email + "IUbyV45v7Uytvi" + randSalt).substring(0, 8);
+		console.log(new_pass);
 		fs.readFile('database/users/' + email + "/data.json", 'utf-8', function(err, data) {
 			data = JSON.parse(data);
 			data.temp_fp_password = new_pass;
@@ -165,7 +167,7 @@ exports.forgot_pass = function(req, res) {
 			fs.writeFile("database/users/" + email + "/data.json", data, function(err) {
 				req.session.fpcc = encrypt_hash(new_pass + "fhBIb76");
 				req.session.cookie.secure = false;
-				var cclink = "https://globular.science/fpcc/" + req.session.fpcc + "/" + email;
+				var cclink = "http://globular.science/fpcc/" + req.session.fpcc + "/" + email;
 				var mailgun = new Mailgun({
 					apiKey: mailGunKey,
 					domain: mailGunDomain

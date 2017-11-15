@@ -25,6 +25,20 @@ function prefixLabels(object, prefix) {
     return object;
 }
 
+function flatMap(array, fn) {
+    return [].concat(...array.map(fn));
+}
+
+function cartesianProduct(...arrays) {
+    if (arrays.length == 0) {
+        return [[]];
+    } else {
+        let rightArray = cartesianProduct(...arrays.slice(1));
+        let leftArray = arrays[0];
+        return flatMap(leftArray, x => rightArray.map(xs => [x].concat(xs)));
+    }
+}
+
 // Suffix labels of an object
 function suffixLabels(arr, suffix) {
     var new_arr = [];
@@ -110,12 +124,14 @@ Array.prototype.end = function(n) {
     return this[this.length - 1 - n];
 }
 
-Array.prototype.last = function() {
-    return this[this.length - 1];
+Array.prototype.last = function(arg) {
+    if (arg != undefined) this[this.length - 1] = arg;
+    else return this[this.length - 1];
 };
 
-Array.prototype.penultimate = function() {
-    return this[this.length - 2];
+Array.prototype.penultimate = function(arg) {
+    if (arg != undefined) this[this.length - 2] = arg;
+    else return this[this.length - 2];
 };
 
 Array.prototype.incremented_array = function(value) {
@@ -148,14 +164,6 @@ String.prototype.last = function() {
     if (this.length == 0) return '';
     return this.substr(this.length - 1, 1);
 }
-
-Array.prototype.fill = function(value, length) {
-    this.length = 0;
-    for (var i = 0; i < length; i++) {
-        this[i] = value;
-    }
-    return this;
-};
 
 String.prototype.is_basic_interchanger = function() {
     return (this == 'Int' || this == 'IntI0');
@@ -365,11 +373,22 @@ function globular_is_array(object) {
     //return object.constructor.toString().indexOf("Array") > -1;
 }
 
-function bounding_box_slice(a, b) {
+function bbox_slice(box, a, b) {
     return {
         min: box.min.slice(a, b),
         max: box.max.slice(a, b)
     }
+}
+
+function getBoundingBoxSource(box) {
+    return {
+        min: box.min.slice(0, box.min.length - 1),
+        max: box.max.slice(0, box.max.length - 1)
+    }
+}
+
+function boundingBoxesEqual(b1, b2) {
+    return (b1.min.vector_equals(b2.min) && b1.max.vector_equals(b2.max));
 }
 
 // Decompose the geometry of an interchanger vertex
@@ -537,36 +556,14 @@ function json_replacer(key, value) {
     return value;
 }
 
-
-
-function SVGtoPNG(svgElement, callback) {
-  var svgURL = new XMLSerializer().serializeToString(svgElement);
-  alert(svgURL);
-  var img = new Image();
-  img.onload = function() {
-  	var canvas = $('#mycanvas')[0];
-    canvas.getContext('2d').drawImage(this, 0, 0);
-    callback(canvas.toDataURL());
-  }
-  img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgURL);
+function decimal_part(number) {
+    return number - Math.floor(number)
 }
 
-// Adds canvas.toBlob function
-(function(a){"use strict";var b=a.HTMLCanvasElement&&a.HTMLCanvasElement.prototype,c=a.Blob&&function(){try{return Boolean(new Blob)}catch(a){return!1}}(),d=c&&a.Uint8Array&&function(){try{return(new Blob([new Uint8Array(100)])).size===100}catch(a){return!1}}(),e=a.BlobBuilder||a.WebKitBlobBuilder||a.MozBlobBuilder||a.MSBlobBuilder,f=(c||e)&&a.atob&&a.ArrayBuffer&&a.Uint8Array&&function(a){var b,f,g,h,i,j;a.split(",")[0].indexOf("base64")>=0?b=atob(a.split(",")[1]):b=decodeURIComponent(a.split(",")[1]),f=new ArrayBuffer(b.length),g=new Uint8Array(f);for(h=0;h<b.length;h+=1)g[h]=b.charCodeAt(h);return i=a.split(",")[0].split(":")[1].split(";")[0],c?new Blob([d?g:f],{type:i}):(j=new e,j.append(f),j.getBlob(i))};a.HTMLCanvasElement&&!b.toBlob&&(b.mozGetAsFile?b.toBlob=function(a,c,d){d&&b.toDataURL&&f?a(f(this.toDataURL(c,d))):a(this.mozGetAsFile("blob",c))}:b.toDataURL&&f&&(b.toBlob=function(a,b,c){a(f(this.toDataURL(b,c)))})),typeof define=="function"&&define.amd?define(function(){return f}):a.dataURLtoBlob=f})(this);
-
-// Downloads SVG as PNG
-function download_SVG_as_PNG(svgElement, coords, filename) {
-  var svgURL = new XMLSerializer().serializeToString(svgElement);
-  var img = new Image();
-  img.onload = function() {
-  	var canvas = $('<canvas>')[0];
-  	var scale = 300;
-  	canvas.width = coords.logical_width * scale;
-  	canvas.height = coords.logical_height * scale;
-    canvas.getContext('2d').drawImage(this, coords.sx, coords.sy, coords.sWidth, coords.sHeight, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob(function(blob) {
-        saveAs(blob, filename);
-    }, "image/png");
-  }
-  img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgURL);
+String.prototype.padToLength = function(n) {
+    var padded = this;
+    while (padded.length < n) {
+        padded = '0' + padded;
+    }
+    return padded;
 }

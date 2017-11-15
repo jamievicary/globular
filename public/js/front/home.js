@@ -1,4 +1,5 @@
 // Global project object
+/*global $*/
 var gProject = {
     initialized: false
 };
@@ -6,6 +7,7 @@ var MainDisplay = null;
 var global_p_id = '';
 var timeout = null;
 var new_project_text = '';
+var historical_state = false;
 
 //function for producing all pop ups/errors
 var original_msg_html = '<br><div id="msg-close-opt-err" class="msg-close-opt">Close</div>';
@@ -67,7 +69,6 @@ function render_project_front(s) {
     $('#loading-window').appendTo($('#gallery-box').parent()).show();
     $("#cell-body").html("");
     $("#my-projects-box").fadeOut();
-    $('#diagram-canvas').empty();
     $(window).unbind('resize');
     $(window).bind('resize', function() {
         $('#diagram-canvas').css('width', window.innerWidth - $('#control-body').width() - 150);
@@ -84,7 +85,7 @@ function render_project_front(s) {
     $('#loading-window').empty();
     loading_detail_level = 0;
     loading_detail_array = [];
-    MainDisplay.diagram = null;
+    MainDisplay.setDiagram(null);
 
     function close_project() {
         $("#diagram-canvas").fadeOut(1000);
@@ -138,7 +139,8 @@ function render_project_front(s) {
 $(document).ready(function() {
 
     globular_prepare_renderer();
-    MainDisplay = new Display($('#diagram-canvas'));
+    MainDisplay = new DisplayManager($('#diagram-canvas'));
+    MainDisplay.setDisplay("2d-svg");
 
     // Handle key presses
     $(document).keypress(function(event) {
@@ -163,14 +165,16 @@ $(document).ready(function() {
             gProject.keepBottomUI();
         } else if (key == 'p') {
             gProject.keepTopUI();
-        //} else if (key == 'p') {
-        //    gProject.applyStochasticProcess(1);
+        } else if (key == 'z') {
+            gProject.applyStochasticProcess(1);
         //} else if (key == 'z') {
         //    gProject.displayInterchangers();
         } else if (key == 'h') {
             gProject.storeTheoremUI();
         } else if (key == 'g') {
             gProject.downloadGraphic();
+        } else if (key == 'q') {
+            gProject.downloadSequence();
         }
 
         /*
@@ -215,8 +219,7 @@ $(document).ready(function() {
     $('<div>').attr('id', 'source-target-diagram').appendTo('#source-target-window');
 
     // Create the 'Allow undo' checkbox
-    $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>')
-        .appendTo($('#project-menu'));
+    $('<label class=""><input type="checkbox" name="checkbox" id="allow-undo-checkbox">Allow undo</label>').appendTo($('#project-menu'));
     $('#allow-undo-checkbox').prop('checked', true);
 
     // Create the 'Loading Workspace' div
@@ -269,7 +272,6 @@ $(document).ready(function() {
     $("#view-p-desc").click(function() {
 
         if (dbltoggle % 2 == 0) {
-            $("#view-desc-body").show();
             $("#view-desc-body").animate({
                 marginTop: "-=225px"
             }, 500);
@@ -277,28 +279,29 @@ $(document).ready(function() {
         } else {
             $("#view-desc-body").animate({
                 marginTop: "+=225px"
-            }, 500, function() {
-                $("#view-desc-body").hide();
-            });
+            }, 500);
 
         }
-        dbltoggle = dbltoggle + 1;
+        dbltoggle += 1;
     });
 
     // Prevent keypress bubbling when editing project name
     $("#diagram-title").keypress(function(e) {
-        e.stopPropagation()
+        e.stopPropagation();
     });
     $("input.text-field-style-1").keypress(function(e) {
-        e.stopPropagation()
+        e.stopPropagation();
+    });
+    $("#text-p-desc").keypress(function(e) {
+        e.stopPropagation();
     });
 
     // Click handler on main diagram
     // Handle navigation by forward and back buttons
     window.onpopstate = function(event) {
-        if (event.state === null) {
-            // do nothing
-        } else if (event.state === "") {
+        if (event.state === null)  return;
+        historical_state = true;
+        if (event.state === "") {
             render_project_front(null);
             $("#diagram-title").val("My workspace");
         } else {
@@ -428,6 +431,10 @@ $(document).ready(function() {
         gProject.storeTheoremUI();
     });
 
+    $("#graphic-opt").click(function() {
+        gProject.downloadGraphic();
+    });
+
     $("#save-project-opt").click(function() {
         gProject.saveUI();
     });
@@ -454,6 +461,10 @@ $(document).ready(function() {
 
     $("#get-str-opt").click(function() {
         gProject.exportUI();
+    });
+
+    $("#renderer-opt").change((e) => {
+        MainDisplay.setDisplay($(e.target).val());
     });
 
     $("#msg-close-opt-profile").click(function() {
@@ -769,7 +780,6 @@ $(document).ready(function() {
         $.post('/get_all_datenames', function(result) {
             var optionsHTML = "";
             for (var i = result.length - 1; i >= 0; i--) {
-                console.log("if " + result[i] + " == " + currentDateName);
                 if (result[i] == currentDateName) {
                     cDateNoDir = true;
                 }
@@ -910,13 +920,9 @@ $(document).ready(function() {
     var pathName = window.location.pathname;
     pathName = pathName.substring(1);
     var regexResult = pathName.search(/^([0-9]{4}\.[0-9]{3,}[v][1-9][0-9]{0,})|([0-9]{4}\.[0-9]{3,})$/);
-    if (regexResult != 0) {
-
-        // Public project not requested, so start with a blank page
-        render_page();
-
-    } else {
-
+    render_page();
+    if (regexResult == 0) {
+        
         // Public project requested
         var dateName = pathName.substring(0, 4);
         var posVersion = pathName.search(/([v])/);
@@ -930,6 +936,7 @@ $(document).ready(function() {
             projectNo = pathName.substring(5, posVersion);
         }
         console.log("Getting public project " + dateName + "." + projectNo);
+
         $.post('/get_public_project', {
             dateName: dateName,
             version: version,

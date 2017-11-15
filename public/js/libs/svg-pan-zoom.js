@@ -502,7 +502,7 @@ var optionsDefaults = {
 , preventMouseEventsDefault: true // enable or disable preventDefault for mouse events
 , zoomScaleSensitivity: 0.1 // Zoom sensitivity
 , minZoom: 0.5 // Minimum Zoom level
-, maxZoom: 10 // Maximum Zoom level
+, maxZoom: 20 // Maximum Zoom level
 , fit: true // enable or disable viewport fit in SVG (default true)
 , contain: false // enable or disable viewport contain the svg (default false)
 , center: true // enable or disable viewport centering in SVG (default true)

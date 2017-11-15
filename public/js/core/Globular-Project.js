@@ -226,7 +226,7 @@ Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'targe
     if (this.cacheSourceTarget == null) {
         this.cacheSourceTarget = {};
         this.cacheSourceTarget[boundary] = this.diagram.copy();
-        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
+        this.showSourceTargetPreview(MainDisplay.getVisibleDiagram(), boundary);
         this.clearDiagram();
         this.saveState();
         return;
@@ -235,7 +235,7 @@ Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'targe
     // Check whether we're replacing the cached source or target with a new one
     if (this.cacheSourceTarget[boundary] != null) {
         this.cacheSourceTarget[boundary] = this.diagram.copy();
-        this.showSourceTargetPreview(MainDisplay.visible_diagram, boundary);
+        this.showSourceTargetPreview(MainDisplay.getVisibleDiagram(), boundary);
         this.clearDiagram();
         this.saveState();
         return;
@@ -347,19 +347,12 @@ Project.prototype.dragCellUI = function(drag) {
 
         // Use a closure to specify the behaviour on selection
         (function(action) {
-            item.click(function() {
-                //$("#options-box").fadeOut(100);
+            item.click(e => {
                 $("#options-box").hide();
                 gProject.performActionUI(action, drag);
             }).hover(
-                // Mouse in
-                function() {
-                    MainDisplay.highlight_action(action, drag.boundary)
-                },
-                // Mouse out
-                function() {
-                    MainDisplay.remove_highlight();
-                });
+                e => MainDisplay.highlightAction(action, drag.boundary),
+                e => MainDisplay.removeHighlight());
         })(options[i]);
     }
     //$("#options-box").fadeIn(100);
@@ -431,12 +424,14 @@ Project.prototype.performActionUI = function(option, drag) {
 }
 
 Project.prototype.saveState = function() {
+    var t = new Timer('Pushed state onto history stack')
     if ($('#allow-undo-checkbox').is(':checked')) {
         history.pushState({
             string: this.currentString(),
             p_id: global_p_id
         }, "", "");
     }
+    t.Report();
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -462,7 +457,7 @@ Project.prototype.selectGeneratorUI = function(id) {
     }
 
     var matched_diagram = generator.getDiagram();
-    var slices_data = MainDisplay.get_current_slice();
+    var slices_data = MainDisplay.getSlices();
 
     if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
         // REWRITE
@@ -478,7 +473,8 @@ Project.prototype.selectGeneratorUI = function(id) {
                 realBoundaryDepth: 0,
                 visibleBoundaryDepth: 0,
                 inclusion: rewrite_matches[i],
-                size: matched_diagram.getSourceBoundary().getFullDimensions()
+                //size: matched_diagram.getSourceBoundary().getFullDimensions()
+                box: this.diagram.getBoundingBox({id: id, key: rewrite_matches[i]})
             }
         }
         var enumerationData = {
@@ -508,26 +504,27 @@ Project.prototype.selectGeneratorUI = function(id) {
     }
     var visible_slice = slice_pointer;
 
+    var inverse_id = id.toggle_inverse();
     // Are we viewing an entire target?
     if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth, id);
     }
 
     // Are we viewing an entire source?
     else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
-        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth);
+        matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth, inverse_id);
     }
 
     // Can we attach to the apparent s or t of the visible diagram?
     else if (d == this.diagram.getDimension() - depth) {
-        matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth);
-        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth));
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth, inverse_id);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth, id));
     }
 
     // Can we attach to the apparent ss or tt of the visible diagram?
     else if (d == this.diagram.getDimension() - depth - 1) {
-        matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth);
-        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth));
+        matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth, inverse_id);
+        matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth, id));
     }
 
     // Nothing possible
@@ -546,15 +543,17 @@ Project.prototype.selectGeneratorUI = function(id) {
 
 }
 
-Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth) {
+Project.prototype.prepareEnumerationData = function(subject_diagram, matched_diagram, visible_boundary_depth, boundary_type, slice_depth, id) {
     var matches = subject_diagram.enumerate(matched_diagram);
     for (var i = 0; i < matches.length; i++) {
+        var match = matches[i];
         matches[i] = {
             visibleBoundaryDepth: visible_boundary_depth,
             realBoundaryDepth: visible_boundary_depth + slice_depth,
             boundaryType: boundary_type,
-            inclusion: matches[i],
-            size: matched_diagram.getFullDimensions()
+            box: subject_diagram.getBoundingBox({id: id, key: matches[i]}),
+            inclusion: matches[i]
+            //size: matched_diagram.getFullDimensions()
         };
     }
     return matches;
@@ -567,10 +566,13 @@ Project.prototype.currentString = function(minimize) {
     var timer = new Timer("Project.currentString");
     // Store the viewbox controls
     this.view_controls = MainDisplay.getControls();
-
+    
+    // Clear main diagram
+    if (this.diagram != null) this.diagram.clearAllSliceCaches();
+    
     var result = globular_stringify(this, minimize);
-
-    timer.Report();
+    //download('rawstring.json', result);
+    //timer.Report();
     return result;
 }
 
@@ -583,6 +585,7 @@ Project.prototype.addZeroCell = function() {
 }
 
 Project.prototype.render = function(div, diagram, slider, highlight) {
+    if (div == "#diagram-canvas") debugger;
     diagram.render(div, highlight);
 }
 
@@ -597,7 +600,7 @@ Project.prototype.renderGenerator = function(div, id) {
 Project.prototype.renderDiagram = function(data) {
     if (data == undefined) data = {};
     //MainDisplay.set_diagram(this.diagram, data.drag, data.controls);
-    MainDisplay.set_diagram({diagram: this.diagram, drag: data.drag, controls: data.controls, preserve_view: data.preserve_view});
+    MainDisplay.setDiagram({diagram: this.diagram, drag: data.drag, controls: data.controls, preserve_view: data.preserve_view});
 };
 
 // Need to write this code
@@ -701,7 +704,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
     color_widget.onImmediateChange = function() {
         project.setColourUI(generator.id, '#' + this.toString());
         project.renderNCell(generator.id);
-        //project.renderCellsAbove(generator.id);
+        project.renderCellsAbove(generator.id);
         project.renderDiagram();
     };
     div_detail.appendChild(input_color);
@@ -776,7 +779,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 var div_match = document.createElement('div');
                 $(div_match).addClass('preview-icon');
                 $(div_extra).append(div_match);
-                project.render(div_match, MainDisplay.visible_diagram, null, match_array[i]);
+                project.render(div_match, MainDisplay.getVisibleDiagram(), null, match_array[i]);
                 (function(match) {
                     $(div_match).click(function() {
                         var ncell = new NCell({
@@ -804,11 +807,17 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                     $(div_match).hover(
                         // Mouse over preview thumbnail
                         function() {
-                            project.render('#diagram-canvas', MainDisplay.visible_diagram, null, match);
+                            let box = match.box;
+                            let boundary = {
+                                depth: match.visibleBoundaryDepth,
+                                type: match.boundaryType
+                            }
+                            MainDisplay.highlightBox(box, boundary);
+                            //project.render('#diagram-canvas', MainDisplay.getVisibleDiagram(), null, match);
                         },
                         // Mouse out of preview thumbnail
                         function() {
-                            project.renderDiagram();
+                            MainDisplay.removeHighlight();
                         }
                     )
                 })(match_array[i]);
@@ -987,8 +996,8 @@ Project.prototype.addNCell = function(data) {
 };
 
 Project.prototype.restrictUI = function() {
-    if (MainDisplay.visible_diagram == null) return;
-    this.diagram = MainDisplay.visible_diagram.copy();
+    if (MainDisplay.getVisibleDiagram() == null) return;
+    this.diagram = MainDisplay.getVisibleDiagram().copy();
     this.renderDiagram();
     this.saveState()
 }
@@ -1029,15 +1038,17 @@ Project.prototype.saveUI = function() {
 
 Project.prototype.keepTopUI = function() {
     if (this.diagram == null) return;
+
+    let slices = MainDisplay.getSlices();
     
-    if (MainDisplay.slices.length == 0) {
+    if (slices.length == 0) {
         // Get cut location from mouse position
         if (MainDisplay.popup == null) return;
         var coordinate = MainDisplay.popup.coordinates[0]
         this.diagram.keepAfter(coordinate);
     } else {
         // Get cut location from first slice
-        this.diagram.keepAfter(Number(MainDisplay.slices[0].val()));
+        this.diagram.keepAfter(slices[0]);
     }
     
     this.renderDiagram();
@@ -1045,20 +1056,32 @@ Project.prototype.keepTopUI = function() {
 
 Project.prototype.keepBottomUI = function() {
     if (this.diagram == null) return;
+
+    let slices = MainDisplay.getSlices();
     
-    if (MainDisplay.slices.length == 0) {
+    if (slices.length == 0) {
         // Get cut location from mouse position
         if (MainDisplay.popup == null) return;
         var coordinate = MainDisplay.popup.coordinates[0]
         this.diagram.keepBefore(coordinate);
     } else {
         // Get cut location from first slice
-        this.diagram.keepBefore(Number(MainDisplay.slices[0].val()));
+        this.diagram.keepBefore(slices[0]);
     }
     
     this.renderDiagram();
 }
 
 Project.prototype.downloadGraphic = function() {
-    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
+    let display = MainDisplay.display;
+    if (display !== null && display instanceof DisplaySVG) {
+        download_SVG_as_PNG(display.svgElement, display.getExportRegion(), "image.png");
+    }
+}
+
+Project.prototype.downloadSequence = function() {
+    let display = MainDisplay.display;
+    if (display !== null && display instanceof DisplaySVG) {
+        display.downloadSequence();
+    }
 }
