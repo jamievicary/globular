@@ -6,6 +6,8 @@
  * MIT Licensed
  */
 
+'use strict';
+
 /**
  * Module dependencies.
  * @private
@@ -114,6 +116,11 @@ MemoryStore.prototype.get = function get(sessionId, callback) {
  * @public
  */
 
+MemoryStore.prototype.set = function set(sessionId, session, callback) {
+  this.sessions[sessionId] = JSON.stringify(session)
+  callback && defer(callback)
+}
+
 /**
  * Get number of active sessions.
  *
@@ -126,11 +133,6 @@ MemoryStore.prototype.length = function length(callback) {
     if (err) return callback(err)
     callback(null, Object.keys(sessions).length)
   })
-}
-
-MemoryStore.prototype.set = function set(sessionId, session, callback) {
-  this.sessions[sessionId] = JSON.stringify(session)
-  callback && defer(callback)
 }
 
 /**

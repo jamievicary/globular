@@ -1,26 +1,28 @@
 {
   "name": "globular",
-  "version": "0.0.1",
-  "private": true,
+  "version": "1.0.0",
+  "description": "globular",
+  "main": "app.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamievicary/globular.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jamievicary/globular/issues"
+  },
+  "homepage": "https://github.com/jamievicary/globular#readme",
   "dependencies": {
-    "body-parser": "~1.0.0",
-    "cookie-parser": "~1.0.1",
-    "debug": "~0.7.4",
-    "ejs": "^2.3.1",
-    "express": "~4.0.0",
-    "jade": "~1.3.0",
-    "morgan": "~1.0.0",
-    "static-favicon": "~1.0.0",
-    "mongodb":"*",
-    "monk":"*",
-    "express-session":"*",
-    "bcrypt-nodejs":"*",
-    "mailgun-js":"*"
-  },
-  "devDependencies": {
-    "nodemon": "*"
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "mailgun-js": "^0.13.1",
+    "morgan": "^1.9.0",
+    "static-favicon": "^2.0.0-alpha",
+    "step": "^1.0.0"
   }
 }

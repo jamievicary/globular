@@ -1,4 +1,3 @@
-
 /*!
  * Connect - session - Store
  * Copyright(c) 2010 Sencha Inc.
@@ -6,27 +5,39 @@
  * MIT Licensed
  */
 
+'use strict';
+
 /**
  * Module dependencies.
+ * @private
  */
 
+var Cookie = require('./cookie')
 var EventEmitter = require('events').EventEmitter
-  , Session = require('./session')
-  , Cookie = require('./cookie');
+var Session = require('./session')
+var util = require('util')
 
 /**
- * Initialize abstract `Store`.
- *
- * @api private
+ * Module exports.
+ * @public
  */
 
-var Store = module.exports = function Store(options){};
+module.exports = Store
 
 /**
- * Inherit from `EventEmitter.prototype`.
+ * Abstract base class for session stores.
+ * @public
  */
 
-Store.prototype.__proto__ = EventEmitter.prototype;
+function Store () {
+  EventEmitter.call(this)
+}
+
+/**
+ * Inherit from EventEmitter.
+ */
+
+util.inherits(Store, EventEmitter)
 
 /**
  * Re-generate the given requests's session.
@@ -59,8 +70,7 @@ Store.prototype.load = function(sid, fn){
     if (err) return fn(err);
     if (!sess) return fn();
     var req = { sessionID: sid, sessionStore: self };
-    sess = self.createSession(req, sess);
-    fn(null, sess);
+    fn(null, self.createSession(req, sess))
   });
 };
 
