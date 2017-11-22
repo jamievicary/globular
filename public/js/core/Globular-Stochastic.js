@@ -92,7 +92,7 @@ Project.prototype.applyStochasticProcess = function() {
         }
         if (adjustment.side == 'left') {
             var rewrite = gProject.signature.getGenerator(adjustment.id);
-            x_offset += rewrite.target.cells.length - rewrite.source.cells.length;
+            x_offset += rewrite.target.data.length - rewrite.source.data.length;
         }
     }
 
@@ -244,7 +244,7 @@ Project.prototype.applyStochasticProcess = function(numIterations) {
                     //}                    
                     if (adjustment.side == 'left') {
                         var rewrite = gProject.signature.getGenerator(adjustment.id);
-                        x_offset += rewrite.target.cells.length - rewrite.source.cells.length;
+                        x_offset += rewrite.target.data.length - rewrite.source.data.length;
                     }
                 }
 
@@ -297,10 +297,10 @@ Project.prototype.displayInterchangers = function() {
 Diagram.prototype.computeTensionChange = function(h1, h2) {
     var gen1 = this.cells[h1]; //index of array is the height; array nCells doesn't actually contain generator
     var gen2 = this.cells[h2];
-    var gen1_input = gProject.signature.getGenerator(gen1.id).source.cells.length; //these will be diagrams
-    var gen2_input = gProject.signature.getGenerator(gen2.id).source.cells.length;
-    var gen1_output = gProject.signature.getGenerator(gen1.id).target.cells.length;
-    var gen2_output = gProject.signature.getGenerator(gen2.id).target.cells.length;
+    var gen1_input = gProject.signature.getGenerator(gen1.id).source.data.length; //these will be diagrams
+    var gen2_input = gProject.signature.getGenerator(gen2.id).source.data.length;
+    var gen1_output = gProject.signature.getGenerator(gen1.id).target.data.length;
+    var gen2_output = gProject.signature.getGenerator(gen2.id).target.data.length;
     if (h1 > h2) {
         gen1_input *= -1;
         gen2_output *= -1;

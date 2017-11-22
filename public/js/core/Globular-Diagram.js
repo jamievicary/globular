@@ -1,38 +1,22 @@
 "use strict";
 
-/*
-    Diagram class
+/*  Diagram class
 
-    Diagram.
-    Diagram.dimension: an integer, the recursive depth
-    Diagram.boost: the dimension boost of labels, induced by existing on a singular slice
-    Diagram.source: the source of the diagram, possibly null
-    Diagram.history: the history of the diagram, possibly null
-    Diagram.content: the content of the diagram at this height.
-        An array, with each element storing:
-            - A subinterval of [0, ..., this.getFoundation().height]
+    Diagram.source :: Diagram, the source of the diagram, possibly null
+    Diagram.geometric_dimension :: Number, the recursive depth
+    Diagram.type_dimension :: Number, the dimension of the signature over which it is defined
+    Diagram.data :: Array(Content)
 */
 
 /*global gProject*/
 
-function Diagram(source, history, content, type) {
+function Diagram(source, type_dimension, data) {
     this['_t'] = 'Diagram';
-    if (source && (history || content)) debugger;
-    if (!source && (history && !content) || (!history && content)) debugger;
     this.source = source;
-    this.history = history;
-    this.content = content;
-    this.type = type;
-    if (this.history) {
-        this.height = this.history.height + 1;
-        this.dimension = this.history.dimension;
-        this.boost = this.history.boost;
-    } else {
-        this.height = 0;
-        this.dimension = (this.source ? this.source.dimension + 1 : 0);
-        this.boost = this.source.boost + 1;
-    }
-    return boost;
+    this.geometric_dimension = source ? source.geometric_dimension + 1 : 0;
+    this.type_dimension = type_dimension;
+    _assert(this.geometric_dimension <= this.type_dimension);
+    this.data = data;
 };
 
 // The type of the object
@@ -40,230 +24,285 @@ Diagram.prototype.getType = function () {
     return 'Diagram';
 }
 
-// Returns the dimension of the diagram
-Diagram.prototype.getDimension = function () {
-    return this.dimension;
+// Check if the diagram has any non-identity data up to the given height
+Diagram.prototype.hasTopLevelContent = function (height) {
+    if (!height) return this.hasTopLevelContent(this.height);
+    if (this.data[height] != null) return true;
+    if (height == 0) return false;
+    return this.hasTopLevelContent(height - 1);
+}
+
+Diagram.prototype.getDimension = function() {
+    return this.geometric_dimension;
 }
 
 // Returns the source boundary of the diagram
-Diagram.prototype.getSource = function () {
+Diagram.prototype.getSourceBoundary = function () {
     return this.source;
 }
 
 // Computes the target boundary of the diagram
-Diagram.prototype.getTarget = function () {
-    if (this.history == null) return this.source;
-    return this.history.getTarget().rewrite(this.content);
+Diagram.prototype.getTargetBoundary = function () {
+    return this.getSlice({height: this.data.length, regular: true});
 }
 
-// Returns a limit from the normalization into the current diagram
-Diagram.prototype.normalize = function () {
+Diagram.prototype.getSlice = function(location) {
+    if (globular_is_array(location)) location = location.slice();
+    else location = [location];
+    if (location.length == 0) return this;
+    if (this.source === null) return null;
 
-    return new Limit(...);
+    // Recursive case
+    let pos = location.pop();
+    if (location.length > 0) return this.getSlice(pos).getSlice(location); // no need to copy slice
 
+    _assert((pos.regular && pos.height <= this.data.length) || (!pos.regular && pos.height < this.data.length));
+
+    // Handle request for slice 1 of identity diagram gracefully
+    if (pos.height == 1 && pos.regular && this.data.length == 0) {
+        return this.source;
+    }
+    else _assert(pos.height <= this.data.length);
+
+    /*
+    // Check whether the cache contains the slice
+    if (!this.sliceCache) { 
+        this.initializeSliceCache();
+    } else if (this.sliceCache[height]) {
+        return this.sliceCache[height];
+    }
+    this.sliceCache[height] = this.getSlice(height - 1).copy().rewrite(this.data[height - 1]); // need to copy before rewrite!
+    return this.sliceCache[height];
+    */
+
+    var regular = pos.height == 0 ? this.source.copy() : this.getSlice({height: pos.height - 1, regular: true}).copy().rewrite(this.data[pos.height - 1]);
+    if (pos.regular) return regular;
+
+    let singular = this.data[pos.height].forward_limit.rewrite(regular);
+    return singular;
 }
+/*
+    if (height == 0) return this.source;
+    return this.getSlice(height - 1).rewrite(this.data[height - 1]);
+*/
 
-// Return the ways that the goal fits inside this diagram; the match must start at the specified height, if defined
-Diagram.prototype.enumerate = function (goal, height) {
+// Return the ways that the goal (up to goal_size) fits inside this diagram (up to max_height), with match starting at the specified height
+Diagram.prototype.enumerate = function (goal, goal_size, start_height, max_height) {
 
-    // Perform basic consistency checks
-    if (this.dimension != goal.dimension) return [];
-    if (this.boost != goal.boost) return [];
+    if (goal_size == undefined) goal_size = goal.height;
+    if (max_height == undefined) max_height = this.height;
+    _assert(this.geometric_dimension == goal.geometric.dimension);
+    _assert(this.type_dimension == goal.type_dimension);
+
+    // Base case
+    if (this.geometric_dimension == 0) {
+        if (this.data == goal.data) return [[]]; // return a single trivial match
+        return []; // return no matches
+    }
 
     // If this diagram is too short to yield a possible match, return empty
-    if (height != undefined && this.height < height + goal.height) return [];
-    if (height == undefined && this.height < goal.height) return [];
+    if (start_height == undefined && max_height < goal_size) return [];
+    if (start_height != undefined && max_height < start_height + goal_size) return [];
 
     // The matches at least contain all the matches in the history of the diagram
-    var matches = this.history.enumerate(goal, height);
+    let matches = [];
+    if (max_height > 1 && start_height == undefined) {
+        matches = this.enumerate(goal, goal_size, start_height, height - 1);
+    }
 
-    // If the match is height-restricted and we're above the possible locus, return what we've got
-    if (height != undefined && this.height > goal.height + height) return matches;
-
-    // From now on, if height is defined, then height == this.height - goal.height
-
-    // If the goal has positive height, obtain the new matches by finding matches of goal.history, and admitting the ones that extend
-    if (goal.height > 0) {
-        var matches_historic = this.history.enumerate(goal.history, this.height - goal.height);
-        for (var i = 0; i < matches_historic.length; i++) {
-            var match = matches_historic[i];
-            if (this.subcontent(goal.content, match.slice(1))) matches.push(match);
+    // If goal_size == 0, we can try to find a match to a subslice
+    if (goal_size == 0) {
+        let slice_matches = this.getSlice(max_height).enumerate(goal.source);
+        let max_height_array = [max_height];
+        for (let i = 0; i < slice_matches.length; i++) {
+            matches.push(max_height_array.concat(slice_matches[i]));
         }
         return matches;
     }
 
-    // The goal has zero height, so find new matches by comparing goal.source with the target of the current diagram
-    var new_matches = this.getTarget().enumerate(goal.source, undefined);
-    return matches.concat(new_matches);
+    // If goal_size > 0, we can try to extend a match of a smaller goal
+    let new_matches = this.enumerate(goal, goal_size - 1, max_height - goal_size, max_height - 1);
+    for (let i = 0; i < new_matches.size; i++) {
+        var match = new_matches[i];
+        if (this.sub_data(goal.data, match, max_height)) {
+            matches.push(match);
+        }
+    }
+    return matches;
 };
 
-// Check if the given subcontent is present with the indicated offset
-Diagram.prototype.sub_content = function (subcontent, offset) {
-    if (!sub_forward_limit(this.content.forward_limit, subcontent.forward_limit, offset)) return false;
-    if (!sub_reverse_limit(this.content.reverse_limit, subcontent.reverse_limit, offset)) return false;
+// Check if the given subdata is present with the indicated offset
+Diagram.prototype.sub_data = function (subdata, offset, height) {
+    if (!sub_limit(this.data[height].forward_limit, subdata.forward_limit, offset)) return false;
+    if (!sub_limit(this.data[height].reverse_limit, subdata.reverse_limit, offset)) return false;
     return true;
 }
 
 // Check if a forward limit contains another
-function sub_forward_limit(limit, sublimit, offset) {
-    if (!limit && !sublimit) return true; // if both are null, nothing to check
-    if (!limit || !sublimit) return false; // but now if either are null, that's inconsistent
-    if (limit.start != sublimit.start + offset[0]) return false; // start of sublimit content must be correct
-    if (limit.finish != sublimit.finish + offset[0]) return false; // finish of sublimit content must be correct
-    if (limit.limits.length != sublimit.limits.length) debugger; // sanity check
-    if (!limit.singularity.sub_content(sublimit.singularity, offset.slice(1))) return false; // recursive check
-    for (let i = 0; i < limit.limits.length; i++) {
-        if (!sub_forward_limit(limit.limits[i], sublimit.limits[i], offset.slice(1))) return false;
-    }
+function sub_limit(limit, sublimit, offset, max_index) {
+
+    if (limit.length != sublimit.length) return false;
+    if (max_index == undefined) max_index = limit.length - 1;
+
+    // Check lower parts of this limit
+    if (max_index > 0 && !sub_forward_limit(limit, sublimit, offset, max_index - 1)) return false;
+    let a = limit[max_index];
+    let b = sublimit[max_index];
+    if (a.first != b.first + offset[0]) return false;
+    if (a.last != b.last + offset[0]) return false;
+    let offset_slice = offset.slice(1);
+    if (!sub_limit(a.data, b.data, offset_slice)) return false;
+
+    // If present, check type data
+    if (a.data && !sub_limit(a.data, b.data, offset_slice)) return false;
+
     return true;
 }
 
-function sub_reverse_limit(limit, sublimit, offset) {
-    if (!limit && !sublimit) return true; // if both are null, nothing to check
-    if (!limit || !sublimit) return false; // but now if either are null, that's inconsistent
-    if (limit.height != sublimit.height + offset[0]) return false;
-    if (!limit.diagram.equal_top_level(sublimit.diagram)) return false;
-    if (!sub_reverse_limit(limit.next, sublimit.next, offset.slice(1))) return false;
-    return true;
-}
+Diagram.prototype.rewrite = function (data) {
 
-/*
-    diagram.content.forward_limit. A linked list of:
-        - singularity - the new content of the singular limit, with dimension diagram.dimension-1
-        - start - the first height that this applies to
-        - finish - the last height that this applies to
-        - limits - an array of limits
-        - next - the next piece of data, possibly null
-
-    diagram.content.reverse_limit. A linked list of:
-        - height - the singular height that this maps into
-        - diagram - the inverse image, with dimension diagram.dimension
-        - next - the next piece of data, possibly null
-    
-    In each case this data is assumed to be in increasing order.
-*/
-
-Diagram.prototype.rewrite = function (content) {
-    return this.rewrite_forward(content.forward_limit).rewrite_backward(content.backward_limit);
-}
-
-// Rewrites a diagram using a forward implicit limit
-Diagram.prototype.rewrite_forward = function (data) {
-    if (data == null) return this; // base case, no further limit data is available
-    if (this.height > data.finish) {
-        // We're above the part of the diagram where this limit applies
-        this.history = this.history.rewrite_forward(data);
-        this.height = this.history.height + 1;
-        return this;
-    } else if (this.height > data.start) {
-        // This limit applies here, so remove this singular height
-        this.history = this.history.rewrite_forward(data);
-        this.height = this.history.height + 1;
-        return this.history; // skip out this part of the diagram from now on
-    } else if (this.height == data.start) {
-        // Replace this singular level with the content provided
-        this.content = data.singularity;
-        this.history = this.history.rewrite_forward(data.next);
-        this.height = this.history.height + 1;
-        return this;
-    } else if (this.height < data.start) {
-        debugger;
-    }
-}
-
-// Rewrites a diagram using a reverse implicit limit
-Diagram.prototype.rewrite_backward = function (data) {
-    if (data == null) return this;
-    if (this.height > data.height) {
-        // Doesn't apply here, so just apply recursively to the history
-        this.history = this.history.rewrite_backward(data);
-        this.height = this.history.height + 1;
-        return this;
-    } else if (this.height == data.height) {
-        // Glue in the provided diagram
-        this.history = this.history.rewrite_backward(data.next);
-        let diagram = data.diagram.copy();
-        diagram.set_foundation_height(this.history.height);
-        this.history = diagram;
+    // Handle the pointlike case
+    /*
+    if (this.geometric_dimension == 0) {
+        this.data = data;
         return this;
     }
-}
+    */
 
-// Set the diagram to start at an artificial height
-Diagram.prototype.set_foundation_height(height) {
-    if (this.history == null) {
-        this.height = height;
-    } else {
-        this.history.set_foundation_height(height);
-        this.height = this.history.height + 1;
-    }
+    // Handle the inductive case
+    return data.backward_limit.rewrite(data.forward_limit.rewrite(this));
 }
 
 // Make a copy of a diagram
 Diagram.prototype.copy = function () {
-    if (this.height > 0) {
-        return new Diagram(undefined, this.history, this.content);
-    } else {
-        return new Diagram(this.source);
+    if (!this.source) return new Diagram(null, this.type_dimension, this.data);
+    let new_source = this.source.copy();
+    let new_data = Content.copyData(this.data);
+    /*
+    let new_data = [];
+    for (let i=0; i<this.data.length; i++) {
+        new_data.push(this.data[i].copy());
     }
+    */
+    return new Diagram(new_source, this.type_dimension, new_data);
+};
+/*
+// Make a new copy of data
+function copy_data(old_data) {
+    if ((typeof old_data) === 'string') return old_data;
+    if (old_data == null) return null;
+    let new_data = [];
+    for (let i=0; i<old_data.length; i++) {
+        new_data.push()
+        let x = old_data[i];
+        let entry = {};
+        entry.type = x.type;
+        entry.forward_limit = x.forward_limit.copy();
+        entry.backward_limit = x.backward_limit.copy();
+    }
+    return new_data;
+}
+*/
+// Make a new copy of a limit
+function copy_limit(old_limit) {
+    if (old_limit == null) return null;
+    let new_limit = [];
+    for (let i=0; i<old_limit.length; i++) {
+        let x = old_limit[i];
+        let entry = {};
+        entry.data = copy_data(x.data);
+        entry.first = x.first;
+        entry.last = x.last;
+        entry.data = copy_limit(o.data);
+    }
+}
+
+// Find the ID of the last cell that appears in the diagram
+Diagram.prototype.getLastId = function () {
+    var d = this;
+    if (this.geometric_dimension == 0) return this.data; //{ id: this.data, dimension: this.type_dimension };
+    while (d.data.length == 0) d = d.source;
+    if (d.dimension == 0) return d.type; //{ id: d.type, dimension: d.type_dimension };
+    _assert(d.data != null);
+    return d.data.last().getLastId();
+}
+
+// Find the colour of the first cell that appears in the diagram
+Diagram.prototype.getLastColour = function () {
+    var id = this.getLastId();
+    return gProject.getColour(id);
+}
+
+
+Diagram.prototype.render = function (div, highlight) {
+    globular_render(div, this, highlight);
+}
+
+Diagram.prototype.prepare = function () {
+    return;
+    /*
+    if (this.source != null) this.source.prepare();
+    for (var i = 0; i < this.cells.length; i++) {
+        var cell = this.cells[i];
+        cell.id = cell.id.clean(); // update the ID to the new format, in case this is an old workspace
+        if (cell.box != undefined) continue;
+        cell.box = this.getSliceBoundingBox(i);
+    }
+    */
 };
 
-//////////////////////
-Diagram.prototype.rewrite = function (cell) {
-    if (cell == undefined) debugger;
-    if (cell.key.last() < 0) debugger;
+// Convert an internal coordinate to {boundary: {type, depth}, coordinates}, by identifying coordinates in slices adjacent to the boundary as being in that boundary. Assumes coordinates are first-index-first.
+Diagram.prototype.getBoundaryCoordinates = function (coordinates, boundaryFlags) {
+    _assert(coordinates.length == this.geometric_dimension);
 
-    // Identify the portion to be cut out, and the cells to be spliced in
-    var source_size;
-    var insert_position;
-    var target;
+    if (coordinates.length == 0) return {boundary: null, coordinates: []};
+    //if (!boundaryFlags) boundaryFlags = [];
 
-    if (cell.id.is_interchanger()) {
-        target = new Diagram(null, this.rewritePasteData(cell.id, cell.key)); // WHY DOES THIS HAVE TO BE A DIAGRAM OBJECT?
-        var bounding_box = (cell.box != null ? cell.box : this.getBoundingBox(cell));
-        insert_position = bounding_box.min.last();
-        source_size = bounding_box.max.last() - bounding_box.min.last();
+    let allow_boundary = {};
+    if (boundaryFlags.length == 0) {
+        allow_boundary = {source: false, target: false};
     } else {
-        // Info on the source and the target of the rewrite is retrieved from the signature here
-        var rewrite = gProject.signature.getGenerator(cell.id);
-        source_size = rewrite.source.cells.length;
-        target = rewrite.target.copy();
-        insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
+        allow_boundary = boundaryFlags[0];
     }
 
-    if (isNaN(insert_position)) debugger;
-    if (insert_position < 0) debugger;
+    /*
+    if (coordinates.length == 1) {
+        sub = {
+            boundary: null,
+            coordinates: []
+        };
+    } else {
+    */
 
-    // Remove the source cells
-    this.cells.splice(insert_position, source_size);
+    var slice = this.getSlice(coordinates[0]); // no need to copy slice
+    //var new_allow_boundary = params.allow_boundary.length == 0 ? [] : params.allow_boundary.slice(1);
+    let sub = slice.getBoundaryCoordinates(coordinates.slice(1), boundaryFlags.slice(1));
 
-    // Prepare the target cells and insert them
-    var slice = this.getSlice(insert_position);
-    if (slice != null) slice = slice.copy(); // need to copy
-
-    // Update the slice cache
-    if (this.sliceCache != null) {
-        this.sliceCache = [];
-        this.sliceCache.splice(insert_position, source_size);
-        for (var i = 0; i < target.cells.length; i++) {
-            this.sliceCache.splice(insert_position + i, 0, null);
-        }
+    var in_source = allow_boundary.source /* && coordinates.length > 1*/ && coordinates[0].height == 0 && coordinates[0].regular;
+    //var in_target = coordinates.length > 1 && c[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
+    var in_target = allow_boundary.target /*&& coordinates.length > 1*/ /*&& c[0] == Math.max(1, this.cells.length)*/;
+    if (sub.boundary != null) {
+        sub.boundary.depth++;
+    } else if (in_target) {
+        // We're in the target, and we were previously in the interior
+        sub.boundary = {
+            type: 't',
+            depth: 1
+        };
+    } else if (in_source) {
+        // We're in the source, and we were previously in the interior
+        sub.boundary = {
+            type: 's',
+            depth: 1
+        };
+    } else {
+        // Not in the source or the target, previously in the interior
+        sub.coordinates.unshift(coordinates[0]);
     }
-    //this.initializeSliceCache();
+    return sub;
+};
 
-    // Insert the target of the rewrite
-    for (var i = 0; i < target.cells.length; i++) {
-        var new_cell = target.cells[i];
-        if (!cell.id.is_interchanger()) {
-            new_cell.pad(cell.key.slice(0, cell.key.length - 1));
-        }
-        new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
-        this.cells.splice(insert_position + i, 0, target.cells[i]);
-        if (i < target.cells.length - 1) slice.rewrite(new_cell);
-    }
 
-    return this;
-}
 
 //////////////////// NOT YET REVISED ////////////////////////
 
@@ -280,69 +319,6 @@ Diagram.prototype.equals = function (d2) {
     if (this.source == null) return true;
     return d1.source.equals(d2.source);
 };
-
-Diagram.prototype.render = function (div, highlight) {
-    globular_render(div, this, highlight);
-}
-
-//    download_SVG_as_PNG(MainDisplay.svg_element, MainDisplay.getExportRegion(), "image.png");
-
-
-// Rewrites a subdiagram of this diagram
-Diagram.prototype.rewrite = function (cell) {
-    if (cell == undefined) debugger;
-    if (cell.key.last() < 0) debugger;
-
-    // Identify the portion to be cut out, and the cells to be spliced in
-    var source_size;
-    var insert_position;
-    var target;
-    if (cell.id.is_interchanger()) {
-        target = new Diagram(null, this.rewritePasteData(cell.id, cell.key)); // WHY DOES THIS HAVE TO BE A DIAGRAM OBJECT?
-        var bounding_box = (cell.box != null ? cell.box : this.getBoundingBox(cell));
-        insert_position = bounding_box.min.last();
-        source_size = bounding_box.max.last() - bounding_box.min.last();
-    } else {
-        // Info on the source and the target of the rewrite is retrieved from the signature here
-        var rewrite = gProject.signature.getGenerator(cell.id);
-        source_size = rewrite.source.cells.length;
-        target = rewrite.target.copy();
-        insert_position = (this.getDimension() == 0 ? 0 : cell.key.last());
-    }
-
-    if (isNaN(insert_position)) debugger;
-    if (insert_position < 0) debugger;
-
-    // Remove the source cells
-    this.cells.splice(insert_position, source_size);
-
-    // Prepare the target cells and insert them
-    var slice = this.getSlice(insert_position);
-    if (slice != null) slice = slice.copy(); // need to copy
-
-    // Update the slice cache
-    if (this.sliceCache != null) {
-        this.sliceCache = [];
-        this.sliceCache.splice(insert_position, source_size);
-        for (var i = 0; i < target.cells.length; i++) {
-            this.sliceCache.splice(insert_position + i, 0, null);
-        }
-    }
-    //this.initializeSliceCache();
-
-    // Insert the target of the rewrite
-    for (var i = 0; i < target.cells.length; i++) {
-        var new_cell = target.cells[i];
-        if (!cell.id.is_interchanger()) {
-            new_cell.pad(cell.key.slice(0, cell.key.length - 1));
-        }
-        new_cell.box = this.getDimension() == 0 ? null : slice.getBoundingBox(new_cell);
-        this.cells.splice(insert_position + i, 0, target.cells[i]);
-        if (i < target.cells.length - 1) slice.rewrite(new_cell);
-    }
-
-    return this;
-}
 
 Diagram.prototype.multipleInterchangerRewrite = function (rewrite_array) {
 
@@ -377,27 +353,6 @@ Diagram.prototype.expandWrapper = function (type, x, k) {
     }, 1, k);
 }
 
-/*
-    Returns a copy of this diagram. This is obtained by recursively copying the source boundary and then
-    copying the set of n-cells along with the information on how they are attached to each other
-*/
-
-Diagram.prototype.copy = function () {
-    var source = (this.source == null ? null : this.source.copy());
-    var cells = [];
-    for (var i = 0; i < this.cells.length; i++) {
-        var cell = this.cells[i];
-        cells.push(new NCell({
-            id: cell.id,
-            key: cell.key,
-            box: cell.box
-        }));
-    }
-    var diagram = new Diagram(source, cells);
-    return diagram;
-};
-
-
 // Attaches the given cell to the diagram, via the specified boundary path. 
 Diagram.prototype.attach = function (cell, boundary /*, bounds*/) {
 
@@ -415,7 +370,7 @@ Diagram.prototype.attach = function (cell, boundary /*, bounds*/) {
     if (boundary.depth == undefined) debugger;
 
     // If attaching to a higher source, need to pad all other attachments
-    if (boundary.depth > 1) { // attached_diagram.cells.length = 0
+    if (boundary.depth > 1) { // attached_diagram.data.length = 0
         if (boundary.type == 's') {
             for (var i = 0; i < this.cells.length; i++) {
                 this.cells[i].key[this.cells[i].key.length - boundary.depth + 1]++;
@@ -490,78 +445,7 @@ Diagram.prototype.getFullDimensions = function () {
 };
 
 
-// Convert an internal coordinate to {boundary: {type, depth}, coordinates}, by identifying
-// coordinates in slices adjacent to the boundary as being in that boundary.
-// ASSUMES COORDINATES ARE FIRST-INDEX-FIRST
-Diagram.prototype.getBoundaryCoordinates = function (params /*internal, fakeheight*/) {
-    if (params.allow_boundary == undefined) params.allow_boundary = [];
-    var allow_boundary = params.allow_boundary.length == 0 ? {
-        source: false,
-        target: false
-    } : params.allow_boundary[0];
-    var c = params.coordinates;
-    var sub;
-    if (c.length == 1) {
-        sub = {
-            boundary: null,
-            coordinates: []
-        };
-    } else {
-        var slice = this.getSlice(c[0]); // no need to copy slice
-        var new_allow_boundary = params.allow_boundary.length == 0 ? [] : params.allow_boundary.slice(1);
-        sub = slice.getBoundaryCoordinates({
-            coordinates: params.coordinates.slice(1),
-            allow_boundary: new_allow_boundary
-        });
-    }
 
-    var in_source = allow_boundary.source && c.length > 1 && c[0] == 0;
-    //var in_target = c.length > 1 && c[0] >= Math.max(this.cells.length, fakeheight ? 1 : 0);
-    var in_target = allow_boundary.target && c.length > 1 /*&& c[0] == Math.max(1, this.cells.length)*/;
-    if (sub.boundary != null) {
-        sub.boundary.depth++;
-    } else if (in_target) {
-        // We're in the target, and we were previously in the interior
-        sub.boundary = {
-            type: 't',
-            depth: 1
-        };
-    } else if (in_source) {
-        // We're in the source, and we were previously in the interior
-        sub.boundary = {
-            type: 's',
-            depth: 1
-        };
-    } else {
-        // Not in the source or the target, previously in the interior
-        sub.coordinates.unshift(c[0]);
-    }
-    return sub;
-};
-
-// Find the ID of the last cell that appears in the diagram
-Diagram.prototype.getLastId = function () {
-    var d = this;
-    while (d.cells.length == 0) {
-        d = d.getSourceBoundary();
-    }
-    return {
-        id: d.cells[d.cells.length - 1].id,
-        dimension: d.getDimension()
-    };
-    /*
-    return {
-        id: d.cells[0].id,
-        dimension: d.getDimension()
-    };
-    */
-}
-
-// Find the colour of the first cell that appears in the diagram
-Diagram.prototype.getLastColour = function () {
-    var id = this.getLastId();
-    return gProject.getColour(id);
-}
 
 
 Diagram.prototype.getLengthsAtSource = function () {
@@ -744,13 +628,17 @@ Diagram.prototype.getLocalMatches = function (click_box, id, flip) {
 
 // Get the cell at a particular location in the diagram
 Diagram.prototype.getCell = function (location) {
+    _assert(location.length == this.geometric_dimension);
+    return this.getSlice(location).data;
+    /*
     var level = location.shift();
     var slice = this.getSlice(location); // no need to copy slice
-    while (slice.cells.length == 0) {
+    while (slice.data.length == 0) {
         if (slice == null) return null;
         slice = slice.getSourceBoundary();
     }
-    return slice.cells[level];
+    return slice.data[level];
+    */
 }
 
 // Get the bounding box surrounding a diagram component
@@ -870,10 +758,11 @@ Diagram.prototype.getSliceBoundingBox = function (location) {
         max: []
         //,ignore: true
     };
-    if (height >= slice.cells.length) return null;
-    return slice.getSlice(height).getBoundingBox(slice.cells[height]); // no need to copy slice
+    if (height >= slice.data.length) return null;
+    return slice.getSlice(height).getBoundingBox(slice.data[height]); // no need to copy slice
 }
 
+/*
 // Returns a slice subdiagram
 Diagram.prototype.getSlice = function (location) {
     if (globular_is_array(location)) location = location.slice();
@@ -906,16 +795,9 @@ Diagram.prototype.getSlice = function (location) {
 
     // Otherwise do a recursive call
     this.sliceCache[height] = this.getSlice(height - 1).copy().rewrite(this.cells[height - 1]); // need to copy before rewrite!
-    //return this.sliceCache[height].copy();
     return this.sliceCache[height];
-    /*
-    var slice = this.source.copy();
-    for (var i = 0; i < height; i++) {
-        slice.rewrite(this.cells[i]);
-    }
-    return slice;
-    */
 };
+*/
 
 Diagram.prototype.initializeSliceCache = function () {
     this.sliceCache = [];
@@ -928,15 +810,6 @@ Diagram.prototype.clearAllSliceCaches = function () {
     return this;
 }
 
-Diagram.prototype.prepare = function () {
-    if (this.source != null) this.source.prepare();
-    for (var i = 0; i < this.cells.length; i++) {
-        var cell = this.cells[i];
-        cell.id = cell.id.clean(); // update the ID to the new format, in case this is an old workspace
-        if (cell.box != undefined) continue;
-        cell.box = this.getSliceBoundingBox(i);
-    }
-};
 
 // Check if the specified id is used at all in this diagram
 Diagram.prototype.usesCell = function (generator) {
@@ -1003,7 +876,7 @@ Diagram.prototype.realizeCoordinate = function (coords) {
     }
 
     // For each extra dimension we have to dive to find an entity, pad the coords
-    while (slice.cells.length == 0) {
+    while (slice.data.length == 0) {
         slice = slice.source;
         coords.unshift(0);
     }

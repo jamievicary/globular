@@ -74,7 +74,7 @@ class DisplayManager {
         // Update the suppression input
         var suppress = this.suppressInput.val();
         if (controls != null) suppress = controls.project;
-        suppress = Math.min(suppress, this.diagram.getDimension());
+        suppress = Math.min(suppress, this.diagram.geometric_dimension);
         if (suppress < 0) suppress = 0;
         this.suppressInput.val(suppress);
         update_control_width(this.suppressInput);
@@ -167,7 +167,7 @@ class DisplayManager {
         }
 
         // Calculate the desired number of slice controls
-        let remainingDimensions = this.diagram.getDimension() - this.getSuppress() - this.display.getMaximumDimension() /*this.view_input.val()*/ ;
+        let remainingDimensions = this.diagram.geometric_dimension - this.getSuppress() - this.display.getMaximumDimension() /*this.view_input.val()*/ ;
         if (remainingDimensions < 0) remainingDimensions = 0;
 
         // Remove any superfluous slice controls
@@ -239,9 +239,9 @@ class DisplayManager {
                     val = controls.slices[i];
                 }
             }
-            input.val(Math.min(val, Math.max(slice.cells.length, 1)));
+            input.val(Math.min(val, Math.max(slice.data.length, 1)));
             update_control_width(input);
-            input.attr('max', Math.max(1, slice.cells.length));
+            input.attr('max', Math.max(1, slice.data.length));
             slice = slice.getSlice(input.val()); // no need to copy slice
         }
     }
@@ -272,8 +272,8 @@ class DisplayManager {
 
         // If the value is out of range (e.g. if we're on the source slice of an identity diagram,
         // do nothing)
-        if (height >= slice.cells.length) return;
-        let box = slice.cells[height].box;
+        if (height >= slice.data.length) return;
+        let box = slice.data[height].box;
 
         // Apply the highlight
         this.highlightBox(box);
@@ -353,7 +353,7 @@ class DisplayManager {
             return null;
         }
 
-        return this.sliceInputs.map(input => Number(input.val()));
+        return this.sliceInputs.map(input => ({height: Number(input.val()), regular: true}));
     }
 
     getSuppress() {

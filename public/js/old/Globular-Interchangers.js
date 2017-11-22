@@ -196,7 +196,7 @@ Diagram.prototype.rewriteInterchanger = function(nCell) {
     var rewrite = {};
     rewrite.source = new Diagram(null, this.atomicInterchangerSource(nCell.id, nCell.key));
     rewrite.target = new Diagram(null, this.atomicInterchangerTarget(nCell.id, nCell.key));
-    if (rewrite.source.cells.length != 0 || rewrite.target.cells.length) return rewrite;
+    if (rewrite.source.data.length != 0 || rewrite.target.data.length) return rewrite;
     alert("Illegal data passed to rewriteInterchanger");
     return [];
 }

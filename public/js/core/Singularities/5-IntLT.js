@@ -54,7 +54,7 @@ Diagram.prototype.getTarget.IntLT = function(type, key) {
     var slice = this.getSlice(key.last());
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
-    var x_coordinate = slice.cells[cell.key.last()].box.min.last();
+    var x_coordinate = slice.data[cell.key.last()].box.min.last();
 
     var key_type = type.substr(0, type.length - (type.tail('-TI0') ? 4 : 2));
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';
@@ -165,10 +165,10 @@ Diagram.prototype.interchangerAllowed.IntLT = function(type, key) {
     
     var cell = this.cells[key.last()];
     var slice = this.getSlice(key.last());
-    if(cell.key.last() >= slice.cells.length) {return false;}
+    if(cell.key.last() >= slice.data.length) {return false;}
     var t = slice.target_size(cell.key.last());
     var s = slice.source_size(cell.key.last());
-    var x_coordinate = slice.cells[cell.key.last()].box.min.last();
+    var x_coordinate = slice.data[cell.key.last()].box.min.last();
     
     var key_type = type.substr(0, type.length - (type.tail('-TI0') ? 4 : 2));
     var base_type = (type.substr(0, 5) === 'IntI0') ? 'IntI0' : 'Int';

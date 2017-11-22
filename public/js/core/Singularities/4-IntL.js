@@ -196,7 +196,7 @@ Diagram.prototype.interchangerAllowed.IntL = function(type, key) {
     var space_above = (x < this.cells.length - g1_target);
     var space_below = (x >= g1_source);
     var space_left = (coords.last() > 0);
-    var space_right = (coords.last() + g1_source < slice.cells.length);
+    var space_right = (coords.last() + g1_source < slice.data.length);
 
     if (type == 'Int-L') {
         if (!(space_right && space_above)) return false;
@@ -270,7 +270,7 @@ Diagram.prototype.rewritePasteData.IntL = function(type, key) {
     var behind = type.tail('Int-R', 'Int-RI0', 'IntI0-L', 'IntI0-LI0');
     //var q = move_right ? cell.key.last() + s : cell.key.last() - 1;
     var q = move_right ? cell.box.max.last() : cell.box.min.last() - 1;
-    if (q >= slice.cells.length) debugger;
+    if (q >= slice.data.length) debugger;
     var movement = [{
             relative: behind ? 0 : ((move_right ? 1 : -1) * (slice.target_size(q) - slice.source_size(q)))
         }, {

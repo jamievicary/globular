@@ -37,6 +37,8 @@ function Project(string) {
         this[name] = new_project[name];
     }
 
+    this.counts = [];
+
     // Ensure at least one 0-cell
 
     timer.Report();
@@ -79,16 +81,21 @@ Project.prototype.setColourUI = function(id, colour) {
     this.saveState();
 };
 
+Project.prototype.freshName = function(dimension) {
+    let num = this.signature.getNCells(dimension).length;
+    return dimension.toString() + "-" + Globular.base26(num);
+}
+
 // Gets the front-end colour to what the user wants
 var lightnesses = [30, 50, 70];
 Project.prototype.getColour = function(data) {
-    if (data.id === undefined) data.id = data.type;
-    if (data.dimension == undefined) debugger;
+    //if (data.id === undefined) data.id = data.type;
+    //if (data.dimension == undefined) debugger;
     /*
     var generator = this.signature.getGenerator(id);
     if (generator != null) return generator.display.colour;
     */
-    var analysis = data.id.analyze_id();
+    let analysis = Globular.analyze_id(data);
 
     // Case that the id derives from the signature
     if (analysis.signature) {
@@ -248,8 +255,8 @@ Project.prototype.saveSourceTargetUI = function(boundary /* = 'source' or 'targe
     var target = this.cacheSourceTarget.target;
 
     // Test dimensions
-    if (source.getDimension() != target.getDimension()) {
-        alert("Source has dimension " + source.getDimension() + ", but target has dimension " + target.getDimension());
+    if (source.geometric_dimension != target.geometric_dimension) {
+        alert("Source has dimension " + source.geometric_dimension + ", but target has dimension " + target.geometric_dimension);
         this.cacheSourceTarget[boundary] = null;
         return true;
     }
@@ -342,7 +349,7 @@ Project.prototype.dragCellUI = function(drag) {
                 id = id.toggle_inverse();
             }
         }
-        var item = $('<li>').html(id.getFriendlyName());
+        var item = $('<li>').html(Globular.getFriendlyName(id));
         list.append(item);
 
         // Use a closure to specify the behaviour on selection
@@ -401,14 +408,14 @@ Project.prototype.performActionUI = function(option, drag) {
             id: option.preattachment.id,
             key: option.preattachment.key
         }), option.preattachment.boundary);
-        console.log("Preattachment " + option.preattachment.id.getFriendlyName());
+        console.log("Preattachment " + Globular.getFriendlyName(option.preattachment.id));
     }
 
     this.diagram.attach(new NCell({
         id: option.id,
         key: option.key
     }), drag.boundary, true);
-    console.log("Attachment " + option.id.getFriendlyName());
+    console.log("Attachment " + Globular.getFriendlyName(option.id));
 
     // Useful shortcut to the diagram for console manipulation
     d = this.diagram;
@@ -783,7 +790,7 @@ Project.prototype.createGeneratorDOMEntry = function(id) {
                 (function(match) {
                     $(div_match).click(function() {
                         var ncell = new NCell({
-                            id: enumerationData.diagram.cells[0].id,
+                            id: enumerationData.diagram.data[0].id,
                             key: match.inclusion
                         });
                         var boundary = {

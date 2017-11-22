@@ -4,10 +4,124 @@
     Some auxiliary functions
 */
 
+class Globular {
+
+    static analyze_id(string) {
+        if (string.tail('I1')) {
+            var r = this.chop(2).analyze_id();
+            if (r == null) return null;
+            r.i1 = true;
+            return r;
+        }
+        if (string.tail('I0')) {
+            var r = this.chop(2).analyze_id();
+            if (r == null) return null;
+            r.i0 = true;
+            return r;
+        }
+        if (string.tail('-E')) {
+            var r = this.chop(2).analyze_id();
+            if (r == null) return null;
+            r.dimension++;
+            return r;
+        }
+        var generator = gProject.signature.getGenerator(string);
+        if (generator == null) return {
+            base_id: string,
+            signature: false,
+            i0: false,
+            i1: false,
+            dimension: 0
+        }
+        return {
+            base_id: string,
+            signature: true,
+            i0: false,
+            i1: false,
+            dimension: generator.getDimension(),
+            generator: generator
+        }
+    }
+
+    static toggle_inverse(depth) {
+        if (depth == undefined) depth = 0;
+        var i0 = false;
+        var i1 = false;
+        if (this.tail('I0I1')) {
+            i0 = true;
+            i1 = true;
+        } else if (this.tail('I0')) {
+            i0 = true;
+        } else if (this.tail('I1')) {
+            i1 = true;
+        }
+        if (depth == 0) i0 = !i0;
+        if (depth == 1) i1 = !i1;
+        var new_id = this.strip_inverses();
+        if (i0) new_id += 'I0';
+        if (i1) new_id += 'I1';
+        return new_id;
+    }
+
+    static strip_inverses(string) {
+        let new_id = string;
+        if (new_id.tail('I1')) new_id = new_id.chop(2);
+        if (new_id.tail('I0')) new_id = new_id.chop(2);
+        return new_id;
+    }
+
+    static repeat(string, n) {
+        let result = "";
+        for (var i = 0; i < n; i++) {
+            result += string;
+        }
+        return result;
+    }
+
+    //https://stackoverflow.com/questions/8603480/how-to-create-a-function-that-converts-a-number-to-a-bijective-hexavigesimal
+    static base26(a) {
+        let alpha = "abcdefghijklmnopqrstuvwxyz";
+        a += 1;
+        let c = 0;
+        let x = 1;
+        while (a >= x) {
+            c++;
+            a -= x;
+            x *= 26;
+        }
+        var s = "";
+        for (var i = 0; i < c; i++) {
+            s = alpha.charAt(a % 26) + s;
+            a = Math.floor(a / 26);
+        }
+        return s;
+    }
+
+    static getFriendlyName(string) {
+        if (string.tail('-EI0')) return this.chop(4).getFriendlyName() + ", cancel";
+        if (string.tail('-E')) return this.chop(2).getFriendlyName() + ", insert";
+        if (string.tail('I0')) return this.chop(2).getFriendlyName() + " inverse";
+        if (string.tail('I1')) return this.chop(2).getFriendlyName() + " flip";
+        var generator = gProject.signature.getGenerator(string);
+        if (generator) return generator.name;
+        return 'UNKNOWN';
+    }
+
+    static friendlyCoordinate(coordinates) {
+        let string = '';
+        for (let i=0; i<coordinates.length; i++) {
+            string += (i > 0 ? "," : "") + coordinates[i].height.toString() + (coordinates[i].regular ? "" : "*");
+        }
+        return '[' + string + ']';
+    }
+}
+
+/*
 // Quick way to return a random alphanumeric string of length ~10
 function globular_freshName(n) {
     return n.toString() + '-' + Math.random().toString(36).slice(2);
 }
+*/
 
 // Check whether a number is an integer
 function isInteger(n) {
@@ -102,7 +216,7 @@ function diff_array(t1, t2) {
     var tab = new Array();
 
     if (t1.length != t2.length) {
-        console.log("Arrays of differnt length")
+        console.log("Arrays of different length")
     }
 
     for (var i = 0; i < t1.length; i++) {
@@ -111,7 +225,7 @@ function diff_array(t1, t2) {
     return tab;
 }
 
-Array.prototype.tail = function(t) {
+Array.prototype.tail = function (t) {
     if (t.length > this.length) return false;
     var start = this.length - t.length;
     for (var i = 0; i < t.length; i++) {
@@ -120,30 +234,30 @@ Array.prototype.tail = function(t) {
     return true;
 }
 
-Array.prototype.end = function(n) {
+Array.prototype.end = function (n) {
     return this[this.length - 1 - n];
 }
 
-Array.prototype.last = function(arg) {
+Array.prototype.last = function (arg) {
     if (arg != undefined) this[this.length - 1] = arg;
     else return this[this.length - 1];
 };
 
-Array.prototype.penultimate = function(arg) {
+Array.prototype.penultimate = function (arg) {
     if (arg != undefined) this[this.length - 2] = arg;
     else return this[this.length - 2];
 };
 
-Array.prototype.incremented_array = function(value) {
+Array.prototype.incremented_array = function (value) {
     this[this.length - 1] += value;
     return this;
 };
 
-Array.prototype.increment_last = function(value) {
+Array.prototype.increment_last = function (value) {
     this[this.length - 1] += value;
 };
 
-Array.prototype.reverse = function() {
+Array.prototype.reverse = function () {
     var t2 = new Array();
     for (var i = 0; i < this.length; i++) {
         t2.push(this[this.length - 1 - i]);
@@ -151,7 +265,7 @@ Array.prototype.reverse = function() {
     return t2;
 };
 
-String.prototype.tail = function() {
+String.prototype.tail = function () {
     for (var i = 0; i < arguments.length; i++) {
         var t = arguments[i];
         if (this.substr(this.length - t.length, t.length) === t) return true;
@@ -160,21 +274,21 @@ String.prototype.tail = function() {
     //return this.substr(this.length - elements, this.length);
 };
 
-String.prototype.last = function() {
+String.prototype.last = function () {
     if (this.length == 0) return '';
     return this.substr(this.length - 1, 1);
 }
 
-String.prototype.is_basic_interchanger = function() {
+String.prototype.is_basic_interchanger = function () {
     return (this == 'Int' || this == 'IntI0');
 };
 
-String.prototype.is_interchanger = function() {
+String.prototype.is_interchanger = function () {
     if (this.tail('-E', 'EI0')) return true;
     return (this.substr(0, 3) == 'Int');
 };
 
-String.prototype.is_invertible = function() {
+String.prototype.is_invertible = function () {
     if (this.is_interchanger()) return true;
     if (this.indexOf('^0') > -1) return true;
     var checkbox = $('#invertible-' + this.getBaseType());
@@ -182,11 +296,11 @@ String.prototype.is_invertible = function() {
     return checkbox.is(':checked');
 }
 
-String.prototype.getBaseType = function() {
+String.prototype.getBaseType = function () {
     return this.strip_inverses();
 }
 
-String.prototype.getSignatureType = function() {
+String.prototype.getSignatureType = function () {
     if (this.tail('I0')) return this.chop(2).getSignatureType();
     if (this.tail('I1')) return this.chop(2).getSignatureType();
     if (this.tail('-E')) return this.chop(2).getSignatureType();
@@ -195,114 +309,16 @@ String.prototype.getSignatureType = function() {
 }
 
 // Remove the trailing n characters
-String.prototype.chop = function(n) {
+String.prototype.chop = function (n) {
     return this.substring(0, this.length - n);
 }
 
 // Ensure any old 'I'-style inverse markers are replaced with 'I0' markers
-String.prototype.clean = function() {
+String.prototype.clean = function () {
     return this.replace(/I(?![\d,n])/g, 'I0');
 }
 
-String.prototype.analyze_id = function() {
-    if (this.tail('I1')) {
-        var r = this.chop(2).analyze_id();
-        if (r == null) return null;
-        r.i1 = true;
-        return r;
-    }
-    if (this.tail('I0')) {
-        var r = this.chop(2).analyze_id();
-        if (r == null) return null;
-        r.i0 = true;
-        return r;
-    }
-    if (this.tail('-E')) {
-        var r = this.chop(2).analyze_id();
-        if (r == null) return null;
-        r.dimension++;
-        return r;
-    }
-    var generator = gProject.signature.getGenerator(this);
-    if (generator == null) return {
-        base_id: this,
-        signature: false,
-        i0: false,
-        i1: false,
-        dimension: 0
-    }
-    return {
-        base_id: this,
-        signature: true,
-        i0: false,
-        i1: false,
-        dimension: generator.getDimension(),
-        generator: generator
-    }
-}
-
-String.prototype.toggle_inverse = function(depth) {
-    if (depth == undefined) depth = 0;
-    var i0 = false;
-    var i1 = false;
-    if (this.tail('I0I1')) {
-        i0 = true;
-        i1 = true;
-    } else if (this.tail('I0')) {
-        i0 = true;
-    } else if (this.tail('I1')) {
-        i1 = true;
-    }
-    if (depth == 0) i0 = !i0;
-    if (depth == 1) i1 = !i1;
-    var new_id = this.strip_inverses();
-    if (i0) new_id += 'I0';
-    if (i1) new_id += 'I1';
-    return new_id;
-}
-
-String.prototype.strip_inverses = function() {
-    var new_id = this;
-    if (new_id.tail('I1')) new_id = new_id.chop(2);
-    if (new_id.tail('I0')) new_id = new_id.chop(2);
-    return new_id;
-}
-
-String.prototype.repeat = function(n) {
-    var result = "";
-    for (var i = 0; i < n; i++) {
-        result += this;
-    }
-    return result;
-}
-
-String.prototype.getFriendlyName = function() {
-
-    // Is it a cancellation?
-    if (this.tail('-EI0')) return this.chop(4).getFriendlyName() + ", cancel";
-
-    // Is it an inverse cancellation?
-    if (this.tail('-E')) return this.chop(2).getFriendlyName() + ", insert";
-
-    // Is it an inverse?
-    if (this.tail('I0')) return this.chop(2).getFriendlyName() + " inverse";
-
-    // Is it a flip?
-    if (this.tail('I1')) return this.chop(2).getFriendlyName() + " flip";
-
-    // Is it a generator?
-    var generator = gProject.signature.getGenerator(this);
-    if (generator != null) return generator.name;
-
-    // Is it a named singularity?
-    var family = GetSingularityFamily(this);
-    if (family != undefined) return SingularityData[family].friendly[this];
-
-    // Don't understand this
-    return 'UNKNOWN';
-}
-
-Array.prototype.move = function(instructions) {
+Array.prototype.move = function (instructions) {
     for (var i = 0; i < instructions.length; i++) {
         if (i == this.length) return;
         var command = instructions.end(i);
@@ -317,7 +333,7 @@ Array.prototype.move = function(instructions) {
 }
 
 // Adds the components of the argument to the components of this array
-Array.prototype.vector_add = function(v2) {
+Array.prototype.vector_add = function (v2) {
     var result = this.slice();
     var n = Math.min(this.length, v2.length);
     for (var i = 0; i < n; i++) {
@@ -327,7 +343,7 @@ Array.prototype.vector_add = function(v2) {
 }
 
 // Check two arrays for equality componentwise
-Array.prototype.vector_equals = function(v2) {
+Array.prototype.vector_equals = function (v2) {
     if (this.length != v2.length) return false;
     for (var i = 0; i < this.length; i++) {
         if (this[i] != v2[i]) return false;
@@ -335,23 +351,23 @@ Array.prototype.vector_equals = function(v2) {
     return true;
 };
 
-Array.prototype.set = function(attr, val) {
+Array.prototype.set = function (attr, val) {
     this.attr = val;
     return this;
 };
 
-Array.prototype.has_suffix = function(a2) {
+Array.prototype.has_suffix = function (a2) {
     for (var i = 0; i < a2.length; i++) {
         if (this.end(i) != a2.end(i)) return false;
     }
     return true;
 }
 
-Number.prototype.magnitude = function() {
+Number.prototype.magnitude = function () {
     return this;
 }
 
-Array.prototype.magnitude = function() {
+Array.prototype.magnitude = function () {
     return this.length - 1;
 }
 
@@ -361,11 +377,11 @@ function hsl(hue, saturation, lightness) {
 
 var GlobularColours = [
     /* Mid   */
-    [hsl(250, 100, 60) /*blue*/ , hsl(10, 100, 60) /*red*/ , hsl(120, 100, 60) /*green*/ ],
+    [hsl(250, 100, 60) /*blue*/, hsl(10, 100, 60) /*red*/, hsl(120, 100, 60) /*green*/],
     /* Light */
-    [hsl(0, 0, 100) /*white*/ , hsl(0, 0, 80) /*light gray*/ ],
+    [hsl(0, 0, 100) /*white*/, hsl(0, 0, 80) /*light gray*/],
     /* Dark  */
-    [hsl(0, 0, 0) /*black*/ , hsl(265, 100, 30) /*dark blue*/ , hsl(10, 100, 30) /*dark red*/ , hsl(130, 100, 30) /*dark green*/ ]
+    [hsl(0, 0, 0) /*black*/, hsl(265, 100, 30) /*dark blue*/, hsl(10, 100, 30) /*dark red*/, hsl(130, 100, 30) /*dark green*/]
 ];
 
 function globular_is_array(object) {
@@ -442,11 +458,11 @@ function bezier_initial_part(bezier, t) {
     var ttt = tt * t;
     var P1 = b.P1.slice();
     var P2 = [u * b.P1[0] + t * b.P2[0],
-              u * b.P1[1] + t * b.P2[1]];
+    u * b.P1[1] + t * b.P2[1]];
     var P3 = [uu * b.P1[0] + 2 * t * u * b.P2[0] + tt * b.P3[0],
-              uu * b.P1[1] + 2 * t * u * b.P2[1] + tt * b.P3[1]];
+    uu * b.P1[1] + 2 * t * u * b.P2[1] + tt * b.P3[1]];
     var P4 = [uuu * b.P1[0] + 3 * t * uu * b.P2[0] + 3 * tt * u * b.P3[0] + ttt * b.P4[0],
-              uuu * b.P1[1] + 3 * t * uu * b.P2[1] + 3 * tt * u * b.P3[1] + ttt * b.P4[1]];
+    uuu * b.P1[1] + 3 * t * uu * b.P2[1] + 3 * tt * u * b.P3[1] + ttt * b.P4[1]];
     return {
         P1: P1,
         P2: P2,
@@ -470,7 +486,7 @@ function Timer(caller) {
     this.caller = caller;
 }
 
-Timer.prototype.Report = function() {
+Timer.prototype.Report = function () {
     var time = Math.floor(performance.now() - this.start_time);
     console.log("Timing: " + this.caller + ": " + time + "ms");
 }
@@ -490,7 +506,7 @@ function globular_lz4_compress(string) {
         uncompressed: string
     };
     var compressed_output = new Uint8Array(compressedSize);
-    for (var i=0; i<compressedSize; i++) {
+    for (var i = 0; i < compressedSize; i++) {
         compressed_output[i] = output[i];
     }
     var compressed_string = Uint8ToStringVersion2(compressed_output);
@@ -555,10 +571,18 @@ function decimal_part(number) {
     return number - Math.floor(number)
 }
 
-String.prototype.padToLength = function(n) {
+String.prototype.padToLength = function (n) {
     var padded = this;
     while (padded.length < n) {
         padded = '0' + padded;
     }
     return padded;
+}
+
+function xor(a, b) {
+    return (!!a && !b) || (!a && !!b);
+}
+
+function _assert(arg) {
+    if (!arg) debugger;
 }

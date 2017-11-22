@@ -174,7 +174,7 @@ function cps_prepare_diagram(diagram) {
     diagram.prepare(); // non-CPS
 
     /*
-    var num_slices = Math.min(1, diagram.cells.length);
+    var num_slices = Math.min(1, diagram.data.length);
     for (var i=0; i<num_slices; i++) {
 
         tasks.push({

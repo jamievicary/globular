@@ -11,7 +11,7 @@ function Generator(data) {
     if (data == undefined) return;
     if (data.source === undefined) debugger;
     var n = (data.source == null ? 0 : data.source.getDimension() + 1);
-    if (data.id == undefined) data.id = globular_freshName(n);
+    if (data.id == undefined) data.id = gProject.freshName(n);
     this.source = (data.source == null ? null : data.source.copy());
     this.target = (data.target == null ? null : data.target.copy());
     if (this.source != null) this.source.clearAllSliceCaches();
@@ -41,8 +41,13 @@ Generator.prototype.prepare = function() {
 }
 
 Generator.prototype.getDiagram = function() {
-    var key = Array(this.source == null ? 0 : this.source.getDimension()).fill(0);
-    return new Diagram(this.source == null ? null : this.source.copy(), [new NCell({id: this.id, key: key.slice(), box: this.getBoundingBox()})]);
+    if (!this.source) return new Diagram(null, 0, this.id); // dimension 0
+    let source = this.source.copy();
+    let type_dimension = source.type_dimension + 1;
+    let forward_limit = new ForwardLimit([new LimitComponent(this.id)]);
+    let backward_limit = new BackwardLimit([new LimitComponent(this.id, this.target.data)]);
+    let content = new Content(forward_limit, backward_limit);
+    return new Diagram(source, type_dimension, [content]);
 }
 
 Generator.prototype.getSource = function() {
@@ -72,10 +77,10 @@ Generator.prototype.swapSourceTarget = function() {
 
 Generator.prototype.getTargetColour = function() {
     var t = this.target;
-    while (t.cells.length == 0) {
+    while (t.data.length == 0) {
         t = t.getTargetBoundary();
     }
-    var id = t.cells[0].id;
+    var id = t.data[0].id;
     var colour = gProject.getColour(id);
     return colour;
 }

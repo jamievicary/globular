@@ -74,8 +74,8 @@ Diagram.prototype.interchangerAllowed.IntLP = function(type, key) {
     else if (type == 'IntI0-R-PI0') { if (cell.id != 'IntI0-LI0') return false; }
 
     // Check the cell being pulled through has the correct type (interchanger or inverse interchanger)
-    if (type.tail('Int-L-P', 'Int-L-PI0', 'Int-R-P', 'Int-R-PI0')) return slice.cells[cell.key.last()].id == 'Int';
-    return slice.cells[cell.key.last()].id == 'IntI0';
+    if (type.tail('Int-L-P', 'Int-L-PI0', 'Int-R-P', 'Int-R-PI0')) return slice.data[cell.key.last()].id == 'Int';
+    return slice.data[cell.key.last()].id == 'IntI0';
 };
 
 

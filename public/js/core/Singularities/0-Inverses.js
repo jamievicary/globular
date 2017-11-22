@@ -219,12 +219,12 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
 
     if(type.tail('Int-E')){
         var slice = this.getSlice(height);
-        if(key.penultimate() + 1 >= slice.cells.length){return false;}
+        if(key.penultimate() + 1 >= slice.data.length){return false;}
         return true;
     }
     else if(type.tail('IntI0-E')){
         var slice = this.getSlice(height);
-        if(key.penultimate() + 1 > slice.cells.length){return false;}
+        if(key.penultimate() + 1 > slice.data.length){return false;}
         if(key.penultimate() < 1){return false;}
         return true;
     }

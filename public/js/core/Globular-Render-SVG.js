@@ -22,11 +22,11 @@ function globular_render(container, diagram, subdiagram, suppress) {
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
     diagram = diagram.copy();
-    if (diagram.getDimension() - suppress == 0) {
+    if (diagram.geometric_dimension - suppress == 0) {
         return globular_render_0d(container, diagram, subdiagram);
-    } else if (diagram.getDimension() - suppress == 1) {
+    } else if (diagram.geometric_dimension - suppress == 1) {
         return globular_render_1d(container, diagram, subdiagram);
-    } else if (diagram.getDimension() - suppress >= 2) {
+    } else if (diagram.geometric_dimension - suppress >= 2) {
         var data = globular_render_2d(container, diagram, subdiagram);
         if (subdiagram != undefined) {
             globular_add_highlight(container, data, subdiagram.box, {
@@ -49,7 +49,7 @@ function prepare_SVG_container(container, diagram, min_x, max_x, min_y, max_y) {
     var y_center = (min_y + max_y) / 2;
     var w, h;
     /* special display mode for bio pictures
-    if (container.attr('id') == 'diagram-canvas' && diagram.getDimension() == 2 && diagram.source.cells.length == 0) {
+    if (container.attr('id') == 'diagram-canvas' && diagram.getDimension() == 2 && diagram.source.data.length == 0) {
         w = 15;
         h = 15;
         svg.setAttributeNS(null, "viewBox", (x_center - w / 2).toString() + " " + (-y_center - h / 2).toString() + " " + w + " " + h);
@@ -100,7 +100,7 @@ function globular_render_0d(container, diagram, subdiagram) {
 }
 
 function globular_render_1d(container, diagram, subdiagram) {
-    var length = Math.max(1, diagram.cells.length);
+    var length = Math.max(1, diagram.data.length);
     var d = prepare_SVG_container(container, diagram, 0, length, -0.5, 0.5);
     $(container)[0].bounds = {
         left: 0,
@@ -116,7 +116,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     };
 
     // Draw line segments except last
-    for (var i = 0; i < diagram.cells.length; i++) {
+    for (var i = 0; i < diagram.data.length; i++) {
         var start_x = (i == 0 ? 0 : i - 0.5);
         var finish_x = i + 0.5;
         var path_string = SVG_move_to({
@@ -128,7 +128,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         });
         d.g.appendChild(SVG_create_path({
             string: path_string,
-            stroke: diagram.getSlice(i).getLastColour(),
+            stroke: diagram.getSlice({height: i, regular: true}).getLastColour(),
             element_type: 'edge',
             element_index: i
         }));
@@ -136,13 +136,13 @@ function globular_render_1d(container, diagram, subdiagram) {
             start_x: start_x,
             finish_x: finish_x,
             y: 0,
-            id: diagram.getSlice(i).getLastId(),
+            id: diagram.getSlice({height: i, regular: true}).getLastId(),
             level: i
         });
     }
 
     // Draw last line segment
-    var start_x = length - 0.5 - (diagram.cells.length == 0 ? 0.5 : 0);
+    var start_x = length - 0.5 - (diagram.data.length == 0 ? 0.5 : 0);
     var finish_x = length;
     //var id = diagram.getTargetBoundary().cells[0].id;
     var id_data = diagram.getTargetBoundary().getLastId();
@@ -156,24 +156,28 @@ function globular_render_1d(container, diagram, subdiagram) {
         }),
         stroke: gProject.getColour(id_data),
         element_type: 'edge',
-        element_index: diagram.cells.length
+        element_index: diagram.data.length
     }));
     data.edges.push({
         start_x: start_x,
         finish_x: finish_x,
         y: 0,
         id: id_data.id,
-        level: diagram.cells.length
+        level: diagram.data.length
     });
 
     // Draw vertices
     var dimension = diagram.getDimension();
-    for (var i = 0; i < diagram.cells.length; i++) {
-        var id = diagram.cells[i].id;
+    for (var i = 0; i < diagram.data.length; i++) {
+        //var id = diagram.data[i].getLastId();
+        var id = diagram.getSlice({height: i, regular: false}).getLastId();
+        /*
         var colour = gProject.getColour({
             id: id,
             dimension: dimension
         });
+        */
+        var colour = gProject.getColour(id);
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         var x = i + 0.5;
         var y = 0;
@@ -231,11 +235,11 @@ function globular_render_1d(container, diagram, subdiagram) {
 function globular_render_2d(container, diagram, subdiagram) {
 
     // Deal with an empty 2-diagram specially
-    if ((diagram.cells.length == 0) && (diagram.source.cells.length == 0)) {
+    if ((diagram.data.length == 0) && (diagram.source.data.length == 0)) {
         var d = prepare_SVG_container(container, diagram, -0.5, 0.5, -0.5, 0.5);
         d.g.appendChild(SVG_create_path({
             string: "M -0.5 -0.5 L 0.5 -0.5 L 0.5 0.5 L -0.5  0.5",
-            //fill: gProject.getColour(diagram.source.source.cells[0].id)
+            //fill: gProject.getColour(diagram.source.source.data[0].id)
             fill: diagram.getLastColour(),
             element_type: 'region'
         }));
@@ -257,13 +261,13 @@ function globular_render_2d(container, diagram, subdiagram) {
     var data = SVG_prepare(diagram);
 
     // Prepare the SVG group in which to render the diagram    
-    var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.cells.length));
+    var d = prepare_SVG_container(container, diagram, -0.5, data.max_x + 0.5, 0, Math.max(1, diagram.data.length));
     var defs = $('<defs>');
     $(d.svg).prepend(defs);
 
     // Draw overall background rectangle
     //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    //var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.cells.length == 0);
+    //var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.data.length == 0);
     var big_background = false;
     var x_center = (data.max_x + 0) / 2;
     var y_center = Math.max(1, data.vertices.length) / 2;
@@ -290,7 +294,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     var color = diagram.source.source.getLastColour();
     d.g.appendChild(SVG_create_path({
         string: path_string,
-        //        fill: gProject.getColour(diagram.source.source.cells[0].id)
+        //        fill: gProject.getColour(diagram.source.source.data[0].id)
         fill: color,
         element_type: 'region'
     }));
@@ -362,7 +366,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttributeNS(null, "d", instructions.path_string);
-        //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.cells[0].id));
+        //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.data[0].id));
         var colour;
         if (edge.type == null) {
             colour = '#ffffff';
@@ -403,7 +407,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 
         // Detect if we start or finish on a boundary
         var start_boundary = (edge.start_height == 0);
-        var finish_boundary = (edge.finish_height == Math.max(1, diagram.cells.length));
+        var finish_boundary = (edge.finish_height == Math.max(1, diagram.data.length));
 
         var path_s = "";
         var drawn_something = false;
@@ -710,7 +714,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                     y: 0
                 }) + SVG_line_to({
                     x: x,
-                    y: Math.max(1, diagram.cells.length)
+                    y: Math.max(1, diagram.data.length)
                 }),
                 stroke_width: 0.25,
                 stroke: highlight_colour,
@@ -719,9 +723,9 @@ function globular_render_2d(container, diagram, subdiagram) {
         }
         //else if (subdiagram.boundaryPath.length == 1) {
         else if (subdiagram.visibleBoundaryDepth == 1) {
-            var y = (subdiagram.boundaryType == 's' ? 0.125 - delta : Math.max(1, diagram.cells.length) - 0.125 + delta);
+            var y = (subdiagram.boundaryType == 's' ? 0.125 - delta : Math.max(1, diagram.data.length) - 0.125 + delta);
             var x1, x2;
-            var edges = data.edges_at_level[subdiagram.boundaryType == 's' ? 0 : diagram.cells.length];
+            var edges = data.edges_at_level[subdiagram.boundaryType == 's' ? 0 : diagram.data.length];
 
             // Get the first and last edge of the inclusion
             //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
@@ -1403,8 +1407,8 @@ function SVG_prepare(diagram, subdiagram) {
 
     // Start with the edges that exist at the source boundary
     var current_edges = [];
-    for (var level = 0; level < diagram.source.cells.length; level++) {
-        var attachment = diagram.source.cells[level];
+    for (var level = 0; level < diagram.source.data.length; level++) {
+        var attachment = diagram.source.data[level];
         var new_edge = {
             type: attachment.id,
             attachment_height: level,
@@ -1418,7 +1422,7 @@ function SVG_prepare(diagram, subdiagram) {
         };
 
         // Every source edge except the last has a succeeding edge
-        if (level < diagram.source.cells.length - 1) {
+        if (level < diagram.source.data.length - 1) {
             new_edge.succeeding.push({
                 index: level + 1,
                 offset: 1
@@ -1434,13 +1438,13 @@ function SVG_prepare(diagram, subdiagram) {
 
     // Get the subdiagrams at each slice
     var slices = [];
-    for (var level = 0; level <= diagram.cells.length; level++) {
+    for (var level = 0; level <= diagram.data.length; level++) {
         slices.push(diagram.getSlice(level));
     }
 
-    for (var level = 0; level < diagram.cells.length; level++) {
+    for (var level = 0; level < diagram.data.length; level++) {
 
-        var attachment = diagram.cells[level];
+        var attachment = diagram.data[level];
         var interchanger = (attachment.id.substring(0, 3) == 'Int');
         var source_cells, target_cells;
         if (attachment.id.is_interchanger()) {
@@ -1457,8 +1461,8 @@ function SVG_prepare(diagram, subdiagram) {
             */
         } else {
             var r = gProject.signature.getGenerator(attachment.id);
-            source_cells = r.source.cells;
-            target_cells = r.target.cells;
+            source_cells = r.source.data;
+            target_cells = r.target.data;
         }
 
         // Add to the list of vertices
@@ -1557,7 +1561,7 @@ function SVG_prepare(diagram, subdiagram) {
     for (var i = 0; i < edges.length; i++) {
         var edge = edges[i];
         if (edge.finish_height == null) {
-            edge.finish_height = Math.max(1, diagram.cells.length);
+            edge.finish_height = Math.max(1, diagram.data.length);
         }
         edge.length = edge.finish_height - edge.start_height;
         edge.fill_right = false;
@@ -1712,7 +1716,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
             } else {
                 bottom = b.top - 0.25;
                 top = b.top;
-                edges = data.edges_at_level[diagram.cells.length];
+                edges = data.edges_at_level[diagram.data.length];
             }
             if (box.min.last() == box.max.last()) {
                 if (box.min.last() == 0) {

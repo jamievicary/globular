@@ -154,7 +154,7 @@ class DisplaySVG {
     }
 
     updateControls() {
-        
+
     }
 
     updatePanzoom(preserveView) {
@@ -203,7 +203,7 @@ class DisplaySVG {
 
     getLogicalLocation0D({ type }) {
         if (type == "vertex") {
-            return this.createLocation([0], [], type);
+            return this.createLocation([], [], type);
         }
 
         return null;
@@ -212,21 +212,21 @@ class DisplaySVG {
     getLogicalLocation1D({ type, index }, coords) {
         if (type == 'vertex') {
             let vertex = this.data.vertices[index];
-            return this.createLocation([vertex.level], [], type);
+            return this.createLocation([{ height: vertex.level, regular: false }], [], type);
         }
-        
+
         if (type == "edge") {
             let edge = this.data.edges[index];
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.left, target: fringe.right }];
-            return this.createLocation([edge.level, 0], boundaryFlags, type);
+            return this.createLocation([{ height: edge.level, regular: true }], boundaryFlags, type);
         }
 
         return null;
     }
 
     getLogicalLocation2D({ type, index, index2 }, coords) {
-            if (type == 'vertex') {
+        if (type == 'vertex') {
             let vertex = this.data.vertices[index];
             return this.createLocation([vertex.level], [], type);
         }
@@ -236,7 +236,7 @@ class DisplaySVG {
 
         if (type == 'edge') {
             let edge = this.data.edges[index];
-                
+
             // Adjust height to correct for phenomenon that edges can 'protrude'
             // above and below their true vertical bounds.
             if (edge.finish_vertex != null) height = Math.min(height, edge.finish_vertex);
@@ -259,7 +259,7 @@ class DisplaySVG {
             // There's insufficient data in the region SVG object to determine
             // the logical position. So we should do something a bit clever,
             // possibly involving using the equation for a cubic to see if we're
-            // to the left or right of a region.
+            // to the left or right of an edge.
             // 
             // For now, what we have is good enough.
 
@@ -271,7 +271,7 @@ class DisplaySVG {
             // When the diagram is projected, we view it sideways with the topmost slice
             // on top; the lower slices are not visible in the diagram. Hence we always
             // point at the topmost slice.
-            let depth = Math.max(0, this.visibleDiagram.getSlice([edgesToLeft, height]).cells.length - 1);
+            let depth = Math.max(0, this.visibleDiagram.getSlice([edgesToLeft, height]).data.length - 1);
 
             // Traverse into deeper slices until there is a cell present the in
             // the diagram, if neccessary.
@@ -318,10 +318,7 @@ class DisplaySVG {
     createLocation(coordinates, boundaryFlags, type) {
         let padded = this.manager.getSlices().concat(coordinates);
         boundaryFlags = this.manager.getBoundaryFlags().concat(boundaryFlags);
-        let position = this.diagram.getBoundaryCoordinates({
-            allow_boundary: boundaryFlags,
-            coordinates: padded
-        });
+        let position = this.diagram.getBoundaryCoordinates(padded, boundaryFlags);
         let dimension = this.diagram.getDimension() - coordinates.length + 1;
         return {
             origin: type,
@@ -351,7 +348,7 @@ class DisplaySVG {
         let boundary = this.diagram.getBoundary(data.logical.boundary);
         let cell = boundary.getCell(data.logical.coordinates.reverse());
         let boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
-        let description = cell.id.getFriendlyName() + ' @ ' + boundary_string + JSON.stringify(data.logical.coordinates);
+        let description = Globular.getFriendlyName(cell) + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
         let pos = $('#diagram-canvas').position();
         this.manager.showPopup(description, {
             left: 5 + pos.left + data.pixels.x,
@@ -428,15 +425,14 @@ class DisplaySVG {
         }
 
         // If we're being asked to render an invalid slice, give up
-        if (i > slice.cells.length) return;
-        let n = slice.cells.length.toString().length;
+        if (i > slice.data.length) return;
+        let n = slice.data.length.toString().length;
 
         this.render();
         this.highlight_slice(slices.length - 1);
         let temp_this = this;
         download_SVG_as_PNG(this.svgElement, this.getExportRegion(), prefix + " " + i.toString().padToLength(n) + ".png", undefined,
-            //(function(j){temp_this.downloadSlice(prefix, j + 1);})(i)
-            (function(i){this.downloadSlice(prefix, i+1)}).bind(this, i)
+            (function (i) { this.downloadSlice(prefix, i + 1) }).bind(this, i)
         );
     }
 

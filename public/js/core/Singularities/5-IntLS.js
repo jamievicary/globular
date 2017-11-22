@@ -480,13 +480,13 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
     var space_below = (key.last() >= g1_source);
     var space_left = (box.min.last() >= box.max.penultimate() - box.min.penultimate());
     //var space_left = (cell.box.min.last() > 0);
-    var space_right = (cell.box.min.last() + g1_source < slice.cells.length);
-    //var space_right = (cell.box.min.last() + slice.target_size(key.penultimate()) < slice.cells.length);
+    var space_right = (cell.box.min.last() + g1_source < slice.data.length);
+    //var space_right = (cell.box.min.last() + slice.target_size(key.penultimate()) < slice.data.length);
 
 
     var space_behind = (box.min.penultimate() > 0);
     var subslice = slice.getSlice(box.min.last());
-    var space_infront = (box.max.penultimate() < subslice.cells.length);
+    var space_infront = (box.max.penultimate() < subslice.data.length);
 
     // For the target we need to modify the key of alpha
     if (type === 'Int-L-S') {
@@ -582,7 +582,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
                     return false;
                 }
                 for (var i = 0; i < l; i++) {
-                    var aaa = temp_slice.cells[cell.key.last() + offset - i];
+                    var aaa = temp_slice.data[cell.key.last() + offset - i];
                     if (aaa.id != subsubtype) {
                         return false;
                     }
@@ -603,11 +603,11 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
 
             } else {
                 var offset = n - (this.target_size(key.last()) - this.source_size(key.last()));
-                if (cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {
+                if (cell.key.last() + offset + l - 1 >= temp_slice.data.length) {
                     return false;
                 }
                 for (var i = 0; i < l; i++) {
-                    var aaa = temp_slice.cells[cell.key.last() + offset + i];
+                    var aaa = temp_slice.data[cell.key.last() + offset + i];
                     if (aaa.id != subsubtype) {
                         return false;
                     }
@@ -650,11 +650,11 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
             var temp_slice = this.getSlice(key.last());
             if (subtype.tail('I0')) {
                 var offset = n;
-                if (cell.key.last() + offset + l - 1 >= temp_slice.cells.length) {
+                if (cell.key.last() + offset + l - 1 >= temp_slice.data.length) {
                     return false;
                 }
                 for (var i = 0; i < l; i++) {
-                    var aaa = temp_slice.cells[cell.key.last() + offset + i];
+                    var aaa = temp_slice.data[cell.key.last() + offset + i];
                     if (aaa.id != subsubtype) {
                         return false;
                     }
@@ -679,7 +679,7 @@ Diagram.prototype.interchangerAllowed.IntLS = function(type, key) {
                     return false;
                 }
                 for (var i = 0; i < l; i++) {
-                    var aaa = temp_slice.cells[cell.key.last() + offset - i];
+                    var aaa = temp_slice.data[cell.key.last() + offset - i];
                     if (aaa.id != subsubtype) {
                         return false;
                     }
