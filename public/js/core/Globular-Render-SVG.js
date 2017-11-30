@@ -30,10 +30,10 @@ function globular_render(container, diagram, subdiagram, suppress) {
         var data = globular_render_2d(container, diagram, subdiagram);
         if (subdiagram != undefined) {
             globular_add_highlight(container, data, subdiagram.box, {
-//                boundary: {
-                    depth: subdiagram.visibleBoundaryDepth,
-                    type: subdiagram.boundaryType
-//                }
+                //                boundary: {
+                depth: subdiagram.visibleBoundaryDepth,
+                type: subdiagram.boundaryType
+                //                }
             }, diagram);
         }
         return data;
@@ -128,7 +128,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         });
         d.g.appendChild(SVG_create_path({
             string: path_string,
-            stroke: diagram.getSlice({height: i, regular: true}).getLastColour(),
+            stroke: diagram.getSlice({ height: i, regular: true }).getLastColour(),
             element_type: 'edge',
             element_index: i
         }));
@@ -136,7 +136,7 @@ function globular_render_1d(container, diagram, subdiagram) {
             start_x: start_x,
             finish_x: finish_x,
             y: 0,
-            id: diagram.getSlice({height: i, regular: true}).getLastId(),
+            id: diagram.getSlice({ height: i, regular: true }).getLastId(),
             level: i
         });
     }
@@ -170,7 +170,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     var dimension = diagram.getDimension();
     for (var i = 0; i < diagram.data.length; i++) {
         //var id = diagram.data[i].getLastId();
-        var id = diagram.getSlice({height: i, regular: false}).getLastId();
+        var id = diagram.getSlice({ height: i, regular: false }).getLastId();
         /*
         var colour = gProject.getColour({
             id: id,
@@ -308,6 +308,7 @@ function globular_render_2d(container, diagram, subdiagram) {
 
     // Check to see if there's a level with no edges
     var empty_level = false;
+    data.edges_at_level = data.regular_levels;
     for (var i = 0; i < data.edges_at_level.length; i++) {
         if (data.edges_at_level[i].length == 0) {
             empty_level = true;
@@ -322,10 +323,10 @@ function globular_render_2d(container, diagram, subdiagram) {
         var e1_bot, e2_bot, e1_top, e2_top;
         var p = (vertex.type == 'Int' ? 1 : 0);
         var q = 1 - p;
-        e1_bot = data.edges[vertex.source_edges[p]];
-        e2_bot = data.edges[vertex.source_edges[q]];
-        e1_top = data.edges[vertex.target_edges[q]];
-        e2_top = data.edges[vertex.target_edges[p]];
+        e1_bot = vertex.source_edges[p];
+        e2_bot = vertex.source_edges[q];
+        e1_top = vertex.target_edges[q];
+        e2_top = vertex.target_edges[p];
         vertex.intersection = bezier_decompose(Math.min(e1_bot.x, e2_bot.x), Math.max(e1_bot.x, e2_bot.x), Math.min(e1_top.x, e2_top.x), Math.max(e1_top.x, e2_top.x), i);
         vertex.y = vertex.intersection.centre[1];
     }
@@ -338,7 +339,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             // Only draw this right-hand region first if there are no empty levels
             if (empty_level) continue;
             var source_edges = data.edges_at_level[0];
-            edge = data.edges[source_edges[source_edges.length - 1]];
+            edge = source_edges[source_edges.length - 1];
         } else {
             edge = data.edges[i];
         }
@@ -378,9 +379,9 @@ function globular_render_2d(container, diagram, subdiagram) {
             } else {
                 sublevel = data.edges_at_level[level].indexOf(i);
             }
-            var sd = diagram.getSlice(level).getSlice(sublevel + 1);
+            var sd = diagram.getSlice({height: level, regular:true})
+                .getSlice({height: sublevel + 1, regular:true});
 
-            //var sd = diagram.getSlice(Math.ceil(edge.start_height)).getSlice(edge.attachment_height + 1);
             colour = sd.getLastColour();
             //var generator = gProject.signature.getGenerator(edge.type);
             //colour = generator.getTargetColour();
@@ -421,7 +422,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             });
         } else {
             // We start at a vertex
-            var vertex = data.vertices[edge.start_vertex];
+            var vertex = edge.start_vertex;
             if (vertex.type.is_basic_interchanger()) {
                 path_s = SVG_move_to({
                     x: edge.x,
@@ -467,7 +468,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             drawn_something = true;
             //            }
         } else {
-            var vertex = data.vertices[edge.finish_vertex];
+            var vertex = edge.finish_vertex;
             if (!vertex.type.is_basic_interchanger()) {
                 //path_s += SVG_line_to(vertex.x, vertex.height + 0.5);
                 path_s += SVG_bezier_to({
@@ -485,15 +486,13 @@ function globular_render_2d(container, diagram, subdiagram) {
         // Add the path to the SVG object
         if (drawn_something) {
             path.setAttributeNS(null, "d", path_s);
-            path.setAttributeNS(null, "stroke", gProject.getColour({
-                id: edge.type,
-                dimension: diagram.getDimension() - 1
-            }));
+            path.setAttributeNS(null, "stroke", gProject.getColour(edge.type));
+            //{ id: edge.type, dimension: diagram.getDimension() - 1 }));
             path.setAttributeNS(null, "stroke-width", line_width);
             path.setAttributeNS(null, "fill", "none");
             path.setAttributeNS(null, "element_type", 'edge');
             path.setAttributeNS(null, 'element_index', i)
-                //path.element_index = i;
+            //path.element_index = i;
             d.g.appendChild(path);
         }
     }
@@ -514,10 +513,10 @@ function globular_render_2d(container, diagram, subdiagram) {
             var e1_bot, e2_bot, e1_top, e2_top;
             var p = (vertex.type == 'Int' ? 1 : 0);
             var q = 1 - p;
-            e1_bot = data.edges[vertex.source_edges[p]];
-            e2_bot = data.edges[vertex.source_edges[q]];
-            e1_top = data.edges[vertex.target_edges[q]];
-            e2_top = data.edges[vertex.target_edges[p]];
+            e1_bot = vertex.source_edges[p];
+            e2_bot = vertex.source_edges[q];
+            e1_top = vertex.target_edges[q];
+            e2_top = vertex.target_edges[p];
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
 
@@ -659,7 +658,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }
         } //else {
 
-        vertex.fill = gProject.getColour(vertex);
+        vertex.fill = gProject.getColour(vertex.type);
         vertex.radius = circle_radius;
         vertex.element_type = 'vertex';
         vertex.element_index = i;
@@ -667,180 +666,6 @@ function globular_render_2d(container, diagram, subdiagram) {
         d.g.appendChild(SVG_create_circle(vertex));
         //}
     }
-
-    /*
-    // Prepare active regions
-    var active = [];
-    for (var i = 0; i < data.vertices.length; i++) {
-        var vertex = data.vertices[i];
-        // Add vertex active region
-        active.push({
-            x: vertex.x,
-            y: vertex.y,
-            logical: [i],
-            direction: 'vertical'
-        });
-    }
-    for (var i = 0; i < data.edges.length; i++) {
-        var edge = data.edges[i];
-
-        // Add line active region
-        for (var height = Math.ceil(edge.start_height); height <= Math.floor(edge.finish_height); height++) {
-
-            // Correction for case that diagram is an identity
-            var edge_height = Math.min(height, data.edges_at_level.length - 1);
-
-            active.push({
-                x: edge.x,
-                y: height,
-                logical: [edge_height, data.edges_at_level[edge_height].indexOf(i)],
-                direction: 'horizontal'
-            });
-        }
-    }
-    */
-
-    /*
-    // Render the highlight
-    if (subdiagram != undefined) {
-        var delta = 0.0005;
-        //if (subdiagram.boundaryPath.length == 2) {
-        if (subdiagram.visibleBoundaryDepth == 2) {
-            // Highlight left or right side boundary
-            var x = (subdiagram.boundaryType == 's' ? 0.125 - 0.5 - delta : data.max_x + 0.5 - 0.125 + delta);
-            d.g.appendChild(SVG_create_path({
-                string: SVG_move_to({
-                    x: x,
-                    y: 0
-                }) + SVG_line_to({
-                    x: x,
-                    y: Math.max(1, diagram.data.length)
-                }),
-                stroke_width: 0.25,
-                stroke: highlight_colour,
-                stroke_opacity: highlight_opacity
-            }));
-        }
-        //else if (subdiagram.boundaryPath.length == 1) {
-        else if (subdiagram.visibleBoundaryDepth == 1) {
-            var y = (subdiagram.boundaryType == 's' ? 0.125 - delta : Math.max(1, diagram.data.length) - 0.125 + delta);
-            var x1, x2;
-            var edges = data.edges_at_level[subdiagram.boundaryType == 's' ? 0 : diagram.data.length];
-
-            // Get the first and last edge of the inclusion
-            //var first_edge = data.edges[data.edges_at_level[0][subdiagram.inclusion[0]]];
-            var first_edge_index = subdiagram.inclusion.last();
-            var last_edge_index = subdiagram.inclusion.last() + subdiagram.size.magnitude();
-            var x1, x2;
-            if (first_edge_index == last_edge_index) {
-                if (first_edge_index == 0) {
-                    x1 = -0.4;
-                } else {
-                    x1 = data.edges[edges[first_edge_index - 1]].x + 0.1;
-                }
-                if (first_edge_index == edges.length) {
-                    x2 = data.max_x + 0.4;
-                } else {
-                    x2 = data.edges[edges[first_edge_index]].x - 0.1;
-                }
-            } else {
-                var x1 = data.edges[edges[first_edge_index]].x - 0.25;
-                var x2 = data.edges[edges[last_edge_index - 1]].x + 0.25;
-            }
-            d.g.appendChild(SVG_create_path({
-                string: SVG_move_to({
-                    x: x1,
-                    y: y
-                }) + SVG_line_to({
-                    x: x2,
-                    y: y
-                }),
-                stroke_width: 0.25,
-                stroke: highlight_colour,
-                stroke_opacity: highlight_opacity
-            }));
-        } else if (subdiagram.visibleBoundaryDepth == 0) {
-            // Highlight in main diagram
-            // Design decision: pad out by 0.25 uniformly.
-
-            // Find min and max y-values by looking at subdiagram specification
-            var inc_y = subdiagram.inclusion[1];
-            var min_y, max_y;
-            if (subdiagram.size.length == 1) {
-                // The subdiagram has height zero, so min and max y-values fall
-                // between vertices
-                min_y = inc_y + 0.1;
-                max_y = inc_y - 0.1;
-            } else {
-                // Min and max y-values fall on vertices
-                min_y = inc_y + 0.5;
-                //max_y = inc_y + subdiagram.size.length - 1 + 0.5;
-                max_y = min_y + subdiagram.size.length - 2;
-            }
-
-            // Find min and max x-values by looking at edges and vertices of diagram
-            var inc_x = subdiagram.inclusion.end(1);
-            var min_x = Number.MAX_VALUE;
-            var max_x = -Number.MAX_VALUE;
-            for (var height = inc_y; height < inc_y + subdiagram.size.length; height++) {
-                var size = subdiagram.size[height - inc_y];
-                var edges = data.edges_at_level[height];
-                for (var i = 0; i < size; i++) {
-                    var edge = data.edges[edges[inc_x + i]];
-                    min_x = Math.min(min_x, edge.x);
-                    max_x = Math.max(max_x, edge.x);
-                }
-            }
-            for (var height = inc_y; height < inc_y + subdiagram.size.length - 1; height++) {
-                min_x = Math.min(min_x, data.vertices[height].x);
-                max_x = Math.max(max_x, data.vertices[height].x);
-            }
-            if (min_x == Number.MAX_VALUE) {
-                // The subdiagram is an identity on an identity, so handle this case specially
-                if (inc_x == 0) {
-                    min_x = -0.5;
-                } else {
-                    min_x = data.edges[data.edges_at_level[inc_y][inc_x - 1]].x + 0.5;
-                }
-                if (inc_x == data.edges_at_level[inc_y].length) {
-                    // We're at the right-hand edge
-                    max_x = data.max_x + 0.5;
-                } else {
-                    max_x = data.edges[data.edges_at_level[inc_y][inc_x]].x - 0.5;
-                }
-            }
-
-            // Pad values appropriately to give a little buffer to the highlighted area
-            min_x -= 0.45;
-            max_x += 0.45;
-            min_y -= 0.5;
-            max_y += 0.5;
-            // Clip the highlight box to within the diagram bounds
-            min_y = Math.max(min_y, 0);
-            max_y = Math.min(max_y, Math.max(1, data.vertices.length));
-            min_x = Math.max(min_x, -0.5);
-            max_x = Math.min(max_x, data.max_x + 0.5);
-            var path_string = SVG_move_to({
-                x: min_x,
-                y: min_y
-            }) + SVG_line_to({
-                x: min_x,
-                y: max_y
-            }) + SVG_line_to({
-                x: max_x,
-                y: max_y
-            }) + SVG_line_to({
-                x: max_x,
-                y: min_y
-            });
-            d.g.appendChild(SVG_create_path({
-                string: path_string,
-                fill: highlight_colour,
-                fill_opacity: highlight_opacity
-            }));
-        }
-    }
-    */
 
     // Add SVG object to container. We have to do it in this weird way because
     // otherwise the masks aren't recognized in Chrome v46.
@@ -900,8 +725,8 @@ function process_instructions(data, i) {
         }
         i.path_string += SVG_draw_edge_bottom_to_top(data, i.edge);
         // ... update the instructions.
-        var vertex_index = i.edge.finish_vertex;
-        if (vertex_index == null) {
+        var vertex = i.edge.finish_vertex;
+        if (vertex == null) {
             // We've reached the top of the diagram, so draw a line clockwise
             // until we get to the next edge
             var next_edge = i.edge.next_clockwise_at_target;
@@ -929,14 +754,14 @@ function process_instructions(data, i) {
                         x: -0.5,
                         y: Math.max(1, data.vertices.length)
                     });
-                    var target_edges = data.edges_at_level[data.edges_at_level.length - 1];
-                    i.edge = data.edges[target_edges[0]]; // Will necessarily exist
+                    var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
+                    i.edge = target_edges[0]; // Will necessarily exist
                     i.path_string += SVG_line_to(top_of_edge(data, i.edge));
                     i.draw_up = false;
                     i.turning += 3; // turn right thrice
                     return;
                 }
-                i.edge = data.edges[source_edges[source_edges.length - 1]];
+                i.edge = source_edges.last();//[source_edges.length - 1];
                 i.path_string += SVG_line_to(bottom_of_edge(data, i.edge));
                 i.draw_up = true;
                 i.turning += 2; // turn right twice
@@ -950,12 +775,11 @@ function process_instructions(data, i) {
             return;
         }
         // We've got to a vertex, as a source edge.
-        var vertex = data.vertices[vertex_index];
         for (var j = 0; j < vertex.source_edges.length; j++) {
-            if (data.edges[vertex.source_edges[j]] == i.edge) {
+            if (vertex.source_edges[j] == i.edge) {
                 if (j < vertex.source_edges.length - 1) {
                     // Come down the next source edge
-                    i.edge = data.edges[vertex.source_edges[j + 1]];
+                    i.edge = vertex.source_edges[j + 1];
                     i.draw_up = false;
                     i.turning += 1; // turn right once
                     return;
@@ -964,13 +788,13 @@ function process_instructions(data, i) {
                 if (vertex.target_edges.length == 0) {
                     // No target edges! So come back down the first source edge.
                     // Doesn't matter if this is the same one we came up.
-                    i.edge = data.edges[vertex.source_edges[0]];
+                    i.edge = vertex.source_edges[0];
                     i.draw_up = false;
                     i.turning -= 1; // turn left once
                     return;
                 }
                 // Continue up the last target edge
-                i.edge = data.edges[vertex.target_edges[vertex.target_edges.length - 1]];
+                i.edge = vertex.target_edges.last();//[vertex.target_edges.length - 1];
                 i.draw_up = true;
                 i.turning += 0; // not turning
                 return;
@@ -985,8 +809,8 @@ function process_instructions(data, i) {
     }
 
     i.path_string += SVG_draw_edge_top_to_bottom(data, i.edge);
-    var vertex_index = i.edge.start_vertex;
-    if (vertex_index == null) {
+    var vertex = i.edge.start_vertex;
+    if (vertex == null) {
         // We've reached the bottom of the diagram, so draw a line clockwise
         // until we get to the next edge
         var next_edge = i.edge.next_clockwise_at_source;
@@ -1004,7 +828,7 @@ function process_instructions(data, i) {
                 x: -0.5,
                 y: Math.max(1, data.vertices.length)
             });
-            var target_edges = data.edges_at_level[data.edges_at_level.length - 1];
+            var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
             if (target_edges.length == 0) {
                 // No edges at the top of the diagram, so come around
                 i.path_string += SVG_line_to({
@@ -1023,7 +847,7 @@ function process_instructions(data, i) {
                 return;
             }
             // There are edges at the top of the diagram, so choose the first one
-            i.edge = data.edges[target_edges[0]];
+            i.edge = target_edges[0];
             i.path_string += SVG_line_to(top_of_edge(data, i.edge));
             i.draw_up = false;
             i.turning += 2;
@@ -1038,28 +862,27 @@ function process_instructions(data, i) {
     }
 
     // We've got to a vertex, as a target edge. Find which edge it is.
-    var vertex = data.vertices[vertex_index];
     for (var j = 0; j < vertex.target_edges.length; j++) {
-        if (data.edges[vertex.target_edges[j]] == i.edge) {
+        if (vertex.target_edges[j] == i.edge) {
             if (j == 0) {
                 // We've come down as the first target edge
                 if (vertex.source_edges.length == 0) {
                     // No source edges! So come back up the last target edge.
                     // Doesn't matter if this is the same one we came down.
-                    i.edge = data.edges[vertex.target_edges[vertex.target_edges.length - 1]];
+                    i.edge = vertex.target_edges.last();//[vertex.target_edges.length - 1];
                     i.draw_up = true;
                     i.turning -= 1;
                     return;
                 }
                 // Continue down the first source edge
-                i.edge = data.edges[vertex.source_edges[0]];
+                i.edge = vertex.source_edges[0];
                 i.draw_up = false;
                 i.turning += 0; // no turning
                 return;
             }
             // We haven't come down the first target edge, so continue
             // up the edge to the left
-            i.edge = data.edges[vertex.target_edges[j - 1]];
+            i.edge = vertex.target_edges[j - 1];
             i.draw_up = true;
             i.turning += 1;
             return;
@@ -1076,34 +899,33 @@ function SVG_line_to(p) {
 }
 
 function SVG_bezier_to(p) {
+    /*
     if (p.c1x === undefined) throw 0;
     if (p.c1y === undefined) throw 0;
     if (p.c2x === undefined) throw 0;
     if (p.c2y === undefined) throw 0;
     if (p.x === undefined) throw 0;
     if (p.y === undefined) throw 0;
+    */
+    _assert(p.c1x != null && p.c1y != null && p.c2x != null && p.c2y != null && p.x != null && p.y != null);
     return "C " + p.c1x + " " + p.c1y + ", " + p.c2x + " " + p.c2y + ", " + p.x + " " + p.y + " ";
 }
 
 function SVG_move_to(p) {
+    /*
     if (p.x === undefined) throw 0;
     if (p.y === undefined) throw 0;
+    */
+    _assert(p.x != null && p.y != null);
     return "M " + p.x + " " + p.y + " ";
 }
 
 // Return the point at the bottom of the edge
 function bottom_of_edge(data, edge) {
     if (edge.start_vertex == null) {
-        return {
-            x: edge.x,
-            y: 0
-        };
+        return { x: edge.x, y: 0 };
     }
-    return {
-        x: data.vertices[edge.start_vertex].x,
-        y: data.vertices[edge.start_vertex].y,
-        //y: edge.start_height
-    };
+    return { x: edge.start_vertex.x, y: edge.start_vertex.y };
 }
 
 // Return the point at the top of the edge
@@ -1114,11 +936,7 @@ function top_of_edge(data, edge) {
             y: Math.max(1, data.vertices.length)
         };
     }
-    return {
-        x: data.vertices[edge.finish_vertex].x,
-        y: data.vertices[edge.finish_vertex].y,
-        //y: edge.finish_height
-    };
+    return { x: edge.finish_vertex.x, y: edge.finish_vertex.y };
 }
 
 function SVG_draw_edge_bottom_to_top(data, edge) {
@@ -1132,7 +950,7 @@ function SVG_draw_edge_top_to_bottom(data, edge) {
     if (r === undefined) throw 0;
     return r;
 }
-
+/*
 function point_on_edge(data, edge_list, edge_index, height) {
     var diagram_height = Math.max(1, data.vertices.length);
     height = Math.max(height, 0);
@@ -1175,7 +993,9 @@ function point_on_edge(data, edge_list, edge_index, height) {
         y: height
     };
 }
+*/
 
+/*
 // Draw section of an edge. Assume that we have already moved to the start point.
 function SVG_draw_edge_section_at_slice(data, edge_list, edge_index, h_start, h_end) {
     var diagram_height = Math.max(1, data.vertices.length);
@@ -1207,6 +1027,7 @@ function SVG_draw_edge_section_at_slice(data, edge_list, edge_index, h_start, h_
     }
     return SVG_draw_edge_section(data, edge, h_start, h_end);
 }
+*/
 
 function SVG_draw_edge_section(data, edge, h_start, h_end) {
     var diagram_height = Math.max(1, data.vertices.length);
@@ -1229,7 +1050,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                 });
             } else {
                 // Coming up out of a vertex as a target edge
-                var vertex = data.vertices[edge.start_vertex];
+                var vertex = edge.start_vertex;
                 if (vertex.intersection == undefined) {
                     path += SVG_bezier_to({
                         c1x: edge.x,
@@ -1241,7 +1062,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                     });
                 } else {
                     var i = vertex.intersection;
-                    var left = (edge == data.edges[vertex.target_edges[0]]);
+                    var left = (edge == vertex.target_edges[0]);
                     path += SVG_bezier_to({
                         c1x: (left ? i.tl.P3[0] : i.tr.P3[0]),
                         c1y: (left ? i.tl.P3[1] : i.tr.P3[1]),
@@ -1271,7 +1092,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                 });
             } else {
                 // Coming up into a vertex as a source edge
-                var vertex = data.vertices[edge.finish_vertex];
+                var vertex = edge.finish_vertex;
                 if (vertex.intersection == undefined) {
                     path += SVG_bezier_to({
                         c1x: edge.x,
@@ -1283,7 +1104,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                     });
                 } else {
                     var i = vertex.intersection;
-                    var left = (edge == data.edges[vertex.source_edges[0]]);
+                    var left = (edge == vertex.source_edges[0]);
                     path += SVG_bezier_to({
                         c1x: (left ? i.bl.P2[0] : i.br.P2[0]),
                         c1y: (left ? i.bl.P2[1] : i.br.P2[1]),
@@ -1310,7 +1131,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                 });
             } else {
                 // Coming down out of a vertex as a source edge
-                var vertex = data.vertices[edge.finish_vertex];
+                var vertex = edge.finish_vertex;
                 if (vertex.intersection == undefined) {
                     path += SVG_bezier_to({
                         c1x: edge.x,
@@ -1322,7 +1143,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                     });
                 } else {
                     var i = vertex.intersection;
-                    var left = (edge == data.edges[vertex.source_edges[0]]);
+                    var left = (edge == vertex.source_edges[0]);
                     path += SVG_bezier_to({
                         c1x: (left ? i.bl.P3[0] : i.br.P3[0]),
                         c1y: (left ? i.bl.P3[1] : i.br.P3[1]),
@@ -1353,7 +1174,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                 });
             } else {
                 // Coming down into a vertex as a target edge
-                var vertex = data.vertices[edge.start_vertex];
+                var vertex = edge.start_vertex;
                 if (vertex.intersection == undefined) {
                     path += SVG_bezier_to({
                         c1x: edge.x,
@@ -1365,7 +1186,7 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                     });
                 } else {
                     var i = vertex.intersection;
-                    var left = (edge == data.edges[vertex.target_edges[0]]);
+                    var left = (edge == vertex.target_edges[0]);
                     path += SVG_bezier_to({
                         c1x: (left ? i.tl.P2[0] : i.tr.P2[0]),
                         c1y: (left ? i.tl.P2[1] : i.tr.P2[1]),
@@ -1385,177 +1206,190 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
 
 
 function SVG_prepare(diagram, subdiagram) {
-    /*
-        For each edge, calculate its start and finish height, and its
-        x-coordinate.
-        
-        For each vertex, calculate its list of edges.
-    */
+    /* For each edge, calculate its start and finish height, and its x-coordinate.
+       For each vertex, calculate its list of edges. */
 
-    var data = {
-        edges: [],
-        vertices: [],
-        edges_at_level: []
-    };
-
-    var edges = data.edges;
-    var vertices = data.vertices;
-    var edges_at_level = data.edges_at_level;
+    let edges = [];
+    let vertices = [];
+    let regular_levels = [];
+    let singular_levels = [];
+    let max_x = -Number.MAX_VALUE;
 
     // Can't layout a diagram of dimension less than 2
     if (diagram.getDimension() < 2) return;
 
     // Start with the edges that exist at the source boundary
-    var current_edges = [];
+    let current_regular_level = [];
     for (var level = 0; level < diagram.source.data.length; level++) {
         var attachment = diagram.source.data[level];
         var new_edge = {
-            type: attachment.id,
-            attachment_height: level,
+            structure: 'edge',
+            type: attachment.getLastId(),
             start_height: 0,
             finish_height: null,
-            succeeding: [],
             x: 0,
             start_vertex: null,
             finish_vertex: null,
-            //coordinates: [0, attachment.box.min[0]]
         };
 
         // Every source edge except the last has a succeeding edge
+        /*
         if (level < diagram.source.data.length - 1) {
             new_edge.succeeding.push({
                 index: level + 1,
                 offset: 1
             });
         }
+        */
 
         // Store data
         edges.push(new_edge);
-        current_edges.push(level);
-
+        current_regular_level.push(new_edge);
     }
-    edges_at_level.push(current_edges.slice());
+    regular_levels.push(current_regular_level.slice());
 
-    // Get the subdiagrams at each slice
-    var slices = [];
+    // Get the regular and singular slices
+    /*
+    var regular_slices = [];
+    var singular_slices = [];
     for (var level = 0; level <= diagram.data.length; level++) {
-        slices.push(diagram.getSlice(level));
+        regular_slices.push(diagram.getSlice({ height: level, regular: true }));
+        if (level == diagram.data.length) break;
+        singular_slices.push(diagram.getSlice({ height: level, regular: false }));
     }
+    */
 
     for (var level = 0; level < diagram.data.length; level++) {
 
-        var attachment = diagram.data[level];
-        var interchanger = (attachment.id.substring(0, 3) == 'Int');
-        var source_cells, target_cells;
-        if (attachment.id.is_interchanger()) {
-            var source_size = diagram.source_size(level);
-            var target_size = diagram.target_size(level);
-            var pos = attachment.box.min.last();
-            source_cells = slices[level].cells.slice(pos, pos + source_size);
-            target_cells = slices[level + 1].cells.slice(pos, pos + target_size);
+        let data = diagram.data[level];
+        let height_is_vertex = [];
+        let current_singular_level = current_regular_level.slice();
+
+        // Create the new vertices for this level
+        let forward_nontrivial_neighbourhood = data.forward_limit.analyzeSingularNeighbourhoods();
+        let backward_nontrivial_neighbourhood = data.backward_limit.analyzeSingularNeighbourhoods();
+        let forward_monotone = data.forward_limit.getMonotone();
+        let backward_monotone = data.backward_limit.getMonotone();
+        let s = diagram.getSlice({ height: level, regular: false });
+        let new_vertices = [];
+        for (let i = 0; i < s.data.length; i++) {
+            if (forward_nontrivial_neighbourhood[i] || backward_nontrivial_neighbourhood[i]) {
+                let structure = 'vertex';
+                let type = s.data[i].getLastId();
+                let x = 0;
+                let y = level + 0.5;
+                let forward_insert = Globular.findFirstLast(forward_monotone, i);
+                let backward_insert = Globular.findFirstLast(backward_monotone, i);
+                let singular_height = i;
+                let vertex = { structure, type, level, x, y, forward_insert, backward_insert, singular_height };
+                //current_singular_level.push(vertex);
+                vertices.push(vertex);
+                new_vertices.push(vertex);
+            }
+        }
+        //vertices_at_level[level] = current_vertices;
+
+        // Remove the edges that have been consumed, and create new edges as necessary
+        let offset = 0;
+        for (let i = new_vertices.length - 1; i >= 0; i--) {
+            let vertex = new_vertices[i];
+            vertex.source_edges = [];
+            vertex.target_edges = [];
+
+            // Set the source edges correctly for this vertex
+            for (let j = vertex.forward_insert.first; j < vertex.forward_insert.last; j++) {
+                var edge = regular_levels[level][j]
+                vertex.source_edges[j - vertex.forward_insert.first] = edge;
+                edge.finish_vertex = vertex;
+                edge.finish_height = vertex.y;
+            }
+
+            // Create the new edges that are created by this vertex
+            let next_slice = diagram.getSlice({ height: level + 1, regular: true });
+            let new_edges = [];
+            for (let j = vertex.backward_insert.first; j < vertex.backward_insert.last; j++) {
+                let index = j;
+                let structure = 'edge';
+                let type = next_slice.data[j].getLastId();
+                let start_height = vertex.y;
+                let finish_height = null;
+                //let succeeding = []; // NEED TO POPULATE!!!
+                let x = 0;
+                let start_vertex = vertex;
+                let finish_vertex = null;
+                var new_edge = { structure, type, start_height, finish_height, x, start_vertex, finish_vertex };
+                edges.push(new_edge);
+                new_edges.push(new_edge);
+                vertex.target_edges[j - vertex.backward_insert.first] = new_edge;
+            }
+
+            // Set succession data
             /*
-            var x = slices[level].cells[attachment.box.min.last()];
-            var y = slices[level].cells[attachment.box.min.last() + 1];
-            source_cells = [x, y];
-            target_cells = [y, x];
+            for (let j = 0; j < vertex.target_edges.length - 1; j++) {
+                vertex.target_edges[j].succeeding.push(vertex.target_edges[j + 1]);
+            }
             */
-        } else {
-            var r = gProject.signature.getGenerator(attachment.id);
-            source_cells = r.source.data;
-            target_cells = r.target.data;
+
+            // Update the current_edges array
+            let regular_before = current_regular_level.slice(0, vertex.forward_insert.first);
+            let regular_after = current_regular_level.slice(vertex.forward_insert.last);
+            current_regular_level = regular_before.concat(new_edges.concat(regular_after));
+            let singular_before = current_singular_level.slice(0, vertex.forward_insert.first);
+            let singular_after = current_singular_level.slice(vertex.forward_insert.last);
+            current_singular_level = singular_before.concat([vertex].concat(singular_after));
         }
 
-        // Add to the list of vertices
-        var vertex = {
-            type: attachment.id,
-            level: level,
-            y: level + 0.5,
-            source_edges: [],
-            target_edges: [],
-            //coordinates: level // DEFINITELY RIGHT!!!!!!
-        };
-        vertices.push(vertex);
-
-        // For each edge consumed by this rewrite, indicate its finish
-        // height and remove it from the list of current edges
-        for (var i = 0; i < source_cells.length; i++) {
-            var remove_edge_index = current_edges[attachment.box.min.last()];
-            vertex.source_edges.push(remove_edge_index);
-            if (edges[remove_edge_index] === undefined) {
-                var x = 0;
-            }
-            edges[remove_edge_index].finish_height = level + 0.5;
-            edges[remove_edge_index].finish_vertex = vertices.length - 1;
-            current_edges.splice(attachment.box.min.last(), 1);
-        }
-
-        // Add the first target of the rewrite in the succeedence partial order
-        if (target_cells.length > 0) {
-            if (attachment.box.min.last() > 0) {
-                edges[current_edges[attachment.box.min.last() - 1]].succeeding.push({
-                    index: edges.length,
-                    offset: 1
-                });
-            }
-        }
-
-        // For each edge produced by this rewrite, add it to the lists
-        // of edges and current edges, and correctly set succeeding data
-        for (i = 0; i < target_cells.length; i++) {
-            var new_edge = {
-                type: target_cells[i].id,
-                attachment_height: attachment.box.min.last(),
-                start_height: level + 0.5,
-                finish_height: null,
-                succeeding: [],
-                x: 0,
-                start_vertex: vertices.length - 1,
-                finish_vertex: null
-            };
-            edges.push(new_edge);
-            var new_edge_index = edges.length - 1;
-            current_edges.splice(attachment.box.min.last() + i, 0, new_edge_index);
-            vertex.target_edges.push(new_edge_index);
-            if (i != target_cells.length - 1) {
-                new_edge.succeeding.push({
-                    index: new_edge_index + 1,
-                    offset: 1
-                });
-            }
-        }
-
-        // Add succeeding data for the first edge after the rewrite
-        if (target_cells.length > 0) {
-            if (attachment.box.min.last() + target_cells.length < current_edges.length) {
-                var subsequent_edge_index = current_edges[attachment.box.min.last() + target_cells.length];
-                edges[edges.length - 1].succeeding.push({
-                    index: subsequent_edge_index,
-                    offset: 1
-                });
-            }
-        }
-
-        // Handle the case of a scalar
-        if (vertex.source_edges.length + vertex.target_edges.length > 0) {
-            vertex.scalar = false;
-        } else {
-            vertex.scalar = true;
-            if (attachment.box.min.last() == 0) {
-                vertex.preceding_edge = null;
-            } else {
-                vertex.preceding_edge = current_edges[attachment.box.min.last() - 1];
-            }
-            if (attachment.box.min.last() == current_edges.length) {
-                vertex.succeeding_edge = null;
-            } else {
-                vertex.succeeding_edge = current_edges[attachment.box.min.last()];
-            }
-            vertex.x = 0;
-        }
-
-        // Remember the edges present at this level
-        edges_at_level.push(current_edges.slice());
+        // Remember the list of edges at this level of the diagram
+        singular_levels.push(current_singular_level);
+        regular_levels.push(current_regular_level.slice());
     }
+
+    /*
+                edges.push(new_edge);
+                var new_edge_index = edges.length - 1;
+                current_edges.splice(attachment.box.min.last() + i, 0, new_edge_index);
+                vertex.target_edges.push(new_edge_index);
+                if (i != target_cells.length - 1) {
+                    new_edge.succeeding.push({
+                        index: new_edge_index + 1,
+                        offset: 1
+                    });
+                }
+            }
+    
+            // Add succession data for the first edge after the rewrite
+            if (target_cells.length > 0) {
+                if (attachment.box.min.last() + target_cells.length < current_edges.length) {
+                    var subsequent_edge_index = current_edges[attachment.box.min.last() + target_cells.length];
+                    edges[edges.length - 1].succeeding.push({
+                        index: subsequent_edge_index,
+                        offset: 1
+                    });
+                }
+            }
+    
+            // Handle the case of a scalar
+            if (vertex.source_edges.length + vertex.target_edges.length > 0) {
+                vertex.scalar = false;
+            } else {
+                vertex.scalar = true;
+                if (attachment.box.min.last() == 0) {
+                    vertex.preceding_edge = null;
+                } else {
+                    vertex.preceding_edge = current_edges[attachment.box.min.last() - 1];
+                }
+                if (attachment.box.min.last() == current_edges.length) {
+                    vertex.succeeding_edge = null;
+                } else {
+                    vertex.succeeding_edge = current_edges[attachment.box.min.last()];
+                }
+                vertex.x = 0;
+            }
+    
+            // Remember the edges present at this level
+            edges_at_level.push(current_edges.slice());
+        }
+    */
 
     // Specify finish height of dangling edges
     for (var i = 0; i < edges.length; i++) {
@@ -1572,19 +1406,20 @@ function SVG_prepare(diagram, subdiagram) {
 
     // For the edges at the top and bottom of the diagram, specify their clockwise successors
     // Bottom of diagram:
-    for (var i = 1; i < edges_at_level[0].length; i++) {
-        var edge = edges[edges_at_level[0][i]];
-        edge.next_clockwise_at_source = edges[edges_at_level[0][i - 1]];
+    for (var i = 1; i < regular_levels[0].length; i++) {
+        let edge = regular_levels[0][i];
+        edge.next_clockwise_at_source = regular_levels[0][i - 1];
     }
     // Top of diagram:
-    for (var i = 0; i < current_edges.length - 1; i++) {
-        var edge = edges[current_edges[i]];
-        edge.next_clockwise_at_target = edges[current_edges[i + 1]];
+    for (var i = 0; i < current_regular_level.length - 1; i++) {
+        let edge = current_regular_level[i];
+        edge.next_clockwise_at_target = current_regular_level[i + 1];
     }
 
     // Calculate the x coordinates for edges and scalars
     while (true) {
-        var problem;
+        let problem;
+        /*
         do {
             problem = false;
             for (var i = 0; i < edges.length; i++) {
@@ -1598,7 +1433,31 @@ function SVG_prepare(diagram, subdiagram) {
                     };
                 }
             }
-        } while (problem == true);
+        } while (problem);
+        */
+
+        // Make sure there's enough space between elements
+        do {
+            problem = false;
+            for (let i=0; i<regular_levels.length; i++) {
+                let level = regular_levels[i];
+                for (let j=0; j<level.length-1; j++) {
+                    if (level[j+1].x < level[j].x) {
+                        problem = true;
+                        level[j+1].x = leve[j].x + 1;
+                    }
+                }
+            }
+            for (let i=0; i<singular_levels.length; i++) {
+                let level = singular_levels[i];
+                for (let j=0; j<level.length-1; j++) {
+                    if (level[j+1].x < level[j].x) {
+                        problem = true;
+                        level[j+1].x = level[j].x + 1;
+                    }
+                }
+            }
+        } while (problem);
 
         // Even up inputs and outputs for vertices
         for (var i = 0; i < vertices.length; i++) {
@@ -1606,6 +1465,8 @@ function SVG_prepare(diagram, subdiagram) {
             if (!vertex.scalar) {
                 if (vertex.source_edges.length == 0) continue;
                 if (vertex.target_edges.length == 0) continue;
+
+                /*
                 var source_mean = 0;
                 for (var j = 0; j < vertex.source_edges.length; j++) {
                     source_mean += edges[vertex.source_edges[j]].x;
@@ -1616,24 +1477,28 @@ function SVG_prepare(diagram, subdiagram) {
                     target_mean += edges[vertex.target_edges[j]].x;
                 }
                 target_mean /= vertex.target_edges.length;
+                */
+
                 // NEW IDEA
-                source_mean = (edges[vertex.source_edges[0]].x + edges[vertex.source_edges.last()].x) / 2;
-                target_mean = (edges[vertex.target_edges[0]].x + edges[vertex.target_edges.last()].x) / 2;
-                var diff = Math.abs(source_mean - target_mean);
+                let source_mean = (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
+                let target_mean = (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
+                let diff = Math.abs(source_mean - target_mean);
                 if (diff > 0.01) {
                     problem = true;
-                    var edges_to_offset;
+                    let edges_to_offset;
                     if (source_mean > target_mean) {
                         edges_to_offset = vertex.target_edges;
                     } else {
                         edges_to_offset = vertex.source_edges;
                     }
-                    for (var j = 0; j < edges_to_offset.length; j++) {
-                        edges[edges_to_offset[j]].x += diff;
+                    for (let j = 0; j < edges_to_offset.length; j++) {
+                        edges_to_offset[j].x += diff;
                     }
                 }
                 continue;
             }
+
+            /*
             // Check that scalars are sufficiently padded on either side
             var preceding_x = (vertex.preceding_edge == null ? -1 : edges[vertex.preceding_edge].x);
             if (vertex.x < preceding_x + 1) {
@@ -1647,40 +1512,50 @@ function SVG_prepare(diagram, subdiagram) {
                     problem = true;
                 }
             }
+            */
         }
         if (!problem) break;
     }
 
-    // Find max edge x-coordinate
-    data.max_x = -Number.MAX_VALUE;
-    for (var i = 0; i < edges.length; i++) {
-        data.max_x = Math.max(data.max_x, edges[i].x);
+    // Find max x-coordinate
+    for (var i = 0; i < regular_levels.length; i++) {
+        let level = regular_levels[i];
+        for (let j=0; j<level.length; j++) {
+            max_x = Math.max(max_x, level[j].x);
+        }
+    }
+    for (var i = 0; i < singular_levels.length; i++) {
+        let level = singular_levels[i];
+        for (let j=0; j<level.length; j++) {
+            max_x = Math.max(max_x, level[j].x);
+        }
     }
 
+    /*
     // Set vertex x-coordinates for non-scalars
     for (var i = 0; i < vertices.length; i++) {
         var vertex = vertices[i];
-        if (vertex.scalar) {
-            data.max_x = Math.max(data.max_x, vertex.x);
-            continue;
-        };
+        if (vertex.scalar) continue;
         if (vertex.source_edges.length == 1) {
-            vertex.x = edges[vertex.source_edges[0]].x;
+            vertex.x = vertex.source_edges[0].x;
         } else if (vertex.target_edges.length == 1) {
-            vertex.x = edges[vertex.target_edges[0]].x;
+            vertex.x = vertex.target_edges[0].x;
         } else {
             var total_x = 0;
             for (var j = 0; j < vertex.source_edges.length; j++) {
-                total_x += edges[vertex.source_edges[j]].x;
+                total_x += vertex.source_edges[j].x;
             }
             for (var j = 0; j < vertex.target_edges.length; j++) {
-                total_x += edges[vertex.target_edges[j]].x;
+                total_x += vertex.target_edges[j].x;
             }
             vertex.x = total_x / (vertex.target_edges.length + vertex.source_edges.length);
         }
     }
+    */
 
-    return data;
+    return { edges, vertices, regular_levels, max_x };
+    //var data = {edges: [], vertices: [], edges_at_level: []};
+    //return data;
 }
 
 // Add a highlighting rectangle to the diagram
@@ -1689,11 +1564,11 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     if (diagram.getDimension() < 2) return;
     var b = $(container)[0].bounds;
     var bottom, top, left, right;
-    
+
     if (boundary != null) {
         if (boundary.depth == 0) boundary = null;
     }
-    
+
     if (boundary != null) {
         if (boundary.depth == 2) {
             if (boundary.type == 's') {
@@ -1721,17 +1596,17 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
             if (box.min.last() == box.max.last()) {
                 if (box.min.last() == 0) {
                     left = b.left;
-                    right = edges.length == 0 ? b.right : data.edges[edges[0]].x - 0.5;
+                    right = edges.length == 0 ? b.right : edges[0].x - 0.5;
                 } else if (box.max.last() == edges.length) {
-                    left = data.edges[edges.last()].x + 0.5;
+                    left = edges.last().x + 0.5;
                     right = b.right;
                 } else {
-                    left = data.edges[edges[box.min.last() - 1]].x + 0.5;
-                    right = data.edges[edges[box.min.last()]].x - 0.5;
+                    left = edges[box.min.last() - 1].x + 0.5;
+                    right = edges[box.min.last()].x - 0.5;
                 }
             } else {
-                left = data.edges[edges[box.min.last()]].x - 0.5;
-                right = data.edges[edges[box.max.last() - 1]].x + 0.5;
+                left = edges[box.min.last()].x - 0.5;
+                right = edges[box.max.last() - 1].x + 0.5;
             }
             if (left == right) {
                 left -= 0.25;
@@ -1764,17 +1639,17 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
                 if (chunk.min == chunk.max) {
                     if (chunk.min == 0) {
                         eff_left = b.left;
-                        eff_right = data.edges[edges[0]].x - 0.5;
+                        eff_right = edges[0].x - 0.5;
                     } else if (chunk.max == edges.length) {
-                        eff_left = data.edges[edges.last()].x + 0.5;
+                        eff_left = edges.last().x + 0.5;
                         eff_right = b.right;
                     } else {
-                        eff_left = data.edges[edges[chunk.min - 1]].x + 0.5;
-                        eff_right = data.edges[edges[chunk.min]].x - 0.5;
+                        eff_left = edges[chunk.min - 1].x + 0.5;
+                        eff_right = edges[chunk.min].x - 0.5;
                     }
                 } else {
-                    eff_left = data.edges[edges[chunk.min]].x - 0.5;
-                    eff_right = data.edges[edges[chunk.max - 1]].x + 0.5;
+                    eff_left = edges[chunk.min].x - 0.5;
+                    eff_right = edges[chunk.max - 1].x + 0.5;
                 }
             }
             left = Math.min(left, eff_left);
@@ -1840,11 +1715,11 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
         string: path_string,
         fill: '#ffff00',
         fill_opacity: 0.5
-            /*,
-            stroke: '#ff0000',
-            stroke_opacity: 0.4,
-            stroke_width: 0.01
-            */
+        /*,
+        stroke: '#ff0000',
+        stroke_opacity: 0.4,
+        stroke_width: 0.01
+        */
     }));
     /*
     g[0].appendChild(SVG_create_path({

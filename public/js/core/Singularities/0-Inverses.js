@@ -44,7 +44,7 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
                 type: 't',
                 depth: 1
             },
-            id: cell.id.toggle_inverse(),
+            id: Globular.toggle_inverse(cell.id),
             key: this.getSlice(height).getInverseKey(cell.id, cell.key) // no need to copy
         };
         return [{
@@ -267,7 +267,7 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
         id: base_type,
         key: base_key
     }), new NCell({
-        id: base_type.toggle_inverse(),
+        id: Globular.toggle_inverse(base_type),
         key: reverse_key
     })];
 }

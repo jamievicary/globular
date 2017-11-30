@@ -57,11 +57,11 @@ Signature.prototype.getGenerator = function (id) {
     var i1 = false;
     if (id.tail('I1')) {
         i1 = true;
-        id = id.chop(2);
+        id = Globular.chop(id, 2);
     }
     if (id.tail('I0')) {
         i0 = true;
-        id = id.chop(2);
+        id = Globular.chop(id, 2);
     }
     
     while (sig != null) {

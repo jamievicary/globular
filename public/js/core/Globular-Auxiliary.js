@@ -6,21 +6,26 @@
 
 class Globular {
 
+    // Remove the trailing n characters
+    static chop (string, n) {
+        return string.substring(0, string.length - n);
+    }
+
     static analyze_id(string) {
         if (string.tail('I1')) {
-            var r = this.chop(2).analyze_id();
+            var r = Globular.analyze_id(Globular.chop(string, 2));
             if (r == null) return null;
             r.i1 = true;
             return r;
         }
         if (string.tail('I0')) {
-            var r = this.chop(2).analyze_id();
+            var r = Globular.analyze_id(Globular.chop(string, 2));
             if (r == null) return null;
             r.i0 = true;
             return r;
         }
         if (string.tail('-E')) {
-            var r = this.chop(2).analyze_id();
+            var r = Globular.analyze_id(Globular.chop(string, 2));
             if (r == null) return null;
             r.dimension++;
             return r;
@@ -43,21 +48,21 @@ class Globular {
         }
     }
 
-    static toggle_inverse(depth) {
+    static toggle_inverse(string, depth) {
         if (depth == undefined) depth = 0;
         var i0 = false;
         var i1 = false;
-        if (this.tail('I0I1')) {
+        if (string.tail('I0I1')) {
             i0 = true;
             i1 = true;
-        } else if (this.tail('I0')) {
+        } else if (string.tail('I0')) {
             i0 = true;
-        } else if (this.tail('I1')) {
+        } else if (string.tail('I1')) {
             i1 = true;
         }
         if (depth == 0) i0 = !i0;
         if (depth == 1) i1 = !i1;
-        var new_id = this.strip_inverses();
+        var new_id = Globular.strip_inverses(string);
         if (i0) new_id += 'I0';
         if (i1) new_id += 'I1';
         return new_id;
@@ -65,8 +70,8 @@ class Globular {
 
     static strip_inverses(string) {
         let new_id = string;
-        if (new_id.tail('I1')) new_id = new_id.chop(2);
-        if (new_id.tail('I0')) new_id = new_id.chop(2);
+        if (new_id.tail('I1')) new_id = Globular.chop(new_id,2);
+        if (new_id.tail('I0')) new_id = Globular.chop(new_id,2);
         return new_id;
     }
 
@@ -98,10 +103,10 @@ class Globular {
     }
 
     static getFriendlyName(string) {
-        if (string.tail('-EI0')) return this.chop(4).getFriendlyName() + ", cancel";
-        if (string.tail('-E')) return this.chop(2).getFriendlyName() + ", insert";
-        if (string.tail('I0')) return this.chop(2).getFriendlyName() + " inverse";
-        if (string.tail('I1')) return this.chop(2).getFriendlyName() + " flip";
+        if (string.tail('-EI0')) return Globular.getFriendlyName(Globular.chop(string, 4)) + ", cancel";
+        if (string.tail('-E')) return Globular.getFriendlyName(Globular.chop(string, 2)) + ", insert";
+        if (string.tail('I0')) return Globular.getFriendlyName(Globular.chop(string, 2)) + " inverse";
+        if (string.tail('I1')) return Globular.getFriendlyName(Globular.chop(string, 2)) + " flip";
         var generator = gProject.signature.getGenerator(string);
         if (generator) return generator.name;
         return 'UNKNOWN';
@@ -109,11 +114,36 @@ class Globular {
 
     static friendlyCoordinate(coordinates) {
         let string = '';
-        for (let i=0; i<coordinates.length; i++) {
+        for (let i = 0; i < coordinates.length; i++) {
             string += (i > 0 ? "," : "") + coordinates[i].height.toString() + (coordinates[i].regular ? "" : "*");
         }
         return '[' + string + ']';
     }
+
+    static getBaseType(string) {
+        return Globular.strip_inverses(string);
+    }
+
+    static findIndices(array, value) {
+        let results = [];
+        for (let i=0; i<array.length; i++) {
+            if (array[i] == value) results.push(i);
+        }
+        return results;
+    }
+
+    static findFirstLast(monotone, value) {
+        let first = null;
+        let last = null;
+        let pos = 0;
+        while (monotone[pos] < value) pos ++;
+        first = pos;
+        while (pos < monotone.length && monotone[pos] == value) pos ++;
+        if (pos == monotone.length) pos --;
+        last = pos;
+        return {first, last};
+    }
+
 }
 
 /*
@@ -291,27 +321,12 @@ String.prototype.is_interchanger = function () {
 String.prototype.is_invertible = function () {
     if (this.is_interchanger()) return true;
     if (this.indexOf('^0') > -1) return true;
-    var checkbox = $('#invertible-' + this.getBaseType());
+    var checkbox = $('#invertible-' + Globular.getBaseType(this));
     if (checkbox.length == 0) return false;
     return checkbox.is(':checked');
 }
 
-String.prototype.getBaseType = function () {
-    return this.strip_inverses();
-}
 
-String.prototype.getSignatureType = function () {
-    if (this.tail('I0')) return this.chop(2).getSignatureType();
-    if (this.tail('I1')) return this.chop(2).getSignatureType();
-    if (this.tail('-E')) return this.chop(2).getSignatureType();
-    if (gProject.signature.getGenerator(this) == null) return null;
-    return this;
-}
-
-// Remove the trailing n characters
-String.prototype.chop = function (n) {
-    return this.substring(0, this.length - n);
-}
 
 // Ensure any old 'I'-style inverse markers are replaced with 'I0' markers
 String.prototype.clean = function () {
@@ -481,15 +496,17 @@ function bezier_intersect_t(r) {
     return t;
 }
 
-function Timer(caller) {
-    this.start_time = performance.now();
-    this.caller = caller;
+class Timer {
+    constructor(caller) {
+        this.start_time = performance.now();
+        this.caller = caller;
+    }
+    Report() {
+        var time = Math.floor(performance.now() - this.start_time);
+        console.log("Timing: " + this.caller + ": " + time + "ms");
+    }
 }
 
-Timer.prototype.Report = function () {
-    var time = Math.floor(performance.now() - this.start_time);
-    console.log("Timing: " + this.caller + ": " + time + "ms");
-}
 
 var Buffer = require('buffer').Buffer;
 var LZ4 = require('lz4');

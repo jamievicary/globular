@@ -1,144 +1,144 @@
 "use strict";
 
-/*
-    Generator class
-*/
-
-
-// Creates a generator with a fresh id, and specific source and target, both source and target are of type Diagram
-function Generator(data) {
-    this['_t'] = 'Generator';
-    if (data == undefined) return;
-    if (data.source === undefined) debugger;
-    var n = (data.source == null ? 0 : data.source.getDimension() + 1);
-    if (data.id == undefined) data.id = gProject.freshName(n);
-    this.source = (data.source == null ? null : data.source.copy());
-    this.target = (data.target == null ? null : data.target.copy());
-    if (this.source != null) this.source.clearAllSliceCaches();
-    if (this.target != null) this.target.clearAllSliceCaches();
-    this.id = data.id;
-    this.invertible = data.invertible;
-    this.separate_source_target = data.separate_source_target;
-    if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
-    this.name = data.name;
-    if (data.single_thumbnail == undefined) data.single_thumbnail = (this.getDimension() <= 2);
-    this.single_thumbnail = data.single_thumbnail;
-    return this;
-};
-
-Generator.prototype.prepare = function() {
-    if (this.source != null) {
-        this.source.prepare();
-        this.source.clearAllSliceCaches();
+class Generator {
+    constructor(data) {
+        this['_t'] = 'Generator';
+        if (!data) return;
+        if (data == undefined) return;
+        var n = (data.source == null ? 0 : data.source.getDimension() + 1);
+        if (data.id == undefined) data.id = gProject.freshName(n);
+        this.source = (data.source == null ? null : data.source.copy());
+        this.target = (data.target == null ? null : data.target.copy());
+        if (this.source != null) this.source.clearAllSliceCaches();
+        if (this.target != null) this.target.clearAllSliceCaches();
+        this.id = data.id;
+        this.invertible = data.invertible;
+        this.separate_source_target = data.separate_source_target;
+        if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
+        this.name = data.name;
+        if (!data.single_thumbnail) data.single_thumbnail = (this.getDimension() <= 2);
+        this.single_thumbnail = data.single_thumbnail;
+        return this;
     }
-    if (this.target != null) {
-        this.target.prepare();
-        this.target.clearAllSliceCaches();
+    prepare() {
+        if (this.source != null) {
+            this.source.prepare();
+            this.source.clearAllSliceCaches();
+        }
+        if (this.target != null) {
+            this.target.prepare();
+            this.target.clearAllSliceCaches();
+        }
+        // We don't hold diagram objects any more
+        if (this.diagram != undefined)
+            delete this.diagram;
     }
-    
-    // We don't hold diagram objects any more
-    if (this.diagram != undefined) delete this.diagram;
-}
-
-Generator.prototype.getDiagram = function() {
-    if (!this.source) return new Diagram(null, 0, this.id); // dimension 0
-    let source = this.source.copy();
-    let type_dimension = source.type_dimension + 1;
-    let forward_limit = new ForwardLimit([new LimitComponent(this.id)]);
-    let backward_limit = new BackwardLimit([new LimitComponent(this.id, this.target.data)]);
-    let content = new Content(forward_limit, backward_limit);
-    return new Diagram(source, type_dimension, [content]);
-}
-
-Generator.prototype.getSource = function() {
-    return (this.source == null ? null : this.source.copy());
-}
-
-Generator.prototype.getTarget = function() {
-    return (this.target == null ? null : this.target.copy());
-}
-
-// Mirror a generator
-Generator.prototype.mirror = function(n) {
-    if (n == 0) {
-        var temp = this.source;
-        this.source = this.target;
-        this.target = temp;
-    } else if (n == 1) {
-        this.source = this.source.mirror(0);
-        this.target = this.target.mirror(0);
+    getDiagram() {
+        if (!this.source) return new Diagram(0, { type_dimension: 0, type: this.id });
+        let source = this.source.copy();
+        let type_dimension = source.type_dimension + 1;
+        let forward_limit = this.source.contractForwardLimit(this.id);
+        let singular_height = forward_limit.rewrite(this.source.copy());
+        let backward_limit = singular_height.contractBackwardLimit(this.id, null, this.target);
+        let data = [new Content(this.getDimension() - 1, forward_limit, backward_limit)];
+        return new Diagram(source.getDimension() + 1, {type_dimension, source, data});
     }
-    return this;
-}
-
-Generator.prototype.swapSourceTarget = function() {
-    return this;
-}
-
-Generator.prototype.getTargetColour = function() {
-    var t = this.target;
-    while (t.data.length == 0) {
-        t = t.getTargetBoundary();
+    getSource() {
+        return (this.source == null ? null : this.source.copy());
     }
-    var id = t.data[0].id;
-    var colour = gProject.getColour(id);
-    return colour;
-}
-
-Generator.prototype.getDimension = function() {
-    if (this.source === undefined) return 0;
-    if (this.source == null) return 0;
-    return this.source.getDimension() + 1;
-}
-
-Generator.prototype.getType = function() {
-    return 'Generator';
-}
-
-Generator.prototype.copy = function() {
-    var newSource = null;
-    var newTarget = null;
-    if (this.source != null) {
-        newSource = this.source.copy();
+    getTarget() {
+        return (this.target == null ? null : this.target.copy());
     }
-    if (this.target != null) {
-        newTarget = this.target.copy();
+    // Mirror a generator
+    mirror(n) {
+        if (n == 0) {
+            var temp = this.source;
+            this.source = this.target;
+            this.target = temp;
+        }
+        else if (n == 1) {
+            this.source = this.source.mirror(0);
+            this.target = this.target.mirror(0);
+        }
+        return this;
     }
-    return new Generator({source: newSource, target: newTarget, id: this.id, name: this.name});
-};
-
-Generator.prototype.getBoundingBox = function() {
-    var box = {
-        min: Array(Math.max(0, this.getDimension() - 1)).fill(0),
-        max: this.getSourceLengths()
-    };
-    //box.max.push(1);
-    return box;
-}
-
-Generator.prototype.getSourceLengths = function() {
-    if (this.source == null) return [];
-    return this.source.getLengthsAtSource();
-}
-
-Generator.prototype.usesCell = function(generator) {
-    
-    // Generators can only use cells which have a lower dimension
-    if (generator.getDimension() >= this.getDimension()) return false;
-    
-    // The generator uses the specified cell iff the source or target uses it
-    if (this.source != null) {
-        var source_uses = this.source.usesCell(generator);
-        this.source.clearAllSliceCaches();
-        if (source_uses) return true;
-
-        var target_uses = this.target.usesCell(generator);
-        this.target.clearAllSliceCaches();
-        if (target_uses) return true;
+    swapSourceTarget() {
+        return this;
     }
-    return false;
+    getTargetColour() {
+        var t = this.target;
+        while (t.data.length == 0) {
+            t = t.getTargetBoundary();
+        }
+        var id = t.data[0].id;
+        var colour = gProject.getColour(id);
+        return colour;
+    }
+    getDimension() {
+        if (this.source === undefined)
+            return 0;
+        if (this.source == null)
+            return 0;
+        return this.source.getDimension() + 1;
+    }
+    getType() {
+        return 'Generator';
+    }
+    copy() {
+        var newSource = null;
+        var newTarget = null;
+        if (this.source != null) {
+            newSource = this.source.copy();
+        }
+        if (this.target != null) {
+            newTarget = this.target.copy();
+        }
+        return new Generator({ source: newSource, target: newTarget, id: this.id, name: this.name });
+    }
+    getBoundingBox() {
+        var box = {
+            min: Array(Math.max(0, this.getDimension() - 1)).fill(0),
+            max: this.getSourceLengths()
+        };
+        //box.max.push(1);
+        return box;
+    }
+    getSourceLengths() {
+        if (this.source == null)
+            return [];
+        return this.source.getLengthsAtSource();
+    }
+    usesCell(generator) {
+        // Generators can only use cells which have a lower dimension
+        if (generator.getDimension() >= this.getDimension())
+            return false;
+        // The generator uses the specified cell iff the source or target uses it
+        if (this.source != null) {
+            var source_uses = this.source.usesCell(generator);
+            this.source.clearAllSliceCaches();
+            if (source_uses)
+                return true;
+            var target_uses = this.target.usesCell(generator);
+            this.target.clearAllSliceCaches();
+            if (target_uses)
+                return true;
+        }
+        return false;
+    }
+    flippable() {
+        return (this.name.indexOf('*1') > -1);
+    }
 }
 
-Generator.prototype.flippable = function() {
-    return (this.name.indexOf('*1') > -1);
-}
+
+
+
+
+
+
+
+
+
+
+
+
