@@ -266,47 +266,22 @@ function globular_render_2d(container, diagram, subdiagram) {
     $(d.svg).prepend(defs);
 
     // Draw overall background rectangle
-    //var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    //var big_background = ($(container).attr('id') == 'diagram-canvas') && (diagram.source.data.length == 0);
     var big_background = false;
     var x_center = (data.max_x + 0) / 2;
     var y_center = Math.max(1, data.vertices.length) / 2;
     var w = big_background ? 20 : data.max_x + 1;
     var h = big_background ? 20 : Math.max(1, data.vertices.length);
-    var path_string = SVG_move_to({
-        x: x_center - w / 2,
-        y: y_center - h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center + w / 2,
-        y: y_center - h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center + w / 2,
-        y: y_center + h / 2
-    });
-    path_string += SVG_line_to({
-        x: x_center - w / 2,
-        y: y_center + h / 2
-    });
+    var path_string = SVG_move_to({ x: x_center - w / 2, y: y_center - h / 2 })
+        + SVG_line_to({ x: x_center + w / 2, y: y_center - h / 2 })
+        + SVG_line_to({ x: x_center + w / 2, y: y_center + h / 2 })
+        + SVG_line_to({ x: x_center - w / 2, y: y_center + h / 2 });
 
     // Determine background colour
     var color = diagram.source.source.getLastColour();
-    d.g.appendChild(SVG_create_path({
-        string: path_string,
-        //        fill: gProject.getColour(diagram.source.source.data[0].id)
-        fill: color,
-        element_type: 'region'
-    }));
-    $(container)[0].bounds = {
-        left: -0.5,
-        right: data.max_x + 0.5,
-        top: Math.max(1, data.vertices.length),
-        bottom: 0
-    };
+    d.g.appendChild(SVG_create_path({ string: path_string, fill: color, element_type: 'region' }));
+    $(container)[0].bounds = { left: -0.5, right: data.max_x + 0.5, top: Math.max(1, data.vertices.length), bottom: 0 };
 
-
-    // Check to see if there's a level with no edges
+    // Check whether there's a level with no edges
     var empty_level = false;
     data.edges_at_level = data.regular_levels;
     for (var i = 0; i < data.edges_at_level.length; i++) {
@@ -346,32 +321,21 @@ function globular_render_2d(container, diagram, subdiagram) {
         if (edge.fill_right) continue;
         var draw_up = true;
 
-        var instructions = {
-            edge: edge,
-            draw_up: true,
-            path_string: "",
-            turning: 0,
-            avoid_boundary: (i >= 0)
-        };
+        var instructions = { edge, draw_up, path_string: "", turning: 0, avoid_boundary: (i >= 0) };
         do {
             instructions.edge.adjacent_regions.push(edge);
             process_instructions(data, instructions)
             if (instructions.edge == null) break;
         } while (instructions.edge != edge);
-        if (instructions.edge == null) {
-            continue;
-        }
-        if (instructions.turning < 0) {
-            continue;
-        }
+        if (!instructions.edge) continue;
+        if (instructions.turning < 0) continue;
 
         var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttributeNS(null, "d", instructions.path_string);
         //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.data[0].id));
         var colour;
-        if (edge.type == null) {
-            colour = '#ffffff';
-        } else {
+        if (!edge.type) colour = '#ffffff';
+        else {
             var level = Math.ceil(edge.start_height);
             var sublevel;
             if (i < 0) {
@@ -379,12 +343,9 @@ function globular_render_2d(container, diagram, subdiagram) {
             } else {
                 sublevel = data.edges_at_level[level].indexOf(i);
             }
-            var sd = diagram.getSlice({height: level, regular:true})
-                .getSlice({height: sublevel + 1, regular:true});
-
+            var sd = diagram.getSlice({ height: level, regular: true })
+                .getSlice({ height: sublevel + 1, regular: true });
             colour = sd.getLastColour();
-            //var generator = gProject.signature.getGenerator(edge.type);
-            //colour = generator.getTargetColour();
         }
 
         path.setAttributeNS(null, "stroke-width", 0.01);
@@ -392,10 +353,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         path.setAttributeNS(null, "fill", colour);
         path.setAttributeNS(null, "element_type", "region");
         path.region = edge;
-        svg_paths.push({
-            path: path,
-            edge: edge
-        });
+        svg_paths.push({ path: path, edge: edge });
     }
     for (var i = 0; i < svg_paths.length; i++) {
         d.g.appendChild(svg_paths[i].path);
@@ -424,24 +382,11 @@ function globular_render_2d(container, diagram, subdiagram) {
             // We start at a vertex
             var vertex = edge.start_vertex;
             if (vertex.type.is_basic_interchanger()) {
-                path_s = SVG_move_to({
-                    x: edge.x,
-                    y: edge.start_height + 0.5
-                });
+                path_s = SVG_move_to({ x: edge.x, y: edge.start_height + 0.5 });
             } else {
-                path_s += SVG_move_to({
-                    x: vertex.x,
-                    y: vertex.y
-                });
+                path_s += SVG_move_to({ x: vertex.x, y: vertex.y });
                 //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
-                path_s += SVG_bezier_to({
-                    c1x: edge.x,
-                    c1y: vertex.y,
-                    c2x: edge.x,
-                    c2y: vertex.y + 0.4,
-                    x: edge.x,
-                    y: edge.start_height + 0.5
-                });
+                path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y, c2x: edge.x, c2y: vertex.y + 0.4, x: edge.x, y: edge.start_height + 0.5 });
                 drawn_something = true;
             }
         }
@@ -449,36 +394,19 @@ function globular_render_2d(container, diagram, subdiagram) {
         // Do the main straight part of the edge
         var draw_main = false;
         if (edge.finish_height > edge.start_height + 1) {
-            path_s += SVG_line_to({
-                x: edge.x,
-                y: edge.finish_height - 0.5
-            });
+            path_s += SVG_line_to({ x: edge.x, y: edge.finish_height - 0.5 });
             drawn_something = true;
             draw_main = true;
         }
 
         // Do the top bit of the path
         if (finish_boundary) {
-            // Nothing to do, unless also coming from source boundary
-            //            if (edge.start_height == 0) {
-            path_s += SVG_line_to({
-                x: edge.x,
-                y: edge.finish_height
-            });
+            path_s += SVG_line_to({ x: edge.x, y: edge.finish_height });
             drawn_something = true;
-            //            }
         } else {
             var vertex = edge.finish_vertex;
             if (!vertex.type.is_basic_interchanger()) {
-                //path_s += SVG_line_to(vertex.x, vertex.height + 0.5);
-                path_s += SVG_bezier_to({
-                    c1x: edge.x,
-                    c1y: vertex.y - 0.4,
-                    c2x: edge.x,
-                    c2y: vertex.y,
-                    x: vertex.x,
-                    y: vertex.y
-                });
+                path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y - 0.4, c2x: edge.x, c2y: vertex.y, x: vertex.x, y: vertex.y });
                 drawn_something = true;
             }
         }
@@ -487,12 +415,10 @@ function globular_render_2d(container, diagram, subdiagram) {
         if (drawn_something) {
             path.setAttributeNS(null, "d", path_s);
             path.setAttributeNS(null, "stroke", gProject.getColour(edge.type));
-            //{ id: edge.type, dimension: diagram.getDimension() - 1 }));
             path.setAttributeNS(null, "stroke-width", line_width);
             path.setAttributeNS(null, "fill", "none");
             path.setAttributeNS(null, "element_type", 'edge');
             path.setAttributeNS(null, 'element_index', i)
-            //path.element_index = i;
             d.g.appendChild(path);
         }
     }
@@ -520,27 +446,12 @@ function globular_render_2d(container, diagram, subdiagram) {
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
 
-            var lower_colour = gProject.getColour({
-                id: e1_bot.type,
-                dimension: diagram.getDimension() - 1
-            });
-            var upper_colour = gProject.getColour({
-                id: e2_bot.type,
-                dimension: diagram.getDimension() - 1
-            });
+            var lower_colour = gProject.getColour({ id: e1_bot.type, dimension: diagram.getDimension() - 1 });
+            var upper_colour = gProject.getColour({ id: e2_bot.type, dimension: diagram.getDimension() - 1 });
 
             // Prepare the upper path
-            var top_str = SVG_move_to({
-                x: e2_bot.x,
-                y: i - epsilon
-            }) + SVG_bezier_to({
-                c1x: e2_bot.x,
-                c1y: i + 0.5,
-                c2x: e2_top.x,
-                c2y: i + 0.5,
-                x: e2_top.x,
-                y: i + 1 + epsilon
-            });
+            var top_str = SVG_move_to({ x: e2_bot.x, y: i - epsilon })
+                + SVG_bezier_to({ c1x: e2_bot.x, c1y: i + 0.5, c2x: e2_top.x, c2y: i + 0.5, x: e2_top.x, y: i + 1 + epsilon });
 
             // Draw lower path, possibly using an obscuring mask
             var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
@@ -551,112 +462,35 @@ function globular_render_2d(container, diagram, subdiagram) {
                 var mask = $('<mask>', {
                     id: mask_id
                 });
-                var transparent_str = SVG_move_to({
-                    x: left,
-                    y: i
-                }) + SVG_line_to({
-                    x: left,
-                    y: i + 1
-                }) + SVG_line_to({
-                    x: right,
-                    y: i + 1
-                }) + SVG_line_to({
-                    x: right,
-                    y: i
-                }) + SVG_line_to({
-                    x: left,
-                    y: i
-                });
-                mask.append(SVG_create_path({
-                    string: transparent_str,
-                    fill: "white",
-                    element_type: 'mask_transparent'
-                }));
-                mask.append(SVG_create_path({
-                    string: top_str,
-                    stroke_width: line_width * 2,
-                    stroke: "black",
-                    element_type: 'mask_top'
-                }));
+                var transparent_str = SVG_move_to({ x: left, y: i })
+                    + SVG_line_to({ x: left, y: i + 1 })
+                    + SVG_line_to({ x: right, y: i + 1 })
+                    + SVG_line_to({ x: right, y: i })
+                    + SVG_line_to({ x: left, y: i });
+                mask.append(SVG_create_path({ string: transparent_str, fill: "white", element_type: 'mask_transparent' }));
+                mask.append(SVG_create_path({ string: top_str, stroke_width: line_width * 2, stroke: "black", element_type: 'mask_top' }));
                 //g.appendChild(mask[0]);
                 defs.append(mask);
 
             }
             // Draw the lower path
-            var bot_str = SVG_move_to({
-                x: e1_bot.x,
-                y: i - epsilon
-            }) + SVG_bezier_to({
-                c1x: e1_bot.x,
-                c1y: i + 0.5,
-                c2x: e1_top.x,
-                c2y: i + 0.5,
-                x: e1_top.x,
-                y: i + 1 + epsilon
-            });
-            d.g.appendChild(SVG_create_path({
-                string: bot_str,
-                stroke: lower_colour,
-                stroke_width: line_width,
-                mask: (obscure ? "url(#" + mask_id + ")" : null),
-                element_type: 'interchanger_edge',
-                element_index: i,
-                element_index_2: 1
-            }));
+            var bot_str = SVG_move_to({ x: e1_bot.x, y: i - epsilon })
+                + SVG_bezier_to({ c1x: e1_bot.x, c1y: i + 0.5, c2x: e1_top.x, c2y: i + 0.5, x: e1_top.x, y: i + 1 + epsilon });
+            d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 1, string: bot_str, stroke: lower_colour, stroke_width: line_width, mask: (obscure ? "url(#" + mask_id + ")" : null), element_type: 'interchanger_edge' }));
 
             // Draw upper path
-            d.g.appendChild(SVG_create_path({
-                string: top_str,
-                stroke: upper_colour,
-                stroke_width: line_width,
-                element_type: 'interchanger_edge',
-                element_index: i,
-                element_index_2: 0
-            }));
-
-            // Calculate the intersection data
-            //var intersect = bezier_decompose(Math.min(e1_bot.x, e2_bot.x), Math.max(e1_bot.x, e2_bot.x), Math.min(e1_top.x, e2_top.x), Math.max(e1_top.x, e2_top.x), i);
-            /*
-            d.g.appendChild(SVG_create_circle({
-                x: intersect.centre[0],
-                y: intersect.centre[1],
-                fill: '#ff8fbf'
-            }));
-            */
-            //vertex.y = intersect.centre[1];
+            d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 0, string: top_str, stroke: upper_colour, stroke_width: line_width, element_type: 'interchanger_edge', }));
 
             // Attach little circles where the path joins its neighbours
-            if (i != 0) {
-                // Draw little circles at the bottom
-                d.g.appendChild(SVG_create_circle({
-                    x: e2_bot.x,
-                    y: i,
-                    fill: upper_colour,
-                    class_name: 'dummy'
-                }));
-                d.g.appendChild(SVG_create_circle({
-                    x: e1_bot.x,
-                    y: i,
-                    fill: lower_colour,
-                    class_name: 'dummy'
-                }));
+            if (i != 0) { // Draw little circles at the bottom                
+                d.g.appendChild(SVG_create_circle({ x: e2_bot.x, y: i, fill: upper_colour, class_name: 'dummy' }));
+                d.g.appendChild(SVG_create_circle({ x: e1_bot.x, y: i, fill: lower_colour, class_name: 'dummy' }));
             }
-            if (i != data.vertices.length - 1) {
-                // Draw little circles at the top
-                d.g.appendChild(SVG_create_circle({
-                    x: e2_top.x,
-                    y: i + 1,
-                    fill: upper_colour,
-                    class_name: 'dummy'
-                }));
-                d.g.appendChild(SVG_create_circle({
-                    x: e1_top.x,
-                    y: i + 1,
-                    fill: lower_colour,
-                    class_name: 'dummy'
-                }));
+            if (i != data.vertices.length - 1) { // Draw little circles at the top
+                d.g.appendChild(SVG_create_circle({ x: e2_top.x, y: i + 1, fill: upper_colour, class_name: 'dummy' }));
+                d.g.appendChild(SVG_create_circle({ x: e1_top.x, y: i + 1, fill: lower_colour, class_name: 'dummy' }));
             }
-        } //else {
+        }
 
         vertex.fill = gProject.getColour(vertex.type);
         vertex.radius = circle_radius;
@@ -664,7 +498,6 @@ function globular_render_2d(container, diagram, subdiagram) {
         vertex.element_index = i;
         vertex.fill_opacity = circle_opacity;
         d.g.appendChild(SVG_create_circle(vertex));
-        //}
     }
 
     // Add SVG object to container. We have to do it in this weird way because
@@ -736,24 +569,12 @@ function process_instructions(data, i) {
                     i.edge = null;
                     return;
                 }
-                i.path_string += SVG_line_to({
-                    x: data.max_x + 0.5,
-                    y: Math.max(1, data.vertices.length)
-                });
-                i.path_string += SVG_line_to({
-                    x: data.max_x + 0.5,
-                    y: 0
-                });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.vertices.length) });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: 0 });
                 var source_edges = data.edges_at_level[0];
                 if (source_edges.length == 0) {
-                    i.path_string += SVG_line_to({
-                        x: -0.5,
-                        y: 0
-                    });
-                    i.path_string += SVG_line_to({
-                        x: -0.5,
-                        y: Math.max(1, data.vertices.length)
-                    });
+                    i.path_string += SVG_line_to({ x: -0.5, y: 0 });
+                    i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.vertices.length) });
                     var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
                     i.edge = target_edges[0]; // Will necessarily exist
                     i.path_string += SVG_line_to(top_of_edge(data, i.edge));
@@ -820,25 +641,13 @@ function process_instructions(data, i) {
                 i.edge = null;
                 return;
             }
-            i.path_string += SVG_line_to({
-                x: -0.5,
-                y: 0
-            });
-            i.path_string += SVG_line_to({
-                x: -0.5,
-                y: Math.max(1, data.vertices.length)
-            });
+            i.path_string += SVG_line_to({ x: -0.5, y: 0 });
+            i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.vertices.length) });
             var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
             if (target_edges.length == 0) {
                 // No edges at the top of the diagram, so come around
-                i.path_string += SVG_line_to({
-                    x: data.max_x + 0.5,
-                    y: Math.max(1, data.vertices.length)
-                });
-                i.path_string += SVG_line_to({
-                    x: data.max_x + 0.5,
-                    y: 0
-                });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.vertices.length) });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: 0 });
                 var source_edges = data.edges_at_level[0];
                 i.edge = data.edges[source_edges.length - 1]; // Will necessarily exist
                 i.path_string += SVG_line_to(bottom_of_edge(data, i.edge));
@@ -891,143 +700,43 @@ function process_instructions(data, i) {
 }
 
 function SVG_line_to(p) {
-    if (p.x === undefined) {
-        throw 0;
-    }
-    if (p.y === undefined) throw 0;
+    _assert(p.x != null && p.y != null);
     return "L " + p.x + " " + p.y + " ";
 }
 
 function SVG_bezier_to(p) {
-    /*
-    if (p.c1x === undefined) throw 0;
-    if (p.c1y === undefined) throw 0;
-    if (p.c2x === undefined) throw 0;
-    if (p.c2y === undefined) throw 0;
-    if (p.x === undefined) throw 0;
-    if (p.y === undefined) throw 0;
-    */
     _assert(p.c1x != null && p.c1y != null && p.c2x != null && p.c2y != null && p.x != null && p.y != null);
     return "C " + p.c1x + " " + p.c1y + ", " + p.c2x + " " + p.c2y + ", " + p.x + " " + p.y + " ";
 }
 
 function SVG_move_to(p) {
-    /*
-    if (p.x === undefined) throw 0;
-    if (p.y === undefined) throw 0;
-    */
     _assert(p.x != null && p.y != null);
     return "M " + p.x + " " + p.y + " ";
 }
 
 // Return the point at the bottom of the edge
 function bottom_of_edge(data, edge) {
-    if (edge.start_vertex == null) {
-        return { x: edge.x, y: 0 };
-    }
+    if (edge.start_vertex == null) return { x: edge.x, y: 0 };
     return { x: edge.start_vertex.x, y: edge.start_vertex.y };
 }
 
 // Return the point at the top of the edge
 function top_of_edge(data, edge) {
-    if (edge.finish_vertex == null) {
-        return {
-            x: edge.x,
-            y: Math.max(1, data.vertices.length)
-        };
-    }
+    if (edge.finish_vertex == null) return { x: edge.x, y: Math.max(1, data.vertices.length) };
     return { x: edge.finish_vertex.x, y: edge.finish_vertex.y };
 }
 
 function SVG_draw_edge_bottom_to_top(data, edge) {
-    var r = SVG_draw_edge_section(data, edge, edge.start_height, edge.finish_height);
-    if (r === undefined) throw 0;
+    let r = SVG_draw_edge_section(data, edge, edge.start_height, edge.finish_height);
+    _assert(r != null);
     return r;
 }
 
 function SVG_draw_edge_top_to_bottom(data, edge) {
     var r = SVG_draw_edge_section(data, edge, edge.finish_height, edge.start_height);
-    if (r === undefined) throw 0;
+    _assert(r != null);
     return r;
 }
-/*
-function point_on_edge(data, edge_list, edge_index, height) {
-    var diagram_height = Math.max(1, data.vertices.length);
-    height = Math.max(height, 0);
-    height = Math.min(height, diagram_height);
-    if (edge_index == -1) {
-        return {
-            x: -0.5,
-            y: height
-        };
-    }
-    if (edge_index == edge_list.length) {
-        return {
-            x: data.max_x + 0.5,
-            y: height
-        }
-    }
-    var edge = data.edges[edge_list[edge_index]];
-    if (height == edge.start_height) {
-        if (edge.start_vertex == null) return {
-            x: edge.x,
-            y: height
-        };
-        return {
-            x: data.vertices[edge.start_vertex].x,
-            y: height
-        };
-    }
-    if (height == edge.finish_height) {
-        if (edge.finish_vertex == null) return {
-            x: edge.x,
-            y: height
-        };
-        return {
-            x: data.vertices[edge.finish_vertex].x,
-            y: height
-        };
-    }
-    return {
-        x: edge.x,
-        y: height
-    };
-}
-*/
-
-/*
-// Draw section of an edge. Assume that we have already moved to the start point.
-function SVG_draw_edge_section_at_slice(data, edge_list, edge_index, h_start, h_end) {
-    var diagram_height = Math.max(1, data.vertices.length);
-    h_start = Math.min(Math.max(h_start, 0), diagram_height);
-    h_end = Math.min(Math.max(h_end, 0), diagram_height);
-    if (h_start == h_end) return "";
-    var path = "";
-    var edge;
-    if (edge_index < 0) {
-        edge = {
-            start_height: 0,
-            finish_height: Math.max(1, data.vertices.length),
-            length: Math.max(1, data.vertices.length),
-            x: -0.5,
-            start_vertex: null,
-            finish_vertex: null
-        }
-    } else if (edge_index == edge_list.length) {
-        edge = {
-            start_height: 0,
-            finish_height: Math.max(1, data.vertices.length),
-            length: Math.max(1, data.vertices.length),
-            x: data.max_x + 0.5,
-            start_vertex: null,
-            finish_vertex: null
-        }
-    } else {
-        edge = data.edges[edge_list[edge_index]];
-    }
-    return SVG_draw_edge_section(data, edge, h_start, h_end);
-}
-*/
 
 function SVG_draw_edge_section(data, edge, h_start, h_end) {
     var diagram_height = Math.max(1, data.vertices.length);
@@ -1044,75 +753,38 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
             // Draw bottom half-height of edge
             if (edge.start_vertex == null) {
                 // Incoming from lower boundary
-                path += SVG_line_to({
-                    x: edge.x,
-                    y: h_start + 0.5
-                });
+                path += SVG_line_to({ x: edge.x, y: h_start + 0.5 });
             } else {
                 // Coming up out of a vertex as a target edge
                 var vertex = edge.start_vertex;
                 if (vertex.intersection == undefined) {
-                    path += SVG_bezier_to({
-                        c1x: edge.x,
-                        c1y: vertex.y,
-                        c2x: edge.x,
-                        c2y: vertex.y + 0.4,
-                        x: edge.x,
-                        y: edge.start_height + 0.5
-                    });
+                    path += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y, c2x: edge.x, c2y: vertex.y + 0.4, x: edge.x, y: edge.start_height + 0.5 });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == vertex.target_edges[0]);
-                    path += SVG_bezier_to({
-                        c1x: (left ? i.tl.P3[0] : i.tr.P3[0]),
-                        c1y: (left ? i.tl.P3[1] : i.tr.P3[1]),
-                        c2x: (left ? i.tl.P2[0] : i.tr.P2[0]),
-                        c2y: (left ? i.tl.P2[1] : i.tr.P2[1]),
-                        x: edge.x,
-                        y: edge.start_height + 0.5
-                    });
+                    path += SVG_bezier_to({ c1x: (left ? i.tl.P3[0] : i.tr.P3[0]), c1y: (left ? i.tl.P3[1] : i.tr.P3[1]), c2x: (left ? i.tl.P2[0] : i.tr.P2[0]), c2y: (left ? i.tl.P2[1] : i.tr.P2[1]), x: edge.x, y: edge.start_height + 0.5 });
                 }
             }
         }
         if (middle_section) {
             // Draw appropriate portion of central piece of line
             var central_finish = Math.min(h_end, edge.finish_height - 0.5);
-            path += SVG_line_to({
-                x: edge.x,
-                y: central_finish
-            });
+            path += SVG_line_to({ x: edge.x, y: central_finish });
         }
         if (top_section) {
             // Draw top half-height of line
             if (edge.finish_vertex == null) {
                 // Edge finishes at the top boundary
-                path += SVG_line_to({
-                    x: edge.x,
-                    y: h_end
-                });
+                path += SVG_line_to({ x: edge.x, y: h_end });
             } else {
                 // Coming up into a vertex as a source edge
                 var vertex = edge.finish_vertex;
                 if (vertex.intersection == undefined) {
-                    path += SVG_bezier_to({
-                        c1x: edge.x,
-                        c1y: vertex.y - 0.4,
-                        c2x: edge.x,
-                        c2y: vertex.y,
-                        x: vertex.x,
-                        y: vertex.y
-                    });
+                    path += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y - 0.4, c2x: edge.x, c2y: vertex.y, x: vertex.x, y: vertex.y });
                 } else {
                     var i = vertex.intersection;
                     var left = (edge == vertex.source_edges[0]);
-                    path += SVG_bezier_to({
-                        c1x: (left ? i.bl.P2[0] : i.br.P2[0]),
-                        c1y: (left ? i.bl.P2[1] : i.br.P2[1]),
-                        c2x: (left ? i.bl.P3[0] : i.br.P3[0]),
-                        c2y: (left ? i.bl.P3[1] : i.br.P3[1]),
-                        x: vertex.x,
-                        y: vertex.y
-                    });
+                    path += SVG_bezier_to({ c1x: (left ? i.bl.P2[0] : i.br.P2[0]), c1y: (left ? i.bl.P2[1] : i.br.P2[1]), c2x: (left ? i.bl.P3[0] : i.br.P3[0]), c2y: (left ? i.bl.P3[1] : i.br.P3[1]), x: vertex.x, y: vertex.y });
                 }
             }
         }
@@ -1232,32 +904,11 @@ function SVG_prepare(diagram, subdiagram) {
             finish_vertex: null,
         };
 
-        // Every source edge except the last has a succeeding edge
-        /*
-        if (level < diagram.source.data.length - 1) {
-            new_edge.succeeding.push({
-                index: level + 1,
-                offset: 1
-            });
-        }
-        */
-
         // Store data
         edges.push(new_edge);
         current_regular_level.push(new_edge);
     }
     regular_levels.push(current_regular_level.slice());
-
-    // Get the regular and singular slices
-    /*
-    var regular_slices = [];
-    var singular_slices = [];
-    for (var level = 0; level <= diagram.data.length; level++) {
-        regular_slices.push(diagram.getSlice({ height: level, regular: true }));
-        if (level == diagram.data.length) break;
-        singular_slices.push(diagram.getSlice({ height: level, regular: false }));
-    }
-    */
 
     for (var level = 0; level < diagram.data.length; level++) {
 
@@ -1287,7 +938,6 @@ function SVG_prepare(diagram, subdiagram) {
                 new_vertices.push(vertex);
             }
         }
-        //vertices_at_level[level] = current_vertices;
 
         // Remove the edges that have been consumed, and create new edges as necessary
         let offset = 0;
@@ -1323,13 +973,6 @@ function SVG_prepare(diagram, subdiagram) {
                 vertex.target_edges[j - vertex.backward_insert.first] = new_edge;
             }
 
-            // Set succession data
-            /*
-            for (let j = 0; j < vertex.target_edges.length - 1; j++) {
-                vertex.target_edges[j].succeeding.push(vertex.target_edges[j + 1]);
-            }
-            */
-
             // Update the current_edges array
             let regular_before = current_regular_level.slice(0, vertex.forward_insert.first);
             let regular_after = current_regular_level.slice(vertex.forward_insert.last);
@@ -1343,53 +986,6 @@ function SVG_prepare(diagram, subdiagram) {
         singular_levels.push(current_singular_level);
         regular_levels.push(current_regular_level.slice());
     }
-
-    /*
-                edges.push(new_edge);
-                var new_edge_index = edges.length - 1;
-                current_edges.splice(attachment.box.min.last() + i, 0, new_edge_index);
-                vertex.target_edges.push(new_edge_index);
-                if (i != target_cells.length - 1) {
-                    new_edge.succeeding.push({
-                        index: new_edge_index + 1,
-                        offset: 1
-                    });
-                }
-            }
-    
-            // Add succession data for the first edge after the rewrite
-            if (target_cells.length > 0) {
-                if (attachment.box.min.last() + target_cells.length < current_edges.length) {
-                    var subsequent_edge_index = current_edges[attachment.box.min.last() + target_cells.length];
-                    edges[edges.length - 1].succeeding.push({
-                        index: subsequent_edge_index,
-                        offset: 1
-                    });
-                }
-            }
-    
-            // Handle the case of a scalar
-            if (vertex.source_edges.length + vertex.target_edges.length > 0) {
-                vertex.scalar = false;
-            } else {
-                vertex.scalar = true;
-                if (attachment.box.min.last() == 0) {
-                    vertex.preceding_edge = null;
-                } else {
-                    vertex.preceding_edge = current_edges[attachment.box.min.last() - 1];
-                }
-                if (attachment.box.min.last() == current_edges.length) {
-                    vertex.succeeding_edge = null;
-                } else {
-                    vertex.succeeding_edge = current_edges[attachment.box.min.last()];
-                }
-                vertex.x = 0;
-            }
-    
-            // Remember the edges present at this level
-            edges_at_level.push(current_edges.slice());
-        }
-    */
 
     // Specify finish height of dangling edges
     for (var i = 0; i < edges.length; i++) {
@@ -1419,41 +1015,25 @@ function SVG_prepare(diagram, subdiagram) {
     // Calculate the x coordinates for edges and scalars
     while (true) {
         let problem;
-        /*
-        do {
-            problem = false;
-            for (var i = 0; i < edges.length; i++) {
-                var edge = edges[i];
-                for (var j = 0; j < edge.succeeding.length; j++) {
-                    var succ = edge.succeeding[j];
-                    var succ_edge = edges[succ.index];
-                    if (succ_edge.x < edge.x + succ.offset) {
-                        succ_edge.x = edge.x + succ.offset;
-                        problem = true;
-                    };
-                }
-            }
-        } while (problem);
-        */
 
         // Make sure there's enough space between elements
         do {
             problem = false;
-            for (let i=0; i<regular_levels.length; i++) {
+            for (let i = 0; i < regular_levels.length; i++) {
                 let level = regular_levels[i];
-                for (let j=0; j<level.length-1; j++) {
-                    if (level[j+1].x < level[j].x) {
+                for (let j = 0; j < level.length - 1; j++) {
+                    if (level[j + 1].x <= level[j].x) {
                         problem = true;
-                        level[j+1].x = leve[j].x + 1;
+                        level[j + 1].x = level[j].x + 1;
                     }
                 }
             }
-            for (let i=0; i<singular_levels.length; i++) {
+            for (let i = 0; i < singular_levels.length; i++) {
                 let level = singular_levels[i];
-                for (let j=0; j<level.length-1; j++) {
-                    if (level[j+1].x < level[j].x) {
+                for (let j = 0; j < level.length - 1; j++) {
+                    if (level[j + 1].x <= level[j].x) {
                         problem = true;
-                        level[j+1].x = level[j].x + 1;
+                        level[j + 1].x = level[j].x + 1;
                     }
                 }
             }
@@ -1462,40 +1042,18 @@ function SVG_prepare(diagram, subdiagram) {
         // Even up inputs and outputs for vertices
         for (var i = 0; i < vertices.length; i++) {
             var vertex = vertices[i];
-            if (!vertex.scalar) {
-                if (vertex.source_edges.length == 0) continue;
-                if (vertex.target_edges.length == 0) continue;
+            if (vertex.source_edges.length == 0) continue;
+            if (vertex.target_edges.length == 0) continue;
 
-                /*
-                var source_mean = 0;
-                for (var j = 0; j < vertex.source_edges.length; j++) {
-                    source_mean += edges[vertex.source_edges[j]].x;
+            let source_mean = (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
+            let target_mean = (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
+            let diff = Math.abs(source_mean - target_mean);
+            if (diff > 0.01) {
+                problem = true;
+                let edges_to_offset = (source_mean > target_mean) ? vertex.target_edges : vertex.source_edges;
+                for (let j = 0; j < edges_to_offset.length; j++) {
+                    edges_to_offset[j].x += diff;
                 }
-                source_mean /= vertex.source_edges.length;
-                var target_mean = 0;
-                for (var j = 0; j < vertex.target_edges.length; j++) {
-                    target_mean += edges[vertex.target_edges[j]].x;
-                }
-                target_mean /= vertex.target_edges.length;
-                */
-
-                // NEW IDEA
-                let source_mean = (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
-                let target_mean = (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
-                let diff = Math.abs(source_mean - target_mean);
-                if (diff > 0.01) {
-                    problem = true;
-                    let edges_to_offset;
-                    if (source_mean > target_mean) {
-                        edges_to_offset = vertex.target_edges;
-                    } else {
-                        edges_to_offset = vertex.source_edges;
-                    }
-                    for (let j = 0; j < edges_to_offset.length; j++) {
-                        edges_to_offset[j].x += diff;
-                    }
-                }
-                continue;
             }
 
             /*
@@ -1520,22 +1078,21 @@ function SVG_prepare(diagram, subdiagram) {
     // Find max x-coordinate
     for (var i = 0; i < regular_levels.length; i++) {
         let level = regular_levels[i];
-        for (let j=0; j<level.length; j++) {
+        for (let j = 0; j < level.length; j++) {
             max_x = Math.max(max_x, level[j].x);
         }
     }
     for (var i = 0; i < singular_levels.length; i++) {
         let level = singular_levels[i];
-        for (let j=0; j<level.length; j++) {
+        for (let j = 0; j < level.length; j++) {
             max_x = Math.max(max_x, level[j].x);
         }
     }
 
-    /*
     // Set vertex x-coordinates for non-scalars
     for (var i = 0; i < vertices.length; i++) {
         var vertex = vertices[i];
-        if (vertex.scalar) continue;
+        if (vertex.source_edges.length + vertex.target_edges.length == 0) continue;
         if (vertex.source_edges.length == 1) {
             vertex.x = vertex.source_edges[0].x;
         } else if (vertex.target_edges.length == 1) {
@@ -1551,11 +1108,8 @@ function SVG_prepare(diagram, subdiagram) {
             vertex.x = total_x / (vertex.target_edges.length + vertex.source_edges.length);
         }
     }
-    */
 
     return { edges, vertices, regular_levels, max_x };
-    //var data = {edges: [], vertices: [], edges_at_level: []};
-    //return data;
 }
 
 // Add a highlighting rectangle to the diagram
@@ -1613,7 +1167,7 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
                 right += 0.25;
             }
         }
-    } else { // THE CASE THAT boundary == null
+    } else { // The case that boundary == null
 
         // Get top and bottom
         bottom = box.min.last() + b.bottom;
@@ -1695,39 +1249,10 @@ function globular_add_highlight(container, data, box, boundary, diagram) {
     //svg.children('g').children('g').append(g);
     svg.find('g.diagram_group').append(g);
     var path_string =
-        SVG_move_to({
-            x: left,
-            y: bottom
-        }) + SVG_line_to({
-            x: left,
-            y: top
-        }) + SVG_line_to({
-            x: right,
-            y: top
-        }) + SVG_line_to({
-            x: right,
-            y: bottom
-        }) + SVG_line_to({
-            x: left,
-            y: bottom
-        });
-    g[0].appendChild(SVG_create_path({
-        string: path_string,
-        fill: '#ffff00',
-        fill_opacity: 0.5
-        /*,
-        stroke: '#ff0000',
-        stroke_opacity: 0.4,
-        stroke_width: 0.01
-        */
-    }));
-    /*
-    g[0].appendChild(SVG_create_path({
-        string: path_string,
-        stroke_width: 0.01,
-        stroke: '#ff0000',
-        stroke_opacity: 0.4
-    }));
-    */
-
+        SVG_move_to({ x: left, y: bottom })
+        + SVG_line_to({ x: left, y: top })
+        + SVG_line_to({ x: right, y: top })
+        + SVG_line_to({ x: right, y: bottom })
+        + SVG_line_to({ x: left, y: bottom });
+    g[0].appendChild(SVG_create_path({ string: path_string, fill: '#ffff00', fill_opacity: 0.5 }));
 }

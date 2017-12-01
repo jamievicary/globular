@@ -319,7 +319,7 @@ Project.prototype.dragCellUI = function (drag) {
     }
 
     // Reverse the coordinates, since the display code uses the opposite system
-    drag.coordinates = drag.coordinates.reverse();
+    //drag.coordinates = drag.coordinates.reverse();
 
     // Find how we can interpret this drag in terms of an algebraic move
     var options = diagram_pointer.interpretDrag(drag);

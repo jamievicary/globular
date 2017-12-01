@@ -189,6 +189,9 @@ class DisplaySVG {
         // Obtain the information attached to the SVG element
         let target = event.target;
         let type = target.getAttributeNS(null, "element_type");
+        //console.log(type + '@' + JSON.stringify(coords));
+        //return;
+
         let index = Number(target.getAttributeNS(null, "element_index"));
         let index2 = Number(target.getAttributeNS(null, "element_index_2"));
         let element = { type, index, index2 };
@@ -228,7 +231,8 @@ class DisplaySVG {
     getLogicalLocation2D({ type, index, index2 }, coords) {
         if (type == 'vertex') {
             let vertex = this.data.vertices[index];
-            return this.createLocation([vertex.level], [], type);
+            let coords = [{height: vertex.level, regular: false}, {height: vertex.singular_height, regular: false}];
+            return this.createLocation(coords, [], type);
         }
 
         // Determine the height of the vertex nearest to the clicked height.
@@ -239,21 +243,26 @@ class DisplaySVG {
 
             // Adjust height to correct for phenomenon that edges can 'protrude'
             // above and below their true vertical bounds.
+            /*
             if (edge.finish_vertex != null) height = Math.min(height, edge.finish_vertex);
             if (edge.start_vertex != null) height = Math.max(height, edge.start_vertex + 1);
+            */
 
-            let edgesToLeft = this.data.edges_at_level[height].indexOf(index) + 1;
+            let edgesToLeft = this.data.edges_at_level[height].indexOf(edge);
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
-            return this.createLocation([height, edgesToLeft - 1], boundaryFlags, type);
+            let slicecoords = [{height: height, regular: true}, {height: edgesToLeft, regular: false}];
+            return this.createLocation(slicecoords, boundaryFlags, type);
         }
 
+        /*
         if (type == "interchanger_edge") {
             let edgesToLeft = this.edgesLeftOfInterchanger(index, index2, height, coords);
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
             return this.createLocation([height, edgesToLeft - 1], boundaryFlags, type);
         }
+        */
 
         if (type == 'region') {
             // There's insufficient data in the region SVG object to determine
@@ -265,17 +274,19 @@ class DisplaySVG {
 
             // Count the edges that are to the left of the coordinates
             let edgesAtLevel = this.data.edges_at_level[height];
-            let edgesToLeft = edgesAtLevel.filter(edge => this.data.edges[edge].x <= coords.x).length;
+            let edgesToLeft = edgesAtLevel.filter(edge => edge.x <= coords.x).length;
             edgesToLeft = Math.max(0, edgesToLeft);
 
             // When the diagram is projected, we view it sideways with the topmost slice
             // on top; the lower slices are not visible in the diagram. Hence we always
             // point at the topmost slice.
-            let depth = Math.max(0, this.visibleDiagram.getSlice([edgesToLeft, height]).data.length - 1);
+            //let slice = this.visibleDiagram.getSlice([{height: edgesToLeft, regular: true}, {height: height, regular: true}]);
+            //let depth = (slice.getDimension() == 0 ? 0 : Math.max(0, slice.data.length - 1));
 
             // Traverse into deeper slices until there is a cell present the in
             // the diagram, if neccessary.
-            let entityCoordinates = this.visibleDiagram.realizeCoordinate([depth, edgesToLeft, height]).reverse();
+            //let entityCoordinates = this.visibleDiagram.realizeCoordinate([depth, edgesToLeft, height]).reverse();
+            let entityCoordinates = [{height: height, regular: true}, {height: edgesToLeft, regular: true}];
             let fringe = this.getFringe(coords);
             let boundaryFlags = [
                 { source: fringe.bottom, target: fringe.top },
@@ -346,7 +357,9 @@ class DisplaySVG {
 
         this.popup = data.logical;
         let boundary = this.diagram.getBoundary(data.logical.boundary);
-        let cell = boundary.getCell(data.logical.coordinates.reverse());
+        //let cell = boundary.getCell(data.logical.coordinates.reverse());
+        let slice = boundary.getSlice(data.logical.coordinates);
+        let cell = slice.getLastId();
         let boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
         let description = Globular.getFriendlyName(cell) + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
         let pos = $('#diagram-canvas').position();

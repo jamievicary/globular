@@ -77,18 +77,19 @@ Diagram.prototype.interpretClickInverses = function(drag) {
 
     var cells = gProject.signature.getNCells(this.getDimension() + 1);
     if (this.getDimension() == 0) drag.coordinates = []
-    var click_box = this.getLocationBoundingBox(drag.coordinates);
+    //var click_box = this.getLocationBoundingBox(drag.coordinates);
+    let click = drag.coordinates;
 
     var results = [];
     for (var i = 0; i < cells.length; i++) {
         // Does the source of this cell match at this location?
         var generator = gProject.signature.getGenerator(cells[i]);
         
-        results = results.concat(this.getLocalMatches(click_box, generator.id, ''));
-        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0'));
+        results = results.concat(this.getLocalMatches(click, generator.id, ''));
+        results = results.concat(this.getLocalMatches(click, generator.id, 'I0'));
         if (!generator.flippable()) continue;
-        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I1'));
-        results = results.concat(this.getLocalMatches(click_box, generator.id, 'I0I1'));
+        results = results.concat(this.getLocalMatches(click, generator.id, 'I1'));
+        results = results.concat(this.getLocalMatches(click, generator.id, 'I0I1'));
 
 /*        
         //var checkbox = $('#invertible-' + generator.id);

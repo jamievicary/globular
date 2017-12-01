@@ -32,6 +32,10 @@ class Content {
         _assert(!isNaN(n));
         _assert(forward_limit);
         _assert(backward_limit);
+        _assert(forward_limit instanceof ForwardLimit);
+        _assert(backward_limit instanceof BackwardLimit);
+        _assert(forward_limit.n == n);
+        _assert(backward_limit.n == n);
         this.n = n;
         this.forward_limit = forward_limit;
         this.backward_limit = backward_limit;
@@ -57,8 +61,8 @@ class Content {
         this.backward_limit.deepPad(position);
     }
     equals(content) {
-        if (this.forward_limit != content.forward_limit) return false;
-        if (this.backward_limit != content.backward_limit) return false;
+        if (!this.forward_limit.equals(content.forward_limit)) return false;
+        if (!this.backward_limit.equals(content.backward_limit)) return false;
         return true;
     }
     getMonotones() {
@@ -77,7 +81,7 @@ class Content {
         return new_data;
     }
     static deepPadData(data, position) {
-        for (let i=0; i<data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
             data[i].deepPad(position);
         }
     }
@@ -86,13 +90,14 @@ class Content {
 class LimitComponent {
 
     /*
-        - for n > 0:
-            - data :: Array(Content(n-1))
-            - first :: Number, the first regular slice affected
-            - last :: Number, the last regular slice affected
-            - sublimits :: Array(Limit(n-1)) // should be forward/backward?
-        - for n == 0:
-            - type :: String
+- LimitComponent(n) comprises: (this is a component of a limit between n-diagrams)
+    - for n > 0:
+        - data :: Array(Content(n-1))
+        - first :: Number, the first regular slice affected
+        - last :: Number, the last regular slice affected
+        - sublimits :: Array(Limit(n-1)) // should be forward/backward?
+    - for n == 0:
+        - type :: String
     */
     constructor(n, args) {
         _assert(!isNaN(n));
@@ -104,21 +109,25 @@ class LimitComponent {
         }
         _assert(!isNaN(args.first));
         _assert(!isNaN(args.last));
-        _assert(args.data);
-        _assert(args.sublimits);
+        _assert(args.data instanceof Array);
+        _assert(args.sublimits instanceof Array);
         this.data = args.data;
         this.first = args.first;
         this.last = args.last;
         this.sublimits = args.sublimits;
         for (let i = 0; i < this.sublimits.length; i++) {
-            _assert(this.sublimits[i]);
+            _assert(this.sublimits[i] instanceof Limit);
+            _assert(this.sublimits[i].n == n - 1);
+        }
+        for (let i = 0; i < this.data.length; i++) {
+            _assert(this.data[i] instanceof Content);
+            _assert(this.data[i].n == n - 1);
         }
     }
     equals(b) {
         var a = this;
         if (a.first != b.first) return false;
         if (a.last != b.last) return false;
-        if (a.contract != b.contract) return false;
         if (!a.data && b.data) return false;
         if (a.data && !b.data) return false;
         if (a.data) {
@@ -139,6 +148,7 @@ class LimitComponent {
     }
     getLastId() {
         if (this.n == 0) return this.type;
+        return this.data.last().getLastId();
         _assert(false); // ... to write ...
     }
     copy() {
@@ -156,7 +166,7 @@ class LimitComponent {
         return new LimitComponent(this.n, { data, sublimits, first, last });
     }
     usesCell(generator) {
-        if (this.contract) return (this.contract == generator.id);
+        if (this.n == 0) return this.type == generator.id;
         for (let i = 0; i < this.data.length; i++) {
             if (this.data[i].usesCell(generator)) return true;
         }
@@ -223,7 +233,7 @@ class Limit {
         if (!this.components || !limit.components) return false;
         if (this.components.length != limit.components.length) return false;
         for (let i = 0; i < this.components.length; i++) {
-            if (this.components[i] != limit.components[i]) return false;
+            if (!this.components[i].equals(limit.components[i])) return false;
         }
         return true;
     }
@@ -260,7 +270,7 @@ class ForwardLimit extends Limit {
     constructor(n, components) {
         _assert(!isNaN(n));
         _assert(components);
-        return super(n ,components); // call the Limit constructor
+        return super(n, components); // call the Limit constructor
     }
     rewrite(diagram) {
         diagram.type_dimension++;

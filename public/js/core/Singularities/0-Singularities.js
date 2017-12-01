@@ -120,6 +120,7 @@ Diagram.prototype.interpretDrag = function(drag) {
 
     // Recursively handle a drag in a subdiagram
     var options = [];
+    /*
     if (drag.coordinates.length > 1) {
         var new_drag = {
             boundary: drag.boundary,
@@ -138,6 +139,7 @@ Diagram.prototype.interpretDrag = function(drag) {
             }
         }
     }
+    */
 
     // If we're clicking, then find a match natively in the current diagram    
     //if (drag.directions == null) {

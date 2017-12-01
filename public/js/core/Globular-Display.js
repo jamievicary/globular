@@ -242,7 +242,7 @@ class DisplayManager {
             input.val(Math.min(val, Math.max(slice.data.length, 1)));
             update_control_width(input);
             input.attr('max', Math.max(1, slice.data.length));
-            slice = slice.getSlice(input.val()); // no need to copy slice
+            slice = slice.getSlice({height:input.val(), regular:true}); // no need to copy slice
         }
     }
 
@@ -284,6 +284,8 @@ class DisplayManager {
     }
 
     highlightAction(action, boundary) {
+        return;
+        
         // Decide what to actually highlight. If we're cancelling something on the boundary, highlight that instead.
         var real_boundary, real_action;
         if (action.preattachment == null) {
