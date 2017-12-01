@@ -14,9 +14,9 @@
         - backward_limit :: BackwardLimit(n)
 - ForwardLimit(n) extends Limit(n)
 - BackwardLimit(n) extends Limit(n)
-- Limit(n) comprises: (this is a limit between n-diagrams)
-    - for all n:
-        - components :: Array(LimitComponent(n))
+- Limit(n) extends Array comprises: (this is a limit between n-diagrams)
+    - for all n, an array of:
+        - LimitComponent(n)
 - LimitComponent(n) comprises: (this is a component of a limit between n-diagrams)
     - for n > 0:
         - data :: Array(Content(n-1))
@@ -41,7 +41,7 @@ class Content {
         this.backward_limit = backward_limit;
     }
     getLastId() {
-        return this.forward_limit.components.last().getLastId();
+        return this.forward_limit.last().getLastId();
     }
     copy() {
         return new Content(this.n, this.forward_limit.copy(), this.backward_limit.copy());
@@ -204,44 +204,42 @@ class LimitComponent {
     }
 }
 
-class Limit {
+class Limit extends Array {
     constructor(n, components) {
         _assert(!isNaN(n));
         _assert(components);
+        super(...components);
         this.n = n;
-        this.components = components;
     }
     usesCell(generator) {
-        for (let i = 0; i < this.components.length; i++) {
-            if (this.components[i].usesCell(generator)) return true;
+        for (let i = 0; i < this.length; i++) {
+            if (this[i].usesCell(generator)) return true;
         }
         return false;
     }
     pad(depth) {
-        for (let i = 0; i < this.components.length; i++) {
-            this.components[i].pad(depth);
+        for (let i = 0; i < this.length; i++) {
+            this[i].pad(depth);
         }
     }
     deepPad(position) {
         _assert(this.n == position.length);
-        for (let i = 0; i < this.components.length; i++) {
-            this.components[i].deepPad(position);
+        for (let i = 0; i < this.length; i++) {
+            this[i].deepPad(position);
         }
     }
     equals(limit) {
-        if (!this.components && !limit.components) return true;
-        if (!this.components || !limit.components) return false;
-        if (this.components.length != limit.components.length) return false;
-        for (let i = 0; i < this.components.length; i++) {
-            if (!this.components[i].equals(limit.components[i])) return false;
+        if (this.length != limit.length) return false;
+        for (let i = 0; i < this.length; i++) {
+            if (!this[i].equals(limit[i])) return false;
         }
         return true;
     }
     getMonotone() {
         let monotone = [];
         let singular_height = 0;
-        for (let i = 0; i < this.components.length; i++) {
-            let component = this.components[i];
+        for (let i = 0; i < this.length; i++) {
+            let component = this[i];
             while (monotone.length < component.first) {
                 monotone.push(singular_height);
                 singular_height++;
@@ -257,8 +255,8 @@ class Limit {
     analyzeSingularNeighbourhoods() {
         var singular_classification = [];
         let offset = 0;
-        for (let i = 0; i < this.components.length; i++) {
-            let component = this.components[i];
+        for (let i = 0; i < this.length; i++) {
+            let component = this[i];
             singular_classification[component.first - offset] = true;
             offset += component.last - component.first - 1;
         }
@@ -275,19 +273,19 @@ class ForwardLimit extends Limit {
     rewrite(diagram) {
         diagram.type_dimension++;
         if (this.n == 0) {
-            diagram.type = this.components[0].type;
+            diagram.type = this[0].type;
             return diagram;
         }
-        for (let i = this.components.length - 1; i >= 0; i--) {
-            let c = this.components[i];
+        for (let i = this.length - 1; i >= 0; i--) {
+            let c = this[i];
             diagram.data.splice(c.first, c.last - c.first, c.data[0])
         }
         return diagram;
     }
     copy() {
         let new_components = [];
-        for (let i = 0; i < this.components.length; i++) {
-            new_components.push(this.components[i].copy());
+        for (let i = 0; i < this.length; i++) {
+            new_components.push(this[i].copy());
         }
         return new ForwardLimit(this.n, new_components);
     }
@@ -302,12 +300,12 @@ class BackwardLimit extends Limit {
     rewrite(diagram) {
         diagram.type_dimension--;
         if (diagram.geometric_dimension == 0) {
-            diagram.type = this.components[0].type;
+            diagram.type = this[0].type;
             return diagram;
         }
         let offset = 0;
-        for (let i = 0; i < this.components.length; i++) {
-            let c = this.components[i];
+        for (let i = 0; i < this.length; i++) {
+            let c = this[i];
             let before = diagram.data.slice(0, c.first + offset);
             let after = diagram.data.slice(c.first + offset + 1, diagram.data.length);
             diagram.data = before.concat(c.data.concat(after));
@@ -318,8 +316,8 @@ class BackwardLimit extends Limit {
     }
     copy() {
         let new_components = [];
-        for (let i = 0; i < this.components.length; i++) {
-            new_components.push(this.components[i].copy());
+        for (let i = 0; i < this.length; i++) {
+            new_components.push(this[i].copy());
         }
         return new BackwardLimit(this.n, new_components);
     }

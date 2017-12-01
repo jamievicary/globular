@@ -858,10 +858,10 @@ function sub_content(content, subcontent, position) {
 
 // Check if the given subdata is present with the indicated offset
 function sub_data(data, subdata, offset) {
-    //    if (!sub_limit(this.data[height].forward_limit.components, subdata.forward_limit.components, offset)) return false;
-    //    if (!sub_limit(this.data[height].backward_limit.components, subdata.backward_limit.components, offset)) return false;
-    if (!sub_limit(this.data[height].forward_limit.components, subdata.forward_limit.components, offset)) return false;
-    if (!sub_limit(this.data[height].backward_limit.components, subdata.backward_limit.components, offset)) return false;
+    //    if (!sub_limit(this.data[height].forward_limit, subdata.forward_limit, offset)) return false;
+    //    if (!sub_limit(this.data[height].backward_limit, subdata.backward_limit, offset)) return false;
+    if (!sub_limit(this.data[height].forward_limit, subdata.forward_limit, offset)) return false;
+    if (!sub_limit(this.data[height].backward_limit, subdata.backward_limit, offset)) return false;
     return true;
 }
 
@@ -869,9 +869,9 @@ function sub_data(data, subdata, offset) {
 // Check if a forward limit contains all the content of another
 function sub_limit(limit, sublimit, offset) {
     _assert(limit.n == sublimit.n);
-    if (limit.components.length != sublimit.components.length) return false; // number of components must be the same
-    for (let i = 0; i < limit.components.length; i++) {
-        if (!sub_limit_component(limit.components[i], sublimit.components[i], offset)) return false;
+    if (limit.length != sublimit.length) return false; // number of components must be the same
+    for (let i = 0; i < limit.length; i++) {
+        if (!sub_limit_component(limit[i], sublimit[i], offset)) return false;
     }
     return true;
 }
