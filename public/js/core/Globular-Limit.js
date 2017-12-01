@@ -236,7 +236,7 @@ class Limit extends Array {
         return true;
     }
     getMonotone() {
-        let monotone = [];
+        let monotone = new Monotone(0, []);
         let singular_height = 0;
         for (let i = 0; i < this.length; i++) {
             let component = this[i];
@@ -249,6 +249,7 @@ class Limit extends Array {
             }
             singular_height++;
         }
+        monotone.target_size = 
         return monotone;
     }
     // For each singular height, computes whether its neighbourhood is nontrivial
@@ -322,3 +323,94 @@ class BackwardLimit extends Limit {
         return new BackwardLimit(this.n, new_components);
     }
 }
+
+class Monotone extends Array {
+    constructor(target_size, values) {
+        _assert(!isNaN(target_size));
+        _assert(target_size >= 0);
+        _assert(values);
+        //super(...values);
+        super();
+        for (let i = 0; i < values.length; i++) {
+            this[i] = values[i];
+            _assert(!isNaN(values[i]));
+            _assert(values[i] >= 0);
+            if (i > 0) _assert(this[i - 1] <= this[i]);
+        }
+        this.target_size = target_size;
+        if (this.length > 0) _assert(this.target_size > this.last());
+    }
+    grow() {
+        this.push(this.target_size);
+        this.target_size++;
+    }
+    compose(second) {
+        _assert(second instanceof Monotone);
+        let copy_second = second.copy();
+        copy_second.target_size = this.target_size;
+        for (let i = 0; i < second.length; i++) {
+            copy_second[i] = this[second[i]];
+        }
+        return copy_second;
+    }
+    equals(second) {
+        let first = this;
+        if (first.length != second.length) return false;
+        if (first.target_size != second.target_size) return false;
+        for (let i = 0; i < first.length; i++) {
+            if (first[i] != second[i]) return false;
+        }
+        return true;
+    }
+    pushout(second, n) {
+        let first = this;
+        _assert(second instanceof Monotone);
+        _assert(first.length == second.length);
+        if (n == null) return this.pushout(second, first.length); // begin the induction
+        if (n == 0) return { first: new Monotone(0, []), second: new Monotone(0, []) }; // base case
+        let injections = this.pushout(second, n - 1); // recursive step
+        if (injections == null) return null;
+        _assert(injections.first instanceof Monotone);
+        _assert(injections.second instanceof Monotone);
+        _assert(injections.first.target_size == injections.second.target_size);
+        let left_delta = first[n - 1] + (n == 1 ? 1 : -first[n - 2]);
+        let right_delta = second[n - 1] + (n == 1 ? 1 : -second[n - 2]);
+        if (left_delta > 1 && right_delta > 1) return null;
+        else if (left_delta == 0 || right_delta == 0) {
+            let t = injections.first.target_size;
+            while (injections.first.length <= first[n - 1]) injections.first.push(t - 1);
+            while (injections.second.length <= second[n - 1]) injections.second.push(t - 1);
+        } else {
+            for (let i = 0; i < left_delta - 1; i++) injections.first.grow();
+            for (let i = 0; i < right_delta - 1; i++) injections.second.grow();
+            let t = (left_delta > 1 ? injections.first.target_size : injections.second.target_size);
+            injections.first.push(t);
+            injections.second.push(t);
+            injections.first.target_size = t + 1;
+            injections.second.target_size = t + 1;
+        }
+        if (n == first.length) {
+            let first_trailing = first.target_size - this.last() - 1;
+            let second_trailing = second.target_size - this.last() - 1;
+            if (first_trailing > 0 && second_trailing > 0) return null;
+            while (injections.first.length < first.target_size) injections.first.grow();
+            while (injections.second.length < second.target_size) injections.second.grow();
+            injections.first.target_size = injections.second.target_size = Math.max(injections.first.target_size, injections.second.target_size);
+        }
+        if (n == first.length) {
+            _assert(injections.first.length == first.target_size);
+            _assert(injections.second.length == second.target_size);
+            _assert(injections.first.target_size == injections.second.target_size);
+            _assert(injections.first.compose(first).equals(injections.second.compose(second)));
+        }
+        return injections;
+    }
+    copy() {
+        let m = new Monotone(this.target_size, []);
+        for (let i = 0; i < this.length; i++) {
+            m[i] = this[i];
+        }
+        return m;
+    }
+}
+
