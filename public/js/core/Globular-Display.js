@@ -74,7 +74,7 @@ class DisplayManager {
         // Update the suppression input
         var suppress = this.suppressInput.val();
         if (controls != null) suppress = controls.project;
-        suppress = Math.min(suppress, this.diagram.geometric_dimension);
+        suppress = Math.min(suppress, this.diagram.n);
         if (suppress < 0) suppress = 0;
         this.suppressInput.val(suppress);
         update_control_width(this.suppressInput);
@@ -85,7 +85,7 @@ class DisplayManager {
             if (drag != undefined) {
                 if (drag.boost) view++;
             }
-            view = Math.min(this.display.getMaximumDimension(), view, this.diagram.getDimension() - suppress);
+            view = Math.min(this.display.getMaximumDimension(), view, this.diagram.n - suppress);
             this.viewInput.val(view);
             update_control_width(view);
         }
@@ -167,7 +167,7 @@ class DisplayManager {
         }
 
         // Calculate the desired number of slice controls
-        let remainingDimensions = this.diagram.geometric_dimension - this.getSuppress() - this.display.getMaximumDimension() /*this.view_input.val()*/ ;
+        let remainingDimensions = this.diagram.n - this.getSuppress() - this.display.getMaximumDimension() /*this.view_input.val()*/ ;
         if (remainingDimensions < 0) remainingDimensions = 0;
 
         // Remove any superfluous slice controls
@@ -242,11 +242,12 @@ class DisplayManager {
             input.val(Math.min(val, Math.max(slice.data.length, 1)));
             update_control_width(input);
             input.attr('max', Math.max(1, slice.data.length));
-            slice = slice.getSlice({height:input.val(), regular:true}); // no need to copy slice
+            slice = slice.getSlice({height:Number(input.val()), regular:true}); // no need to copy slice
         }
     }
 
     highlightSlice(index) {
+        return null;
         // Get bounding box for entire action
         var location = this.getSlices();
         var box = this.diagram.getLocationBoundingBox(location.reverse());

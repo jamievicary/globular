@@ -8,52 +8,66 @@
 */
 
 // Interpret drag of this type
-Diagram.prototype.interpretDrag.Inverses = function(drag) {
+Diagram.prototype.interpretDrag.Inverses = function (drag, boundary_type) {
 
-    if (drag.directions == null) return this.interpretClickInverses(drag);
+    if (drag.directions == null) return this.interpretClickInverses(drag, boundary_type);
+
+    _assert(drag.directions.length == 1);
+    let drag_content = this.drag(drag.coordinates, drag.directions[0] > 0);
+    if (!drag_content) return [];
+    return drag_content;
+
+    /*
+    if (content)
+
+
     if (drag.coordinates.length > 1) return [];
 
     var up = drag.directions[0] > 0;
     var height = drag.coordinates[0];
+*/
 
-    // Can we cancel an invertible cell at the bottom?
-    if (!up && height == 0) {
-        var cell = this.cells[height];
-        //if (!cell.id.is_invertible()) return [];
-        var preattachment = {
-            boundary: {
-                type: 's',
-                depth: 1
-            },
-            id: cell.id,
-            key: cell.key
+    /*
+        // Can we cancel an invertible cell at the bottom?
+        if (!up && height == 0) {
+            var cell = this.cells[height];
+            //if (!cell.id.is_invertible()) return [];
+            var preattachment = {
+                boundary: {
+                    type: 's',
+                    depth: 1
+                },
+                id: cell.id,
+                key: cell.key
+            };
+            return [{
+                preattachment: preattachment,
+                id: cell.id.toggle_inverse() + '-EI0',
+                key: [0]
+            }];
         };
-        return [{
-            preattachment: preattachment,
-            id: cell.id.toggle_inverse() + '-EI0',
-            key: [0]
-        }];
-    };
+    
+        // Can we cancel an invertible cell at the top?
+        if (up && height == this.cells.length - 1) {
+            var cell = this.cells[height];
+            //if (!cell.id.is_invertible()) return [];
+            var preattachment = {
+                boundary: {
+                    type: 't',
+                    depth: 1
+                },
+                id: Globular.toggle_inverse(cell.id),
+                key: this.getSlice(height).getInverseKey(cell.id, cell.key) // no need to copy
+            };
+            return [{
+                preattachment: preattachment,
+                id: cell.id + '-EI0',
+                key: [this.cells.length - 1]
+            }];
+        }
+        */
 
-    // Can we cancel an invertible cell at the top?
-    if (up && height == this.cells.length - 1) {
-        var cell = this.cells[height];
-        //if (!cell.id.is_invertible()) return [];
-        var preattachment = {
-            boundary: {
-                type: 't',
-                depth: 1
-            },
-            id: Globular.toggle_inverse(cell.id),
-            key: this.getSlice(height).getInverseKey(cell.id, cell.key) // no need to copy
-        };
-        return [{
-            preattachment: preattachment,
-            id: cell.id + '-EI0',
-            key: [this.cells.length - 1]
-        }];
-    }
-
+    /*
     var cell = this.cells[up ? height : height - 1];
     var options = this.getDragOptions([cell.id + '-EI0'], [up ? height : height - 1]);
 
@@ -70,116 +84,58 @@ Diagram.prototype.interpretDrag.Inverses = function(drag) {
         return [];
     }
     return [possible_options[0]];
+    */
+
 };
 
 // See if we can insert a invertible cell from the signature
-Diagram.prototype.interpretClickInverses = function(drag) {
+Diagram.prototype.interpretClickInverses = function (drag, boundary_type) {
 
-    var cells = gProject.signature.getNCells(this.getDimension() + 1);
-    if (this.getDimension() == 0) drag.coordinates = []
+    var cells = gProject.signature.getNCells(this.n + 1);
+    if (this.n == 0) drag.coordinates = []
     //var click_box = this.getLocationBoundingBox(drag.coordinates);
     let click = drag.coordinates;
 
     var results = [];
     for (var i = 0; i < cells.length; i++) {
-        // Does the source of this cell match at this location?
-        var generator = gProject.signature.getGenerator(cells[i]);
-        
-        results = results.concat(this.getLocalMatches(click, generator.id, ''));
-        results = results.concat(this.getLocalMatches(click, generator.id, 'I0'));
-        if (!generator.flippable()) continue;
-        results = results.concat(this.getLocalMatches(click, generator.id, 'I1'));
-        results = results.concat(this.getLocalMatches(click, generator.id, 'I0I1'));
-
-/*        
-        //var checkbox = $('#invertible-' + generator.id);
-        //if (!checkbox.is(':checked')) continue;
-        var matches = this.enumerate(generator.source);
-        for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
-            //if (!matches[j].vector_equals(drag.coordinates)) continue;
-            results.push({
-                id: cells[i],
-                key: matches[j],
-                possible: true
-            });
-        }
-        
-        // What about the target
-        var matches = this.enumerate(generator.target);
-        for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
-            //if (!matches[j].vector_equals(drag.coordinates)) continue;
-            results.push({
-                id: cells[i] + 'I0',
-                key: matches[j],
-                possible: true
-            });
-        }
-        
-        // What about the flip, if possible
-        if (!generator.flippable()) continue;
-        
-        // Match the flip
-        var flip_generator = generator.copy().mirror(1);
-        var matches = this.enumerate(flip_generator.source);
-        for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
-            results.push({
-                id: cells[i] + 'I1',
-                key: matches[j],
-                possible: true
-            });
-        }
-
-        // Match the flip inverse
-        var matches = this.enumerate(flip_generator.target);
-        for (var j = 0; j < matches.length; j++) {
-            if (!matches[j].tail(drag.coordinates)) continue;
-            results.push({
-                id: cells[i] + 'I0I1',
-                key: matches[j],
-                possible: true
-            });
-        }
-*/
+        results = results.concat(this.getLocalMatches(click, cells[i], boundary_type == 's' ? true : false))
     }
     return results;
 };
 
-Diagram.prototype.getInterchangerCoordinates.Inverses = function(type, key) {
+Diagram.prototype.getInterchangerCoordinates.Inverses = function (type, key) {
     return this.getInterchangerBoundingBox(type, key).min;
 }
 
-Diagram.prototype.expand.Inverses = function(type, x, n, o) {
-    
+Diagram.prototype.expand.Inverses = function (type, x, n, o) {
+
     var list = new Array();
-    
-    if(type.tail('EI0')){
-        for(var i = 1; i <= n; i++){
-            list.push(new NCell({id: type, key: [x + n - i]}));
+
+    if (type.tail('EI0')) {
+        for (var i = 1; i <= n; i++) {
+            list.push(new NCell({ id: type, key: [x + n - i] }));
         }
     }
-    else{
+    else {
         var k = x[0];
-        if(type.substr(0, 5) === 'IntI0' /*&& o === -1*/){k++}
-        for(var i = 0; i < n; i++){
-            list.push(new NCell({id: type, key: [k, x[1] + i]}));
+        if (type.substr(0, 5) === 'IntI0' /*&& o === -1*/) { k++ }
+        for (var i = 0; i < n; i++) {
+            list.push(new NCell({ id: type, key: [k, x[1] + i] }));
             k += o;
-        }   
+        }
     }
-    
+
     return list;
 }
 
-Diagram.prototype.getInverseKey.Inverses = function(type, key) {
-    
+Diagram.prototype.getInverseKey.Inverses = function (type, key) {
+
     // '-EI0' cells require a key of length 1
     if (type.tail('E')) {
-        //if (key.length != this.getDimension()) debugger;
+        //if (key.length != this.n) debugger;
         return [key.last()];
     }
-    
+
     // '-E' cells require a key of length > 1
     //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min.slice(1);
     //if (type.tail('EI')) return this.getBoundingBox({id: type, key: key}).min;
@@ -189,7 +145,7 @@ Diagram.prototype.getInverseKey.Inverses = function(type, key) {
     }
 }
 
-Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
+Diagram.prototype.getInterchangerBoundingBox.Inverses = function (type, key) {
     var base_type = type.substr(0, type.length - (type.tail('-E') ? 2 : 3));
 
     var box;
@@ -211,22 +167,22 @@ Diagram.prototype.getInterchangerBoundingBox.Inverses = function(type, key) {
     return box;
 }
 
-Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
+Diagram.prototype.interchangerAllowed.Inverses = function (type, key) {
 
     // This procedure only recognizes '-E' or '-EI0' type moves
     if (!type.strip_inverses().tail('-E')) return false;
 
     var height = key.last();
 
-    if(type.tail('Int-E')){
+    if (type.tail('Int-E')) {
         var slice = this.getSlice(height);
-        if(key.penultimate() + 1 >= slice.data.length){return false;}
+        if (key.penultimate() + 1 >= slice.data.length) { return false; }
         return true;
     }
-    else if(type.tail('IntI0-E')){
+    else if (type.tail('IntI0-E')) {
         var slice = this.getSlice(height);
-        if(key.penultimate() + 1 > slice.data.length){return false;}
-        if(key.penultimate() < 1){return false;}
+        if (key.penultimate() + 1 > slice.data.length) { return false; }
+        if (key.penultimate() < 1) { return false; }
         return true;
     }
     else if (type.tail('-E')) return true;
@@ -253,7 +209,7 @@ Diagram.prototype.interchangerAllowed.Inverses = function(type, key) {
     return false;
 };
 
-Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
+Diagram.prototype.rewritePasteData.Inverses = function (type, key) {
 
     // '...-EI'-type cells just rewrite to the identity
     if (type.tail('-EI0')) return [];
@@ -273,8 +229,8 @@ Diagram.prototype.rewritePasteData.Inverses = function(type, key) {
     })];
 }
 
-Diagram.prototype.tidyKey.Inverses = function(type, key) {
+Diagram.prototype.tidyKey.Inverses = function (type, key) {
     if (type.tail('-EI0') && key.length != 1) debugger;
-    if (type.tail('-E') && key.length != this.getDimension()) debugger;
+    if (type.tail('-E') && key.length != this.n) debugger;
     return key;
 }

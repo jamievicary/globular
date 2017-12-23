@@ -4,16 +4,16 @@ class Diagram {
     constructor(n, args) {
         this['_t'] = 'Diagram';
         _assert(!isNaN(n));
-        _assert(!isNaN(args.type_dimension));
-        _assert(n <= args.type_dimension);
-        this.geometric_dimension = n;
-        this.type_dimension = args.type_dimension;
+        _assert(!isNaN(args.t));
+        _assert(n <= args.t);
+        this.n = n;
+        this.t = args.t;
         if (n == 0) {
-            _assert(args.type);
+            _assert(args.type instanceof Generator);
             this.type = args.type;
             return this;
         }
-        _assert(args.source && (args.source.getDimension() + 1 == n));
+        _assert(args.source && (args.source.n + 1 == n));
         _assert(args.data);
         this.source = args.source;
         this.data = args.data;
@@ -32,29 +32,28 @@ class Diagram {
             return false;
         return this.hasTopLevelContent(height - 1);
     }
-    getDimension() {
-        return this.geometric_dimension;
-    }
     // Returns the source boundary of the diagram
     getSourceBoundary() {
         return this.source;
     }
     // Computes the target boundary of the diagram
     getTargetBoundary() {
-        if (this.getDimension() == 0) return null;
+        if (this.n == 0) return null;
         return this.getSlice({ height: this.data.length, regular: true });
     }
     getSlice(location) {
         if (globular_is_array(location)) location = location.slice();
         else location = [location];
         if (location.length == 0) return this;
+        _assert(!isNaN(location[0].height));
+        _assert(location[0].regular != undefined);
         if (!this.source) return null;
         // Recursive case
         let pos = location.shift();
         if (location.length > 0) return this.getSlice(pos).getSlice(location); // no need to copy slice
-        _assert((pos.regular && pos.height <= this.data.length) || (!pos.regular && pos.height < this.data.length));
         // Handle request for slice 1 of identity diagram gracefully
         if (pos.height == 1 && pos.regular && this.data.length == 0) return this.source;
+        _assert((pos.regular && pos.height <= this.data.length) || (!pos.regular && pos.height < this.data.length));
         _assert(pos.height <= this.data.length);
         /*
         // Check whether the cache contains the slice
@@ -66,10 +65,23 @@ class Diagram {
         this.sliceCache[height] = this.getSlice(height - 1).copy().rewrite(this.data[height - 1]); // need to copy before rewrite!
         return this.sliceCache[height];
         */
+
+        if (pos.height == 0 && pos.regular) return this.source;
+        if (pos.regular) {
+            let singular = this.getSlice({height: pos.height - 1, regular: false}).copy();
+            return this.data[pos.height - 1].backward_limit.rewrite(singular);
+        } else {
+            let regular = this.getSlice({height: pos.height, regular: true}).copy();
+            if (pos.height == 0) regular.t = this.t - 1; // When rewriting source need to correct the type dimension
+            return this.data[pos.height].forward_limit.rewrite(regular);
+        }
+        /*
         var regular = pos.height == 0 ? this.source.copy() : this.getSlice({ height: pos.height - 1, regular: true }).copy().rewrite(this.data[pos.height - 1]);
         if (pos.regular) return regular;
         let singular = this.data[pos.height].forward_limit.rewrite(regular);
+        if (pos.height == 0) singular.t ++; // Give type dimension an extra boost when we rewrite the source
         return singular;
+        */
     }
     /*
         if (height == 0) return this.source;
@@ -78,10 +90,10 @@ class Diagram {
     // Return the ways that the goal (up to goal_size) fits inside this diagram (up to max_height),
     // with match starting at the specified height, and including click_point if present
     enumerate({ goal, goal_size, start_height, max_height }) { //(goal, goal_size, start_height, max_height, click_point) {
-        _assert(this.geometric_dimension == goal.geometric_dimension);
-        _assert(this.type_dimension == goal.type_dimension);
+        _assert(this.n == goal.n);
+        _assert(this.t == goal.t);
         // Base case
-        if (this.geometric_dimension == 0) {
+        if (this.n == 0) {
             if (this.type == goal.type) return [[]]; // return a single trivial match
             return []; // return no matches
         }
@@ -92,7 +104,7 @@ class Diagram {
         if (start_height != undefined && max_height < start_height + goal_size) return [];
         // The matches at least contain all the matches in the history of the diagram
         let matches = [];
-        if (max_height > 1 && start_height == undefined) {
+        if (max_height > 0 /*1*/ && start_height == undefined) {
             matches = this.enumerate({ goal, goal_size, start_height, max_height: max_height - 1 });
         }
         // If goal_size == 0, we can try to find a match to a subslice
@@ -135,7 +147,7 @@ class Diagram {
     rewrite(data) {
         // Handle the pointlike case
         /*
-        if (this.geometric_dimension == 0) {
+        if (this.n == 0) {
             this.data = data;
             return this;
         }
@@ -145,21 +157,21 @@ class Diagram {
     }
     // Make a copy of a diagram
     copy() {
-        let type_dimension = this.type_dimension;
+        let t = this.t;
         if (!this.source) {
             let type = this.type;
-            return new Diagram(0, { type_dimension, type });
+            return new Diagram(0, { t, type });
         }
         let data = Content.copyData(this.data);
         let source = this.source.copy();
-        return new Diagram(this.getDimension(), { type_dimension, source, data });
+        return new Diagram(this.n, { t, source, data });
     }
     // Find the ID of the last cell that appears in the diagram
     getLastId() {
         var d = this;
-        if (this.geometric_dimension == 0) return this.type; //{ id: this.data, dimension: this.type_dimension };
+        if (this.n == 0) return this.type; //{ id: this.data, dimension: this.t };
         while (d.data.length == 0) d = d.source;
-        if (d.dimension == 0) return d.type; //{ id: d.type, dimension: d.type_dimension };
+        if (d.dimension == 0) return d.type; //{ id: d.type, dimension: d.t };
         _assert(d.data != null);
         return d.data.last().getLastId();
     }
@@ -185,7 +197,7 @@ class Diagram {
     }
     // Convert an internal coordinate to {boundary: {type, depth}, coordinates}, by identifying coordinates in slices adjacent to the boundary as being in that boundary. Assumes coordinates are first-index-first.
     getBoundaryCoordinates(coordinates, boundaryFlags) {
-        //_assert(coordinates.length == this.geometric_dimension);
+        //_assert(coordinates.length == this.n);
         if (coordinates.length == 0) return { boundary: null, coordinates: [] };
         let allow_boundary = boundaryFlags.length ? boundaryFlags[0] : { source: false, target: false };
         var slice = this.getSlice(coordinates[0]); // no need to copy slice
@@ -219,29 +231,22 @@ class Diagram {
     }
     // Check if the specified id is used at all in this diagram
     usesCell(generator) {
-        if (generator.dimension > this.type_dimension)
-            return false;
-        if (this.geometric_dimension == 0)
-            return this.data == generator.id;
-        // Check whether the source uses it
-        if (this.source && this.source.usesCell(generator))
-            return true;
-        // Check all the content of the diagram
+        if (generator.dimension > this.t) return false;
+        if (this.n == 0) return this.data == generator.id;
+        if (this.source && this.source.usesCell(generator)) return true;
         for (var i = 0; i < this.data.length; i++) {
-            if (this.data[i].usesCell(generator))
-                return true;
+            if (this.data[i].usesCell(generator)) return true;
         }
-        // If not, we're clear
         return false;
     }
     // Get the bounding box surrounding a diagram component
     getLocationBoundingBox(location) {
-        _assert(this.geometric_dimension == location.length);
+        _assert(this.n == location.length);
         if (!globular_is_array(location))
             location = [location];
         else
             location = location.slice();
-        if (this.geometric_dimension == 0)
+        if (this.n == 0)
             return {
                 min: [],
                 max: []
@@ -251,7 +256,7 @@ class Diagram {
         var box = this.getSliceBoundingBox(location);
         if (box == null)
             return null;
-        var extra = (location.length > this.getDimension() ? location.slice(1) : location);
+        var extra = (location.length > this.n ? location.slice(1) : location);
         box.min = box.min.concat(extra);
         box.max = box.max.concat(extra);
         if (extra.length == location.length)
@@ -268,35 +273,34 @@ class Diagram {
         }
     }
     // Attaches the given cell to the diagram, via the specified boundary path. 
-    attach(id, position, boundary /*, bounds*/) {
-        if (boundary != null) {
-            if (boundary.type == '')
-                boundary = null;
-        }
-        let generator = gProject.signature.getGenerator(id);
-        // If the boundary is null, just rewrite the interior
-        if (boundary == null) {
-            let content = this.getAttachmentContent(generator.id, position, generator.source, generator.target);
-            this.rewrite(content);
-            return;
-        }
+    attach(option, boundary /*, bounds*/) {
+        _assert(option instanceof Content);
+
+        if (boundary == null) return this.rewrite(option);
+
         _assert(boundary.type != null);
-        _assert(boundary.depth != undefined);
+        _assert(boundary.depth != null);
 
         if (boundary.depth > 1) {
             if (boundary.type == 's') this.pad(boundary.depth);
-            this.source.attach(id, position, { type: boundary.type, depth: boundary.depth - 1 });
+            this.source.attach(option, { type: boundary.type, depth: boundary.depth - 1 });
+            //this.source.attach(id, position, { type: boundary.type, depth: boundary.depth - 1 });
         } else {
             if (boundary.type == 's') {
+                let new_content = option.reverse(this.source);
+                this.data.unshift(new_content);
+                this.source.rewrite(option);
+                /*
                 var content = this.source.getAttachmentContent(id, position, generator.source, generator.target);
                 this.source.rewrite(content);
                 var inverse_content = this.source.getAttachmentContent(Globular.toggle_inverse(id), position, generator.target, generator.source);
                 this.data.unshift(inverse_content);
                 //this.initializeSliceCache();
+                */
             }
             else {
-                let content = this.getTargetBoundary().getAttachmentContent(id, position, generator.source, generator.target);
-                this.data.push(content);
+                //let content = this.getTargetBoundary().getAttachmentContent(id, position, generator.source, generator.target);
+                this.data.push(option);
             }
 
         }
@@ -323,40 +327,22 @@ class Diagram {
         });
     };
     */
-    // Construct the content that contracts a source diagram, at a given position, and inserts the target diagram
-    getAttachmentContent(type, position, source, target) {
-        //if (!position) position = [].fill(0, 0, this.getDimension());
-        _assert(position.length == this.getDimension());
-        _assert(this.getDimension() == source.getDimension());
-        _assert(this.getDimension() == target.getDimension());
-        if (this.getDimension() == 0) {
-            let forward_component = new LimitComponent(0, { type: type });
-            let backward_component = new LimitComponent(0, { type: target.type });
-            let forward_limit = new ForwardLimit(0, [forward_component]);
-            let backward_limit = new BackwardLimit(0, [backward_component]);
-            return new Content(0, forward_limit, backward_limit);
-        }
-        let forward_limit = this.contractForwardLimit(type, position, source);
-        let singular_diagram = forward_limit.rewrite(this.copy());
-        let backward_limit = singular_diagram.contractBackwardLimit(type, position, target);
-        return new Content(this.getDimension(), forward_limit, backward_limit);
-    }
 
     // Create the forward limit which contracts the a subdiagram at a given position, to a given type
     contractForwardLimit(type, position, subdiagram) {
         if (!position) {
             let arr = [];
-            if (this.getDimension() > 0) {
-                arr[this.getDimension() - 1] = 0;
-                arr = arr.fill(0, 0, this.getDimension());
+            if (this.n > 0) {
+                arr[this.n - 1] = 0;
+                arr = arr.fill(0, 0, this.n);
             }
             position = arr;
         }
         if (!subdiagram) subdiagram = this;
-        _assert(position.length == this.getDimension());
-        _assert(this.getDimension() == subdiagram.getDimension());
-        if (this.getDimension() == 0) {
-            let forward_component = new LimitComponent(0, { type: type });
+        _assert(position.length == this.n);
+        _assert(this.n == subdiagram.n);
+        if (this.n == 0) {
+            let forward_component = new LimitComponent(0, { type });
             return new ForwardLimit(0, [forward_component]);
         }
         let slice_position = position.slice(1);
@@ -369,11 +355,11 @@ class Diagram {
         }
         let source_forward_limit = this.source.contractForwardLimit(type);
         let source_backward_limit = this.getTargetBoundary().contractBackwardLimit(type);
-        let data = [new Content(this.getDimension() - 1, source_forward_limit, source_backward_limit)];
+        let data = [new Content(this.n - 1, source_forward_limit, source_backward_limit)];
         let first = position[0];
         let last = position[0] + subdiagram.data.length;
-        let forward_limit_component = new LimitComponent(this.getDimension(), { first, last, data, sublimits });
-        let forward_limit = new ForwardLimit(this.getDimension(), [forward_limit_component]);
+        let forward_limit_component = new LimitComponent(this.n, { first, last, data, sublimits });
+        let forward_limit = new ForwardLimit(this.n, [forward_limit_component]);
         return forward_limit;
     }
 
@@ -381,16 +367,16 @@ class Diagram {
     contractBackwardLimit(type, position, subdiagram) {
         if (!position) {
             let arr = [];
-            if (this.getDimension() > 0) {
-                arr[this.getDimension() - 1] = 0;
-                arr = arr.fill(0, 0, this.getDimension());
+            if (this.n > 0) {
+                arr[this.n - 1] = 0;
+                arr = arr.fill(0, 0, this.n);
             }
             position = arr;
         }
         if (!subdiagram) subdiagram = this;
-        _assert(position.length == this.getDimension());
-        _assert(this.getDimension() == subdiagram.getDimension());
-        if (this.getDimension() == 0) {
+        _assert(position.length == this.n);
+        _assert(this.n == subdiagram.n);
+        if (this.n == 0) {
             let forward_component = new LimitComponent(0, { type: subdiagram.type });
             return new BackwardLimit(0, [forward_component]);
         }
@@ -406,8 +392,8 @@ class Diagram {
         let last = position[0] + subdiagram.data.length;
         let data = Content.copyData(subdiagram.data);
         Content.deepPadData(data, slice_position);
-        let backward_limit_component = new LimitComponent(this.getDimension(), { first, last, data, sublimits });
-        let backward_limit = new BackwardLimit(this.getDimension(), [backward_limit_component]);
+        let backward_limit_component = new LimitComponent(this.n, { first, last, data, sublimits });
+        let backward_limit = new BackwardLimit(this.n, [backward_limit_component]);
         return backward_limit;
     }
 
@@ -427,7 +413,7 @@ class Diagram {
     */
 
     singularData() {
-        if (this.getDimension() == 0) return this.type;
+        if (this.n == 0) return this.type;
         let array = [];
         for (let i = 0; i < this.data.length; i++) {
             slice_array = this.getSlice({ height: i, regular: false }).singularData();
@@ -442,7 +428,7 @@ class Diagram {
     // Get the content array to attach a type at the given position of a given diagram
     static getLimitComponents(id, diagram, position) {
         if (!diagram) return null;
-        if (diagram.geometric_dimension == 0) {
+        if (diagram.n == 0) {
             return [new LimitComponent(0, { type: id })];
         }
         let sublimits = [];
@@ -453,16 +439,16 @@ class Diagram {
         }
         let first = position[0];
         let last = position[0] + diagram.data.length;
-        return [new LimitComponent(this.getDimension(), { first, last, data, sublimits })];
+        return [new LimitComponent(this.n, { first, last, data, sublimits })];
         //return [new LimitComponent(id, position[0], position[0] + diagram.data.length, null, sublimits)];
     }
     */
 
     equals(d2) {
         var d1 = this;
-        if (d1.getDimension() != d2.getDimension()) return false;
-        if (d1.type_dimension != d2.type_dimension) return false;
-        if (d1.geometric_dimension == 0) return d1.type == d2.type;
+        if (d1.n != d2.n) return false;
+        if (d1.t != d2.t) return false;
+        if (d1.n == 0) return d1.type == d2.type;
         if (d1.data.length != d2.data.length) return false;
         for (var i = 0; i < this.data.length; i++) {
             if (!d1.data[i].equals(d2.data[i])) return false;
@@ -471,24 +457,372 @@ class Diagram {
     }
 
     // Get all the ways that a cell matches, local to a given click
-    getLocalMatches(click, id, flip) {
+    getLocalMatches(click, type, flip) {
         //        subdiagramContainsPoint({ subdiagram, position, point }) {
-        var generator = gProject.signature.getGenerator(id);
         var subdiagram;
-        if (flip == '') subdiagram = generator.source;
-        else if (flip == 'I0') subdiagram = generator.target;
-        else if (flip == 'I1') subdiagram = generator.source.mirror(0);
-        else if (flip == 'I0I1') subdiagram = generator.target.mirror(0);
+        if (!flip) subdiagram = type.source;
+        else subdiagram = type.target;
         var matches = this.enumerate({ goal: subdiagram });
         var results = [];
         for (var i = 0; i < matches.length; i++) {
             if (!this.subdiagramContainsPoint({ subdiagram, position: matches[i], click })) continue;
             //var small_intersection = intersection.min.vector_equals(intersection.max);
             // Only accept small intersection if it equals click_box
-            //if (small_intersection && !boundingBoxesEqual(intersection, click_box)) continue;
-            results.push({ id: id + flip, key: matches[i], possible: true });
+            //if (small_intersection && !boundingBoxesEqual(intersection, click_box)) continue; 
+
+            let content = this.getAttachmentContent(type, matches[i],
+                flip ? type.target : type.source,
+                flip ? type.source : type.target);
+            results.push(content);
+
+            //results.push({ id: id + flip, key: matches[i], possible: true });
         }
         return results;
+    }
+
+    // Construct the content that contracts a source diagram, at a given position, and inserts the target diagram
+    getAttachmentContent(type, position, source, target) {
+        //if (!position) position = [].fill(0, 0, this.n);
+        _assert(position.length == this.n);
+        _assert(this.n == source.n);
+        _assert(this.n == target.n);
+        if (this.n == 0) {
+            let forward_component = new LimitComponent(0, { type: type });
+            let backward_component = new LimitComponent(0, { type: target.type });
+            let forward_limit = new ForwardLimit(0, [forward_component]);
+            let backward_limit = new BackwardLimit(0, [backward_component]);
+            return new Content(0, forward_limit, backward_limit);
+        }
+        let forward_limit = this.contractForwardLimit(type, position, source);
+        let singular_diagram = forward_limit.rewrite(this.copy());
+        let backward_limit = singular_diagram.contractBackwardLimit(type, position, target);
+        return new Content(this.n, forward_limit, backward_limit);
+    }
+
+    getContractionLimit(location) {
+        _assert(location instanceof Array);
+        _assert(location.length > 0);
+        //_assert(!isNaN(location[0]));
+        if (location.length == 1) {
+            _assert(!location[0].regular); // Must end on a singular structure
+            let height = location[0].height;
+            let contract_data = this.contract(height);
+            if (!contract_data) return null;
+            let first = location[0].height;
+            let last = first + 2;
+            let n = this.n;
+            let I2_reversed = contract_data.I2.getForwardLimit(this.getSlice({ height: first + 1, regular: false }), contract_data.T);
+            let sublimits = [contract_data.I1, I2_reversed];
+            let data_forward = contract_data.I1.compose(this.data[height].forward_limit);
+            let data_backward = contract_data.I2.compose(this.data[height + 1].backward_limit);
+            let data = [new Content(this.n - 1, data_forward, data_backward)];
+            let forward_component = new LimitComponent(this.n, { first, last, data, sublimits });
+            return new ForwardLimit(n, [forward_component]);
+        }
+        else if (location.length > 1) {
+            let slice = this.getSlice(location[0]);
+            let recursive = slice.getContractionLimit(location.slice(1));
+            if (!location[0].regular) return null; // Can't handle contractions in singular subslices yet
+            let recursive_target = recursive.rewrite(slice.copy())
+            let recursive_reversed = recursive.getBackwardLimit(slice, recursive_target);
+            let first = location[0].height;
+            let last = location[0].height;
+            let data = [new Content(this.n - 1, recursive, recursive_reversed)];
+            let sublimits = [];
+            let component = new LimitComponent(this.n, { data, first, last, sublimits });
+            return new ForwardLimit(this.n, [component]);
+        }
+        _assert(false);
+    }
+
+    getContractionContent(location) {
+        let forward_limit = this.getContractionLimit(location);
+        if (!forward_limit) return null;
+        let target = forward_limit.rewrite(this.copy());
+        let backward_limit = new BackwardLimit(this.n, []);
+        return new Content(this.n, forward_limit, backward_limit);
+        // The target has length 0, so it's a pure vacuum bubble.
+    }
+
+    drag(location, up) {
+        _assert(location instanceof Array);
+        _assert(location.length > 0);
+        _assert(!location.last().regular); // final entity must be at a singular height
+        if (!up && location.last().height == 0) return null;
+        if (!up) location[location.length - 1].height--; // if we're dragging down, adjust for this
+        let content = this.getContractionContent(location);
+        if (!content) return null;
+        return [content];
+    }
+
+    // Contract the given height with the one above
+    contract(height) {
+        _assert(!isNaN(height));
+        _assert(height >= 0);
+        _assert(height < this.data.length - 1);
+        let regular = this.getSlice({ height: height + 1, regular: true });
+        let D1 = this.getSlice({ height, regular: false });
+        let D2 = this.getSlice({ height: height + 1, regular: false });
+        let L1 = this.data[height].backward_limit;
+        let L2 = this.data[height + 1].forward_limit;
+        return regular.pushout({ D1, D2, L1, L2, depth: 0 });
+    }
+
+    // Define pushout as an unbiased unification. This might never be needed, let's see.
+    pushout({ D1, D2, L1, L2, depth }) {
+        if (depth == null) depth = 0;
+        return this.unify({ D1, D2, L1, L2, depth }); // right is implicitly null
+    }
+
+    // Unify two diagrams, at given recursive depth, with a given tendency to the right
+    unify({ D1, D2, L1, L2, right, depth }) {
+        _assert(right == null || (typeof (right) == 'boolean'));
+        _assert(D1 instanceof Diagram);
+        _assert(D2 instanceof Diagram);
+        _assert(L1 instanceof BackwardLimit);
+        _assert(L2 instanceof ForwardLimit);
+        _assert(this.n == D1.n);
+        _assert(this.n == D2.n);
+
+        // Handle the base case, where we only allow pushouts given a matching triangle of types
+        if (this.n == 0) {
+            _assert(D1.type instanceof Generator);
+            _assert(D2.type instanceof Generator);
+            let I1, I2, T;
+            if (D1.type == this.type) {
+                T = D2.copy();
+                I1 = L2.copy();
+                I2 = new BackwardLimit(0, []);
+                console.log("Pushout base case this==D1");
+            }
+            else if (this.type == D2.type) {
+                T = D1.copy();
+                I2 = L1.copy();
+                I1 = new ForwardLimit(0, []);
+                console.log("Pushout base case this==D2");
+            }
+            else if (D1.type == D2.type) {
+                if (D1.t < D1.type.n) debugger;
+                else if (D1.t == D1.type.n) return null;
+                //if (depth < D1.type.n) return null; // see 2017-ANC page 47
+                T = D1.copy();
+                I1 = new ForwardLimit(0, []);
+                I2 = new BackwardLimit(0, []);
+                console.log("Pushout base case D1==D2, this.t==" + this.t + ", this.type.n==" + this.type.n + ", D1.t==" + D1.t + ", D1.type.n=" + D1.type.n + ", depth=" + depth);
+            } else {
+                // All 3 types different
+                console.log("No interchanger: base case, all types distinct")
+                return null;
+            }
+            /*            
+                        else if (this.type != D1.type && this.type != D2.type) return null;
+                        else {
+                            T = (this.type == D1.type) ? D2.copy() : D1.copy();
+                            I1 = L2.copy();
+                            I2 = L1.copy()
+                            console.log("Pushout base case 2");
+                        }
+                        */
+            _assert(T instanceof Diagram);
+            _assert(I1 instanceof ForwardLimit);
+            _assert(I2 instanceof BackwardLimit);
+            return { T, I1, I2 };
+            /*
+            if (D1.type == D2.type) return { T:D1.copy(), I1: new ForwardLimit(0, []), I2: new BackwardLimit(0, [])};
+            if (this.type != D1.type && this.type != D2.type) return null;
+            return { T: (this.type == D1.type) ? D2.copy() : D1.copy(), I1: L2.copy(), I2: L1.copy() };
+            */
+        }
+
+        // Get the pushout of the singular monotones
+        let M1 = L1.getMonotone(this.data.length, D1.data.length);
+        let M2 = L2.getMonotone(this.data.length, D2.data.length);
+        let pushout = M1.pushout({second:M2, right});
+        if (!pushout) {
+            console.log("No pushout at depth " + depth + ": monotones have no pushout");
+            return null;
+        }
+
+        // Get the pushouts on all the singular slices
+        let slice_pushouts = [];
+        for (let i = 0; i < this.data.length; i++) {
+            let main_slice = this.getSlice({ height: i, regular: false });
+            let d1_slice = D1.getSlice({ height: M1[i], regular: false });
+            let d2_slice = D2.getSlice({ height: M2[i], regular: false });
+            let l1_sublimit = L1.subBackwardLimit(i);
+            let l2_sublimit = L2.subForwardLimit(i);
+            let slice_pushout = main_slice.pushout(
+                { D1: d1_slice, D2: d2_slice, L1: l1_sublimit, L2: l2_sublimit, depth: depth + 1 });
+            if (!slice_pushout) {
+                console.log("No pushout at depth " + depth + ": singular slice " + i + " has no pushout");
+                return null; // if any of the slice pushouts can't be formed, then fail
+            }
+            slice_pushouts.push(slice_pushout);
+        }
+
+        // Check all the slice pushouts agree
+        let new_left_limits = [];
+        for (let i = 0; i < slice_pushouts.length; i++) {
+            let left_slice_limit = slice_pushouts[i].I1;
+            if (!new_left_limits[M1[i]]) {
+                new_left_limits[M1[i]] = left_slice_limit;
+                continue;
+            }
+            if (!left_slice_limit.equals(new_left_limits[M1[i]])) {
+                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting left limit");
+                return null;
+            }
+        }
+        let new_right_limits = [];
+        for (let i = 0; i < slice_pushouts.length; i++) {
+            let right_slice_limit = slice_pushouts[i].I2;
+            if (!new_right_limits[M2[i]]) {
+                new_right_limits[M2[i]] = right_slice_limit;
+                continue;
+            }
+            if (!right_slice_limit.equals(new_right_limits[M2[i]])) {
+                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting right limit");
+                return null;
+            }
+        }
+        let target_slices = [];
+        for (let i = 0; i < slice_pushouts.length; i++) {
+            let target_slice_index = pushout.first[M1[i]];
+            if (!target_slices[target_slice_index]) {
+                target_slices[target_slice_index] = slice_pushouts[i].T;
+            }
+            if (!target_slices[target_slice_index].equals(slice_pushouts[i].T)) {
+                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting pushout diagram");
+                return null;
+            }
+        }
+        // Check agreement on elements not in the image of L1 or L2
+        let l1_complement = M1.imageComplement();
+        let l2_complement = M2.imageComplement();
+        for (let i = 0; i < l1_complement.length; i++) {
+            let d1_level = l1_complement[i];
+            let d1_slice = D1.getSlice({ height: d1_level, regular: false });
+            if (target_slices[pushout.first[i]] == null) {
+                //target_slices[pushout.first[i]] = d1_slice.copy();
+            } else if (!d1_slice.equals(target_slices[pushout.first[i]])) {
+                console.log("No pushout at depth " + depth + ": D1 index " + i + " is not in the image and has a conflicting pushout diagram");
+                return null;
+            }
+        }
+        for (let i = 0; i < l2_complement.length; i++) {
+            let d2_level = l2_complement[i];
+            let d2_slice = D1.getSlice({ height: d2_level, regular: false });
+            if (target_slices[pushout.second[i]] == null) {
+                //target_slices[pushout.second[i]] = d1_slice.copy();
+            }
+            else if (!d2_slice.equals(target_slices[pushout.second[i]])) {
+                console.log("No pushout at depth " + depth + ": D2 index " + i + " is not in the image and has a conflicting pushout diagram");
+                return null;
+            }
+        }
+
+        // Build target diagram
+        let data = [];
+        let I1_content = [];
+        let I2_content = [];
+        for (let i = 0; i < target_slices.length; i++) {
+            let i1_preimage = pushout.first.getFirstLast(i);
+            let i2_preimage = pushout.second.getFirstLast(i);
+            _assert(i1_preimage.first != null && i1_preimage.last != null && i2_preimage.first != null && i2_preimage.last != null);
+
+            // If the target slice is not present we will add it later
+            if (target_slices[i] == null) continue;
+
+            // These checks should now always pass
+            _assert(i1_preimage.last > i1_preimage.first);
+            _assert(i2_preimage.last > i2_preimage.first);
+
+            // Build content for main diagram
+            let backward_limit = new_right_limits[i2_preimage.last - 1].compose(D2.data[i2_preimage.last - 1].backward_limit);
+            let forward_limit = new_left_limits[i1_preimage.first].compose(D1.data[i1_preimage.first].forward_limit);
+            let new_content = new Content(this.n - 1, forward_limit, backward_limit);
+            data[i] = new_content;
+            //data.push(new_content);
+
+            // Build the forward limit component
+            let I1_component_args = { first: i1_preimage.first, last: i1_preimage.last, data: [new_content.copy()], sublimits: [] };
+            let I1_trivial = true;
+            for (let j = i1_preimage.first; j < i1_preimage.last; j++) {
+                let limit = new_left_limits[j];
+                if (limit.length > 0) I1_trivial = false;
+                I1_component_args.sublimits.push(limit);
+            }
+            if (!I1_trivial) I1_content.push(new LimitComponent(this.n, I1_component_args));
+
+            // Build the backward limit component
+            let I2_component_args = { first: i2_preimage.first, last: i2_preimage.last, data: [], sublimits: [] };
+            let I2_trivial = true;
+            for (let j = i2_preimage.first; j < i2_preimage.last; j++) {
+                let limit = new_right_limits[j];
+                if (limit.length > 0) I2_trivial = false;
+                I2_component_args.sublimits.push(limit);
+                I2_component_args.data.push(D2.data[j].copy());
+
+            }
+            if (!I2_trivial) I2_content.push(new LimitComponent(this.n, I2_component_args));
+        }
+
+        // Insert additional levels induced by non-surjectivity of L1 or L2.
+        // These need inserting into T, I1, I2.
+        /*
+        let l1_complement = M1.imageComplement();
+        let l2_complement = M2.imageComplement();
+        */
+        let l2_index = 0;
+        let l1_index = 0;
+        while (l1_index < l1_complement.length || l2_index < l2_complement.length) {
+            let l1_position = l1_complement[l1_index];
+            let l2_position = l2_complement[l2_index];
+            let use_left;
+            if (l1_position == null && l2_position == null) _assert(false);
+            else if (l1_position == null) use_left = false;
+            else if (l2_position == null) use_left = true;
+            else use_left = (pushout.first[l1_position] < pushout.second[l2_position]);
+            let insert_position = use_left ? pushout.first[l1_position] : pushout.second[l2_position];
+            let insert_data = use_left ? D1.data[l1_position] : D2.data[l2_position];
+            _assert(!isNaN(insert_position));
+            _assert(insert_data);
+            //data.splice(insert_position, 0, insert_data);
+            _assert(data[insert_position] == null);
+            data[insert_position] = insert_data;
+            if (use_left) {
+                let firstlast = pushout.second.getFirstLast(insert_position);
+                _assert(firstlast.first == firstlast.last);
+                let new_content = { first: firstlast.first, last: firstlast.last, data: [], sublimits: [] };
+                let i = 0;
+                for (; i < I2_content.length; i++) {
+                    if (I2_content[i].last > new_content.last) break;
+                }
+                I2_content.splice(i, 0, new LimitComponent(this.n, new_content));
+                l1_index++;
+            } else {
+                let firstlast = pushout.first.getFirstLast(insert_position);
+                _assert(firstlast.first == firstlast.last);
+                let new_content = { first: firstlast.first, last: firstlast.last, data: [insert_data.copy()], sublimits: [] };
+                let i = 0;
+                for (; i < I1_content.length; i++) {
+                    if (I1_content[i].last > new_content.last) break;
+                }
+                I1_content.splice(i, 0, new LimitComponent(this.n, new_content));
+                l2_index++;
+            }
+        }
+
+        // Construct and return the necessary objects
+        let T = new Diagram(this.n, {
+            t: this.t,
+            n: this.n,
+            source: this.source.copy(),
+            data
+        });
+        let I1 = new ForwardLimit(this.n, I1_content);
+        let I2 = new BackwardLimit(this.n, I2_content);
+        return { T, I1, I2 };
     }
 
 
@@ -497,27 +831,20 @@ class Diagram {
         Check for equality of two diagrams, recursively on their sources.
     */
     multipleInterchangerRewrite(rewrite_array) {
-        if (rewrite_array === false) {
-            return false;
-        }
+        if (rewrite_array === false) return false;
         for (var i = 0; i < rewrite_array.length; i++) {
             if (this.interchangerAllowed(rewrite_array[i].id, rewrite_array[i].key)) {
                 this.rewrite(rewrite_array[i]);
             }
-            else {
-                return false;
-            }
+            else return false;
         }
         return true;
     }
     expandWrapper(type, x, k) {
-        if (x < 0 || x >= this.cells.length) {
-            return false;
-        }
+        if (x < 0 || x >= this.cells.length) return false;
         var y = this.cells[x].key.last();
-        if (this.cells[x].id === 'IntI0') {
-            y--;
-        } // Special code to deal with the key for IntI0
+        if (this.cells[x].id === 'IntI0') y--;
+        // Special code to deal with the key for IntI0
         return this.expand(type, {
             up: x,
             across: y,
@@ -530,20 +857,16 @@ class Diagram {
         this.source = diagram_copy;
         this.data = [];
         this.type = undefined;
-        this.geometric_dimension++;
-        this.type_dimension++;
+        this.n++;
+        this.t++;
         this.initializeSliceCache();
     }
     /*
         Returns the full sizes of all the slices of the diagram
     */
     getFullDimensions() {
-        if (this.getDimension() == 0) {
-            return [];
-        }
-        else if (this.getDimension() == 1) {
-            return this.cells.length;
-        }
+        if (this.n == 0) return [];
+        if (this.n == 1) return this.cells.length;
         var full_dimensions = [this.source.getFullDimensions()];
         for (var i = 0; i < this.cells.length; i++) {
             full_dimensions.push(this.getSlice(i + 1).getFullDimensions());
@@ -552,8 +875,8 @@ class Diagram {
         return full_dimensions;
     }
     getLengthsAtSource() {
-        if (this.getDimension() == 0) return [];
-        if (this.getDimension() == 1) return [this.data.length];
+        if (this.n == 0) return [];
+        if (this.n == 1) return [this.data.length];
         return this.getSourceBoundary().getLengthsAtSource().concat([this.data.length]);
     }
     source_size(level) {
@@ -575,8 +898,7 @@ class Diagram {
         }
     }
     getBoundary(path) {
-        if (path == null)
-            return this;
+        if (path == null) return this;
         var boundary = {};
         if (typeof path == 'string') {
             boundary.type = path.last();
@@ -585,15 +907,9 @@ class Diagram {
         else {
             boundary = path;
         }
-        if (boundary.depth > 1)
-            return this.source.getBoundary({
-                depth: boundary.depth - 1,
-                type: boundary.type
-            });
-        if (boundary.type == 's')
-            return this.getSourceBoundary();
-        if (boundary.type == 't')
-            return this.getTargetBoundary();
+        if (boundary.depth > 1) return this.source.getBoundary({ depth: boundary.depth - 1, type: boundary.type });
+        if (boundary.type == 's') return this.getSourceBoundary();
+        if (boundary.type == 't') return this.getTargetBoundary();
     }
     pullUpMinMax(top_height, bottom_height, min, max) {
         for (var i = bottom_height; i < top_height; i++) {
@@ -602,16 +918,12 @@ class Diagram {
             max = Math.max(max + delta, box.max.last() + delta);
             min = Math.min(min, box.min.last());
         }
-        return {
-            min: min,
-            max: max
-        };
+        return { min, max };
     }
     // Check that the bounding boxes can slide past each other
     boundingBoxesSlideDownOnRight(lower, upper) {
         // Make sure they are adjacent in height correctly
-        if (lower.max.last() != upper.min.last())
-            return false;
+        if (lower.max.last() != upper.min.last()) return false;
         // Find the top face of the lower bounding box
         var pull_up = this.pullUpMinMax(upper.min.last(), lower.min.last(), lower.min.penultimate(), lower.max.penultimate());
         // Check the upper box is on the right
@@ -629,7 +941,7 @@ class Diagram {
     }
     // Get the cell at a particular location in the diagram
     getCell(location) {
-        _assert(location.length == this.geometric_dimension);
+        _assert(location.length == this.n);
         return this.getSlice(location).getLastId();
         /*
         var level = location.shift();
@@ -644,11 +956,7 @@ class Diagram {
     // Get bounding box surrounding the entire diagram
     getEntireBoundingBox(cell) {
         var source = this.getSourceBoundary();
-        if (source == null)
-            return {
-                min: [],
-                max: []
-            };
+        if (source == null) return { min: [], max: [] };
         var box = this.getSourceBoundary().getEntireBoundingBox();
         box.min.push(0);
         box.max.push(this.cells.length);
@@ -656,12 +964,9 @@ class Diagram {
     }
     // Gets the bounding box for an entire slice of the diagram
     getEntireSliceBoundingBox(location) {
-        if (!globular_is_array(location))
-            location = [location];
-        else
-            location = location.slice();
-        if (location.length == 0)
-            return this.getEntireBoundingBox();
+        if (!globular_is_array(location)) location = [location];
+        else location = location.slice();
+        if (location.length == 0) return this.getEntireBoundingBox();
         var height = location.pop();
         var box = this.getSlice(height).getEntireSliceBoundingBox(location);
         box.min.push(height);
@@ -686,10 +991,8 @@ class Diagram {
                 return {boundaryboundary_data
             }
             */
-            if (height < box.min.last())
-                return null;
-            if (height > box.max.last())
-                return null;
+            if (height < box.min.last()) return null;
+            if (height > box.max.last()) return null;
             var minmax = this.pullUpMinMax(height, box.min.last(), box.min.penultimate(), box.max.penultimate());
             box.min.pop();
             box.min[box.min.length - 1] = minmax.min;
@@ -701,13 +1004,11 @@ class Diagram {
         // Shallow boundary
         if (boundary.depth == 1) {
             if (boundary.type == 's') {
-                if (height > 0)
-                    return null;
+                if (height > 0) return null;
                 return this.getSourceBoundary().getLocationBoundaryBox(null, box, location);
             }
             else {
-                if (height < Math.max(1, this.cells.length))
-                    return null;
+                if (height < Math.max(1, this.cells.length)) return null;
                 return this.getTargetBoundary().getLocationBoundaryBox(null, box, location);
             }
         }
@@ -733,7 +1034,7 @@ class Diagram {
         else location = [location];
         var height = location.shift();
         var slice = this.getSlice(location); // no need to copy slice
-        if (slice.getDimension() == 0) return { min: [], max: [] };
+        if (slice.n == 0) return { min: [], max: [] };
         if (height >= slice.data.length) return null;
         return slice.getSlice(height).getBoundingBox(slice.data[height]); // no need to copy slice
     }
@@ -827,7 +1128,7 @@ class Diagram {
             slice = slice.getSlice({ height: coords[coords.length - 1 - i], regular: true });
         }
         // For each extra dimension we have to dive to find an entity, pad the coords
-        while (slice.getDimension() > 0 && slice.data.length == 0) {
+        while (slice.n > 0 && slice.data.length == 0) {
             slice = slice.source;
             coords.unshift(0);
         }
@@ -860,8 +1161,8 @@ function sub_content(content, subcontent, position) {
 function sub_data(data, subdata, offset) {
     //    if (!sub_limit(this.data[height].forward_limit, subdata.forward_limit, offset)) return false;
     //    if (!sub_limit(this.data[height].backward_limit, subdata.backward_limit, offset)) return false;
-    if (!sub_limit(this.data[height].forward_limit, subdata.forward_limit, offset)) return false;
-    if (!sub_limit(this.data[height].backward_limit, subdata.backward_limit, offset)) return false;
+    if (!sub_limit(data.forward_limit, subdata.forward_limit, offset)) return false;
+    if (!sub_limit(data.backward_limit, subdata.backward_limit, offset)) return false;
     return true;
 }
 
@@ -891,6 +1192,7 @@ function sub_limit_component(component, subcomponent, offset) {
     for (let i = 0; i < component.sublimits.length; i++) {
         if (!sub_limit(component.sublimits[i], subcomponent.sublimits[i], offset_slice)) return false;
     }
+    return true;
 }
 
 /*

@@ -92,9 +92,7 @@ class DisplaySVG {
         let dy = this.selectPixels.y - pixels.y;
 
         let threshold = 50;
-        if (dx * dx + dy * dy < threshold * threshold) {
-            return;
-        }
+        if (dx * dx + dy * dy < threshold * threshold) return;
 
         var data = this.selectPosition;
         this.selectPixels = null;
@@ -102,14 +100,16 @@ class DisplaySVG {
 
         // Clicking a 2d picture
         if (this.data.dimension == 2) {
-            if (data.dimension == this.diagram.getDimension() - 1) {
+            if (data.origin == 'edge') {
                 // Clicking on an edge
                 if (Math.abs(dx) < 0.7 * threshold) return;
                 data.directions = [dx > 0 ? +1 : -1];
-            } else if (data.dimension == this.diagram.getDimension()) {
+            } else if (data.origin == 'vertex') {
                 // Clicking on a vertex
                 if (Math.abs(dy) < 0.7 * threshold) return;
-                data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
+                data.coordinates.pop();
+                //data.coordinates = data.coordinates.slice(location.length - 1); // Remove the final coordinate
+                data.directions = [dy > 0 ? +1 : -1 /*, dx > 0 ? +1 : -1*/];
             }
 
             // Clicking a 1d picture
@@ -236,7 +236,7 @@ class DisplaySVG {
         }
 
         // Determine the height of the vertex nearest to the clicked height.
-        let height = Math.min(Math.floor(coords.y + 0.5), this.data.vertices.length);
+        let height = Math.min(Math.floor(coords.y + 0.5), this.data.max_y);
 
         if (type == 'edge') {
             let edge = this.data.edges[index];
@@ -281,7 +281,7 @@ class DisplaySVG {
             // on top; the lower slices are not visible in the diagram. Hence we always
             // point at the topmost slice.
             //let slice = this.visibleDiagram.getSlice([{height: edgesToLeft, regular: true}, {height: height, regular: true}]);
-            //let depth = (slice.getDimension() == 0 ? 0 : Math.max(0, slice.data.length - 1));
+            //let depth = (slice.n == 0 ? 0 : Math.max(0, slice.data.length - 1));
 
             // Traverse into deeper slices until there is a cell present the in
             // the diagram, if neccessary.
@@ -329,13 +329,14 @@ class DisplaySVG {
     createLocation(coordinates, boundaryFlags, type) {
         let padded = this.manager.getSlices().concat(coordinates);
         boundaryFlags = this.manager.getBoundaryFlags().concat(boundaryFlags);
+        //if (type == 'vertex') debugger;
         let position = this.diagram.getBoundaryCoordinates(padded, boundaryFlags);
-        let dimension = this.diagram.getDimension() - coordinates.length + 1;
+       // let dimension = this.diagram.n - coordinates.length + 1;
         return {
             origin: type,
             coordinates: position.coordinates,
-            boundary: position.boundary,
-            dimension
+            boundary: position.boundary
+            //,dimension
         };
     }
 
@@ -361,7 +362,7 @@ class DisplaySVG {
         let slice = boundary.getSlice(data.logical.coordinates);
         let cell = slice.getLastId();
         let boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
-        let description = Globular.getFriendlyName(cell) + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
+        let description = cell.name + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
         let pos = $('#diagram-canvas').position();
         this.manager.showPopup(description, {
             left: 5 + pos.left + data.pixels.x,

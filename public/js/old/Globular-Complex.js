@@ -33,13 +33,13 @@ function Complex(diagram) {
     // Hardcode something that works for d = 0,1,2, and we'll
     // do something better at a later stage.
 
-    if (diagram.getDimension() == 0) {
+    if (diagram.n == 0) {
         return this.complex_0(diagram);
     }
-    else if (diagram.getDimension() == 1) {
+    else if (diagram.n == 1) {
         return this.complex_1(diagram);
     }
-    else if (diagram.getDimension() == 2) {
+    else if (diagram.n == 2) {
         return this.complex_2(diagram);
     }
     else {
@@ -63,7 +63,7 @@ Complex.prototype.copy = function() {
             subset: this.simplices[index].subset.slice()
         };
     }
-    if (this.getDimension() > 0) {
+    if (this.n > 0) {
         new_complex.source = this.source.copy();
         new_complex.target = this.target.copy();
     }

@@ -27,7 +27,7 @@ Diagram.prototype.getRandomPoint = function() {
 
 // Gets a random point from a subfeature of the given dimension
 Diagram.prototype.getRandomPoint = function(dimension) {
-    if (dimension == this.getDimension()) {
+    if (dimension == this.n) {
         var height = Math.floor(Math.random() * this.generators.length);
         
     }
@@ -35,7 +35,7 @@ Diagram.prototype.getRandomPoint = function(dimension) {
 
 // Calculate the total volume of things of each dimension
 Diagram.prototype.calculateTotalVolume = function(dimension) {
-    if (dimension == diagram.getDimension()) {
+    if (dimension == diagram.n) {
         return this.generators.length;
     }
     

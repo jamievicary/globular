@@ -41,7 +41,7 @@ Signature.prototype.getType = function () {
     of the signature if required.
 */
 Signature.prototype.addGenerator = function (generator) {
-    var d = generator.getDimension();
+    var d = generator.n;
     if (d == this.n) {
         this.cells[generator.id] = generator;
         this.k++;
@@ -115,7 +115,12 @@ Signature.prototype.getAllCells = function () {
 };
 
 Signature.prototype.getCells = function() {
-    return Object.keys(this.cells);
+    let cells = [];
+    let keys = Object.keys(this.cells);
+    for (let i=0; i<keys.length; i++) {
+        cells.push(this.cells[keys[i]]);
+    }
+    return cells;
 };
 
 Signature.prototype.prepare = function() {

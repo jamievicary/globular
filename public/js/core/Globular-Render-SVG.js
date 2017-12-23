@@ -22,11 +22,11 @@ function globular_render(container, diagram, subdiagram, suppress) {
     var container_dom = $(container)[0];
     container_dom.rectangles = [];
     diagram = diagram.copy();
-    if (diagram.geometric_dimension - suppress == 0) {
+    if (diagram.n - suppress == 0) {
         return globular_render_0d(container, diagram, subdiagram);
-    } else if (diagram.geometric_dimension - suppress == 1) {
+    } else if (diagram.n - suppress == 1) {
         return globular_render_1d(container, diagram, subdiagram);
-    } else if (diagram.geometric_dimension - suppress >= 2) {
+    } else if (diagram.n - suppress >= 2) {
         var data = globular_render_2d(container, diagram, subdiagram);
         if (subdiagram != undefined) {
             globular_add_highlight(container, data, subdiagram.box, {
@@ -101,7 +101,7 @@ function globular_render_1d(container, diagram, subdiagram) {
     data.edges.push({ start_x, finish_x, y: 0, id: id_data.id, level: diagram.data.length });
 
     // Draw vertices
-    var dimension = diagram.getDimension();
+    var dimension = diagram.n;
     for (var i = 0; i < diagram.data.length; i++) {
         //var id = diagram.data[i].getLastId();
         var id = diagram.getSlice({ height: i, regular: false }).getLastId();
@@ -169,9 +169,9 @@ function globular_render_2d(container, diagram, subdiagram) {
     // Draw overall background rectangle
     var big_background = false;
     var x_center = (data.max_x + 0) / 2;
-    var y_center = Math.max(1, data.vertices.length) / 2;
+    var y_center = Math.max(1, diagram.data.length) / 2;
     var w = big_background ? 20 : data.max_x + 1;
-    var h = big_background ? 20 : Math.max(1, data.vertices.length);
+    var h = big_background ? 20 : Math.max(1, diagram.data.length);
     var path_string = SVG_move_to({ x: x_center - w / 2, y: y_center - h / 2 })
         + SVG_line_to({ x: x_center + w / 2, y: y_center - h / 2 })
         + SVG_line_to({ x: x_center + w / 2, y: y_center + h / 2 })
@@ -180,7 +180,7 @@ function globular_render_2d(container, diagram, subdiagram) {
     // Determine background colour
     var color = diagram.source.source.getLastColour();
     d.g.appendChild(SVG_create_path({ string: path_string, fill: color, element_type: 'region' }));
-    $(container)[0].bounds = { left: -0.5, right: data.max_x + 0.5, top: Math.max(1, data.vertices.length), bottom: 0 };
+    $(container)[0].bounds = { left: -0.5, right: data.max_x + 0.5, top: Math.max(1, data.max_y), bottom: 0 };
 
     // Check whether there's a level with no edges
     var empty_level = false;
@@ -192,9 +192,11 @@ function globular_render_2d(container, diagram, subdiagram) {
         }
     }
 
+    /*
     // Calculate Bezier intersection data for crossings
     for (var i = 0; i < data.vertices.length; i++) {
         var vertex = data.vertices[i];
+        continue;
         if (!vertex.type.is_basic_interchanger()) continue;
         var e1_bot, e2_bot, e1_top, e2_top;
         var p = (vertex.type == 'Int' ? 1 : 0);
@@ -206,6 +208,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         vertex.intersection = bezier_decompose(Math.min(e1_bot.x, e2_bot.x), Math.max(e1_bot.x, e2_bot.x), Math.min(e1_top.x, e2_top.x), Math.max(e1_top.x, e2_top.x), i);
         vertex.y = vertex.intersection.centre[1];
     }
+    */
 
     var svg_paths = [];
     for (var i = -1; i < data.edges.length; i++) {
@@ -273,14 +276,16 @@ function globular_render_2d(container, diagram, subdiagram) {
         } else {
             // We start at a vertex
             var vertex = edge.start_vertex;
+            /*
             if (vertex.type.is_basic_interchanger()) {
                 path_s = SVG_move_to({ x: edge.x, y: edge.start_height + 0.5 });
             } else {
+                */
                 path_s += SVG_move_to({ x: vertex.x, y: vertex.y });
                 //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
                 path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y, c2x: edge.x, c2y: vertex.y + 0.4, x: edge.x, y: edge.start_height + 0.5 });
                 drawn_something = true;
-            }
+            //}
         }
 
         // Do the main straight part of the edge
@@ -297,10 +302,10 @@ function globular_render_2d(container, diagram, subdiagram) {
             drawn_something = true;
         } else {
             var vertex = edge.finish_vertex;
-            if (!vertex.type.is_basic_interchanger()) {
+            //if (!vertex.type.is_basic_interchanger()) {
                 path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y - 0.4, c2x: edge.x, c2y: vertex.y, x: vertex.x, y: vertex.y });
                 drawn_something = true;
-            }
+            //}
         }
 
         // Add the path to the SVG object
@@ -320,9 +325,10 @@ function globular_render_2d(container, diagram, subdiagram) {
     for (var i = 0; i < data.vertices.length; i++) {
 
         var vertex = data.vertices[i];
-        vertex.dimension = diagram.getDimension();
+        vertex.dimension = diagram.n;
         var circle_opacity = 1;
 
+        /*
         if (vertex.type.is_basic_interchanger()) {
             circle_opacity = 0;
 
@@ -337,8 +343,8 @@ function globular_render_2d(container, diagram, subdiagram) {
             var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
             var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
 
-            var lower_colour = gProject.getColour({ id: e1_bot.type, dimension: diagram.getDimension() - 1 });
-            var upper_colour = gProject.getColour({ id: e2_bot.type, dimension: diagram.getDimension() - 1 });
+            var lower_colour = gProject.getColour({ id: e1_bot.type, dimension: diagram.n - 1 });
+            var upper_colour = gProject.getColour({ id: e2_bot.type, dimension: diagram.n - 1 });
 
             // Prepare the upper path
             var top_str = SVG_move_to({ x: e2_bot.x, y: i - epsilon })
@@ -381,7 +387,7 @@ function globular_render_2d(container, diagram, subdiagram) {
                 d.g.appendChild(SVG_create_circle({ x: e2_top.x, y: i + 1, fill: upper_colour, class_name: 'dummy' }));
                 d.g.appendChild(SVG_create_circle({ x: e1_top.x, y: i + 1, fill: lower_colour, class_name: 'dummy' }));
             }
-        }
+        }*/
 
         vertex.fill = gProject.getColour(vertex.type);
         vertex.radius = circle_radius;
@@ -459,12 +465,12 @@ function process_instructions(data, i) {
                     i.edge = null;
                     return;
                 }
-                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.vertices.length) });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.max_y) });
                 i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: 0 });
                 var source_edges = data.edges_at_level[0];
                 if (source_edges.length == 0) {
                     i.path_string += SVG_line_to({ x: -0.5, y: 0 });
-                    i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.vertices.length) });
+                    i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.max_y) });
                     var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
                     i.edge = target_edges[0]; // Will necessarily exist
                     i.path_string += SVG_line_to(top_of_edge(data, i.edge));
@@ -532,11 +538,11 @@ function process_instructions(data, i) {
                 return;
             }
             i.path_string += SVG_line_to({ x: -0.5, y: 0 });
-            i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.vertices.length) });
+            i.path_string += SVG_line_to({ x: -0.5, y: Math.max(1, data.max_y) });
             var target_edges = data.edges_at_level.last();//[data.edges_at_level.length - 1];
             if (target_edges.length == 0) {
                 // No edges at the top of the diagram, so come around
-                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.vertices.length) });
+                i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: Math.max(1, data.max_y) });
                 i.path_string += SVG_line_to({ x: data.max_x + 0.5, y: 0 });
                 var source_edges = data.edges_at_level[0];
                 i.edge = data.edges[source_edges.length - 1]; // Will necessarily exist
@@ -612,7 +618,7 @@ function bottom_of_edge(data, edge) {
 
 // Return the point at the top of the edge
 function top_of_edge(data, edge) {
-    if (edge.finish_vertex == null) return { x: edge.x, y: Math.max(1, data.vertices.length) };
+    if (edge.finish_vertex == null) return { x: edge.x, y: Math.max(1, data.max_y) };
     return { x: edge.finish_vertex.x, y: edge.finish_vertex.y };
 }
 
@@ -629,7 +635,7 @@ function SVG_draw_edge_top_to_bottom(data, edge) {
 }
 
 function SVG_draw_edge_section(data, edge, h_start, h_end) {
-    var diagram_height = Math.max(1, data.vertices.length);
+    var diagram_height = Math.max(1, data.max_y);
     h_start = Math.min(Math.max(h_start, 0), diagram_height);
     h_end = Math.min(Math.max(h_end, 0), diagram_height);
     if (h_start == h_end) return "";
@@ -719,7 +725,6 @@ function SVG_draw_edge_section(data, edge, h_start, h_end) {
                     var i = vertex.intersection;
                     var left = (edge == vertex.target_edges[0]);
                     path += SVG_bezier_to({ c1x: (left ? i.tl.P2[0] : i.tr.P2[0]), c1y: (left ? i.tl.P2[1] : i.tr.P2[1]), c2x: (left ? i.tl.P3[0] : i.tr.P3[0]), c2y: (left ? i.tl.P3[1] : i.tr.P3[1]), x: vertex.x, y: vertex.y });
-
                 }
             }
         }
@@ -739,7 +744,7 @@ function SVG_prepare(diagram, subdiagram) {
     let max_x = -Number.MAX_VALUE;
 
     // Can't layout a diagram of dimension less than 2
-    if (diagram.getDimension() < 2) return;
+    if (diagram.n < 2) return;
 
     // Start with the edges that exist at the source boundary
     let current_regular_level = [];
@@ -770,24 +775,25 @@ function SVG_prepare(diagram, subdiagram) {
         // Create the new vertices for this level
         let forward_nontrivial_neighbourhood = data.forward_limit.analyzeSingularNeighbourhoods();
         let backward_nontrivial_neighbourhood = data.backward_limit.analyzeSingularNeighbourhoods();
-        let forward_monotone = data.forward_limit.getMonotone();
-        let backward_monotone = data.backward_limit.getMonotone();
         let s = diagram.getSlice({ height: level, regular: false });
+        let r1 = diagram.getSlice({ height: level, regular: true });
+        let r2 = diagram.getSlice({ height: level + 1, regular: true });
+        let forward_monotone = data.forward_limit.getMonotone(r1.data.length, s.data.length);
+        let backward_monotone = data.backward_limit.getMonotone(r2.data.length, s.data.length);
         let new_vertices = [];
         for (let i = 0; i < s.data.length; i++) {
-            if (forward_nontrivial_neighbourhood[i] || backward_nontrivial_neighbourhood[i]) {
-                let structure = 'vertex';
-                let type = s.data[i].getLastId();
-                let x = 0;
-                let y = level + 0.5;
-                let forward_insert = Globular.findFirstLast(forward_monotone, i);
-                let backward_insert = Globular.findFirstLast(backward_monotone, i);
-                let singular_height = i;
-                let vertex = { structure, type, level, x, y, forward_insert, backward_insert, singular_height };
-                //current_singular_level.push(vertex);
-                vertices.push(vertex);
-                new_vertices.push(vertex);
-            }
+            if (!forward_nontrivial_neighbourhood[i] && !backward_nontrivial_neighbourhood[i]) continue;
+            let structure = 'vertex';
+            let type = s.data[i].getLastId();
+            let x = 0;
+            let y = level + 0.5;
+            let forward_insert = forward_monotone.getFirstLast(i);
+            let backward_insert = backward_monotone.getFirstLast(i);
+            let singular_height = i;
+            let vertex = { structure, type, level, x, y, forward_insert, backward_insert, singular_height };
+            //current_singular_level.push(vertex);
+            vertices.push(vertex);
+            new_vertices.push(vertex);
         }
 
         // Remove the edges that have been consumed, and create new edges as necessary
@@ -864,16 +870,22 @@ function SVG_prepare(diagram, subdiagram) {
     }
 
     // Calculate the x coordinates for edges and scalars
+    /* CONSTRAINTS
+     - Entities at the same level are at least 1 unit apart
+     - Vertices are at the mean input coordinate, equal to the mean output coordinate, where these exists
+    */
     while (true) {
-        let problem;
+        let problem = false;
 
         // Make sure there's enough space between elements
+        /*
         do {
             problem = false;
+            */
             for (let i = 0; i < regular_levels.length; i++) {
                 let level = regular_levels[i];
                 for (let j = 0; j < level.length - 1; j++) {
-                    if (level[j + 1].x <= level[j].x) {
+                    if (level[j + 1].x < level[j].x + 1) {
                         problem = true;
                         level[j + 1].x = level[j].x + 1;
                     }
@@ -882,22 +894,57 @@ function SVG_prepare(diagram, subdiagram) {
             for (let i = 0; i < singular_levels.length; i++) {
                 let level = singular_levels[i];
                 for (let j = 0; j < level.length - 1; j++) {
-                    if (level[j + 1].x <= level[j].x) {
+                    
+                    if (level[j + 1].x < level[j].x + 1) {
                         problem = true;
                         level[j + 1].x = level[j].x + 1;
                     }
                 }
             }
-        } while (problem);
+
+        //} while (problem);
 
         // Even up inputs and outputs for vertices
         for (var i = 0; i < vertices.length; i++) {
             var vertex = vertices[i];
+            /*
             if (vertex.source_edges.length == 0) continue;
             if (vertex.target_edges.length == 0) continue;
+            */
+            if (vertex.source_edges.length + vertex.target_edges.length == 0) continue;
+            let source_mean = vertex.source_edges.length == 0 ? null : (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
+            let target_mean = vertex.target_edges.length == 0 ? null : (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
+            let shift_source = 0;
+            let shift_target = 0;
+            let shift_vertex = 0;
+            if (source_mean == null) {
+                if (vertex.x > target_mean) {
+                    shift_target = vertex.x - target_mean;
+                } else if (target_mean > vertex.x) {
+                    shift_vertex = target_mean - vertex.x;
+                }
+            } else if (target_mean == null) {
+                if (vertex.x > source_mean) {
+                    shift_source = vertex.x - source_mean;
+                } else if (source_mean > vertex.x) {
+                    shift_vertex = source_mean - vertex.x;
+                }
+            } else {
+                let mean = Math.max(vertex.x, target_mean, source_mean);
+                shift_source = mean > source_mean ? mean - source_mean : 0;
+                shift_target = mean > target_mean ? mean - target_mean : 0;
+                shift_vertex = mean > vertex.x ? mean - vertex.x : 0;
+            }
+            for (let i=0; i<vertex.source_edges.length; i++) vertex.source_edges[i].x += shift_source;
+            for (let i=0; i<vertex.target_edges.length; i++) vertex.target_edges[i].x += shift_target;
+            vertex.x += shift_vertex;
+            if (shift_source > 0 || shift_target > 0 || shift_vertex > 0) problem = true;
+            /*
 
-            let source_mean = (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
-            let target_mean = (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
+            if (vertex.source_edges.length == 0 && vertex.target_edges.length == 0) continue;
+            
+            let source_mean = vertex.source_edges.length == 0 ? vertex.x : (vertex.source_edges[0].x + vertex.source_edges.last().x) / 2;
+            let target_mean = vertex.target_edges.length == 0 ? vertex.x : (vertex.target_edges[0].x + vertex.target_edges.last().x) / 2;
             let diff = Math.abs(source_mean - target_mean);
             if (diff > 0.01) {
                 problem = true;
@@ -906,6 +953,7 @@ function SVG_prepare(diagram, subdiagram) {
                     edges_to_offset[j].x += diff;
                 }
             }
+            */
         }
         if (!problem) break;
     }
@@ -944,13 +992,13 @@ function SVG_prepare(diagram, subdiagram) {
         }
     }
 
-    return { edges, vertices, regular_levels, max_x };
+    return { edges, vertices, regular_levels, max_x, max_y: diagram.data.length };
 }
 
 // Add a highlighting rectangle to the diagram
 function globular_add_highlight(container, data, box, boundary, diagram) {
 
-    if (diagram.getDimension() < 2) return;
+    if (diagram.n < 2) return;
     var b = $(container)[0].bounds;
     var bottom, top, left, right;
 

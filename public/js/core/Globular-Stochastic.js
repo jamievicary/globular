@@ -27,7 +27,7 @@ function dimensionHelper(processesDim, diagramDim, historyOn) {
 Project.prototype.applyStochasticProcess = function() {
 
     if (this.diagram == null) return;
-    if (this.diagram.getDimension() != 2) return;
+    if (this.diagram.n != 2) return;
     var process_dimension = 3;
 
     // List possible cell attachments
@@ -110,7 +110,7 @@ Project.prototype.applyStochasticProcess = function() {
 /*
 Project.prototype.applyStochasticProcess = function(numIterations) {
 
-    var diagram_dimension = this.diagram.getDimension();
+    var diagram_dimension = this.diagram.n;
     var process_dimension = Number($("#rp-dimension").val());
     var interchangesOn = false;
     if (process_dimension >= 3) {

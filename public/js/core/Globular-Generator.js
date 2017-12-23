@@ -5,8 +5,8 @@ class Generator {
         this['_t'] = 'Generator';
         if (!data) return;
         if (data == undefined) return;
-        var n = (data.source == null ? 0 : data.source.getDimension() + 1);
-        if (data.id == undefined) data.id = gProject.freshName(n);
+        this.n = (data.source == null ? 0 : data.source.n + 1);
+        if (data.id == undefined) data.id = gProject.freshName(this.n);
         this.source = (data.source == null ? null : data.source.copy());
         this.target = (data.target == null ? null : data.target.copy());
         if (this.source != null) this.source.clearAllSliceCaches();
@@ -16,8 +16,9 @@ class Generator {
         this.separate_source_target = data.separate_source_target;
         if (data.name == undefined) data.name = "Cell " + (gProject.signature.getAllCells().length + 1).toString();
         this.name = data.name;
-        if (!data.single_thumbnail) data.single_thumbnail = (this.getDimension() <= 2);
+        if (!data.single_thumbnail) data.single_thumbnail = (this.n <= 2);
         this.single_thumbnail = data.single_thumbnail;
+
         return this;
     }
     prepare() {
@@ -34,14 +35,14 @@ class Generator {
             delete this.diagram;
     }
     getDiagram() {
-        if (!this.source) return new Diagram(0, { type_dimension: 0, type: this.id });
+        if (!this.source) return new Diagram(0, { t: 0, type: this });
         let source = this.source.copy();
-        let type_dimension = source.type_dimension + 1;
-        let forward_limit = this.source.contractForwardLimit(this.id);
+        let t = source.t + 1;
+        let forward_limit = this.source.contractForwardLimit(this);
         let singular_height = forward_limit.rewrite(this.source.copy());
         let backward_limit = singular_height.contractBackwardLimit(this.id, null, this.target);
-        let data = [new Content(this.getDimension() - 1, forward_limit, backward_limit)];
-        return new Diagram(source.getDimension() + 1, {type_dimension, source, data});
+        let data = [new Content(this.n - 1, forward_limit, backward_limit)];
+        return new Diagram(source.n + 1, {t, source, data});
     }
     getSource() {
         return (this.source == null ? null : this.source.copy());
@@ -74,13 +75,6 @@ class Generator {
         var colour = gProject.getColour(id);
         return colour;
     }
-    getDimension() {
-        if (this.source === undefined)
-            return 0;
-        if (this.source == null)
-            return 0;
-        return this.source.getDimension() + 1;
-    }
     getType() {
         return 'Generator';
     }
@@ -97,7 +91,7 @@ class Generator {
     }
     getBoundingBox() {
         var box = {
-            min: Array(Math.max(0, this.getDimension() - 1)).fill(0),
+            min: Array(Math.max(0, this.n - 1)).fill(0),
             max: this.getSourceLengths()
         };
         //box.max.push(1);
@@ -110,7 +104,7 @@ class Generator {
     }
     usesCell(generator) {
         // Generators can only use cells which have a lower dimension
-        if (generator.getDimension() >= this.getDimension())
+        if (generator.n >= this.n)
             return false;
         // The generator uses the specified cell iff the source or target uses it
         if (this.source != null) {
@@ -127,6 +121,9 @@ class Generator {
     }
     flippable() {
         return (this.name.indexOf('*1') > -1);
+    }
+    is_basic_interchanger() {
+        return false;
     }
 }
 

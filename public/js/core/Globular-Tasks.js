@@ -103,11 +103,11 @@ function cps_render_signature() {
 
     // Loop over cells
     for (var i = 0; i < cells.length; i++) {
-        var generator = gProject.signature.getGenerator(cells[i]);
+        var generator = cells[i];//gProject.signature.getGenerator(cells[i]);
         tasks.push({
             f: cps_import_cell,
             arg: generator,
-            status: 'Rendering ' + generator.getDimension() + '-cell "' + generator.name + '"...'
+            status: 'Rendering ' + generator.n + '-cell "' + generator.name + '"...'
         });
     }
 

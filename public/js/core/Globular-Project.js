@@ -95,7 +95,8 @@ Project.prototype.getColour = function (data) {
     var generator = this.signature.getGenerator(id);
     if (generator != null) return generator.display.colour;
     */
-    let analysis = Globular.analyze_id(data);
+    if (data == null) return '000000'; // should debug
+    let analysis = Globular.analyze_id(data.id);
 
     // Case that the id derives from the signature
     if (analysis.signature) {
@@ -191,8 +192,8 @@ Project.prototype.takeIdentityUI = function () {
     if (this.diagram == null) return;
 
     /*
-    if (this.diagram.getDimension() >= 3) {
-        alert("Can't take the identity of a " + this.diagram.getDimension().toString() + "-dimensional diagram");
+    if (this.diagram.n >= 3) {
+        alert("Can't take the identity of a " + this.diagram.n.toString() + "-dimensional diagram");
         return;
     }
     */
@@ -255,8 +256,8 @@ Project.prototype.saveSourceTargetUI = function (boundary /* = 'source' or 'targ
     var target = this.cacheSourceTarget.target;
 
     // Test dimensions
-    if (source.geometric_dimension != target.geometric_dimension) {
-        alert("Source has dimension " + source.geometric_dimension + ", but target has dimension " + target.geometric_dimension);
+    if (source.n != target.n) {
+        alert("Source has dimension " + source.n + ", but target has dimension " + target.n);
         this.cacheSourceTarget[boundary] = null;
         return true;
     }
@@ -266,7 +267,7 @@ Project.prototype.saveSourceTargetUI = function (boundary /* = 'source' or 'targ
     var sourceOfTarget = target.getSourceBoundary();
     var targetOfSource = source.getTargetBoundary();
     var targetOfTarget = target.getTargetBoundary();
-    if (source.getDimension() != 0) { // globularity trivially satisfied for 0-diagrams
+    if (source.n != 0) { // globularity trivially satisfied for 0-diagrams
         if (!sourceOfSource.equals(sourceOfTarget)) {
             alert("Source of source does not match source of target");
             this.cacheSourceTarget[boundary] = null;
@@ -322,15 +323,18 @@ Project.prototype.dragCellUI = function (drag) {
     //drag.coordinates = drag.coordinates.reverse();
 
     // Find how we can interpret this drag in terms of an algebraic move
-    var options = diagram_pointer.interpretDrag(drag);
+    var options = diagram_pointer.interpretDrag(drag, drag.boundary ? drag.boundary.type : null);
 
+/*
     // Delete those options which require invertibility of noninvertible cells
     for (var i = options.length - 1; i >= 0; i--) {
         if (!this.actionAllowed(options[i], drag)) options.splice(i, 1);
     }
 
+*/
+
     if (options.length === 0) {
-        console.log("No interchanger applies");
+        console.log("No homotopy is possible");
         return;
     }
 
@@ -341,15 +345,10 @@ Project.prototype.dragCellUI = function (drag) {
     }
 
     var list = $('#options-list').empty();
-    for (var i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
         var option = options[i];
         var id = option.id;
-        if (drag.boundary != null) {
-            if (drag.boundary.depth > 0 && drag.boundary.type == 's') {
-                id = Globular.toggle_inverse(id);
-            }
-        }
-        var item = $('<li>').html(Globular.getFriendlyName(id));
+        var item = $('<li>').html('Option ' + i);
         list.append(item);
 
         // Use a closure to specify the behaviour on selection
@@ -367,6 +366,8 @@ Project.prototype.dragCellUI = function (drag) {
 };
 
 Project.prototype.actionAllowed = function (option, drag) {
+
+    if (option instanceof Content) return true;
 
     if (option.preattachment != null) {
 
@@ -410,14 +411,16 @@ Project.prototype.getSignatureType = function (string) {
 Project.prototype.performActionUI = function (option, drag) {
 
     // Perform a preattachment if necessary
+    /*
     if (option.preattachment != null) {
         option.preattachment.boundary.depth += (drag.boundary == null ? 0 : drag.boundary.depth);
         this.diagram.attach(option.preattachment.id, option.preattachment.key, option.preattachment.boundary);
         console.log("Preattachment " + Globular.getFriendlyName(option.preattachment.id));
     }
+    */
 
-    this.diagram.attach(option.id, option.key, drag.boundary);
-    console.log("Attachment " + Globular.getFriendlyName(option.id));
+    this.diagram.attach(option, drag.boundary);
+    //console.log("Attachment " + Globular.getFriendlyName(option.id));
 
     // Useful shortcut to the diagram for console manipulation
     d = this.diagram;
@@ -460,7 +463,7 @@ Project.prototype.selectGeneratorUI = function (id) {
     }
 
     // If user clicked a 0-cell, do nothing
-    if (generator.getDimension() == 0) {
+    if (generator.n == 0) {
         alert("0-cells can never be attached");
         return null;
     }
@@ -468,11 +471,11 @@ Project.prototype.selectGeneratorUI = function (id) {
     var matched_diagram = generator.getDiagram();
     var slices_data = MainDisplay.getSlices();
 
-    if (matched_diagram.getDimension() == this.diagram.getDimension() + 1) {
+    if (matched_diagram.n == this.diagram.n + 1) {
         // REWRITE
         if (slices_data.length > 0) {
-            var d = this.diagram.getDimension();
-            alert('Choose projection level ' + (this.diagram.getDimension() - 2) + ' to rewrite diagram.');
+            var d = this.diagram.n;
+            alert('Choose projection level ' + (this.diagram.n - 2) + ' to rewrite diagram.');
             return null;
         }
         var rewrite_matches = this.diagram.enumerate(matched_diagram.getSourceBoundary());
@@ -492,15 +495,15 @@ Project.prototype.selectGeneratorUI = function (id) {
             matches: rewrite_matches
         };
         return enumerationData;
-    } else if (matched_diagram.getDimension() > this.diagram.getDimension() + 1) {
+    } else if (matched_diagram.n > this.diagram.n + 1) {
         // TOO HIGH-DIMENSIONAL
-        alert('Cannot apply a ' + matched_diagram.getDimension() + '-cell to a ' + this.diagram.getDimension() + '-dimensional diagram.');
+        alert('Cannot apply a ' + matched_diagram.n + '-cell to a ' + this.diagram.n + '-dimensional diagram.');
         return null;
     }
 
     // Try attaching to a boundary
     var depth = slices_data.length;
-    var d = generator.getDimension();
+    var d = generator.n;
     var matches = [];
 
     // Can we attach by virtue of viewing the entire source or target?
@@ -515,23 +518,23 @@ Project.prototype.selectGeneratorUI = function (id) {
 
     var inverse_id = Globular.toggle_inverse(id);
     // Are we viewing an entire target?
-    if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
+    if (slices_data.length > 0 && slices_data.last() == last_slice_max && matched_diagram.n == visible_slice.n + 1) {
         matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('s'), 0, 't', depth, id);
     }
 
     // Are we viewing an entire source?
-    else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.getDimension() == visible_slice.getDimension() + 1) {
+    else if (slices_data.length > 0 && slices_data.last() === 0 && matched_diagram.n == visible_slice.n + 1) {
         matches = this.prepareEnumerationData(visible_slice, matched_diagram.getBoundary('t'), 0, 's', depth, inverse_id);
     }
 
     // Can we attach to the apparent s or t of the visible diagram?
-    else if (d == this.diagram.getDimension() - depth) {
+    else if (d == this.diagram.n - depth) {
         matches = this.prepareEnumerationData(visible_slice.getBoundary('s'), matched_diagram.getBoundary('t'), 1, 's', depth, inverse_id);
         matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('t'), matched_diagram.getBoundary('s'), 1, 't', depth, id));
     }
 
     // Can we attach to the apparent ss or tt of the visible diagram?
-    else if (d == this.diagram.getDimension() - depth - 1) {
+    else if (d == this.diagram.n - depth - 1) {
         matches = this.prepareEnumerationData(visible_slice.getBoundary('ss'), matched_diagram.getTargetBoundary(), 2, 's', depth, inverse_id);
         matches = matches.concat(this.prepareEnumerationData(visible_slice.getBoundary('st'), matched_diagram.getBoundary('s'), 2, 't', depth, id));
     }
@@ -620,7 +623,7 @@ Project.prototype.renderHighlighted = function () {
 Project.prototype.createGeneratorDOMEntry = function (id) {
 
     var generator = this.signature.getGenerator(id);
-    var n = generator.getDimension();
+    var n = generator.n;
 
     var ccps_opt_str = "";
 
@@ -859,8 +862,8 @@ Project.prototype.relatedCells = function (generator_to_remove) {
     var related_cells = [generator_to_remove];
     var cells = this.signature.getAllCells();
     for (var i = 0; i < cells.length; i++) {
-        var id = cells[i];
-        var generator = this.signature.getGenerator(id);
+        var generator = cells[i];
+        //var generator = this.signature.getGenerator(id);
         if (generator.usesCell(generator_to_remove)) {
             related_cells.push(generator);
             related_cells = related_cells.concat(this.relatedCells(generator));
@@ -898,7 +901,7 @@ Project.prototype.renderCells = function () {
 
 Project.prototype.renderCellsAbove = function (id) {
     var generator = this.signature.getGenerator(id);
-    for (var d = generator.getDimension() + 1; d <= this.signature.getDimension(); d++) {
+    for (var d = generator.n + 1; d <= this.signature.n; d++) {
         var cells = this.signature.getNCells(d);
         for (var i = 0; i < cells.length; i++) {
             this.renderNCell(cells[i]);
@@ -910,11 +913,11 @@ Project.prototype.renderCellsAbove = function (id) {
 Project.prototype.renderNCell = function (id) {
 
     var generator = this.signature.getGenerator(id);
-    console.log("Rendering " + generator.getDimension() + "-cell " + generator.name);
+    console.log("Rendering " + generator.n + "-cell " + generator.name);
 
     // Create any required cell groups
     var cell_body = $('#cell-body');
-    for (var d = 0; d <= generator.getDimension(); d++) {
+    for (var d = 0; d <= generator.n; d++) {
         var cell_group_id = '#cell-group-' + d;
         if ($(cell_group_id).length == 0) {
             var cell_group_html = "";
@@ -927,11 +930,11 @@ Project.prototype.renderNCell = function (id) {
 
     // Set default single thumbnail behaviour if undefined
     if (generator.single_thumbnail == undefined) {
-        generator.single_thumbnail = (generator.getDimension() <= 2);
+        generator.single_thumbnail = (generator.n <= 2);
     }
 
     // Add the new generator
-    var cell_group_id = '#cell-group-' + generator.getDimension();
+    var cell_group_id = '#cell-group-' + generator.n;
     var entry = this.createGeneratorDOMEntry(generator.id);
     var cell_id = '#cell-opt-' + generator.id;
     if ($(cell_id).length > 0) {
@@ -945,7 +948,7 @@ Project.prototype.renderNCell = function (id) {
         var d = generator.getDiagram();
         d.render('#ci-' + generator.id);
         d.clearAllSliceCaches();
-    } else if (generator.getDimension() > 0) {
+    } else if (generator.n > 0) {
         var s = generator.getSource();
         s.render('#ci-' + generator.id);
         s.clearAllSliceCaches();
@@ -981,7 +984,7 @@ Project.prototype.addNCell = function (data) {
         name: "Cell " + (this.signature.getAllCells().length + 1),
         invertible: (data.invertible == undefined ? false : data.invertible)
     });
-    var d = generator.getDimension();
+    var d = generator.n;
 
     // Make sure the signature has a sufficiently high dimension
     while (this.signature.n < d) {

@@ -43,7 +43,7 @@ class Globular {
             signature: true,
             i0: false,
             i1: false,
-            dimension: generator.getDimension(),
+            dimension: generator.n,
             generator: generator
         }
     }
@@ -132,17 +132,6 @@ class Globular {
         return results;
     }
 
-    static findFirstLast(monotone, value) {
-        let first = null;
-        let last = null;
-        let pos = 0;
-        while (monotone[pos] < value) pos ++;
-        first = pos;
-        while (pos < monotone.length && monotone[pos] == value) pos ++;
-        if (pos == monotone.length) pos --;
-        last = pos;
-        return {first, last};
-    }
 
 }
 
