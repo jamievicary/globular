@@ -290,16 +290,8 @@ class Diagram {
                 let new_content = option.reverse(this.source);
                 this.data.unshift(new_content);
                 this.source.rewrite(option);
-                /*
-                var content = this.source.getAttachmentContent(id, position, generator.source, generator.target);
-                this.source.rewrite(content);
-                var inverse_content = this.source.getAttachmentContent(Globular.toggle_inverse(id), position, generator.target, generator.source);
-                this.data.unshift(inverse_content);
-                //this.initializeSliceCache();
-                */
             }
             else {
-                //let content = this.getTargetBoundary().getAttachmentContent(id, position, generator.source, generator.target);
                 this.data.push(option);
             }
 
@@ -341,10 +333,7 @@ class Diagram {
         if (!subdiagram) subdiagram = this;
         _assert(position.length == this.n);
         _assert(this.n == subdiagram.n);
-        if (this.n == 0) {
-            let forward_component = new LimitComponent(0, { type });
-            return new ForwardLimit(0, [forward_component]);
-        }
+        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type })]);
         let slice_position = position.slice(1);
         let sublimits = [];
         for (let i = 0; i < subdiagram.data.length; i++) {
@@ -353,8 +342,9 @@ class Diagram {
             let sub_forward_limit = singular_slice.contractForwardLimit(type, slice_position, subdiagram_singular_slice);
             sublimits.push(sub_forward_limit);
         }
-        let source_forward_limit = this.source.contractForwardLimit(type);
-        let source_backward_limit = this.getTargetBoundary().contractBackwardLimit(type);
+        let source_forward_limit = this.source.contractForwardLimit(type, slice_position, subdiagram.source);
+        //let source_backward_limit = this.getTargetBoundary().contractBackwardLimit(type);
+        let source_backward_limit = this.getSlice({height: position[0] + subdiagram.data.length, regular: true}).contractBackwardLimit(type, slice_position, subdiagram.getTargetBoundary());
         let data = [new Content(this.n - 1, source_forward_limit, source_backward_limit)];
         let first = position[0];
         let last = position[0] + subdiagram.data.length;

@@ -372,7 +372,7 @@ class DisplayManager {
             return null;
         }
 
-        return this.diagram.getSlice(this.getSlices().reverse());
+        return this.diagram.getSlice(this.getSlices()/*.reverse()*/);
     }
 
     getBoundaryFlags() {
