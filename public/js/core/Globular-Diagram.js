@@ -68,10 +68,10 @@ class Diagram {
 
         if (pos.height == 0 && pos.regular) return this.source;
         if (pos.regular) {
-            let singular = this.getSlice({height: pos.height - 1, regular: false}).copy();
+            let singular = this.getSlice({ height: pos.height - 1, regular: false }).copy();
             return this.data[pos.height - 1].backward_limit.rewrite(singular);
         } else {
-            let regular = this.getSlice({height: pos.height, regular: true}).copy();
+            let regular = this.getSlice({ height: pos.height, regular: true }).copy();
             if (pos.height == 0) regular.t = this.t - 1; // When rewriting source need to correct the type dimension
             return this.data[pos.height].forward_limit.rewrite(regular);
         }
@@ -499,14 +499,14 @@ class Diagram {
         return new Content(this.n, forward_limit, backward_limit);
     }
 
-    getContractionLimit(location) {
+    getContractionLimit(location, right) {
         _assert(location instanceof Array);
         _assert(location.length > 0);
         //_assert(!isNaN(location[0]));
         if (location.length == 1) {
             _assert(!location[0].regular); // Must end on a singular structure
             let height = location[0].height;
-            let contract_data = this.contract(height);
+            let contract_data = this.contract(height, right == 1);
             if (!contract_data) return null;
             let first = location[0].height;
             let last = first + 2;
@@ -521,7 +521,7 @@ class Diagram {
         }
         else if (location.length > 1) {
             let slice = this.getSlice(location[0]);
-            let recursive = slice.getContractionLimit(location.slice(1));
+            let recursive = slice.getContractionLimit(location.slice(1), right);
             if (!location[0].regular) return null; // Can't handle contractions in singular subslices yet
             let recursive_target = recursive.rewrite(slice.copy())
             let recursive_reversed = recursive.getBackwardLimit(slice, recursive_target);
@@ -535,8 +535,8 @@ class Diagram {
         _assert(false);
     }
 
-    getContractionContent(location) {
-        let forward_limit = this.getContractionLimit(location);
+    getContractionContent(location, right) {
+        let forward_limit = this.getContractionLimit(location, right);
         if (!forward_limit) return null;
         let target = forward_limit.rewrite(this.copy());
         let backward_limit = new BackwardLimit(this.n, []);
@@ -544,19 +544,22 @@ class Diagram {
         // The target has length 0, so it's a pure vacuum bubble.
     }
 
-    drag(location, up) {
+    drag(location, drag) {
         _assert(location instanceof Array);
         _assert(location.length > 0);
         _assert(!location.last().regular); // final entity must be at a singular height
-        if (!up && location.last().height == 0) return null;
-        if (!up) location[location.length - 1].height--; // if we're dragging down, adjust for this
-        let content = this.getContractionContent(location);
+        if (drag[0] < 0 && location.last().height == 0) return null;
+        if (drag[0] < 0) {
+            location[location.length - 1].height--; // if we're dragging down, adjust for this
+            if (drag[1] != null) drag[1] = - drag[1];
+        }
+        let content = this.getContractionContent(location, drag[1]);
         if (!content) return null;
         return [content];
     }
 
     // Contract the given height with the one above
-    contract(height) {
+    contract(height, right) {
         _assert(!isNaN(height));
         _assert(height >= 0);
         _assert(height < this.data.length - 1);
@@ -565,7 +568,7 @@ class Diagram {
         let D2 = this.getSlice({ height: height + 1, regular: false });
         let L1 = this.data[height].backward_limit;
         let L2 = this.data[height + 1].forward_limit;
-        return regular.pushout({ D1, D2, L1, L2, depth: 0 });
+        return regular.unify({ D1, D2, L1, L2, right });
     }
 
     // Define pushout as an unbiased unification. This might never be needed, let's see.
@@ -584,7 +587,7 @@ class Diagram {
         _assert(this.n == D1.n);
         _assert(this.n == D2.n);
 
-        // Handle the base case, where we only allow pushouts given a matching triangle of types
+        // Handle the base case, where we only allow unifications given a matching triangle of types
         if (this.n == 0) {
             _assert(D1.type instanceof Generator);
             _assert(D2.type instanceof Generator);
@@ -593,106 +596,91 @@ class Diagram {
                 T = D2.copy();
                 I1 = L2.copy();
                 I2 = new BackwardLimit(0, []);
-                console.log("Pushout base case this==D1");
+                console.log("Unification base case this==D1");
             }
             else if (this.type == D2.type) {
                 T = D1.copy();
                 I2 = L1.copy();
                 I1 = new ForwardLimit(0, []);
-                console.log("Pushout base case this==D2");
+                console.log("Unification base case this==D2");
             }
             else if (D1.type == D2.type) {
                 if (D1.t < D1.type.n) debugger;
-                else if (D1.t == D1.type.n) return null;
-                //if (depth < D1.type.n) return null; // see 2017-ANC page 47
+                else if (D1.t == D1.type.n) return null; // see 2017-ANC page 47
                 T = D1.copy();
                 I1 = new ForwardLimit(0, []);
                 I2 = new BackwardLimit(0, []);
-                console.log("Pushout base case D1==D2, this.t==" + this.t + ", this.type.n==" + this.type.n + ", D1.t==" + D1.t + ", D1.type.n=" + D1.type.n + ", depth=" + depth);
+                console.log("Unification base case D1==D2, this.t==" + this.t + ", this.type.n==" + this.type.n + ", D1.t==" + D1.t + ", D1.type.n=" + D1.type.n + ", depth=" + depth);
             } else {
                 // All 3 types different
                 console.log("No interchanger: base case, all types distinct")
                 return null;
             }
-            /*            
-                        else if (this.type != D1.type && this.type != D2.type) return null;
-                        else {
-                            T = (this.type == D1.type) ? D2.copy() : D1.copy();
-                            I1 = L2.copy();
-                            I2 = L1.copy()
-                            console.log("Pushout base case 2");
-                        }
-                        */
             _assert(T instanceof Diagram);
             _assert(I1 instanceof ForwardLimit);
             _assert(I2 instanceof BackwardLimit);
             return { T, I1, I2 };
-            /*
-            if (D1.type == D2.type) return { T:D1.copy(), I1: new ForwardLimit(0, []), I2: new BackwardLimit(0, [])};
-            if (this.type != D1.type && this.type != D2.type) return null;
-            return { T: (this.type == D1.type) ? D2.copy() : D1.copy(), I1: L2.copy(), I2: L1.copy() };
-            */
         }
 
-        // Get the pushout of the singular monotones
+        // Get the unification of the singular monotones
         let M1 = L1.getMonotone(this.data.length, D1.data.length);
         let M2 = L2.getMonotone(this.data.length, D2.data.length);
-        let pushout = M1.pushout({second:M2, right});
-        if (!pushout) {
-            console.log("No pushout at depth " + depth + ": monotones have no pushout");
+        let unification = M1.unify({ second: M2, right });
+        if (!unification) {
+            console.log("No unification at depth " + depth + ": monotones have no unification");
             return null;
         }
 
-        // Get the pushouts on all the singular slices
-        let slice_pushouts = [];
+        // Get the unifications on all the singular slices
+        let slice_unifications = [];
         for (let i = 0; i < this.data.length; i++) {
             let main_slice = this.getSlice({ height: i, regular: false });
             let d1_slice = D1.getSlice({ height: M1[i], regular: false });
             let d2_slice = D2.getSlice({ height: M2[i], regular: false });
             let l1_sublimit = L1.subBackwardLimit(i);
             let l2_sublimit = L2.subForwardLimit(i);
-            let slice_pushout = main_slice.pushout(
-                { D1: d1_slice, D2: d2_slice, L1: l1_sublimit, L2: l2_sublimit, depth: depth + 1 });
-            if (!slice_pushout) {
-                console.log("No pushout at depth " + depth + ": singular slice " + i + " has no pushout");
-                return null; // if any of the slice pushouts can't be formed, then fail
+            let slice_unification = main_slice.unify(
+                { D1: d1_slice, D2: d2_slice, L1: l1_sublimit, L2: l2_sublimit, depth: depth + 1, right });
+            if (!slice_unification) {
+                console.log("No unification at depth " + depth + ": singular slice " + i + " has no unification");
+                return null; // if any of the slice unifications can't be formed, then fail
             }
-            slice_pushouts.push(slice_pushout);
+            slice_unifications.push(slice_unification);
         }
 
-        // Check all the slice pushouts agree
+        // Check all the slice unifications agree
         let new_left_limits = [];
-        for (let i = 0; i < slice_pushouts.length; i++) {
-            let left_slice_limit = slice_pushouts[i].I1;
+        for (let i = 0; i < slice_unifications.length; i++) {
+            let left_slice_limit = slice_unifications[i].I1;
             if (!new_left_limits[M1[i]]) {
                 new_left_limits[M1[i]] = left_slice_limit;
                 continue;
             }
             if (!left_slice_limit.equals(new_left_limits[M1[i]])) {
-                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting left limit");
+                console.log("No unification at depth " + depth + ": singular slice " + i + " has a conflicting left limit");
                 return null;
             }
         }
         let new_right_limits = [];
-        for (let i = 0; i < slice_pushouts.length; i++) {
-            let right_slice_limit = slice_pushouts[i].I2;
+        for (let i = 0; i < slice_unifications.length; i++) {
+            let right_slice_limit = slice_unifications[i].I2;
             if (!new_right_limits[M2[i]]) {
                 new_right_limits[M2[i]] = right_slice_limit;
                 continue;
             }
             if (!right_slice_limit.equals(new_right_limits[M2[i]])) {
-                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting right limit");
+                console.log("No unification at depth " + depth + ": singular slice " + i + " has a conflicting right limit");
                 return null;
             }
         }
         let target_slices = [];
-        for (let i = 0; i < slice_pushouts.length; i++) {
-            let target_slice_index = pushout.first[M1[i]];
+        for (let i = 0; i < slice_unifications.length; i++) {
+            let target_slice_index = unification.first[M1[i]];
             if (!target_slices[target_slice_index]) {
-                target_slices[target_slice_index] = slice_pushouts[i].T;
+                target_slices[target_slice_index] = slice_unifications[i].T;
             }
-            if (!target_slices[target_slice_index].equals(slice_pushouts[i].T)) {
-                console.log("No pushout at depth " + depth + ": singular slice " + i + " has a conflicting pushout diagram");
+            if (!target_slices[target_slice_index].equals(slice_unifications[i].T)) {
+                console.log("No unification at depth " + depth + ": singular slice " + i + " has a conflicting unification diagram");
                 return null;
             }
         }
@@ -702,21 +690,21 @@ class Diagram {
         for (let i = 0; i < l1_complement.length; i++) {
             let d1_level = l1_complement[i];
             let d1_slice = D1.getSlice({ height: d1_level, regular: false });
-            if (target_slices[pushout.first[i]] == null) {
-                //target_slices[pushout.first[i]] = d1_slice.copy();
-            } else if (!d1_slice.equals(target_slices[pushout.first[i]])) {
-                console.log("No pushout at depth " + depth + ": D1 index " + i + " is not in the image and has a conflicting pushout diagram");
+            if (target_slices[unification.first[d1_level]] == null) {
+                //target_slices[unification.first[i]] = d1_slice.copy();
+            } else if (!d1_slice.equals(target_slices[unification.first[d1_level]])) {
+                console.log("No unification at depth " + depth + ": D1 index " + i + " is not in the image and has a conflicting unification diagram");
                 return null;
             }
         }
         for (let i = 0; i < l2_complement.length; i++) {
             let d2_level = l2_complement[i];
-            let d2_slice = D1.getSlice({ height: d2_level, regular: false });
-            if (target_slices[pushout.second[i]] == null) {
-                //target_slices[pushout.second[i]] = d1_slice.copy();
+            let d2_slice = D2.getSlice({ height: d2_level, regular: false });
+            if (target_slices[unification.second[d2_level]] == null) {
+                //target_slices[unification.second[i]] = d1_slice.copy();
             }
-            else if (!d2_slice.equals(target_slices[pushout.second[i]])) {
-                console.log("No pushout at depth " + depth + ": D2 index " + i + " is not in the image and has a conflicting pushout diagram");
+            else if (!d2_slice.equals(target_slices[unification.second[d2_level]])) {
+                console.log("No unification at depth " + depth + ": D2 index " + i + " is not in the image and has a conflicting unification diagram");
                 return null;
             }
         }
@@ -726,8 +714,8 @@ class Diagram {
         let I1_content = [];
         let I2_content = [];
         for (let i = 0; i < target_slices.length; i++) {
-            let i1_preimage = pushout.first.getFirstLast(i);
-            let i2_preimage = pushout.second.getFirstLast(i);
+            let i1_preimage = unification.first.getFirstLast(i);
+            let i2_preimage = unification.second.getFirstLast(i);
             _assert(i1_preimage.first != null && i1_preimage.last != null && i2_preimage.first != null && i2_preimage.last != null);
 
             // If the target slice is not present we will add it later
@@ -782,8 +770,8 @@ class Diagram {
             if (l1_position == null && l2_position == null) _assert(false);
             else if (l1_position == null) use_left = false;
             else if (l2_position == null) use_left = true;
-            else use_left = (pushout.first[l1_position] < pushout.second[l2_position]);
-            let insert_position = use_left ? pushout.first[l1_position] : pushout.second[l2_position];
+            else use_left = (unification.first[l1_position] < unification.second[l2_position]);
+            let insert_position = use_left ? unification.first[l1_position] : unification.second[l2_position];
             let insert_data = use_left ? D1.data[l1_position] : D2.data[l2_position];
             _assert(!isNaN(insert_position));
             _assert(insert_data);
@@ -791,7 +779,7 @@ class Diagram {
             _assert(data[insert_position] == null);
             data[insert_position] = insert_data;
             if (use_left) {
-                let firstlast = pushout.second.getFirstLast(insert_position);
+                let firstlast = unification.second.getFirstLast(insert_position);
                 _assert(firstlast.first == firstlast.last);
                 let new_content = { first: firstlast.first, last: firstlast.last, data: [], sublimits: [] };
                 let i = 0;
@@ -801,7 +789,7 @@ class Diagram {
                 I2_content.splice(i, 0, new LimitComponent(this.n, new_content));
                 l1_index++;
             } else {
-                let firstlast = pushout.first.getFirstLast(insert_position);
+                let firstlast = unification.first.getFirstLast(insert_position);
                 _assert(firstlast.first == firstlast.last);
                 let new_content = { first: firstlast.first, last: firstlast.last, data: [insert_data.copy()], sublimits: [] };
                 let i = 0;

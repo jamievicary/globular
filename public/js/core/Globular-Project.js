@@ -322,7 +322,7 @@ Project.prototype.dragCellUI = function (drag) {
     // Reverse the coordinates, since the display code uses the opposite system
     //drag.coordinates = drag.coordinates.reverse();
 
-    // Find how we can interpret this drag in terms of an algebraic move
+    // Try to interpret this drag as an algebraic move
     var options = diagram_pointer.interpretDrag(drag, drag.boundary ? drag.boundary.type : null);
 
 /*
@@ -334,7 +334,7 @@ Project.prototype.dragCellUI = function (drag) {
 */
 
     if (options.length === 0) {
-        console.log("No homotopy is possible");
+        console.log("No homotopy possible");
         return;
     }
 

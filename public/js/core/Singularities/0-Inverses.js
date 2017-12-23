@@ -12,8 +12,8 @@ Diagram.prototype.interpretDrag.Inverses = function (drag, boundary_type) {
 
     if (drag.directions == null) return this.interpretClickInverses(drag, boundary_type);
 
-    _assert(drag.directions.length == 1);
-    let drag_content = this.drag(drag.coordinates, drag.directions[0] > 0);
+    //_assert(drag.directions.length == 1);
+    let drag_content = this.drag(drag.coordinates, drag.directions);
     if (!drag_content) return [];
     return drag_content;
 

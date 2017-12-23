@@ -109,7 +109,7 @@ class DisplaySVG {
                 if (Math.abs(dy) < 0.7 * threshold) return;
                 data.coordinates.pop();
                 //data.coordinates = data.coordinates.slice(location.length - 1); // Remove the final coordinate
-                data.directions = [dy > 0 ? +1 : -1 /*, dx > 0 ? +1 : -1*/];
+                data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
             }
 
             // Clicking a 1d picture

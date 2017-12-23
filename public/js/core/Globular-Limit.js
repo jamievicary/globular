@@ -570,16 +570,18 @@ class Monotone extends Array {
         return complement;
     }
 
-    static union(first, second) {
+    static union(first, second, swap) {
         let i1_array = [];
         for (let i = 0; i < first; i++) i1_array.push(i);
         let i2_array = [];
         for (let i = 0; i < second; i++) i2_array.push(first + i);
-        return {first: new Monotone(first + second, i1_array), second: new Monotone(first + second, i2_array)};
+        let data = { first: new Monotone(first + second, i1_array), second: new Monotone(first + second, i2_array) };
+        if (swap) return {first: data.second, second: data.first};
+        return data;
     }
 
-    pushout({second}) {
-        return this.unify({ second }); // implicitly right==null
+    pushout({ second, right }) {
+        return this.unify({ second, right }); // implicitly right==null, depth==null
     }
 
     // Unify with a second monotone, with the indicated tendency to the right if specified
@@ -594,7 +596,7 @@ class Monotone extends Array {
                 if (first.target_size > 0 && second.target_size > 0) {
                     if (right == null) return null;
                     else if (right == false) return Monotone.union(first.target_size, second.target_size);
-                    else return Monotone.union(second.target_size, first.target_size);
+                    else return Monotone.union(second.target_size, first.target_size, true);
                 }
                 else if (first.target_size == 0) return { first: second.copy(), second: Monotone.getIdentity(second.target_size) };
                 else if (second.target_size == 0) return { first: Monotone.getIdentity(first.target_size), second: first.copy() };
@@ -614,10 +616,12 @@ class Monotone extends Array {
         if (left_delta > 1 && right_delta > 1) {
             // If we haven't been given a tendency, fail
             if (right == null) return null;
-            if (right) {
-
-            }
-
+            let major = right ? { monotone: injections.second, delta: right_delta } : { monotone: injections.first, delta: left_delta };
+            let minor = right ? { monotone: injections.first, delta: left_delta } : { monotone: injections.second, delta: right_delta };
+            for (let i = 0; i < major.delta - 1; i++) major.monotone.grow();
+            minor.monotone.target_size += major.delta - 1;
+            for (let i = 0; i < minor.delta - 1; i++) minor.monotone.grow();
+            major.monotone.target_size = minor.monotone.target_size;
         } else if (left_delta == 0 || right_delta == 0) {
             let t = injections.first.target_size;
             while (injections.first.length <= first[n - 1]) injections.first.push(t - 1);
