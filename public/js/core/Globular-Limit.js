@@ -15,8 +15,9 @@
 - ForwardLimit(n) extends Limit(n)
 - BackwardLimit(n) extends Limit(n)
 - Limit(n) extends Array comprises: (this is a limit between n-diagrams)
-    - for all n, an array of:
-        - LimitComponent(n)
+    - for all n:
+        - Array(LimitComponent(n))
+        - source :: Boolean, whether this limit is source-like
 - LimitComponent(n) comprises: (this is a component of a limit between n-diagrams)
     - for n > 0:
         - data :: Array(Content(n-1))
@@ -217,11 +218,15 @@ class LimitComponent {
 }
 
 class Limit extends Array {
-    constructor(n, components) {
+    constructor(n, components, framing) {
         _assert(!isNaN(n));
         _assert(components instanceof Array);
+        if (n > 0) _assert(framing === undefined);
+        if (n == 0 && components.length > 0) _assert(typeof framing === 'boolean');
+        if (n == 0 && components.length == 0) _assert(framing === undefined);
         super(...components);
         this.n = n;
+        this.framing = framing;
     }
     usesCell(generator) {
         for (let i = 0; i < this.length; i++) {
@@ -292,12 +297,19 @@ class Limit extends Array {
     compose(first, forward) {
         let second = this;
         _assert((typeof forward) === 'boolean');
+        //_assert(typeof first.framing === 'boolean');
+        //_assert(typeof second.source === 'boolean');
+        //_assert(first.source === second.source);
         if (forward) _assert(second instanceof ForwardLimit && first instanceof ForwardLimit);
         if (!forward) _assert(second instanceof BackwardLimit && first instanceof BackwardLimit);
         _assert(first.n == second.n);
         if (first.length == 0) return second.copy();
         if (second.length == 0) return first.copy();
-        if (first.n == 0) return (forward ? second.copy() : first.copy());
+        if (first.n == 0) {
+            let composite = forward ? second.copy() : first.copy();
+            if (first.framing != null) composite.framing = first.framing;
+            return composite;
+        }
         let analysis1 = first.analyze();
         let c1 = 0;
         let c2 = 0;
@@ -370,13 +382,15 @@ class Limit extends Array {
 }
 
 class ForwardLimit extends Limit {
-    constructor(n, components) {
+    constructor(n, components, framing) {
         _assert(!isNaN(n));
         _assert(components);
+        if (n > 0) _assert(framing === undefined);
+        //if (n == 0) _assert(typeof source === 'boolean');
         for (let i = 0; i < components.length; i++) {
             _assert(n == 0 || components[i].data.length == 1);
         }
-        return super(n, components); // call the Limit constructor
+        return super(n, components, framing); // call the Limit constructor
     }
     rewrite(diagram) {
         diagram.t++;
@@ -395,7 +409,7 @@ class ForwardLimit extends Limit {
         for (let i = 0; i < this.length; i++) {
             new_components.push(this[i].copy());
         }
-        return new ForwardLimit(this.n, new_components);
+        return new ForwardLimit(this.n, new_components, this.framing);
     }
     compose(second) {
         return super.compose(second, true);
@@ -412,7 +426,7 @@ class ForwardLimit extends Limit {
     getBackwardLimit(source, target) {
         _assert(source.n == this.n);
         _assert(target.n == this.n);
-        if (this.n == 0) return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })]);
+        if (this.n == 0) return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })], this.framing);
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
         for (let i = 0; i < this.length; i++) {
@@ -437,7 +451,7 @@ class ForwardLimit extends Limit {
 }
 
 class BackwardLimit extends Limit {
-    constructor(n, components) {
+    constructor(n, components, framing) {
         _assert(!isNaN(n));
         _assert(components);
         for (let i = 0; i < components.length; i++) {
@@ -447,7 +461,7 @@ class BackwardLimit extends Limit {
                 _assert(components[i].sublimits.length == components[i].data.length);
             }
         }
-        return super(n, components); // call the Limit constructor
+        return super(n, components, framing); // call the Limit constructor
     }
     rewrite(diagram) {
         diagram.t--;
@@ -471,7 +485,7 @@ class BackwardLimit extends Limit {
         for (let i = 0; i < this.length; i++) {
             new_components.push(this[i].copy());
         }
-        return new BackwardLimit(this.n, new_components);
+        return new BackwardLimit(this.n, new_components, this.framing);
     }
     compose(second) {
         return super.compose(second, false);
@@ -488,7 +502,7 @@ class BackwardLimit extends Limit {
     getForwardLimit(source, target) {
         _assert(source.n == this.n);
         _assert(target.n == this.n);
-        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })]);
+        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })], this.framing);
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
         let offset = 0;
