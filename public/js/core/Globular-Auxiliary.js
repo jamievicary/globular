@@ -132,7 +132,31 @@ class Globular {
         return results;
     }
 
+    static parseSlice(value) {
+        if (typeof value != 'string') return null;
+        let regular = (value.substr(value.length - 1) != '*');
+        if (!regular) value = value.substr(0, value.length - 1);
+        if (isNaN(value)) return null;
+        let height = Number(value);
+        if (!isInteger(height)) return null;
+        return {height, regular};
+    }
 
+    static generateSlice(value) {
+        return String(value.height) + (value.regular ? "" : "*");
+    }
+
+    static moveSlice(position, delta) {
+        _assert(delta == -1 || delta == 1);
+        if (delta == -1 && position.regular) position.height --;
+        if (delta == +1 && !position.regular) position.height ++;
+        position.regular = !position.regular;
+        if (position.height < 0) {
+            position.height = 0;
+            position.regular = true;
+        }
+        return position;
+    }
 }
 
 /*

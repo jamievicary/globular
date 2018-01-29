@@ -97,7 +97,20 @@ class DisplayManager {
         this.display.updateControls();
     }
 
-    changeControls() {
+    changeSliceSpinner(event, ui) {
+        let spinner = $(event.currentTarget);
+        let up = event.originalEvent.currentTarget.classList.contains('ui-spinner-up');
+        let value = spinner.val();
+        let position = Globular.parseSlice(value);
+        _assert(position); 
+        let new_position = Globular.moveSlice(position, up ? 1 : -1);
+        let new_value = Globular.generateSlice(new_position);
+        spinner.val(new_value);
+        this.changeControls();
+        return false;
+    }
+
+    changeControls(event, ui) {
         gProject.clearThumbnails();
         this.updateControls();
         this.render();
@@ -181,13 +194,18 @@ class DisplayManager {
         for (var i = this.sliceInputs.length; i < remainingDimensions; i++) {
             this.sliceInputs[i] =
                 $('<input>')
+                //.spinner(/*{min:0}*/)
                 .addClass('control')
                 .addClass('slice')
+                /*
                 .attr('type', 'number')
                 .attr('min', 0)
+                */
                 .val(0)
                 .attr("index", i)
-                .on('input', event => this.changeControls(event))
+                //.on('input', event => this.changeControls(event))
+                .on('spinstart', (event, ui) => this.changeSliceSpinner(event, ui))
+                //.on('spin', function( event, ui ) {this.spinSlice(event, ui)})
                 .hover(
                     // Mouse over
                     (event) => {
@@ -202,6 +220,7 @@ class DisplayManager {
 
             // Store the index of the slice control
             this.sliceDiv.append(this.sliceInputs[i]);
+            this.sliceInputs[i].spinner({min:0}); // Must do it after appending
             update_control_width(this.sliceInputs[i]);
         }
 
@@ -233,16 +252,17 @@ class DisplayManager {
         var slice = this.diagram; // no need to copy
         for (var i = 0; i < remainingDimensions; i++) {
             var input = this.sliceInputs[i];
-            var val = input.val();
-            if (controls != null) {
-                if (controls.slices[i] != null) {
-                    val = controls.slices[i];
-                }
-            }
-            input.val(Math.min(val, Math.max(slice.data.length, 1)));
+            var position = Globular.parseSlice(input.val());
+            _assert(position);
+            if (controls  && controls.slices[i]) val = controls.slices[i];
+            position.height = Math.min(position.height, Math.max(slice.data.length, 1));
+            if (position.height < 0) position.height = 0;
+            if (position.height == slice.data.length) position.regular = true;
+            input.val(Globular.generateSlice(position));
+            //input.val(Math.min(val, Math.max(slice.data.length, 1)));
             update_control_width(input);
             input.attr('max', Math.max(1, slice.data.length));
-            slice = slice.getSlice({height:Number(input.val()), regular:true}); // no need to copy slice
+            slice = slice.getSlice(position); // no need to copy slice
         }
     }
 
@@ -356,7 +376,7 @@ class DisplayManager {
             return null;
         }
 
-        return this.sliceInputs.map(input => ({height: Number(input.val()), regular: true}));
+        return this.sliceInputs.map(input => (Globular.parseSlice(input.val())));
     }
 
     getSuppress() {
@@ -377,7 +397,7 @@ class DisplayManager {
 
     getBoundaryFlags() {
         return this.sliceInputs.map(input => {
-            let source = input.val() == input.attr("min");
+            let source = input.val() == 0 /*input.attr("min")*/;
             let target = input.val() == input.attr("max");
             return { source, target };
         });
@@ -411,7 +431,7 @@ class DisplayManager {
 // Make the number scrollers the correct width
 function update_control_width(input) {
     var length = String(input.val()).length;
-    var width = 24 + 6 * length;
+    var width = 30 + 6 * length;
     $(input).css('max-width', width + 'px');
 }
 

@@ -294,7 +294,74 @@ class Limit extends Array {
         }
         return component_targets;
     }
+    subLimit(n, forward) {
+        for (let i = 0; i < this.length; i++) {
+            let component = this[i];
+            if (n < component.first) return forward ? new ForwardLimit(this.n - 1, []) : new BackwardLimit(this.n - 1, []);
+            if (n < component.last) return component.sublimits[n - component.first];
+        }
+        return forward ? new ForwardLimit(this.n - 1, []) : new BackwardLimit(this.n - 1, []);
+    }
+
+    /*
     compose(first, forward) {
+        let second = this;
+        _assert((typeof forward) === 'boolean');
+        //_assert(typeof first.framing === 'boolean');
+        //_assert(typeof second.source === 'boolean');
+        //_assert(first.source === second.source);
+        if (forward) _assert(second instanceof ForwardLimit && first instanceof ForwardLimit);
+        if (!forward) _assert(second instanceof BackwardLimit && first instanceof BackwardLimit);
+        _assert(first.n == second.n);
+        if (first.length == 0) return second.copy();
+        if (second.length == 0) return first.copy();
+        if (first.n == 0) {
+            let composite = forward ? second.copy() : first.copy();
+            if (first.framing != null) composite.framing = first.framing;
+            return composite;
+        }
+
+        // Infer sizes of the 3 diagrams involved
+        let t1 = first.analyze();
+        let t2 = second.analyze();
+        let a_size = t1.length;
+        let b_size = Math.max(t1.last(), t2.length);
+        let c_size = t2.last();
+        let m1 = first.getMonotone(a_size, b_size);
+        let m2 = second.getMonotone(b_size, c_size);
+        let m_comp = m2.compose(m1);
+
+        for (let i = 0; i < m2.target_size; i++) {
+            let p = m2.preimage(i);
+            if (p.first == p.last) {
+
+            }
+            let first = m1.preimage(p.first).first;
+            let last = m1.preimage(p.last).last;
+            if (first == last) continue;
+            let sublimits = [];
+            for (let j = first; j < last; j++) {
+                let a = first.subLimit(j);
+                let b = second.subLimit(m1[j]);
+                sublimits.push(b.compose(a));
+            }
+
+            // Build the component
+            new_component = { sublimits };
+
+            if (forward) new_component.data = 
+        }
+
+        let height_c = second.last().last;
+        let height_a = first.last().last;
+        let height_b =
+            let M1 = first.getMonotone();
+        let M2 = second.getMonotone();
+
+    }
+    */
+
+    compose(first, forward) { // See 2017-ANC-19
         let second = this;
         _assert((typeof forward) === 'boolean');
         //_assert(typeof first.framing === 'boolean');
@@ -341,15 +408,25 @@ class Limit extends Array {
             if (target1 < second[c2].last) {  // c1 is in the support of c2
                 // Add the overlapping levels
                 let second_sublimit = second[c2].sublimits[target1 - second[c2].first];
-                for (let i = 0; i < first[c1].last - first[c1].last; i++) {
+                for (let i = 0; i < first[c1].last - first[c1].first; i++) {
                     // For every overlapping level except the first, the new component is getting bigger
                     if (i > 0) c2_component.last++;
                     let first_sublimit = first[c1].sublimits[i];
                     let composed_sublimit = second_sublimit.compose(first_sublimit);
                     c2_component.sublimits.push(composed_sublimit);
-                    if (!forward) c2_component.data.push(Content.copyData(first[c1].data[i]));
+                    //if (!forward) c2_component.data.push(Content.copyData(first[c1].data[i]));
+                    if (!forward) c2_component.data.push(first[c1].data[i].copy());
+                    // DO WE NEED TO UPDATE C2??
                 }
                 c1++;
+                // If this exhausts c2, then finalize it
+                //if (target1 == second[c2].last - 1) {
+                if (c1 == first.length || first[c1+1].first >= second[c2].last) {
+                    if (forward) c2_component.data = Content.copyData(second[c2].data);
+                    new_components.push(new LimitComponent(this.n, c2_component));
+                    c2_component = { sublimits: [], data: [] };
+                    c2++;                        
+                }
             }
             else if (target1 >= second[c2].last) {
                 //c2_component.last = c2_component.first + c2_component.sublimits.length;
@@ -388,6 +465,8 @@ class ForwardLimit extends Limit {
         if (n > 0) _assert(framing === undefined);
         //if (n == 0) _assert(typeof source === 'boolean');
         for (let i = 0; i < components.length; i++) {
+            _assert(components[i] instanceof LimitComponent);
+            _assert(components[i].n == n);
             _assert(n == 0 || components[i].data.length == 1);
         }
         return super(n, components, framing); // call the Limit constructor
@@ -414,19 +493,17 @@ class ForwardLimit extends Limit {
     compose(second) {
         return super.compose(second, true);
     }
-    subForwardLimit(n) {
-        for (let i = 0; i < this.length; i++) {
-            let component = this[i];
-            if (n < component.first) return new ForwardLimit(this.n - 1, []);
-            if (n < component.last) return component.sublimits[n - component.first];
-        }
-        return new ForwardLimit(this.n - 1, []);
+    subLimit(n) {
+        return super.subLimit(n, true);
     }
     // Supposing this limit goes from source to target, construct the equivalent backward limit.
     getBackwardLimit(source, target) {
         _assert(source.n == this.n);
         _assert(target.n == this.n);
-        if (this.n == 0) return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })], this.framing);
+        if (this.n == 0) {
+            if (this.length == 0) return new BackwardLimit(0, []);
+            else return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })], this.framing);
+        }
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
         for (let i = 0; i < this.length; i++) {
@@ -457,9 +534,7 @@ class BackwardLimit extends Limit {
         for (let i = 0; i < components.length; i++) {
             _assert(components[i] instanceof LimitComponent)
             _assert(components[i].n == n);
-            if (n > 0) {
-                _assert(components[i].sublimits.length == components[i].data.length);
-            }
+            if (n > 0) _assert(components[i].sublimits.length == components[i].data.length);
         }
         return super(n, components, framing); // call the Limit constructor
     }
@@ -490,19 +565,17 @@ class BackwardLimit extends Limit {
     compose(second) {
         return super.compose(second, false);
     }
-    subBackwardLimit(n) {
-        for (let i = 0; i < this.length; i++) {
-            let component = this[i];
-            if (n < component.first) return new BackwardLimit(this.n - 1, []);
-            if (n < component.last) return component.sublimits[n - component.first];
-        }
-        return new BackwardLimit(this.n - 1, []);
+    subLimit(n) {
+        return super.subLimit(n, false);
     }
     // Supposing this limit goes from source to target, construct the equivalent backward limit.
     getForwardLimit(source, target) {
         _assert(source.n == this.n);
         _assert(target.n == this.n);
-        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })], this.framing);
+        if (this.n == 0) {
+            if (this.length == 0) return new ForwardLimit(0, []);
+            else return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })], this.framing);
+        }
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
         let offset = 0;
@@ -590,7 +663,7 @@ class Monotone extends Array {
         let i2_array = [];
         for (let i = 0; i < second; i++) i2_array.push(first + i);
         let data = { first: new Monotone(first + second, i1_array), second: new Monotone(first + second, i2_array) };
-        if (swap) return {first: data.second, second: data.first};
+        if (swap) return { first: data.second, second: data.first };
         return data;
     }
 
@@ -598,7 +671,7 @@ class Monotone extends Array {
         return this.unify({ second, right }); // implicitly right==null, depth==null
     }
 
-    // Unify with a second monotone, with the indicated tendency to the right if specified
+    // Unify with a second monotone, with the indicated tendency to the right if specified. Throws exception on failure.
     unify({ second, right, depth }) {
         let first = this;
         _assert(second instanceof Monotone);
@@ -608,19 +681,18 @@ class Monotone extends Array {
         if (depth == null) {
             if (first.length == 0) {
                 if (first.target_size > 0 && second.target_size > 0) {
-                    if (right == null) return null;
+                    if (right == null) throw "No unification at depth " + depth + ": cannot unify monotones at depth " + depth;
                     else if (right == false) return Monotone.union(first.target_size, second.target_size);
                     else return Monotone.union(second.target_size, first.target_size, true);
                 }
                 else if (first.target_size == 0) return { first: second.copy(), second: Monotone.getIdentity(second.target_size) };
                 else if (second.target_size == 0) return { first: Monotone.getIdentity(first.target_size), second: first.copy() };
-                else _assert(false);
+                else _assert(false); // Above cases should be exclusive
             }
             return this.unify({ second, right, depth: first.length }); // begin the induction
         }
         if (depth == 0) return { first: new Monotone(0, []), second: new Monotone(0, []) }; // base case
         let injections = this.unify({ second, right, depth: depth - 1 }); // recursive step
-        if (injections == null) return null;
         _assert(injections.first instanceof Monotone);
         _assert(injections.second instanceof Monotone);
         _assert(injections.first.target_size == injections.second.target_size);
@@ -629,7 +701,7 @@ class Monotone extends Array {
         let right_delta = second[n - 1] + (n == 1 ? 1 : -second[n - 2]);
         if (left_delta > 1 && right_delta > 1) {
             // If we haven't been given a tendency, fail
-            if (right == null) return null;
+            if (right == null) throw "No unification at depth " + depth + ": cannot unify head-to-head monotones without a bias";
             let major = right ? { monotone: injections.second, delta: right_delta } : { monotone: injections.first, delta: left_delta };
             let minor = right ? { monotone: injections.first, delta: left_delta } : { monotone: injections.second, delta: right_delta };
             for (let i = 0; i < major.delta - 1; i++) major.monotone.grow();
@@ -650,7 +722,7 @@ class Monotone extends Array {
         if (n == first.length) {
             let first_trailing = first.target_size - this.last() - 1;
             let second_trailing = second.target_size - this.last() - 1;
-            if (first_trailing > 0 && second_trailing > 0) return null;
+            if (first_trailing > 0 && second_trailing > 0) throw "No unification at depth " + depth + ": trailing elements in monotone unification (?)"
             while (injections.first.length < first.target_size) injections.first.grow();
             while (injections.second.length < second.target_size) injections.second.grow();
             injections.first.target_size = injections.second.target_size = Math.max(injections.first.target_size, injections.second.target_size);
@@ -682,7 +754,7 @@ class Monotone extends Array {
         }
         return null;
     }
-    getFirstLast(value) {
+    preimage(value) {
         let first = null;
         let last = null;
         let pos = 0;

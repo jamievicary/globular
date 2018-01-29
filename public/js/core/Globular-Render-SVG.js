@@ -787,8 +787,8 @@ function SVG_prepare(diagram, subdiagram) {
             let type = s.data[i].getLastId();
             let x = 0;
             let y = level + 0.5;
-            let forward_insert = forward_monotone.getFirstLast(i);
-            let backward_insert = backward_monotone.getFirstLast(i);
+            let forward_insert = forward_monotone.preimage(i);
+            let backward_insert = backward_monotone.preimage(i);
             let singular_height = i;
             let vertex = { structure, type, level, x, y, forward_insert, backward_insert, singular_height };
             //current_singular_level.push(vertex);
