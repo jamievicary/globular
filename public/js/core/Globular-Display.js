@@ -82,9 +82,7 @@ class DisplayManager {
         // Update the view dimension input
         if (this.viewInput != null) {
             var view = Number(this.viewInput.val());
-            if (drag != undefined) {
-                if (drag.boost) view++;
-            }
+            if (drag && drag.boost) view++;
             view = Math.min(this.display.getMaximumDimension(), view, this.diagram.n - suppress);
             this.viewInput.val(view);
             update_control_width(view);
@@ -225,12 +223,15 @@ class DisplayManager {
         }
 
         // If a particular boundary has been requested, make sure it is within view
+        /*
+            UPDATE THIS LOGIC!!!!!
+        */
         if (drag != null) {
             if (drag.boundary == null) {
                 // Rewrite in the interior, so advance the last slider
                 if (this.sliceInputs.length > 0) {
                     var counter = this.sliceInputs.last();
-                    var current = Number(counter.val());
+                    var current = counter.val();
                     counter.val(current + 1);
                     update_control_width(counter);
                 }

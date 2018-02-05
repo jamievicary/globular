@@ -8,15 +8,16 @@
 */
 
 // Interpret drag of this type
+Diagram.prototype.interpretDrag = {};
 Diagram.prototype.interpretDrag.Inverses = function (drag, boundary_type) {
-
+/*
     if (drag.directions == null) return this.interpretClickInverses(drag, boundary_type);
 
     //_assert(drag.directions.length == 1);
     let drag_content = this.drag(drag.coordinates, drag.directions);
     if (!drag_content) return [];
     return drag_content;
-
+*/
     /*
     if (content)
 
@@ -86,21 +87,6 @@ Diagram.prototype.interpretDrag.Inverses = function (drag, boundary_type) {
     return [possible_options[0]];
     */
 
-};
-
-// See if we can insert a invertible cell from the signature
-Diagram.prototype.interpretClickInverses = function (drag, boundary_type) {
-
-    var cells = gProject.signature.getNCells(this.n + 1);
-    if (this.n == 0) drag.coordinates = []
-    //var click_box = this.getLocationBoundingBox(drag.coordinates);
-    let click = drag.coordinates;
-
-    var results = [];
-    for (var i = 0; i < cells.length; i++) {
-        results = results.concat(this.getLocalMatches(click, cells[i], boundary_type == 's' ? true : false))
-    }
-    return results;
 };
 
 Diagram.prototype.getInterchangerCoordinates.Inverses = function (type, key) {

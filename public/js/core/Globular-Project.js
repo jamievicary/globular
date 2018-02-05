@@ -87,28 +87,24 @@ Project.prototype.freshName = function (dimension) {
 }
 
 // Gets the front-end colour to what the user wants
+//var lightnesses = [30, 50, 70];
 var lightnesses = [30, 50, 70];
-Project.prototype.getColour = function (data) {
-    //if (data.id === undefined) data.id = data.type;
-    //if (data.dimension == undefined) debugger;
-    /*
-    var generator = this.signature.getGenerator(id);
-    if (generator != null) return generator.display.colour;
-    */
-    if (data == null) return '000000'; // should debug
-    let analysis = Globular.analyze_id(data.id);
+Project.prototype.getColour = function (point) {
 
-    // Case that the id derives from the signature
-    if (analysis.signature) {
-        if (data.id == analysis.base_id) return analysis.generator.display.colour;
-        var husl = $.husl.fromHex(analysis.generator.display.colour);
-        return $.husl.toHex(husl[0], husl[1], lightnesses[analysis.dimension % 3])
-    }
+    _assert(point instanceof Diagram);
+    _assert(point.n == 0);
+
+    return point.type.display.colour;
+
+    // If the point is appearing in its natural dimension, display its assigned colour
+    if (point.t == point.type.n) return point.type.display.colour;
+
+    // Otherwise, adjust the lightness cyclically
+    var husl = $.husl.fromHex(point.type.display.colour);
+    return $.husl.toHex(husl[0], husl[1], lightnesses[point.t - point.type.n]);
 
     // Case that the id derives from an interchanger
-    else {
-        return $.husl.toHex(0, 0, lightnesses[data.dimension % 3]);
-    }
+//    else return $.husl.toHex(0, 0, lightnesses[data.dimension % 3]);
 };
 
 
@@ -307,23 +303,21 @@ Project.prototype.storeTheoremUI = function () {
 };
 
 
-Project.prototype.dragCellUI = function (drag) {
+Project.prototype.dragCellUI = function (data, expand) {
     //console.log("Detected drag: " + JSON.stringify(drag));
 
     // Get a pointer to the subdiagram in which the drag took place
     var diagram_pointer = this.diagram;
-    if (drag.boundary != null) {
-        for (var i = 0; i < drag.boundary.depth - 1; i++) {
-            diagram_pointer = diagram_pointer.getSourceBoundary();
-        }
-        diagram_pointer = (drag.boundary.type == 's' ? diagram_pointer.getSourceBoundary() : diagram_pointer.getTargetBoundary());
+    if (data.boundary != null) {
+        for (var i = 0; i < data.boundary.depth - 1; i++) diagram_pointer = diagram_pointer.getSourceBoundary();
+        diagram_pointer = (data.boundary.type == 's' ? diagram_pointer.getSourceBoundary() : diagram_pointer.getTargetBoundary());
     }
 
     // Reverse the coordinates, since the display code uses the opposite system
     //drag.coordinates = drag.coordinates.reverse();
 
     // Try to interpret this drag as an algebraic move
-    var options = diagram_pointer.interpretDrag(drag, drag.boundary ? drag.boundary.type : null);
+    var options = diagram_pointer.interaction(data, data.boundary ? data.boundary.type : null, expand);
 
 /*
     // Delete those options which require invertibility of noninvertible cells
@@ -333,33 +327,16 @@ Project.prototype.dragCellUI = function (drag) {
 
 */
 
-    if (options.length === 0) {
-        console.log("No homotopy possible");
-        return;
-    }
+    if (options.length === 0) return;
 
-    // Should really prompt the user to choose between the valid options
-    if (options.length == 1) {
-        this.performActionUI(options[0], drag);
-        return;
-    }
+    if (options.length == 1) return this.performActionUI(options[0], data);
 
     var list = $('#options-list').empty();
     for (let i = 0; i < options.length; i++) {
-        var option = options[i];
-        var id = option.id;
-        var item = $('<li>').html('Option ' + i);
+        let item = $('<li>').html('Option ' + i)
+            .click(e => { $("#options-box").hide(); gProject.performActionUI(options[i], data);})
+            .hover(e => MainDisplay.highlightAction(options[i], data.boundary), e => MainDisplay.removeHighlight());
         list.append(item);
-
-        // Use a closure to specify the behaviour on selection
-        (function (action) {
-            item.click(e => {
-                $("#options-box").hide();
-                gProject.performActionUI(action, drag);
-            }).hover(
-                e => MainDisplay.highlightAction(action, drag.boundary),
-                e => MainDisplay.removeHighlight());
-        })(options[i]);
     }
     //$("#options-box").fadeIn(100);
     $("#options-box").show();
@@ -436,14 +413,14 @@ Project.prototype.performActionUI = function (option, drag) {
 }
 
 Project.prototype.saveState = function () {
-    var t = new Timer('Pushed state onto history stack')
+    //var t = new Timer('Pushed state onto history stack')
     if ($('#allow-undo-checkbox').is(':checked')) {
         history.pushState({
             string: this.currentString(),
             p_id: global_p_id
         }, "", "");
     }
-    t.Report();
+    //t.Report();
 }
 
 // Makes this signature an empty signature of level (n+1)
@@ -715,8 +692,8 @@ Project.prototype.createGeneratorDOMEntry = function (id) {
     color_widget.fromString(generator.display.colour);
     color_widget.onImmediateChange = function () {
         project.setColourUI(generator.id, '#' + this.toString());
-        project.renderNCell(generator.id);
-        project.renderCellsAbove(generator.id);
+        project.renderNCell(generator);
+        project.renderCellsAbove(generator);
         project.renderDiagram();
     };
     div_detail.appendChild(input_color);
@@ -742,7 +719,7 @@ Project.prototype.createGeneratorDOMEntry = function (id) {
         input.change(function () {
             var g = gProject.signature.getGenerator(generator.id);
             g.single_thumbnail = !g.single_thumbnail;
-            gProject.renderNCell(generator.id);
+            gProject.renderNCell(generator);
         });
     }
 
@@ -899,8 +876,8 @@ Project.prototype.renderCells = function () {
     }
 }
 
-Project.prototype.renderCellsAbove = function (id) {
-    var generator = this.signature.getGenerator(id);
+Project.prototype.renderCellsAbove = function (generator) {
+    //var generator = this.signature.getGenerator(id);
     for (var d = generator.n + 1; d <= this.signature.n; d++) {
         var cells = this.signature.getNCells(d);
         for (var i = 0; i < cells.length; i++) {
@@ -910,10 +887,11 @@ Project.prototype.renderCellsAbove = function (id) {
 }
 
 // Insert a new n-cell into the menu
-Project.prototype.renderNCell = function (id) {
+Project.prototype.renderNCell = function (generator) {
+    _assert(generator instanceof Generator);
 
-    var generator = this.signature.getGenerator(id);
-    console.log("Rendering " + generator.n + "-cell " + generator.name);
+    //var generator = this.signature.getGenerator(id);
+    //console.log("Rendering " + generator.n + "-cell " + generator.name);
 
     // Create any required cell groups
     var cell_body = $('#cell-body');
@@ -1002,7 +980,7 @@ Project.prototype.addNCell = function (data) {
     };
 
     // Add the diagram to the menu
-    if (gProject != null) this.renderNCell(generator.id);
+    if (gProject != null) this.renderNCell(generator);
 
     return generator.id;
 };

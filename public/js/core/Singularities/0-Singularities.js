@@ -69,10 +69,12 @@ Diagram.prototype.tidyKey.Signature = function (type, key) {
     return key;
 }
 
+/*
 Diagram.prototype.expand = function (type, start, n, m) {
     var family = GetSingularityFamily(type);
     return ((this.expand[family]).bind(this))(type, start, n, m);
 }
+*/
 
 Diagram.prototype.reorganiseCrossings = function (type, start, n, m) {
     var family = GetSingularityFamily(type);
@@ -116,35 +118,14 @@ Diagram.prototype.getInverseKey = function (type, key) {
     return ((this.getInverseKey[family]).bind(this))(type, key);
 }
 
+/*
 Diagram.prototype.interpretDrag = function (drag, boundary_type) {
-
-    // Recursively handle a drag in a subdiagram
-    var options = [];
-    /*
-    if (drag.coordinates.length > 1) {
-        var new_drag = {
-            boundary: drag.boundary,
-            coordinates: drag.coordinates.slice(0, drag.coordinates.length - 1),
-            directions: (drag.directions == null ? null : drag.directions.slice()),
-            shiftKey: drag.shiftKey
-        };
-        options = this.getSlice(drag.coordinates.last()).interpretDrag(new_drag);
-        for (var i=0; i<options.length; i++) {
-            var action = options[i];
-            action.id += '-E';
-            action.key.push(Math.min(drag.coordinates.last(), this.cells.length));
-            var pre = action.preattachment;
-            if (pre != null) {
-                pre.boundary.depth ++;
-            }
-        }
-    }
-    */
-
-    var inverse_action = ((this.interpretDrag.Inverses).bind(this))(drag, boundary_type);
-    options = options.concat(inverse_action);
-    return options;
+    if (drag.directions == null) return this.interpretClickInverses(drag, boundary_type);
+    let drag_content = this.drag(drag.coordinates, drag.directions);
+    if (!drag_content) return [];
+    return drag_content;
 }
+*/
 
 Diagram.prototype.getDragOptions = function (list, key) {
     var options = [];

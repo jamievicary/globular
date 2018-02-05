@@ -17,7 +17,8 @@
 - Limit(n) extends Array comprises: (this is a limit between n-diagrams)
     - for all n:
         - Array(LimitComponent(n))
-        - source :: Boolean, whether this limit is source-like
+        - framing :: Boolean, the local framing data. "Is this the source?"
+        - dt :: increase in type dimension
 - LimitComponent(n) comprises: (this is a component of a limit between n-diagrams)
     - for n > 0:
         - data :: Array(Content(n-1))
@@ -25,54 +26,68 @@
         - last :: Number, the last regular slice affected
         - sublimits :: Array(Limit(n-1)) // should be forward/backward?
     - for n == 0:
-        - type :: String
+        - type :: Generator
 */
 
 class Content {
+
     constructor(n, forward_limit, backward_limit) {
-        _assert(!isNaN(n));
-        _assert(forward_limit);
-        _assert(backward_limit);
-        _assert(forward_limit instanceof ForwardLimit);
-        _assert(backward_limit instanceof BackwardLimit);
-        _assert(forward_limit.n == n);
-        _assert(backward_limit.n == n);
         this.n = n;
         this.forward_limit = forward_limit;
         this.backward_limit = backward_limit;
+        _validate(this);
     }
-    getLastId() {
-        if (this.forward_limit.length == 0) return null;
-        return this.forward_limit.last().getLastId();
+
+    validate() {
+        _assert(!isNaN(this.n));
+        _assert(this.forward_limit instanceof ForwardLimit);
+        _assert(this.backward_limit instanceof BackwardLimit);
+        _assert(this.forward_limit.n == this.n);
+        _assert(this.backward_limit.n == this.n);
+        _propertylist(this, ['n', 'forward_limit', 'backward_limit']);
+        _validate(this.forward_limit, this.backward_limit);
     }
+
+    getLastPoint() {
+        _assert(false);
+        if (this.forward_limit.length == 0) _assert(false);
+        return this.forward_limit.last().getLastPoint();
+    }
+
     copy() {
         return new Content(this.n, this.forward_limit.copy(), this.backward_limit.copy());
     }
+
     usesCell(generator) {
         if (this.forward_limit.usesCell(generator)) return true;
         if (this.backward_limit.usesCell(generator)) return true;
         return false;
     }
+
     pad(depth) {
         this.forward_limit.pad(depth);
         this.backward_limit.pad(depth);
     }
+
     // Pad the content so that the origin moves to the specified position
     deepPad(position) {
         this.forward_limit.deepPad(position);
         this.backward_limit.deepPad(position);
     }
+
     equals(content) {
         if (!this.forward_limit.equals(content.forward_limit)) return false;
         if (!this.backward_limit.equals(content.backward_limit)) return false;
         return true;
     }
+
     getMonotones(height) {
         return {
             forward_monotone: this.forward_limit.getMonotone(height),
             backward_monotone: this.backward_limit.getMonotone(height)
         }
     }
+
     // Assuming that the content is to act on the specified source, reverse it
     reverse(source) {
         _assert(this.n == source.n);
@@ -82,6 +97,102 @@ class Content {
         let new_backward_limit = this.forward_limit.getBackwardLimit(source, middle);
         return new Content(this.n, new_forward_limit, new_backward_limit);
     }
+
+    // Get data that describes an expansion of this Content object (2018-ANC-1-55)
+    getExpansionData(index, r1, r2, s) {
+        _validate(this, r1, r2, s);
+
+        let f = this.forward_limit;
+        let b = this.backward_limit;
+
+        let forward_monotone = f.getMonotone(r1.data.length, s.data.length);
+        let backward_monotone = b.getMonotone(r2.data.length, s.data.length);
+        //let source_preimage = forward_monotone.preimage(location[1].height);
+        let f_analysis = f.getComponentTargets();
+        let f_index = f_analysis.indexOf(index);
+        let b_analysis = b.getComponentTargets();
+        let b_index = b_analysis.indexOf(index);
+
+        let f_old = f_index < 0 ? null : f[f_index];
+        let b_old = b_index < 0 ? null : b[b_index];
+        _assert(f_old || b_old);
+        _assert(f.length > 0 || b.length > 0);
+
+        // The only failure case is if there is only a single component
+        if (f.length == 0 && b.length == 1) throw "can't expand a single component";
+        if (f.length == 1 && b.length == 0) throw "can't expand a single component";
+        if (f.length == 1 && b.length == 1 && f_old && b_old) throw "can't expand a single component";
+
+        // E - Prepare the first new forward limit by deleting the chosen component
+        let f_new_1 = f.copy();
+        if (f_index >= 0) f_new_1.splice(f_index, 1);
+
+        // Compute delta offset
+        let f_delta = 0;
+        for (let i = 0; i < f.length; i++) {
+            if (f_analysis[i] >= index) break;
+            f_delta -= f[i].last - f[i].first - 1;
+        }
+        let b_delta = 0;
+        for (let i = 0; i < b.length; i++) {
+            if (b_analysis[i] >= index) break;
+            b_delta += b[i].last - b[i].first - 1;
+        }
+
+        // G - Prepare the second new forward limit by selecting only the chosen component, and adjusting first/last
+        let f_new_2 = f_old ? new ForwardLimit(this.n, [f_old.copy()], null, f.dt) : new ForwardLimit(this.n, [], null, f.dt);
+        if (f_old) {
+            f_new_2[0].first += f_delta + b_delta;
+            f_new_2[0].last += f_delta + b_delta;
+        }
+
+        // F - Prepare the first new backward limit
+        let b_new_1 = b.copy();
+        if (b_old) {
+            b_new_1.splice(b_index, 1);
+            let f_old_delta = f_old ? f_old.last - f_old.first : 0; // weird f/b mixing here!
+            let b_old_delta = b_old ? b_old.last - b_old.first : 0;
+            for (let i = b_index + 1; i < b.length; i++) {
+                b_new_1[i - 1].first += f_old_delta - b_old_delta;
+                b_new_1[i - 1].last += f_old_delta - b_old_delta;
+            }
+        }
+
+        // H - Prepare the second new backward limit
+        let b_new_2 = b_old ? new BackwardLimit(this.n, [b_old.copy()], null, b.dt) : new BackwardLimit(this.n, [], null, b.dt);
+
+        // C - Prepare the first sublimit - tricky as we need the reversed version of f_old
+        // OPTIMIZATION: we don't really need to reverse all of f, just f_old
+        let f_backward = f.getBackwardLimit(r1, s);
+        let sublimit_1 =  f_old ? new BackwardLimit(this.n, [f_backward[f_index].copy()], null, f.dt) : new BackwardLimit(this.n, [], null, f.dt);
+        if (f_old) {
+            sublimit_1[0].first += f_delta;
+            sublimit_1[0].last += f_delta;
+        }
+        _validate(sublimit_1);
+
+        // D - Prepare the second sublimit
+        let sublimit_2 = b.copy();
+        if (b_old) {
+            sublimit_2.splice(b_index, 1);
+            let local_delta = b_old.last - b_old.first - 1;
+            for (let i = b_index + 1; i < b.length; i++) {
+                b[i].first -= local_delta;
+                b[i].last -= local_delta;
+            }
+        }
+        _validate(sublimit_2);
+
+        _validate(f_new_1, b_new_1, f_new_2, b_new_2);
+
+        // Return the data of the expansion, an array of Content of length 2,
+        // and the corresponding sublimits, an array of BackwardLimit of length 2.
+        return {
+            data: [new Content(this.n, f_new_1, b_new_1), new Content(this.n, f_new_2, b_new_2)],
+            sublimits: [sublimit_1, sublimit_2]
+        }
+    }
+
     static copyData(data) {
         _assert(data instanceof Array);
         if ((typeof data) === 'string') return data;
@@ -93,6 +204,7 @@ class Content {
         }
         return new_data;
     }
+
     static deepPadData(data, position) {
         for (let i = 0; i < data.length; i++) {
             data[i].deepPad(position);
@@ -102,43 +214,48 @@ class Content {
 
 class LimitComponent {
 
-    /*
-- LimitComponent(n) comprises: (this is a component of a limit between n-diagrams)
-    - for n > 0:
-        - data :: Array(Content(n-1))
-        - first :: Number, the first regular slice affected
-        - last :: Number, the last regular slice affected
-        - sublimits :: Array(Limit(n-1)) // should be forward/backward?
-    - for n == 0:
-        - type :: String
-    */
     constructor(n, args) {
-        _assert(!isNaN(n));
         this.n = n;
         if (n == 0) {
-            _assert(args.type instanceof Generator);
             this.type = args.type;
             return this;
         }
-        _assert(!isNaN(args.first));
-        _assert(!isNaN(args.last));
-        _assert(args.data instanceof Array);
-        _assert(args.sublimits instanceof Array);
         this.data = args.data;
         this.first = args.first;
         this.last = args.last;
         this.sublimits = args.sublimits;
-        for (let i = 0; i < this.sublimits.length; i++) {
-            _assert(this.sublimits[i] instanceof Limit);
-            _assert(this.sublimits[i].n == n - 1);
-        }
-        for (let i = 0; i < this.data.length; i++) {
-            _assert(this.data[i] instanceof Content);
-            _assert(this.data[i].n == n - 1);
+        _validate(this);
+    }
+
+    validate() {
+        _assert(isNatural(this.n));
+        if (this.n == 0) {
+            _propertylist(this, ['n', 'type']);
+            _assert(this.type instanceof Generator);
+            _validate(this.type);
+        } else {
+            _propertylist(this, ['n', 'data', 'first', 'last', 'sublimits']);
+            _assert(isNatural(this.first));
+            _assert(isNatural(this.last));
+            _assert(this.first <= this.last);
+            _assert(this.data instanceof Array);
+            _assert(this.sublimits instanceof Array);
+            _assert(this.sublimits.length == this.last - this.first);
+            for (let i = 0; i < this.sublimits.length; i++) {
+                _assert(this.sublimits[i] instanceof Limit);
+                _assert(this.sublimits[i].n == this.n - 1);
+                _validate(this.sublimits[i]);
+            }
+            for (let i = 0; i < this.data.length; i++) {
+                _assert(this.data[i] instanceof Content);
+                _assert(this.data[i].n == this.n - 1);
+                _validate(this.data[i]);
+            }
         }
     }
+
     equals(b) {
-        var a = this;
+        let a = this;
         if (a.first != b.first) return false;
         if (a.last != b.last) return false;
         if (!a.data && b.data) return false;
@@ -159,12 +276,18 @@ class LimitComponent {
         }
         return true;
     }
-    getLastId() {
-        if (this.n == 0) return this.type;
-        return this.data.last().getLastId();
+
+    getLastPoint() {
+        _assert(false);
+        if (this.n == 0) {
+            return new Diagram(0, { t: this.n, type: this.type }); // ???
+        }
+        return this.data.last().getLastPoint();
         _assert(false); // ... to write ...
     }
+
     copy() {
+        _validate(this);
         if (this.n == 0) {
             let type = this.type;
             return new LimitComponent(0, { type });
@@ -178,6 +301,7 @@ class LimitComponent {
         let last = this.last;
         return new LimitComponent(this.n, { data, sublimits, first, last });
     }
+
     usesCell(generator) {
         if (this.n == 0) return this.type == generator.id;
         for (let i = 0; i < this.data.length; i++) {
@@ -188,6 +312,7 @@ class LimitComponent {
         }
         return false;
     }
+
     pad(depth) {
         if (depth == 1) {
             this.first++;
@@ -201,6 +326,7 @@ class LimitComponent {
             }
         }
     }
+
     // Pad this component so that the origin moves to the given position
     deepPad(position) {
         _assert(this.n == position.length);
@@ -218,15 +344,30 @@ class LimitComponent {
 }
 
 class Limit extends Array {
-    constructor(n, components, framing) {
-        _assert(!isNaN(n));
-        _assert(components instanceof Array);
-        if (n > 0) _assert(framing === undefined);
-        if (n == 0 && components.length > 0) _assert(typeof framing === 'boolean');
-        if (n == 0 && components.length == 0) _assert(framing === undefined);
-        super(...components);
+    initialize(n, framing, dt) {
         this.n = n;
-        this.framing = framing;
+        if (framing != null) this.framing = framing;
+        this.dt = dt;
+        _validate(this);
+    }
+    validate() {
+        _assert(isNatural(this.n));
+        if (this.n == 0 && this.length > 0) _assert(typeof this.framing === 'boolean');
+        if (this.n > 0) _assert(this.framing == undefined);
+        for (let i = 0; i < this.length; i++) {
+            _assert(this[i] instanceof LimitComponent);
+            _assert(this[i].n == this.n);
+            this[i].validate();
+        }
+        if (this.n == 0) _propertylist(this, ['n'], ['framing', 'dt']);
+        else _propertylist(this, ['n'], ['dt']);
+    }
+    set_dt(dt) {
+        return this;
+        _assert(isInteger(dt));
+        _assert(dt >= 0);
+        this.dt = dt;
+        return this;
     }
     usesCell(generator) {
         for (let i = 0; i < this.length; i++) {
@@ -253,8 +394,9 @@ class Limit extends Array {
         return true;
     }
     getMonotone(source_height, target_height) {
-        _assert(!isNaN(source_height));
-        _assert(!isNaN(target_height));
+        _validate(this);
+        _assert(isNatural(source_height));
+        _assert(isNatural(target_height));
         let monotone = new Monotone(target_height, []);
         let singular_height = 0;
         for (let i = 0; i < this.length; i++) {
@@ -285,7 +427,8 @@ class Limit extends Array {
         }
         return singular_classification;
     }
-    analyze() {
+    // For each component, find its target index in the codomain diagram
+    getComponentTargets() {
         let component_targets = [];
         let offset = 0;
         for (let i = 0; i < this.length; i++) {
@@ -297,87 +440,28 @@ class Limit extends Array {
     subLimit(n, forward) {
         for (let i = 0; i < this.length; i++) {
             let component = this[i];
-            if (n < component.first) return forward ? new ForwardLimit(this.n - 1, []) : new BackwardLimit(this.n - 1, []);
+            if (n < component.first) return forward ? new ForwardLimit(this.n - 1, [], null, this.dt) : new BackwardLimit(this.n - 1, [], null, this.dt);
             if (n < component.last) return component.sublimits[n - component.first];
         }
-        return forward ? new ForwardLimit(this.n - 1, []) : new BackwardLimit(this.n - 1, []);
+        return forward ? new ForwardLimit(this.n - 1, [], null, this.dt) : new BackwardLimit(this.n - 1, [], null, this.dt);
     }
-
-    /*
-    compose(first, forward) {
-        let second = this;
-        _assert((typeof forward) === 'boolean');
-        //_assert(typeof first.framing === 'boolean');
-        //_assert(typeof second.source === 'boolean');
-        //_assert(first.source === second.source);
-        if (forward) _assert(second instanceof ForwardLimit && first instanceof ForwardLimit);
-        if (!forward) _assert(second instanceof BackwardLimit && first instanceof BackwardLimit);
-        _assert(first.n == second.n);
-        if (first.length == 0) return second.copy();
-        if (second.length == 0) return first.copy();
-        if (first.n == 0) {
-            let composite = forward ? second.copy() : first.copy();
-            if (first.framing != null) composite.framing = first.framing;
-            return composite;
-        }
-
-        // Infer sizes of the 3 diagrams involved
-        let t1 = first.analyze();
-        let t2 = second.analyze();
-        let a_size = t1.length;
-        let b_size = Math.max(t1.last(), t2.length);
-        let c_size = t2.last();
-        let m1 = first.getMonotone(a_size, b_size);
-        let m2 = second.getMonotone(b_size, c_size);
-        let m_comp = m2.compose(m1);
-
-        for (let i = 0; i < m2.target_size; i++) {
-            let p = m2.preimage(i);
-            if (p.first == p.last) {
-
-            }
-            let first = m1.preimage(p.first).first;
-            let last = m1.preimage(p.last).last;
-            if (first == last) continue;
-            let sublimits = [];
-            for (let j = first; j < last; j++) {
-                let a = first.subLimit(j);
-                let b = second.subLimit(m1[j]);
-                sublimits.push(b.compose(a));
-            }
-
-            // Build the component
-            new_component = { sublimits };
-
-            if (forward) new_component.data = 
-        }
-
-        let height_c = second.last().last;
-        let height_a = first.last().last;
-        let height_b =
-            let M1 = first.getMonotone();
-        let M2 = second.getMonotone();
-
-    }
-    */
 
     compose(first, forward) { // See 2017-ANC-19
         let second = this;
         _assert((typeof forward) === 'boolean');
-        //_assert(typeof first.framing === 'boolean');
-        //_assert(typeof second.source === 'boolean');
-        //_assert(first.source === second.source);
         if (forward) _assert(second instanceof ForwardLimit && first instanceof ForwardLimit);
         if (!forward) _assert(second instanceof BackwardLimit && first instanceof BackwardLimit);
+        _validate(first, second);
         _assert(first.n == second.n);
-        if (first.length == 0) return second.copy();
-        if (second.length == 0) return first.copy();
+        if (first.length == 0) return second.copy().set_dt(first.dt + second.dt);
+        if (second.length == 0) return first.copy().set_dt(first.dt + second.dt);
         if (first.n == 0) {
             let composite = forward ? second.copy() : first.copy();
             if (first.framing != null) composite.framing = first.framing;
+            composite.dt = first.dt + second.dt;
             return composite;
         }
-        let analysis1 = first.analyze();
+        let analysis1 = first.getComponentTargets();
         let c1 = 0;
         let c2 = 0;
         let new_components = [];
@@ -389,11 +473,13 @@ class Limit extends Array {
                 c1++;
                 continue;
             }
+
             // Set the start of the component correctly
             if (c2_component.first == null) {
                 c2_component.first = first[c1].first - (target1 - second[c2].first);
                 c2_component.last = c2_component.first + (second[c2].last - second[c2].first);
             }
+
             // Ensure any identity levels that we have skipped are correctly handled
             let height_target = Math.min(first[c1].first, c2_component.last) - c2_component.first;
             while (c2_component.sublimits.length < height_target) {
@@ -405,6 +491,7 @@ class Limit extends Array {
                     c2_component.data.push(second_data.copy());
                 }
             }
+
             if (target1 < second[c2].last) {  // c1 is in the support of c2
                 // Add the overlapping levels
                 let second_sublimit = second[c2].sublimits[target1 - second[c2].first];
@@ -419,24 +506,35 @@ class Limit extends Array {
                     // DO WE NEED TO UPDATE C2??
                 }
                 c1++;
+
                 // If this exhausts c2, then finalize it
                 //if (target1 == second[c2].last - 1) {
-                if (c1 == first.length || first[c1+1].first >= second[c2].last) {
+                if (c1 == first.length || first[c1].first >= second[c2].last) {
                     if (forward) c2_component.data = Content.copyData(second[c2].data);
+                    while (c2_component.sublimits.length < c2_component.last - c2_component.first) {
+                        let index = second[c2].sublimits.length - c2_component.last
+                            + c2_component.first + c2_component.sublimits.length;
+                        let second_sublimit = second[c2].sublimits[index];
+                        c2_component.sublimits.push(second_sublimit.copy());
+                        if (!forward) c2_component.data.push(second[c2].data[index].copy())
+                    }
                     new_components.push(new LimitComponent(this.n, c2_component));
                     c2_component = { sublimits: [], data: [] };
-                    c2++;                        
+                    c2++;
                 }
             }
+
             else if (target1 >= second[c2].last) {
                 //c2_component.last = c2_component.first + c2_component.sublimits.length;
                 if (forward) c2_component.data = Content.copyData(second[c2].data);
                 new_components.push(new LimitComponent(this.n, c2_component));
                 c2_component = { sublimits: [], data: [] };
                 c2++;
+
             } else _assert(false);
         }
         _assert(c1 == first.length);
+
         // Finish off any unpropagated uppermost components of the second limit
         for (; c2 < second.length; c2++) {
             if (c2_component.first == null) {
@@ -453,26 +551,35 @@ class Limit extends Array {
             new_components.push(new LimitComponent(this.n, c2_component));
             c2_component = { sublimits: [] };
         }
-        if (forward) return new ForwardLimit(this.n, new_components);
-        else return new BackwardLimit(this.n, new_components);
+        if (forward) return new ForwardLimit(this.n, new_components, null, first.dt + second.dt);
+        else return new BackwardLimit(this.n, new_components, null, first.dt + second.dt);
     }
 }
 
 class ForwardLimit extends Limit {
-    constructor(n, components, framing) {
-        _assert(!isNaN(n));
-        _assert(components);
-        if (n > 0) _assert(framing === undefined);
-        //if (n == 0) _assert(typeof source === 'boolean');
-        for (let i = 0; i < components.length; i++) {
-            _assert(components[i] instanceof LimitComponent);
-            _assert(components[i].n == n);
-            _assert(n == 0 || components[i].data.length == 1);
-        }
-        return super(n, components, framing); // call the Limit constructor
+
+    constructor(n, components, framing, dt) {
+        if (components === undefined) return super(n);
+        super(...components);
+        super.initialize(n, framing, dt);
+        _validate(this);
+        return this;
     }
+    /*
+        splice(...args) {
+            return super.splice(...args);
+        }
+        */
+
+    validate() {
+        super.validate();
+        for (let i = 0; i < this.length; i++) {
+            _assert(this.n == 0 || this[i].data.length == 1);
+        }
+    }
+
     rewrite(diagram) {
-        diagram.t++;
+        diagram.t += this.dt;
         if (this.n == 0) {
             diagram.type = this[0].type;
             return diagram;
@@ -483,26 +590,32 @@ class ForwardLimit extends Limit {
         }
         return diagram;
     }
+
     copy() {
         let new_components = [];
         for (let i = 0; i < this.length; i++) {
             new_components.push(this[i].copy());
         }
-        return new ForwardLimit(this.n, new_components, this.framing);
+        return new ForwardLimit(this.n, new_components, this.framing, this.dt);
     }
+
     compose(second) {
         return super.compose(second, true);
     }
+
     subLimit(n) {
         return super.subLimit(n, true);
     }
+
     // Supposing this limit goes from source to target, construct the equivalent backward limit.
     getBackwardLimit(source, target) {
+        _assert(source instanceof Diagram && target instanceof Diagram);
+        _validate(source, target);
         _assert(source.n == this.n);
         _assert(target.n == this.n);
         if (this.n == 0) {
             if (this.length == 0) return new BackwardLimit(0, []);
-            else return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })], this.framing);
+            else return new BackwardLimit(0, [new LimitComponent(0, { type: source.type })], this.framing, this.dt);
         }
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
@@ -523,23 +636,31 @@ class ForwardLimit extends Limit {
             let last = component.last;
             new_components.push(new LimitComponent(this.n, { first, last, data, sublimits }));
         }
-        return new BackwardLimit(this.n, new_components);
+        return new BackwardLimit(this.n, new_components, null, this.dt);
     }
 }
 
 class BackwardLimit extends Limit {
-    constructor(n, components, framing) {
-        _assert(!isNaN(n));
-        _assert(components);
-        for (let i = 0; i < components.length; i++) {
-            _assert(components[i] instanceof LimitComponent)
-            _assert(components[i].n == n);
-            if (n > 0) _assert(components[i].sublimits.length == components[i].data.length);
-        }
-        return super(n, components, framing); // call the Limit constructor
+    constructor(n, components, framing, dt) {
+        if (components === undefined) return super(n);
+        super(...components);
+        super.initialize(n, framing, dt);
+        _validate(this);
+        return this;
+        //return super(n, components, framing); // call the Limit constructor
     }
+
+    validate() {
+        super.validate();
+        for (let i = 0; i < this.length; i++) {
+            if (this.n > 0) _assert(this[i].sublimits.length == this[i].data.length);
+        }
+    }
+
     rewrite(diagram) {
-        diagram.t--;
+        _assert(diagram instanceof Diagram);
+        _validate(this, diagram);
+        diagram.t -= this.dt;
         if (diagram.n == 0) {
             diagram.type = this[0].type;
             return diagram;
@@ -560,7 +681,7 @@ class BackwardLimit extends Limit {
         for (let i = 0; i < this.length; i++) {
             new_components.push(this[i].copy());
         }
-        return new BackwardLimit(this.n, new_components, this.framing);
+        return new BackwardLimit(this.n, new_components, this.framing, this.dt);
     }
     compose(second) {
         return super.compose(second, false);
@@ -570,11 +691,13 @@ class BackwardLimit extends Limit {
     }
     // Supposing this limit goes from source to target, construct the equivalent backward limit.
     getForwardLimit(source, target) {
+        _assert(source instanceof Diagram && target instanceof Diagram);
+        _validate(this, source, target);
         _assert(source.n == this.n);
         _assert(target.n == this.n);
         if (this.n == 0) {
             if (this.length == 0) return new ForwardLimit(0, []);
-            else return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })], this.framing);
+            else return new ForwardLimit(0, [new LimitComponent(0, { type: target.type })], this.framing, this.dt);
         }
         let new_components = [];
         let monotone = this.getMonotone(source.data.length, target.data.length);
@@ -594,24 +717,25 @@ class BackwardLimit extends Limit {
             let last = component.last;
             new_components.push(new LimitComponent(this.n, { first, last, data, sublimits }));
         }
-        return new ForwardLimit(this.n, new_components);
+        return new ForwardLimit(this.n, new_components, null, this.dt);
     }
 }
 
 class Monotone extends Array {
     constructor(target_size, values) {
-        _assert(!isNaN(target_size));
-        _assert(target_size >= 0);
-        _assert(values);
-        //super(...values);
         super();
         for (let i = 0; i < values.length; i++) {
             this[i] = values[i];
-            _assert(!isNaN(values[i]));
-            _assert(values[i] >= 0);
-            if (i > 0) _assert(this[i - 1] <= this[i]);
         }
         this.target_size = target_size;
+        _validate(this);
+    }
+    validate() {
+        _assert(isNatural(this.target_size));
+        for (let i = 0; i < this.length; i++) {
+            _assert(isNatural(this[i]));
+            if (i > 0) _assert(this[i - 1] <= this[i]);
+        }
         if (this.length > 0) _assert(this.target_size > this.last());
     }
     static getIdentity(n) {
@@ -667,10 +791,6 @@ class Monotone extends Array {
         return data;
     }
 
-    pushout({ second, right }) {
-        return this.unify({ second, right }); // implicitly right==null, depth==null
-    }
-
     // Unify with a second monotone, with the indicated tendency to the right if specified. Throws exception on failure.
     unify({ second, right, depth }) {
         let first = this;
@@ -681,7 +801,7 @@ class Monotone extends Array {
         if (depth == null) {
             if (first.length == 0) {
                 if (first.target_size > 0 && second.target_size > 0) {
-                    if (right == null) throw "No unification at depth " + depth + ": cannot unify monotones at depth " + depth;
+                    if (right == null) throw "no monotone unification";
                     else if (right == false) return Monotone.union(first.target_size, second.target_size);
                     else return Monotone.union(second.target_size, first.target_size, true);
                 }
@@ -689,7 +809,8 @@ class Monotone extends Array {
                 else if (second.target_size == 0) return { first: Monotone.getIdentity(first.target_size), second: first.copy() };
                 else _assert(false); // Above cases should be exclusive
             }
-            return this.unify({ second, right, depth: first.length }); // begin the induction
+            //return this.unify({ second, right, depth: first.length }); // begin the induction
+            depth = first.length;
         }
         if (depth == 0) return { first: new Monotone(0, []), second: new Monotone(0, []) }; // base case
         let injections = this.unify({ second, right, depth: depth - 1 }); // recursive step
@@ -701,13 +822,16 @@ class Monotone extends Array {
         let right_delta = second[n - 1] + (n == 1 ? 1 : -second[n - 2]);
         if (left_delta > 1 && right_delta > 1) {
             // If we haven't been given a tendency, fail
-            if (right == null) throw "No unification at depth " + depth + ": cannot unify head-to-head monotones without a bias";
+            if (right == null) throw "no monotone unification at depth " + depth + ", cannot unify head-to-head monotones without a bias";
             let major = right ? { monotone: injections.second, delta: right_delta } : { monotone: injections.first, delta: left_delta };
             let minor = right ? { monotone: injections.first, delta: left_delta } : { monotone: injections.second, delta: right_delta };
             for (let i = 0; i < major.delta - 1; i++) major.monotone.grow();
             minor.monotone.target_size += major.delta - 1;
             for (let i = 0; i < minor.delta - 1; i++) minor.monotone.grow();
             major.monotone.target_size = minor.monotone.target_size;
+            let t = injections.first.target_size;
+            injections.first.append(t);
+            injections.second.append(t);
         } else if (left_delta == 0 || right_delta == 0) {
             let t = injections.first.target_size;
             while (injections.first.length <= first[n - 1]) injections.first.push(t - 1);
@@ -720,14 +844,18 @@ class Monotone extends Array {
             injections.second.append(t);
         }
         if (n == first.length) {
-            let first_trailing = first.target_size - this.last() - 1;
-            let second_trailing = second.target_size - this.last() - 1;
-            if (first_trailing > 0 && second_trailing > 0) throw "No unification at depth " + depth + ": trailing elements in monotone unification (?)"
-            while (injections.first.length < first.target_size) injections.first.grow();
-            while (injections.second.length < second.target_size) injections.second.grow();
-            injections.first.target_size = injections.second.target_size = Math.max(injections.first.target_size, injections.second.target_size);
-        }
-        if (n == first.length) {
+            // Append any trailing elements to the injections
+            let left_trailing = first.target_size - first.last() - 1;
+            let right_trailing = second.target_size - second.last() - 1;
+            if (right == null && left_trailing > 0 && right_trailing > 0) throw "no monotone unification at depth " + depth + ", cannot unify head-to-head trailing elements without a bias";
+            let major = right ? { monotone: injections.second, delta: right_trailing } : { monotone: injections.first, delta: left_trailing };
+            let minor = right ? { monotone: injections.first, delta: left_trailing } : { monotone: injections.second, delta: right_trailing };
+            for (let i = 0; i < major.delta; i++) major.monotone.grow();
+            minor.monotone.target_size += major.delta;
+            for (let i = 0; i < minor.delta; i++) minor.monotone.grow();
+            major.monotone.target_size = minor.monotone.target_size;
+
+            // Perform final consistency checks
             _assert(injections.first.length == first.target_size);
             _assert(injections.second.length == second.target_size);
             _assert(injections.first.target_size == injections.second.target_size);

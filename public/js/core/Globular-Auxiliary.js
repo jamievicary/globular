@@ -7,7 +7,7 @@
 class Globular {
 
     // Remove the trailing n characters
-    static chop (string, n) {
+    static chop(string, n) {
         return string.substring(0, string.length - n);
     }
 
@@ -70,8 +70,8 @@ class Globular {
 
     static strip_inverses(string) {
         let new_id = string;
-        if (new_id.tail('I1')) new_id = Globular.chop(new_id,2);
-        if (new_id.tail('I0')) new_id = Globular.chop(new_id,2);
+        if (new_id.tail('I1')) new_id = Globular.chop(new_id, 2);
+        if (new_id.tail('I0')) new_id = Globular.chop(new_id, 2);
         return new_id;
     }
 
@@ -126,30 +126,40 @@ class Globular {
 
     static findIndices(array, value) {
         let results = [];
-        for (let i=0; i<array.length; i++) {
+        for (let i = 0; i < array.length; i++) {
             if (array[i] == value) results.push(i);
         }
         return results;
     }
 
     static parseSlice(value) {
-        if (typeof value != 'string') return null;
-        let regular = (value.substr(value.length - 1) != '*');
-        if (!regular) value = value.substr(0, value.length - 1);
-        if (isNaN(value)) return null;
-        let height = Number(value);
-        if (!isInteger(height)) return null;
-        return {height, regular};
+        try {
+            if (typeof value != 'string') throw 0;
+            let regular = (value.substr(value.length - 1) != '*');
+            if (!regular) value = value.substr(0, value.length - 1);
+            if (isNaN(value)) throw 0;
+            let height = Number(value);
+            if (!isInteger(height)) throw 0;
+            let r = { height, regular };
+            //console.log("Globular.parseSlice: " + JSON.stringify(value) + " -> " + JSON.stringify(r));
+            return r;
+        } catch (e) {
+            _assert(false);
+            //console.log("Globular.parseSlice: " + JSON.stringify(value) + " -> null");
+            return null;
+        }
     }
 
     static generateSlice(value) {
-        return String(value.height) + (value.regular ? "" : "*");
+        let r = String(value.height) + (value.regular ? "" : "*");
+        //console.log("Globular.generateSlice: " + JSON.stringify(value) + " -> " + r);
+        return r;
     }
 
     static moveSlice(position, delta) {
         _assert(delta == -1 || delta == 1);
-        if (delta == -1 && position.regular) position.height --;
-        if (delta == +1 && !position.regular) position.height ++;
+        if (delta == -1 && position.regular) position.height--;
+        if (delta == +1 && !position.regular) position.height++;
         position.regular = !position.regular;
         if (position.height < 0) {
             position.height = 0;
@@ -168,7 +178,13 @@ function globular_freshName(n) {
 
 // Check whether a number is an integer
 function isInteger(n) {
+    if (isNaN(n)) return false;
     return n % 1 === 0;
+}
+
+function isNatural(n) {
+    if (!isInteger(n)) return false;
+    return n >= 0;
 }
 
 // Prefix labels of an object
@@ -615,4 +631,29 @@ function xor(a, b) {
 
 function _assert(arg) {
     if (!arg) debugger;
+}
+
+function _validate(...args) {
+    for (let i=0; i<args.length; i++) {
+        _assert(args[i].validate);
+        args[i].validate();
+    }
+}
+
+function _propertylist(...args) {
+    let obj = args[0];
+    let required = args[1];
+    let optional = args[2];
+    if (optional === undefined) optional = [];
+    if (required === undefined) required = [];
+    _assert(obj);
+    for (let i=0; i<required.length; i++) {
+        _assert(obj.hasOwnProperty(required[i]));
+    }
+    for (var property in obj) {
+        if (obj.hasOwnProperty(property)) {
+            if (isNatural(property)) continue;
+            _assert(required.indexOf(property) > -1 || optional.indexOf(property) > -1);
+        }
+    }
 }

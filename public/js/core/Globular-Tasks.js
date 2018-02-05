@@ -196,7 +196,7 @@ function cps_prepare_diagram(diagram) {
 function cps_render_cell(generator) {
 
     // Do work
-    gProject.renderNCell(generator.id); // non-CPS
+    gProject.renderNCell(generator); // non-CPS
 }
 
 /*

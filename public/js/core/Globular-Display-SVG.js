@@ -68,7 +68,7 @@ class DisplaySVG {
         }
 
         position.directions = null;
-        gProject.dragCellUI(position);
+        gProject.dragCellUI(position, event.shiftKey);
     }
 
     onMouseMove(event) {
@@ -98,30 +98,37 @@ class DisplaySVG {
         this.selectPixels = null;
         this.selectPosition = null;
 
+        let expand = event.shiftKey;
+
         // Clicking a 2d picture
         if (this.data.dimension == 2) {
             if (data.origin == 'edge') {
                 // Clicking on an edge
+                return; // Disable this for now
+                /*
                 if (Math.abs(dx) < 0.7 * threshold) return;
                 data.directions = [dx > 0 ? +1 : -1];
+                data.principal = 0;
+                */
             } else if (data.origin == 'vertex') {
                 // Clicking on a vertex
                 if (Math.abs(dy) < 0.7 * threshold) return;
-                data.coordinates.pop();
-                //data.coordinates = data.coordinates.slice(location.length - 1); // Remove the final coordinate
-                data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1];
+                // Contraction requires one fewer coordinates
+                if (!expand) data.coordinates.pop();
+                data.directions = [dy > 0 ? +1 : -1, dx > 0 ? +1 : -1]
+                data.principal = Math.abs(dx) > Math.abs(dy) ? 0 : 1;
             }
 
-            // Clicking a 1d picture
         } else if (this.data.dimension == 1) {
+            // Clicking a 1d picture
             data.directions = [dx > 0 ? +1 : -1];
         }
 
-        gProject.dragCellUI(data);
+        gProject.dragCellUI(data, expand);
     }
 
     setDiagram(diagram, preserveView = false) {
-        console.log(diagram);
+        //console.log(diagram);
 
         if (diagram == null) {
             this.diagram = null;
@@ -249,6 +256,9 @@ class DisplaySVG {
             */
 
             let edgesToLeft = this.data.edges_at_level[height].indexOf(edge);
+            // because edges overlap each other, small issue when mousing over near edge near vertex
+            if (edgesToLeft < 0)  return null; 
+            _assert(edgesToLeft >= 0);
             let fringe = this.getFringe(coords);
             let boundaryFlags = [{ source: fringe.bottom, target: fringe.top }];
             let slicecoords = [{height: height, regular: true}, {height: edgesToLeft, regular: false}];
@@ -360,9 +370,10 @@ class DisplaySVG {
         let boundary = this.diagram.getBoundary(data.logical.boundary);
         //let cell = boundary.getCell(data.logical.coordinates.reverse());
         let slice = boundary.getSlice(data.logical.coordinates);
-        let cell = slice.getLastId();
+        //_assert(false);
+        let lastPoint = slice.getLastPoint();
         let boundary_string = (data.logical.boundary == null ? '' : data.logical.boundary.type.repeat(data.logical.boundary.depth) + ' ');
-        let description = cell.name + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
+        let description = lastPoint.type.name + ' @ ' + boundary_string + Globular.friendlyCoordinate(data.logical.coordinates);
         let pos = $('#diagram-canvas').position();
         this.manager.showPopup(description, {
             left: 5 + pos.left + data.pixels.x,
