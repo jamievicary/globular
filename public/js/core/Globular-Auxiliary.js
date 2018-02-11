@@ -634,6 +634,7 @@ function _assert(arg) {
 }
 
 function _validate(...args) {
+    return;
     for (let i=0; i<args.length; i++) {
         _assert(args[i].validate);
         args[i].validate();

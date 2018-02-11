@@ -187,9 +187,11 @@ class Diagram {
         //return d.getSlice({ height: d.data.length - 1, regular: false }).getLastPoint();
         //return d.data.last().getLastPoint();
     }
+
     // Get the 0-diagram of 'leftmost action' at the given height (ANC-2018-2-2)
-    getActionPoint(height) {
-        if (this.n == 0) return this;
+    getActionType(height) {
+        if (this.n == 0) return this.type;
+        if (this.data.length == 0) return this.source.getActionType(0);
         if (this.n == 1) {
             let t = 0;
             let max_dim = -1;
@@ -200,12 +202,12 @@ class Diagram {
                     t = i;
                 }
             }
-            return this.getSlice({ height: t, regular: false });
+            return this.getSlice({ height: t, regular: false }).type;
         }
         let forward_targets = this.data[height].forward_limit.getComponentTargets();
         let backward_targets = this.data[height].backward_limit.getComponentTargets();
         if (forward_targets.length + backward_targets.length == 0) {
-            return this.source.getActionPoint(0);
+            return this.source.getActionType(0);
         }
         let t;
         if (forward_targets.length == 0 || backward_targets.length == 0) {
@@ -213,11 +215,11 @@ class Diagram {
         } else {
             t = Math.min(forward_targets[0], backward_targets[0]);
         }
-        return this.getSlice({ height: height, regular: false }).getActionPoint(t);
+        return this.getSlice({ height: height, regular: false }).getActionType(t);
     }
     // Find the colour of the first cell that appears in the diagram
     getLastColour() {
-        return gProject.getColour(this.getActionPoint(0));
+        return gProject.getColour(this.getActionType(0));
         //return gProject.getColour(this.getLastPoint());
     }
     render(div, highlight) {
@@ -363,7 +365,6 @@ class Diagram {
     */
 
     // Create the forward limit which contracts the a subdiagram at a given position, to a given type
-    // Doesn't change this
     contractForwardLimit(type, position, subdiagram, framing) {
         if (!position) {
             let arr = [];
@@ -589,8 +590,13 @@ class Diagram {
                 let s = this.getSlice({ height: location[0].height, regular: false });
                 let content = this.data[location[0].height];
                 let reverse_content = content.reverse(r1);
-                let reverse_expansion = reverse_content.getExpansionData(location[1].height, r1, r2, s);
-                let data = reverse_expansion.data.reverse();
+                let reverse_expansion = reverse_content.getExpansionData(location[1].height, r2, r1, s);
+                let data_0_rev = reverse_expansion.data[0].reverse(r2);
+                
+                let new_regular_slice = reverse_expansion.data[0].rewrite(r2.copy());
+                let data_1_rev = reverse_expansion.data[1].reverse(new_regular_slice);
+                let data = [data_1_rev, data_0_rev];
+
                 let sublimits = reverse_expansion.sublimits.reverse();
                 let component = new LimitComponent(this.n, { data, sublimits, first: location[0].height, last: location[0].height + 2 });
                 return new BackwardLimit(this.n, [component]);
@@ -951,6 +957,18 @@ class Diagram {
         }
 
         return { I1_content, I2_content, T_content };
+    }
+
+    // Find the coequalizer of two limits out of this diagram
+    coequalize(L1, L2, target) {
+        _assert(L1.n == this.n && L2.n == this.n && target.n == this.n);
+        _assert(L1 instanceof ForwardLimit && L2 instanceof ForwardLimit);
+        _assert(target instanceof Diagram);
+        let source = this;
+        let M1 = L1.getMonotone(source.data.length, target.data.length);
+        let M2 = L2.getMonotone(source.data.length, source.data.length);
+        let C = Monotone.coequalize(M1, M2);
+        
     }
 
 

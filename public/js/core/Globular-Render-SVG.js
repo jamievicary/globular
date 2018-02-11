@@ -64,7 +64,7 @@ function globular_render_0d(container, diagram, subdiagram) {
     circle.setAttributeNS(null, "cy", 0);
     circle.setAttributeNS(null, "r", circle_radius);
     var lastpoint = diagram.getLastPoint();
-    circle.setAttributeNS(null, "fill", gProject.getColour(lastpoint));
+    circle.setAttributeNS(null, "fill", lastpoint.type.getColour(diagram.n) /*gProject.getColour(lastpoint)*/);
     circle.setAttributeNS(null, "stroke", "none");
     circle.setAttributeNS(null, "element_type", "vertex");
     d.g.appendChild(circle);
@@ -84,32 +84,38 @@ function globular_render_1d(container, diagram, subdiagram) {
         var finish_x = i + 0.5;
         var path_string = SVG_move_to({ x: start_x, y: 0 }) + SVG_line_to({ x: finish_x, y: 0 });
         //let colour = diagram.getSlice({ height: i, regular: true }).getLastColour();
-        //let colour = gProject.getColour(diagram.getActionPoint(i));
-        let colour = gProject.getColour(diagram.getSlice({height:0, regular:true}).getActionPoint(0));
+        //let colour = gProject.getColour(diagram.getActionType(i));
+        //let colour = gProject.getColour(diagram.getSlice({height:0, regular:true}).getActionType(0));
+        let point = diagram.getSlice({height:0, regular:true}).getActionType(0);
+        let colour = point.getColour(diagram.n - 1);
         d.g.appendChild(SVG_create_path({ string: path_string, stroke: colour, element_type: 'edge', element_index: i }));
         let slice = diagram.getSlice({ height: i, regular: true });
-        let point = slice.getLastPoint();
-        data.edges.push({ start_x, finish_x, y: 0, id: point.type.id, level: i });
+        //let point = slice.getLastPoint();
+        data.edges.push({ start_x, finish_x, y: 0, id: point.id, level: i });
     }
 
     // Draw last line segment
     var start_x = length - 0.5 - (diagram.data.length == 0 ? 0.5 : 0);
     var finish_x = length;
     //var id = diagram.getTargetBoundary().cells[0].id;
-    var lastPoint = diagram.getTargetBoundary().getLastPoint();
+    //var lastPoint = diagram.getTargetBoundary().getLastPoint();
+    let type = diagram.getTargetBoundary().getActionType(0);
+    let colour = type.getColour(diagram.n - 1);
     d.g.appendChild(SVG_create_path({
         string: SVG_move_to({ x: start_x, y: 0 }) + SVG_line_to({ x: finish_x, y: 0 }),
-        stroke: gProject.getColour(lastPoint),
+        stroke: colour, //gProject.getColour(lastPoint),
         element_type: 'edge',
         element_index: diagram.data.length
     }));
-    data.edges.push({ start_x, finish_x, y: 0, id: lastPoint.type.id, level: diagram.data.length });
+    data.edges.push({ start_x, finish_x, y: 0, id: type.id, level: diagram.data.length });
 
     // Draw vertices
     var dimension = diagram.n;
     for (let i = 0; i < diagram.data.length; i++) {
-        let lastPoint = diagram.getSlice({ height: i, regular: false }).getLastPoint();
-        var colour = gProject.getColour(lastPoint);
+        //let lastPoint = diagram.getSlice({ height: i, regular: false }).getLastPoint();
+        let type = diagram.getActionType(i);
+        let colour = type.getColour(diagram.n);
+        //var colour = gProject.getColour(lastPoint);
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         var x = i + 0.5;
         var y = 0;
@@ -121,7 +127,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         circle.setAttributeNS(null, 'element_type', 'vertex');
         circle.setAttributeNS(null, 'element_index', i);
         d.g.appendChild(circle);
-        data.vertices.push({ x: x, y: y, radius: circle_radius, id: lastPoint.type.id, level: i });
+        data.vertices.push({ x: x, y: y, radius: circle_radius, id: type.id, level: i });
     }
 
     // Draw highlight
@@ -176,8 +182,9 @@ function globular_render_2d(container, diagram, subdiagram) {
         + SVG_line_to({ x: x_center - w / 2, y: y_center + h / 2 });
 
     // Determine background colour
-    var lastPoint = diagram.source.source.getLastPoint();
-    let lastColour = gProject.getColour(lastPoint);
+    //var lastPoint = diagram.source.source.getLastPoint();
+    //let lastColour = gProject.getColour(lastPoint);
+    let lastColour = diagram.source.source.getActionType(0).getColour(diagram.n - 2);
     d.g.appendChild(SVG_create_path({ string: path_string, fill: lastColour, element_type: 'region' }));
     $(container)[0].bounds = { left: -0.5, right: data.max_x + 0.5, top: Math.max(1, data.max_y), bottom: 0 };
 
@@ -234,6 +241,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttributeNS(null, "d", instructions.path_string);
         //var colour = (edge.type == null ? '#ffffff' : gProject.getColour(gProject.signature.getGenerator(edge.type).target.data[0].id));
+        /*
         var colour = '#ffffff';
         if (edge.type) {
             var level = Math.ceil(edge.start_height);
@@ -244,6 +252,15 @@ function globular_render_2d(container, diagram, subdiagram) {
             var slice2 = slice1.getSlice({ height: sublevel + 1, regular: true });
             colour = slice2.getLastColour();
         }
+        */
+
+        var level = Math.ceil(edge.start_height);
+        var sublevel;
+        if (i < 0) sublevel = data.edges_at_level[level].length - 1;
+        else sublevel = data.edges_at_level[level].indexOf(i);
+        var slice1 = diagram.getSlice({ height: level, regular: true });
+        var slice2 = slice1.getSlice({ height: sublevel + 1, regular: true });
+        let colour = slice2.getActionType(0).getColour(diagram.n - 2)                                                                                                                                                                                              ;
 
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
@@ -287,7 +304,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             //}
         }
 
-        // Do the main straight part of the edge
+        // Do the main straight bit of the edge
         var draw_main = false;
         if (edge.finish_height > edge.start_height + 1) {
             path_s += SVG_line_to({ x: edge.x, y: edge.finish_height - 0.5 });
@@ -310,7 +327,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         // Add the path to the SVG object
         if (drawn_something) {
             path.setAttributeNS(null, "d", path_s);
-            path.setAttributeNS(null, "stroke", gProject.getColour(edge.type));
+            path.setAttributeNS(null, "stroke", edge.colour /*gProject.getColour(edge.type)*/);
             path.setAttributeNS(null, "stroke-width", line_width);
             path.setAttributeNS(null, "fill", "none");
             path.setAttributeNS(null, "element_type", 'edge');
@@ -388,7 +405,7 @@ function globular_render_2d(container, diagram, subdiagram) {
             }
         }*/
 
-        vertex.fill = gProject.getColour(vertex.type, vertex.dimension);
+        vertex.fill = vertex.colour; //gProject.getColour(vertex.type, vertex.dimension);
         vertex.radius = circle_radius;
         vertex.element_type = 'vertex';
         vertex.element_index = i;
@@ -749,11 +766,13 @@ function SVG_prepare(diagram, subdiagram) {
     let current_regular_level = [];
     for (var level = 0; level < diagram.source.data.length; level++) {
         var attachment = diagram.source.data[level];
-        let point = diagram.source.getActionPoint(level);
+        let type = diagram.source.getActionType(level);
+        let colour = type.getColour(diagram.n - 1);
         //let point = diagram.source.getSlice({height: level, regular: false}).getLastPoint();
         var new_edge = {
             structure: 'edge',
-            type: point,
+            type,
+            colour,
             start_height: 0,
             finish_height: null,
             x: 0,
@@ -785,13 +804,15 @@ function SVG_prepare(diagram, subdiagram) {
         for (let i = 0; i < s.data.length; i++) {
             if (!forward_nontrivial_neighbourhood[i] && !backward_nontrivial_neighbourhood[i]) continue;
             let structure = 'vertex';
-            let type = s.getSlice({height: i, regular: false}).getLastPoint();
+            let type = s.getActionType(i);
+            let colour = type.getColour(diagram.n);
+            //let type = s.getSlice({height: i, regular: false}).getLastPoint();
             let x = 0;
             let y = level + 0.5;
             let forward_insert = forward_monotone.preimage(i);
             let backward_insert = backward_monotone.preimage(i);
             let singular_height = i;
-            let vertex = { structure, type, level, x, y, forward_insert, backward_insert, singular_height };
+            let vertex = { structure, type, colour, level, x, y, forward_insert, backward_insert, singular_height };
             //current_singular_level.push(vertex);
             vertices.push(vertex);
             new_vertices.push(vertex);
@@ -818,7 +839,8 @@ function SVG_prepare(diagram, subdiagram) {
             for (let j = vertex.backward_insert.first; j < vertex.backward_insert.last; j++) {
                 let index = j;
                 let structure = 'edge';
-                let type = next_slice.getActionPoint(j);
+                let type = next_slice.getActionType(j);
+                let colour = type.getColour(diagram.n - 1);
                 //let type = next_slice.getSlice({height: j, regular: false}).getLastPoint();
                 //data[j].getLastPoint();
                 let start_height = vertex.y;
@@ -827,7 +849,7 @@ function SVG_prepare(diagram, subdiagram) {
                 let x = 0;
                 let start_vertex = vertex;
                 let finish_vertex = null;
-                var new_edge = { structure, type, start_height, finish_height, x, start_vertex, finish_vertex };
+                var new_edge = { structure, type, colour, start_height, finish_height, x, start_vertex, finish_vertex };
                 edges.push(new_edge);
                 new_edges.push(new_edge);
                 vertex.target_edges[j - vertex.backward_insert.first] = new_edge;

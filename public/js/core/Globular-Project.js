@@ -86,28 +86,6 @@ Project.prototype.freshName = function (dimension) {
     return dimension.toString() + "-" + Globular.base26(num);
 }
 
-// Gets the front-end colour to what the user wants
-//var lightnesses = [30, 50, 70];
-var lightnesses = [30, 50, 70];
-Project.prototype.getColour = function (point) {
-
-    _assert(point instanceof Diagram);
-    _assert(point.n == 0);
-
-    return point.type.display.colour;
-
-    // If the point is appearing in its natural dimension, display its assigned colour
-    if (point.t == point.type.n) return point.type.display.colour;
-
-    // Otherwise, adjust the lightness cyclically
-    var husl = $.husl.fromHex(point.type.display.colour);
-    return $.husl.toHex(husl[0], husl[1], lightnesses[point.t - point.type.n]);
-
-    // Case that the id derives from an interchanger
-//    else return $.husl.toHex(0, 0, lightnesses[data.dimension % 3]);
-};
-
-
 /* 
 Takes a rule (generator) and a string describing how to get to an appropriate boundary of this diagram as arguments
 Returns the list of all possible inclusion functions of the source of this generator into the diagram

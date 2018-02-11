@@ -58,6 +58,12 @@ class Content {
         return new Content(this.n, this.forward_limit.copy(), this.backward_limit.copy());
     }
 
+    rewrite(source) {
+        let singular = this.forward_limit.rewrite(source.copy());
+        let target = this.backward_limit.rewrite(singular);
+        return target;
+    }
+
     usesCell(generator) {
         if (this.forward_limit.usesCell(generator)) return true;
         if (this.backward_limit.usesCell(generator)) return true;
@@ -150,8 +156,8 @@ class Content {
         let b_new_1 = b.copy();
         if (b_old) {
             b_new_1.splice(b_index, 1);
-            let f_old_delta = f_old ? f_old.last - f_old.first : 0; // weird f/b mixing here!
-            let b_old_delta = b_old ? b_old.last - b_old.first : 0;
+            let f_old_delta = f_old ? f_old.last - f_old.first - 1: 0; // weird f/b mixing here!
+            let b_old_delta = b_old ? b_old.last - b_old.first - 1 : 0;
             for (let i = b_index + 1; i < b.length; i++) {
                 b_new_1[i - 1].first += f_old_delta - b_old_delta;
                 b_new_1[i - 1].last += f_old_delta - b_old_delta;
@@ -159,12 +165,13 @@ class Content {
         }
 
         // H - Prepare the second new backward limit
+        
         let b_new_2 = b_old ? new BackwardLimit(this.n, [b_old.copy()], null, b.dt) : new BackwardLimit(this.n, [], null, b.dt);
 
         // C - Prepare the first sublimit - tricky as we need the reversed version of f_old
         // OPTIMIZATION: we don't really need to reverse all of f, just f_old
         let f_backward = f.getBackwardLimit(r1, s);
-        let sublimit_1 =  f_old ? new BackwardLimit(this.n, [f_backward[f_index].copy()], null, f.dt) : new BackwardLimit(this.n, [], null, f.dt);
+        let sublimit_1 = f_old ? new BackwardLimit(this.n, [f_backward[f_index].copy()], null, f.dt) : new BackwardLimit(this.n, [], null, f.dt);
         if (f_old) {
             sublimit_1[0].first += f_delta;
             sublimit_1[0].last += f_delta;
@@ -357,6 +364,7 @@ class Limit extends Array {
         for (let i = 0; i < this.length; i++) {
             _assert(this[i] instanceof LimitComponent);
             _assert(this[i].n == this.n);
+            if (i != 0) _assert(this[i].first >= this[i - 1].last);
             this[i].validate();
         }
         if (this.n == 0) _propertylist(this, ['n'], ['framing', 'dt']);
@@ -509,7 +517,8 @@ class Limit extends Array {
 
                 // If this exhausts c2, then finalize it
                 //if (target1 == second[c2].last - 1) {
-                if (c1 == first.length || first[c1].first >= second[c2].last) {
+                //if (c1 == first.length || first[c1].first >= second[c2].last) {
+                if (c1 == first.length || analysis1[c1] >= second[c2].last) {
                     if (forward) c2_component.data = Content.copyData(second[c2].data);
                     while (c2_component.sublimits.length < c2_component.last - c2_component.first) {
                         let index = second[c2].sublimits.length - c2_component.last
@@ -554,6 +563,7 @@ class Limit extends Array {
         if (forward) return new ForwardLimit(this.n, new_components, null, first.dt + second.dt);
         else return new BackwardLimit(this.n, new_components, null, first.dt + second.dt);
     }
+
 }
 
 class ForwardLimit extends Limit {
@@ -762,11 +772,12 @@ class Monotone extends Array {
         }
         return copy_second;
     }
-    equals(second) {
+    equals(second, n) {
+        if (n == null) n = this.length;
         let first = this;
         if (first.length != second.length) return false;
         if (first.target_size != second.target_size) return false;
-        for (let i = 0; i < first.length; i++) {
+        for (let i = 0; i < n; i++) {
             if (first[i] != second[i]) return false;
         }
         return true;
@@ -892,5 +903,45 @@ class Monotone extends Array {
         //if (pos == monotone.length) pos --;
         last = pos;
         return { first, last };
+    }
+    static identity(n) {
+        _assert(isNatural(n));
+        let arr = [];
+        for (let i = 0; i < n; i++) {
+            arr.push(i);
+        }
+        return new Monotone(n, arr);
+    }
+
+    static coequalize(M1, M2, n) {
+        _assert(M1 instanceof Monotone && M2 instanceof Monotone);
+        _assert(M1.target_size == M2.target_size);
+        _assert(M1.length == M2.length);
+        if (n == null) n = M1.length;
+
+        // Base case
+        if (n == 0) return Monotone.identity(M1.target_size);
+
+        // Inductive case
+        let c = Monotone.coequalize(M1, M2, n - 1);
+
+        let v1 = M1[n-1];
+        let v2 = M2[n-1];
+        let min = Math.min(v1, v2);
+        let max = Math.max(v1, v2);
+
+        // In c, contract everything in this range
+        let delta = c[max] - c[min];
+        for (let i=c[min] + 1; i<c[max]; i++) {
+            c[i] = c[min];
+        }
+        for (let i=c[max]; i<c.length; i++) {
+            c[i] -= delta;
+        }
+        c.target_size -= delta;
+
+        _assert(c.compose(M1).equals(c.compose(M2), n));
+        return c;
+
     }
 }

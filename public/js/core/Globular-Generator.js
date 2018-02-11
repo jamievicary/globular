@@ -73,6 +73,7 @@ class Generator {
         return this;
     }
     getTargetColour() {
+        _assert(false);
         var t = this.target;
         while (t.data.length == 0) {
             t = t.getTargetBoundary();
@@ -130,6 +131,20 @@ class Generator {
     }
     is_basic_interchanger() {
         return false;
+    }
+
+    // Calculate the display colour
+    getColour(n) {
+
+        _assert(isNatural(n));
+
+        // If the generator is appearing in its native dimension, use the assigned colour
+        if (n == this.n) return this.display.colour;
+
+        // Otherwise, adjust the lightness cyclically
+        var husl = $.husl.fromHex(this.display.colour);
+        var lightnesses = [30, 50, 70];
+        return $.husl.toHex(husl[0], husl[1], lightnesses[(n - this.n) % 3]);
     }
 }
 
