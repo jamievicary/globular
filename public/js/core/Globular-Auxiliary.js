@@ -658,3 +658,10 @@ function _propertylist(...args) {
         }
     }
 }
+
+function truncate(n) {
+    _assert(isNatural(n));
+    if (n < 0) return -1;
+    if (n > 0) return 1;
+    return 0;
+}

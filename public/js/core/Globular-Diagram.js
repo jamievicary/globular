@@ -193,16 +193,20 @@ class Diagram {
         if (this.n == 0) return this.type;
         if (this.data.length == 0) return this.source.getActionType(0);
         if (this.n == 1) {
-            let t = 0;
-            let max_dim = -1;
-            for (let i = 0; i < this.data.length; i++) {
-                let type = this.data[i].forward_limit[0].type;
-                if (type.n > max_dim) {
-                    max_dim = type.n;
-                    t = i;
+            if (height == null) {
+                let t = 0;
+                let max_dim = -1;
+                for (let i = 0; i < this.data.length; i++) {
+                    let type = this.data[i].forward_limit[0].type;
+                    if (type.n > max_dim) {
+                        max_dim = type.n;
+                        t = i;
+                    }
                 }
+                return this.getSlice({ height: t, regular: false }).type;
+            } else {
+                return this.getSlice({height, regular:false}).type;
             }
-            return this.getSlice({ height: t, regular: false }).type;
         }
         let forward_targets = this.data[height].forward_limit.getComponentTargets();
         let backward_targets = this.data[height].backward_limit.getComponentTargets();
@@ -592,7 +596,7 @@ class Diagram {
                 let reverse_content = content.reverse(r1);
                 let reverse_expansion = reverse_content.getExpansionData(location[1].height, r2, r1, s);
                 let data_0_rev = reverse_expansion.data[0].reverse(r2);
-                
+
                 let new_regular_slice = reverse_expansion.data[0].rewrite(r2.copy());
                 let data_1_rev = reverse_expansion.data[1].reverse(new_regular_slice);
                 let data = [data_1_rev, data_0_rev];
@@ -682,7 +686,8 @@ class Diagram {
     };
 
     // Unify two diagrams, at given recursive depth, with a given tendency to the right
-    unify({ D1, D2, L1, L2, right, depth }) {
+    unify({ D1, D2, L1, L2, right, depth, fibre }) {
+        _assert(fibre == null || _propertylist(fibre, ['L1F1', 'L1F2', 'L2F1', 'L2F2', 'F1', 'F2']));
         _assert(right == null || (typeof (right) == 'boolean'));
         _assert(D1 instanceof Diagram);
         _assert(D2 instanceof Diagram);
@@ -707,10 +712,19 @@ class Diagram {
             return { T, I1, I2 };
         }
 
+        // Get the monotones for the fibre maps
+        let L1F1M, L1F2M, L2F1M, L2F2M;
+        if (fibre) {
+            L1F1M = fibre.L1F1.getMonotone(D1.data.length, F1.data.length);
+            L1F2M = fibre.L1F2.getMonotone(D1.data.length, F2.data.length);
+            L2F1M = fibre.L2F1.getMonotone(D2.data.length, F1.data.length);
+            L2F2M = fibre.L2F2.getMonotone(D2.data.length, F2.data.length);
+        }
+
         // Get the unification of the singular monotones
         let L1m = L1.getMonotone(this.data.length, D1.data.length);
         let L2m = L2.getMonotone(this.data.length, D2.data.length);
-        let m_unif = L1m.unify({ second: L2m, right });
+        let m_unif = L1m.unify({ second: L2m, right, fibre: fibre ? { L1F1M, L1F2M, L2F1M, L2F2M } : null });
         let I1m = m_unif.first;
         let I2m = m_unif.second;
         let target_size = m_unif.first.target_size;
@@ -720,7 +734,7 @@ class Diagram {
         let I2_content = [];
         let T_content = [];
         for (let h = 0; h < target_size; h++) {
-            let c = this.unifyComponent({ D1, D2, L1, L2, right, depth }, h, { L1m, L2m, I1m, I2m });
+            let c = this.unifyComponent({ D1, D2, L1, L2, right, fibre, depth }, h, { L1m, L2m, I1m, I2m });
             T_content.push(c.T_content);
             if (c.I1_content) I1_content.push(c.I1_content);
             if (c.I2_content) I2_content.push(c.I2_content);
@@ -734,7 +748,7 @@ class Diagram {
     }
 
     // Compute one component of the given unification, given by the preimage at height h in the target
-    unifyComponent({ D1, D2, L1, L2, right, depth }, h, { L1m, L2m, I1m, I2m }) {
+    unifyComponent({ D1, D2, L1, L2, right, depth, fibre }, h, { L1m, L2m, I1m, I2m }) {
 
         // Find which parts of this, D1 and D2 are needed for this component
         let main = this;
@@ -766,11 +780,30 @@ class Diagram {
         let slice_unifications = [];
         for (let i = preimage_main.first; i < preimage_main.last; i++) {
             let main_slice = this.getSlice({ height: i, regular: false });
-            let d1_slice = D1.getSlice({ height: L1m[i], regular: false });
-            let d2_slice = D2.getSlice({ height: L2m[i], regular: false });
+            let d1_height = L1m[i];
+            let d2_height = L2m[i];
+            let d1_slice = D1.getSlice({ height: d1_height, regular: false });
+            let d2_slice = D2.getSlice({ height: d2_height, regular: false });
             let l1_sublimit = L1.subLimit(i);
             let l2_sublimit = L2.subLimit(i);
-            let slice_unification = main_slice.unify({ D1: d1_slice, D2: d2_slice, L1: l1_sublimit, L2: l2_sublimit, depth: depth + 1, right });
+
+            // Get slice fibre data
+            let fibre_slice = null;
+            if (fibre) {
+                _assert(fibre.L1F1M[d1_height] == fibre.L2F1M[d2_height]);
+                _assert(fibre.L1F2M[d1_height] == fibre.L2F2M[d2_height]);
+                let f1_height = fibre.L1F1M[d1_height];
+                let f2_height = fibre.L1F2M[d1_height];
+                let f1_slice = F1.getSlice({ height: f1_height, regular: false });
+                let f2_slice = F2.getSlice({ height: f2_height, regular: false });
+                let l1f1_slice = fibre.L1F1.subLimit(d1_height);
+                let l1f2_Slice = fibre.L1F2.subLimit(d1_height);
+                let l2f1_slice = fibre.L2F1.subLimit(d2_height);
+                let l2f2_slice = fibre.L2F2.subLimit(d2_height);
+                fibre_slice = { F1: f1_slice, F2: f2_slice, L1F1: l1f1_slice, L1F2: l1f2_slice, L2F1: l2f1_slice, L2F2: l2f2_slice };
+            }
+
+            let slice_unification = main_slice.unify({ D1: d1_slice, D2: d2_slice, L1: l1_sublimit, L2: l2_sublimit, depth: depth + 1, right, fibre: fibre_slice });
             _assert(slice_unification);
             slice_unifications[i] = slice_unification;
         }
@@ -968,7 +1001,7 @@ class Diagram {
         let M1 = L1.getMonotone(source.data.length, target.data.length);
         let M2 = L2.getMonotone(source.data.length, source.data.length);
         let C = Monotone.coequalize(M1, M2);
-        
+
     }
 
 
