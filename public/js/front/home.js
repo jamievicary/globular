@@ -138,6 +138,8 @@ function render_project_front(s) {
 
 $(document).ready(function() {
 
+    Monotone.test();
+
     globular_prepare_renderer();
     MainDisplay = new DisplayManager($('#diagram-canvas'));
     MainDisplay.setDisplay("2d-svg");

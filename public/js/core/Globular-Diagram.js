@@ -3,11 +3,8 @@
 class Diagram {
     constructor(n, args) {
         this['_t'] = 'Diagram';
-        _assert(!isNaN(n));
-        //_assert(!isNaN(args.t));
-        //_assert(n <= args.t);
+        _assert(isNatural(n));
         this.n = n;
-        this.t = args.t;
         if (n == 0) {
             _assert(args.type instanceof Generator);
             this.type = args.type;
@@ -78,14 +75,12 @@ class Diagram {
             return this.data[pos.height - 1].backward_limit.rewrite(singular);
         } else {
             let regular = this.getSlice({ height: pos.height, regular: true }, depth + 1).copy();
-            //if (pos.height == 0) regular.t = this.t - 1; // When rewriting source need to correct the type dimension
             return this.data[pos.height].forward_limit.rewrite(regular);
         }
         /*
         var regular = pos.height == 0 ? this.source.copy() : this.getSlice({ height: pos.height - 1, regular: true }).copy().rewrite(this.data[pos.height - 1]);
         if (pos.regular) return regular;
         let singular = this.data[pos.height].forward_limit.rewrite(regular);
-        if (pos.height == 0) singular.t ++; // Give type dimension an extra boost when we rewrite the source
         return singular;
         */
     }
@@ -97,7 +92,6 @@ class Diagram {
     // with match starting at the specified height, and including click_point if present
     enumerate({ goal, goal_size, start_height, max_height }) { //(goal, goal_size, start_height, max_height, click_point) {
         _assert(this.n == goal.n);
-        //_assert(this.t == goal.t);
         // Base case
         if (this.n == 0) {
             if (this.type == goal.type) return [[]]; // return a single trivial match
@@ -175,7 +169,7 @@ class Diagram {
     // Find the ID of the last cell that appears in the diagram
     getLastPoint() {
         var d = this;
-        if (this.n == 0) return this; //{ id: this.data, dimension: this.t };
+        if (this.n == 0) return this;
         while (d.data.length == 0) {
             d = d.source;
             if (d.n == 0) return d;
@@ -205,7 +199,7 @@ class Diagram {
                 }
                 return this.getSlice({ height: t, regular: false }).type;
             } else {
-                return this.getSlice({height, regular:false}).type;
+                return this.getSlice({ height, regular: false }).type;
             }
         }
         let forward_targets = this.data[height].forward_limit.getComponentTargets();
@@ -329,8 +323,6 @@ class Diagram {
 
         if (boundary.depth > 1) {
             if (boundary.type == 's') this.pad(boundary.depth);
-            option.forward_limit.dt++;
-            option.backward_limit.dt++;
             this.source.attach(option, { type: boundary.type, depth: boundary.depth - 1 });
             //this.source.attach(id, position, { type: boundary.type, depth: boundary.depth - 1 });
         } else {
@@ -381,7 +373,7 @@ class Diagram {
         if (!subdiagram) subdiagram = this;
         _assert(position.length == this.n);
         _assert(this.n == subdiagram.n);
-        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type })], framing, type.n);
+        if (this.n == 0) return new ForwardLimit(0, [new LimitComponent(0, { type })], framing);
         let slice_position = position.slice(1);
         let sublimits = [];
         for (let i = 0; i < subdiagram.data.length; i++) {
@@ -406,7 +398,7 @@ class Diagram {
         let first = position[0];
         let last = position[0] + subdiagram.data.length;
         let forward_limit_component = new LimitComponent(this.n, { first, last, data, sublimits });
-        let forward_limit = new ForwardLimit(this.n, [forward_limit_component], null, type.n - this.t);
+        let forward_limit = new ForwardLimit(this.n, [forward_limit_component], null);
         return forward_limit;
     }
 
@@ -425,7 +417,7 @@ class Diagram {
         _assert(this.n == subdiagram.n);
         if (this.n == 0) {
             let forward_component = new LimitComponent(0, { type: subdiagram.type });
-            return new BackwardLimit(0, [forward_component], framing, type.n);
+            return new BackwardLimit(0, [forward_component], framing);
         }
         let sublimits = [];
         let singular_slice = this.getSlice({ height: position[0], regular: false });
@@ -440,7 +432,7 @@ class Diagram {
         let data = Content.copyData(subdiagram.data);
         Content.deepPadData(data, slice_position);
         let backward_limit_component = new LimitComponent(this.n, { first, last, data, sublimits });
-        let backward_limit = new BackwardLimit(this.n, [backward_limit_component], null, type.n - this.t + 1 /* ??? */);
+        let backward_limit = new BackwardLimit(this.n, [backward_limit_component], null);
         return backward_limit;
     }
 
@@ -494,7 +486,6 @@ class Diagram {
     equals(d2) {
         var d1 = this;
         if (d1.n != d2.n) return false;
-        //if (d1.t != d2.t) return false;
         if (d1.n == 0) return d1.type == d2.type;
         if (d1.data.length != d2.data.length) return false;
         for (var i = 0; i < this.data.length; i++) {
@@ -613,7 +604,7 @@ class Diagram {
     }
 
     // Recursive procedure that constructs a limit contracting a diagram at a given position
-    getContractionLimit(location, right) {
+    getContractionLimit_old(location, right) {
         _assert(location instanceof Array);
         _assert(location.length >= 1); // Contraction requires at least 1 coordinate
         let height = location[0].height;
@@ -628,6 +619,7 @@ class Diagram {
             let D2 = this.getSlice({ height: height + 1, regular: false });
             let L1 = this.data[height].backward_limit;
             let L2 = this.data[height + 1].forward_limit;
+
             let contract_data = regular.unify({ D1, D2, L1, L2, right: right == 1 });
 
             // Build the limit to the contracted diagram
@@ -638,6 +630,74 @@ class Diagram {
             let sublimits = [contract_data.I1, I2_reversed];
             let data_forward = contract_data.I1.compose(this.data[height].forward_limit);
             let data_backward = contract_data.I2.compose(this.data[height + 1].backward_limit);
+            let data = [new Content(this.n - 1, data_forward, data_backward)];
+            let forward_component = new LimitComponent(this.n, { first, last, data, sublimits });
+            return new ForwardLimit(n, [forward_component]);
+        }
+        else if (location.length > 1) {
+            // Recursive case
+            let slice = this.getSlice(location[0]);
+            let recursive = slice.getContractionLimit(location.slice(1), right);
+            let recursive_target = recursive.rewrite(slice.copy())
+            let recursive_backward = recursive.getBackwardLimit(slice, recursive_target);
+            if (location[0].regular) {
+                // Contraction recursive case on regular slice: insert bubble.
+                let data = [new Content(this.n - 1, recursive, recursive_backward)];
+                let sublimits = [];
+                let component = new LimitComponent(this.n, { data, first: height, last: height, sublimits });
+                return new ForwardLimit(this.n, [component]);
+            } else {
+                // Contraction recursive case on singular slice: postcompose.
+                let forward_first = this.data[height].forward_limit;
+                let forward_second = recursive;
+                let backward_first = this.data[height].backward_limit;
+                let backward_second = recursive_backward;
+                let new_forward = forward_second.compose(forward_first);
+                let new_backward = backward_second.compose(backward_first);
+                let data = [new Content(this.n - 1, new_forward, new_backward)];
+                let component = new LimitComponent(this.n, { data, first: height, last: height + 1, sublimits: [recursive] });
+                return new ForwardLimit(this.n, [component]);
+            }
+        }
+        _assert(false);
+    }
+
+    // Recursive procedure that constructs a limit contracting a diagram at a given position
+    getContractionLimit(location, right) {
+        _assert(location instanceof Array);
+        _assert(location.length >= 1); // Contraction requires at least 1 coordinate
+        let height = location[0].height;
+        _assert(!isNaN(height));
+        if (location.length == 1) {
+            // Contraction base case
+            _assert(!location[0].regular); // The UI should never trigger contraction from a regular slice
+            _assert(height >= 0);
+            _assert(height < this.data.length - 1);
+            let regular = this.getSlice({ height: height + 1, regular: true });
+            let D1 = this.getSlice({ height, regular: false });
+            let D2 = this.getSlice({ height: height + 1, regular: false });
+            let L1 = this.data[height].backward_limit;
+            let L1_forward = L1.getForwardLimit(regular, D1);
+            let L2 = this.data[height + 1].forward_limit;
+
+            let upper = [D1, D2];
+            let lower = [{
+                diagram: regular,
+                left_index: 0,
+                right_index: 1,
+                left_limit: L1,
+                right_limit: L2
+            }];
+            let contract_data = Diagram.multiUnify({ lower, upper });
+
+            // Build the limit to the contracted diagram
+            let first = location[0].height;
+            let last = first + 2;
+            let n = this.n;
+            let sublimits = contract_data.limits;
+            let data_forward = sublimits[0].compose(this.data[height].forward_limit);
+            let cocone1_backward = sublimits[1].getBackwardLimit(upper[1], contract_data.target);
+            let data_backward = cocone1_backward.compose(this.data[height + 1].backward_limit);
             let data = [new Content(this.n - 1, data_forward, data_backward)];
             let forward_component = new LimitComponent(this.n, { first, last, data, sublimits });
             return new ForwardLimit(n, [forward_component]);
@@ -703,8 +763,8 @@ class Diagram {
         if (this.n == 0) {
             _assert(D1.type instanceof Generator && D2.type instanceof Generator);
             let I1, I2, T;
-            if (D1.type == this.type)[I1, I2, T] = [L2.copy().set_dt(0), new BackwardLimit(0, [], null, 0), D2.copy()];
-            else if (this.type == D2.type)[I1, I2, T] = [new ForwardLimit(0, [], null, 0), L1.copy().set_dt(0), D1.copy()];
+            if (D1.type == this.type)[I1, I2, T] = [L2.copy(), new BackwardLimit(0, [], null, 0), D2.copy()];
+            else if (this.type == D2.type)[I1, I2, T] = [new ForwardLimit(0, [], null, 0), L1.copy(), D1.copy()];
             else if (D1.type != D2.type) throw "no unification at codimension " + depth + ", base case has all types distinct";
             else if (L1.framing != L2.framing) throw "no unification at codimension " + depth + ", base case has inconsistent framings";
             else[I1, I2, T] = [new ForwardLimit(0, [], null, 0), new BackwardLimit(0, [], null, 0), D1.copy()];
@@ -745,6 +805,348 @@ class Diagram {
         let I1 = new ForwardLimit(this.n, I1_content);
         let I2 = new BackwardLimit(this.n, I2_content);
         return { T, I1, I2 };
+    }
+
+    // Compute a simultaneous unification of monotones
+    static multiUnify({ lower, upper, depth }) {
+
+        let n = upper[0].n;
+        for (let i = 0; i < upper.length; i++) {
+            _assert(upper[i] instanceof Diagram);
+            _assert(upper[i].n == n);
+        }
+
+        for (let i = 0; i < lower.length; i++) {
+            _propertylist(lower[i], ['left_index', 'left_limit', 'right_index', 'right_limit', 'diagram']);
+            _assert(lower[i].diagram instanceof Diagram && lower[i].left_limit instanceof BackwardLimit && lower[i].right_limit instanceof ForwardLimit);
+            _assert(isNatural(lower[i].left_index) && isNatural(lower[i].right_index));
+            _assert(lower[i].left_index < upper.length && lower[i].right_index < upper.length);
+            _assert(lower[i].diagram.n == n && lower[i].left_limit.n == n && lower[i].right_limit.n == n);
+        }
+
+        _assert(depth == null || isNatural(depth));
+        _assert(upper.length > 0); // doesn't make sense to pushout no families (?)
+
+        // Base case
+        if (n == 0) {
+
+            // Tabulate the top-dimensional types that appear
+            let top_types = [];
+            for (let i = 0; i < upper.length; i++) Diagram.updateTopTypes(top_types, upper[i].type);
+            for (let i = 0; i < lower.length; i++) Diagram.updateTopTypes(top_types, lower[i].diagram.type);
+
+            // If there's more than one top-dimensional type, throw an error
+            _assert(top_types.length > 0);
+            if (top_types.length > 1) throw "no unification, multiple top types in base case";
+            let type = top_types[0];
+
+            // We must be approaching the top type with a consistent framing
+            let framing = null;
+            for (let i = 0; i < lower.length; i++) {
+                let l = lower[i];
+                if (upper[l.left_index].type == type && l.diagram.type != type) {
+                    _assert(l.left_limit.framing != null);
+                    if (framing == null) framing = l.left_limit.framing;
+                    if (framing != l.left_limit.framing) throw "no unification, base case has inconsistent framings";
+                }
+                if (upper[l.right_index].type == type && l.diagram.type != type) {
+                    _assert(l.right_limit.framing != null);
+                    if (framing == null) framing = l.right_limit.framing;
+                    if (framing != l.right_limit.framing) throw "no unification, base case has inconsistent framings";
+                }
+            }
+
+            // Build the cocone maps
+            let limits = [];
+            for (let i = 0; i < upper.length; i++) {
+                if (upper[i].type == type) limits.push(new ForwardLimit(0, []));
+                else {
+                    _assert(framing != null);
+                    limits.push(new ForwardLimit(0, [new LimitComponent(0, { type })], framing));
+                }
+            }
+
+            // Check the cocone property
+            for (let i=0; i<lower.length; i++) {
+                let left_forward = lower[i].left_limit.getForwardLimit(lower[i].diagram, upper[lower[i].left_index]);
+                let left_path = limits[lower[i].left_index].compose(left_forward);
+                let right_path = limits[lower[i].right_index].compose(lower[i].right_limit);
+                if (!left_path.equals(right_path)) throw "no unification, base case has no unification"; // can this happen?
+            }
+
+            // Return the final data
+            let target = new Diagram(0, { type });
+            return { limits, target };
+
+            /*
+
+            // For each lower point, then appending the unique top type, it must fit one of these patterns:
+            //  - 
+
+            // All framings if present must be consistent
+            let framing = null;
+            for (let i = 0; i < lower.length; i++) {
+                let ll = lower[i].left_limit;
+                let rl = lower[i].right_limit;
+                if (framing == null) framing = (ll.framing == null ? rl.framing : ll.framing);
+                if (framing != null && ll.framing != null && framing != ll.framing) throw "no unification, base case has inconsistent framings";
+                if (framing != null && rl.framing != null && framing != rl.framing) throw "no unification, base case has inconsistent framings";
+            }
+
+            // Entire family of 0-diagrams must be 2-valued
+            let types = { type1: null, type2: null };
+            for (let i = 0; i < upper.length; i++) Diagram.updateTypes(types, upper[i].type);
+            for (let i = 0; i < lower.length; i++) Diagram.updateTypes(types, lower[i].diagram.type);
+
+            // Choose the type of the target
+            let new_type = types.type2 == null ? types.type1 : types.type2;
+            _assert(new_type != null);
+
+            // Build the final data
+            let limits = [];
+            for (let i = 0; i < upper.length; i++) {
+                let u = upper[i];
+                if (u.type == new_type) limits.push(new ForwardLimit(0, []));
+                else {
+                    _assert(framing != null);
+                    limits.push(new ForwardLimit(0, [new LimitComponent(0, { type: new_type })], framing));
+                }
+            }
+            let target = new Diagram(0, { type: new_type });
+            return { limits, target };
+            */
+        }
+
+        // Get the unification of the singular monotones
+        let m_upper = [];
+        for (let i = 0; i < upper.length; i++) {
+            m_upper[i] = upper[i].data.length;
+        }
+        let m_lower = [];
+        for (let i = 0; i < lower.length; i++) {
+            let m_left = lower[i].left_limit.getMonotone(lower[i].diagram, upper[lower[i].left_index]);
+            let left = { target: lower[i].left_index, monotone: m_left };
+            let m_right = lower[i].right_limit.getMonotone(lower[i].diagram, upper[lower[i].right_index]);
+            let right = { target: lower[i].right_index, monotone: m_right };
+            m_lower.push({ left, right });
+        }
+        let m_unif = Monotone.multiUnify({ lower: m_lower, upper: m_upper });
+
+        // Find size of unification set
+        let target_size = m_unif[0].target_size;
+
+        // For each element of unification set, recursively unify
+        let limit_components = [];
+        for (let i = 0; i < upper.length; i++) limit_components[i] = [];
+        let target_content = [];
+        for (let i = 0; i < target_size; i++) {
+            let component = Diagram.multiUnifyComponent({ upper, lower }, m_unif, m_lower, i);
+            target_content.push(component.target_content);
+            for (let j = 0; j < upper.length; j++) {
+                if (!component.cocone_components[j]) continue;
+                limit_components[j].push(component.cocone_components[j]);
+            }
+        }
+
+        // Build final data
+        let target = new Diagram(n, { source: upper[0].source.copy(), data: target_content });
+        let limits = [];
+        for (let i = 0; i < upper.length; i++) {
+            limits.push(new ForwardLimit(n, limit_components[i]));
+        }
+
+        // Return final data
+        return { limits, target };
+    }
+
+    static updateTopTypes(top_types, type) {
+        if (top_types.indexOf(type) >= 0) return; // type already in list
+        if (top_types.length == 0 || type.n == top_types[0].n) {
+            top_types.push(type);
+            return;
+        }
+        if (type.n < top_types[0].n) return;
+        _assert(type.n > top_types[0].n);
+        top_types.length = 0;
+        top_types.push(type);
+    }
+
+    static updateTypes(types, type) {
+        _assert(type instanceof Generator);
+        _assert(types.type1 != types.type2 || (types.type1 == null && types.type2 == null));
+        if (types.type1 != null && types.type2 != null) _assert(types.type1.n < types.type2.n);
+        if (types.type2 != null) _assert(types.type1 != null);
+        if (types.type1 == type || types.type2 == type) return;
+        if (types.type1 == null) types.type1 = type;
+        else if (types.type2 == null) types.type2 = type;
+        else throw "inconsistent types";
+        if (types.type1 != null && types.type2 != null && types.type1.n > types.type2.n) {
+            [types.type1, types.type2] = [types.type2, types.type1];
+        }
+
+
+        /*
+                if (type1.n == type2.n && type1 != type2) throw "inconsistent types A";
+                if (type1 == type2) {
+                    if (types.type1 == null) {
+                        types.type1 = type1;
+                    } else if (types.type2 == null) {
+                        types.type2 = type1;
+                    } else if (types.type1 != type1 && types.type2 != type1) {
+                        throw "inconsistent types B";
+                    }
+                } else {
+                    if (types.type1 == null && types.type2 == null) {
+                        types.type1 = type1;
+                        types.type2 = type2;
+                    } else if (types.type2 == null) {
+                        if (type1 != types.type1 && type2 != types.type1) {
+                            throw "inconsistent types C";
+                        } else if (type1 == types.type1) {
+                            types.type2 = type2;
+                        } else if (type2 == types.type1) {
+                            types.type1 = type1;
+                        } else _assert(false);
+                    } else {
+                        _assert(types.type1 != types.type2 && type1 != type2);
+                        if (types.type1 == type1 && types.type2 == type2) {
+                            // that's fine, nothing to do
+                        } else if (types.type1 == type2 && types.type2 == type1) {
+                            // that's fine, nothing to do
+                        } else {
+                            throw "inconsistent types C";
+                        }
+                    }
+                }
+        
+                // Ensure any null is second, and if neither is null, that they are in dimension order
+                if (types.type1 == null) [types.type1, types.type2] = [types.type2, types.type1];
+                else if (types.type2 != null && types.type1.n > types.type2.n) [types.type1, types.type2] = [types.type2, types.type1];
+                */
+    }
+
+    static multiUnifyComponent({ upper, lower }, m_cocone, m_lower, height) {
+
+        // Restrict upper, lower to the appropriate heights
+        let upper_preimage = [];
+        let lower_preimage = [];
+        let upper_ranges = [];
+        let lower_ranges = [];
+        for (let i = 0; i < upper.length; i++) {
+            upper_ranges[i] = m_cocone[i].preimage(height);
+            upper_preimage.push(upper[i].restrict(upper_ranges[i]));
+        }
+        for (let i = 0; i < lower.length; i++) {
+            let l = lower[i];
+            let left_index = l.left_index;
+            let right_index = l.right_index;
+            let left_limit = l.left_limit.preimage(upper_ranges[left_index]);
+            let right_limit = l.right_limit.preimage(upper_ranges[right_index]);
+            let left_monotone = l.left_limit.getMonotone(l.diagram.data.length, upper[l.left_index].data.length);
+            let left_preimage = left_monotone.preimage(upper_ranges[l.left_index]);
+            lower_ranges.push(left_preimage);
+            let diagram = l.diagram.restrict(left_preimage);
+            lower_preimage.push({ left_index, right_index, left_limit, right_limit, diagram });
+        }
+        let preimage = { upper: upper_preimage, lower: lower_preimage };
+
+        // Explode the upper singular and regular diagrams
+        let upper_exploded = [];
+        let lower_exploded = [];
+        let upper_slice_position = [];
+        for (let i = 0; i < upper.length; i++) {
+            let u = upper_preimage[i];
+            let slice_positions = [];
+            for (let j = 0; j < u.data.length; j++) {
+                slice_positions.push(upper_exploded.length);
+                upper_exploded.push(u.getSlice({ height: j, regular: false }));
+                if (j == 0) continue; // one less regular level than singular level to include
+                let diagram = u.getSlice({ height: j, regular: true }).copy();
+                let left_limit = u.data[j - 1].backward_limit.copy();
+                let right_limit = u.data[j].forward_limit.copy();
+                let left_index = upper_exploded.length - 2;
+                let right_index = upper_exploded.length - 1;
+                lower_exploded.push({ diagram, left_limit, right_limit, left_index, right_index });
+            }
+            upper_slice_position.push(slice_positions);
+        }
+
+        // Extract the lower singular diagrams
+        for (let i = 0; i < lower.length; i++) {
+            let l = lower_preimage[i];
+            for (let j = 0; j < l.diagram.data.length; j++) {
+                let diagram = l.diagram.getSlice({ height: j, regular: false }).copy(); // LOTS OF THESE COPIES CAN BE AVOIDED, THINK IT THROUGH CAREFULLY
+                let left_limit = l.left_limit.subLimit(j).copy();
+                let right_limit = l.right_limit.subLimit(j).copy();
+                let lower_offset = lower_ranges[i].first;
+                let upper_right_offset = upper_ranges[l.right_index].first;
+                let upper_left_offset = upper_ranges[l.left_index].first;
+                let left_index = upper_slice_position[l.left_index][m_lower[i].left.monotone[j + lower_offset] - upper_left_offset];
+                let right_index = upper_slice_position[l.right_index][m_lower[i].right.monotone[j + lower_offset] - upper_right_offset];
+                lower_exploded.push({ diagram, left_limit, right_limit, left_index, right_index });
+            }
+        }
+        let exploded = { upper: upper_exploded, lower: lower_exploded };
+        _assert(upper_exploded.length > 0);
+        let nonempty_upper = null;
+        for (let i = 0; i < upper.length; i++) {
+            if (upper_preimage[i].data.length > 0) {
+                nonempty_upper = i;
+                break;
+            }
+        }
+        _assert(nonempty_upper != null);
+
+        // Recursively unify
+        let recursive = Diagram.multiUnify(exploded);
+
+        // Get the content for the main diagram
+        let nu = upper[nonempty_upper];
+        let recursive_first = recursive.limits[upper_slice_position[nonempty_upper][0]];
+        let forward = recursive_first.compose(nu.data[upper_ranges[nonempty_upper].first].forward_limit);
+        let last_slice_position = upper_slice_position[nonempty_upper].last();
+        let recursive_last = recursive.limits[last_slice_position];
+        let recursive_last_backward = recursive_last.getBackwardLimit(upper_exploded[last_slice_position], recursive.target);
+        let backward = recursive_last_backward.compose(nu.data[upper_ranges[nonempty_upper].last - 1].backward_limit);
+        let target_content = new Content(nu.n, forward, backward);
+
+        /*
+        if ((left_sublimits.length > 1) || (left_sublimits[0].length > 0)) {
+            let I1_component_args = { first: preimage_D1.first, last: preimage_D1.last, data: [T_content.copy()], sublimits: left_sublimits };
+            I1_content = new LimitComponent(this.n, I1_component_args);
+        }
+        */
+
+        // Get the cocone components as forward limits
+        let cocone_components = [];
+        for (let i = 0; i < upper.length; i++) {
+            let first = upper_ranges[i].first;
+            let last = upper_ranges[i].last;
+            let sublimits = [];
+            for (let j = first; j < last; j++) {
+                let sublimit = recursive.limits[upper_slice_position[i][j - first]]
+                sublimits.push(sublimit.copy());
+            }
+            if (sublimits.length == 1 && sublimits[0].length == 0) {
+                cocone_components[i] = null;
+            } else {
+                let data = [target_content.copy()];
+                cocone_components[i] = new LimitComponent(upper[0].n, { first, last, data, sublimits });
+            }
+        }
+
+        return { target_content, cocone_components };
+
+    }
+
+    restrict(range) {
+        let source = this.getSlice({ height: range.first, regular: true }).copy();
+        let data = [];
+        for (let i = range.first; i < range.last; i++) {
+            data.push(this.data[i].copy());
+        }
+        let n = this.n;
+        return new Diagram(n, { source, data });
     }
 
     // Compute one component of the given unification, given by the preimage at height h in the target
@@ -992,15 +1394,30 @@ class Diagram {
         return { I1_content, I2_content, T_content };
     }
 
-    // Find the coequalizer of two limits out of this diagram
-    coequalize(L1, L2, target) {
+    // Find the coequalizer of two limits out of this diagram. See 2018-2-ANC-46.
+    coequalize(L1, L2, target, n) {
         _assert(L1.n == this.n && L2.n == this.n && target.n == this.n);
         _assert(L1 instanceof ForwardLimit && L2 instanceof ForwardLimit);
         _assert(target instanceof Diagram);
+        _assert(n == null || isNatural(n));
+        if (n == null) n = this.data.length;
         let source = this;
-        let M1 = L1.getMonotone(source.data.length, target.data.length);
-        let M2 = L2.getMonotone(source.data.length, source.data.length);
-        let C = Monotone.coequalize(M1, M2);
+
+        // Base case, return identity limit
+        if (n == 0) return new ForwardLimit(this.n, []);
+
+        // Recursive case
+        let recursive = source.coequalize(L1, L2, target, n - 1);
+
+        // Get monotone coequalizer
+        let M1 = L1.getMonotone(n, target.data.length);
+        let M2 = L2.getMonotone(n, source.data.length);
+        let MC = Monotone.coequalize(M1, M2);
+
+        let L1_image = M1[n - 1];
+        let L2_image = M2[n - 1];
+        let min = Math.min(L1_image, L2_image);
+        let max = Math.max(L1_image, L2_image);
 
     }
 
@@ -1030,8 +1447,8 @@ class Diagram {
         if (this.n == 0) {
             let forward_component = new LimitComponent(0, { type: type });
             let backward_component = new LimitComponent(0, { type: target.type });
-            let forward_limit = new ForwardLimit(0, [forward_component], !flip, 1);
-            let backward_limit = new BackwardLimit(0, [backward_component], flip, 1);
+            let forward_limit = new ForwardLimit(0, [forward_component], !flip);
+            let backward_limit = new BackwardLimit(0, [backward_component], flip);
             return new Content(0, forward_limit, backward_limit);
         }
         let forward_limit = this.contractForwardLimit(type, position, source, !flip);

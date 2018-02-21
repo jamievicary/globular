@@ -40,7 +40,6 @@ class Generator {
     getDiagram() {
         if (!this.source) return new Diagram(0, { t: 0, type: this });
         let source = this.source.copy();
-        let t = source.t + 1;
         let first_limit = this.source.contractForwardLimit(this, null, null, true);
         let singular_height = first_limit.rewrite(this.source.copy());
         let second_limit_forwards = this.target.contractForwardLimit(this, null, null, false);
@@ -48,7 +47,7 @@ class Generator {
         //let backward_limit = singular_height.contractBackwardLimit(this, null, this.target, false);
         //let data = [new Content(this.n - 1, forward_limit, backward_limit)];
         let data = [new Content(this.n - 1, first_limit, second_limit_backwards)];
-        return new Diagram(source.n + 1, { t, source, data });
+        return new Diagram(source.n + 1, { source, data });
     }
     getSource() {
         return (this.source == null ? null : this.source.copy());

@@ -1,6 +1,7 @@
 "use strict";
 
 class Monotone extends Array {
+
     constructor(target_size, values) {
         super();
         for (let i = 0; i < values.length; i++) {
@@ -9,6 +10,7 @@ class Monotone extends Array {
         this.target_size = target_size;
         _validate(this);
     }
+
     validate() {
         _assert(isNatural(this.target_size));
         for (let i = 0; i < this.length; i++) {
@@ -17,6 +19,11 @@ class Monotone extends Array {
         }
         if (this.length > 0) _assert(this.target_size > this.last());
     }
+
+    static test() {
+        Monotone.multiUnify_test();
+    }
+
     static getIdentity(n) {
         let m = new Monotone(0, []);
         for (let i = 0; i < n; i++) {
@@ -24,14 +31,17 @@ class Monotone extends Array {
         }
         return m;
     }
+
     grow() {
         this.push(this.target_size);
         this.target_size++;
     }
+
     append(value) {
         this.push(value);
         this.target_size = value + 1;
     }
+
     compose(second) {
         _assert(second instanceof Monotone);
         let copy_second = second.copy();
@@ -41,6 +51,7 @@ class Monotone extends Array {
         }
         return copy_second;
     }
+
     equals(second, n) {
         if (n == null) n = this.length;
         let first = this;
@@ -51,6 +62,7 @@ class Monotone extends Array {
         }
         return true;
     }
+
     imageComplement() {
         let n = 0;
         let complement = [];
@@ -146,7 +158,7 @@ class Monotone extends Array {
                         injections.fibre.J1M.append(fibre.L1F1M[left_pos]);
                         injections.fibre.J2M.append(fibre.L1F2M[left_pos]);
                     } else if (preference == 0) {
-                        
+
                     } else { // preference == -1
                         injections.fibre.J1M.append(fibre.L2F1M[right_pos]);
                         injections.fibre.J2M.append(fibre.L2F2M[right_pos]);
@@ -257,34 +269,50 @@ class Monotone extends Array {
         }
         return injections;
     }
+
     copy() {
         let m = new Monotone(this.target_size, []);
         for (let i = 0; i < this.length; i++) m[i] = this[i];
         return m;
     }
+
     getFirstPreimage(value) {
         for (let i = 0; i < this.length; i++) {
             if (this[i] == value) return i;
         }
         return null;
     }
+
     getLastPreimage(value) {
         for (let i = this.length - 1; i >= 0; i--) {
             if (this[i] == value) return i;
         }
         return null;
     }
+
     preimage(value) {
+        if (!isNatural(value)) {
+            _propertylist(value, ['first', 'last']);
+        }
+        let min, max;
+        if (isNatural(value)) {
+            min = value;
+            max = value + 1;
+        } else {
+            min = value.first;
+            max = value.last;
+        }
         let first = null;
         let last = null;
         let pos = 0;
-        while (this[pos] < value) pos++;
+        while (this[pos] < min) pos++;
         first = pos;
-        while (pos < this.length && this[pos] == value) pos++;
+        while (pos < this.length && this[pos] < max) pos++;
         //if (pos == monotone.length) pos --;
         last = pos;
         return { first, last };
     }
+
     static identity(n) {
         _assert(isNatural(n));
         let arr = [];
@@ -294,7 +322,7 @@ class Monotone extends Array {
         return new Monotone(n, arr);
     }
 
-    // Coequalize two monotones, cannot fail
+    // Coequalize two monotones, cannot fail. NOT USED.
     static coequalize(M1, M2, n) { // n is recursive parameter
         _assert(M1 instanceof Monotone && M2 instanceof Monotone);
         _assert(M1.target_size == M2.target_size);
@@ -324,6 +352,136 @@ class Monotone extends Array {
 
         _assert(c.compose(M1).equals(c.compose(M2), n));
         return c;
+    }
 
+    static multiUnify_test() {
+        let result = Monotone.multiUnify({ lower: [{ left: { target: 0, monotone: new Monotone(3, [0, 2]) }, right: { target: 1, monotone: new Monotone(4, [0, 1]) } }], upper: [3, 4] });
+        _assert(result[0].equals(new Monotone(5, [0, 1, 2])) && result[1].equals(new Monotone(5, [0, 2, 3, 4])));
+
+        let result2 = Monotone.multiUnify({ lower: [{ left: { target: 0, monotone: new Monotone(2, [0]) }, right: { target: 1, monotone: new Monotone(2, [1]) } }, { left: { target: 0, monotone: new Monotone(2, [1]) }, right: { target: 1, monotone: new Monotone(2, [0]) } }], upper: [2, 2] });
+        _assert(result2[0].equals(new Monotone(1, [0, 0])) && result2[1].equals(new Monotone(1, [0, 0])));
+    }
+
+    // Simultaneously unify an entire diagram of monotones
+    static multiUnify({ lower, upper }) {
+        let upper_included = [];
+        for (let i = 0; i < upper.length; i++) {
+            _assert(isNatural(upper[i]));
+            upper_included[i] = false;
+        }
+
+        let lower_included = [];
+        for (let i = 0; i < lower.length; i++) {
+            _propertylist(lower[i], ['left', 'right']);
+            _propertylist(lower[i].left, ['target', 'monotone']);
+            _propertylist(lower[i].right, ['target', 'monotone']);
+            _assert(lower[i].left.monotone instanceof Monotone && lower[i].right.monotone instanceof Monotone);
+            let lt = lower[i].left.target;
+            _assert(lower[i].left.monotone.length == lower[i].right.monotone.length);
+            _assert(lower[i].left.target < upper.length && lower[i].right.target < upper.length);
+            _assert(lower[i].left.monotone.target_size == upper[lower[i].left.target]);
+            _assert(lower[i].right.monotone.target_size == upper[lower[i].right.target]);
+            _assert(lower[i].left.length == lower[i].right.length);
+            lower_included[i] = false;
+        }
+
+        // Build the first part of the cocone
+        let cocone = [];
+        cocone[0] = Monotone.getIdentity(upper[0]);
+        upper_included[0] = true;
+
+        // Pass through repeatedly until no further unifications can be made
+        while (Monotone.multiUnify_singlePass({ lower_included, upper_included, lower, upper, cocone })) { };
+
+        // Check that all levels have been included
+        for (let i = 0; i < lower.length; i++) _assert(lower_included[i]);
+        for (let i = 0; i < upper.length; i++) _assert(upper_included[i]);
+
+        // Return the cocone data that has been computed
+        return cocone;
+    }
+
+    static multiUnify_singlePass({ lower_included, upper_included, lower, upper, cocone }) {
+
+        let changed = false;
+        for (let i = 0; i < lower.length; i++) {
+
+            // If this part has already been included, skip it
+            if (lower_included[i]) continue;
+
+            let left_inc = upper_included[lower[i].left.target];
+            let right_inc = upper_included[lower[i].right.target];
+
+            // If neither upper target is included, handle this component later, as it's disconnected
+            if (!left_inc && !right_inc) continue;
+
+            if (left_inc && right_inc) { // If both upper targets are included, then glue in the lower object
+                Monotone.multiUnify_glueLower({ i, lower_included, upper_included, lower, upper, cocone });
+            } else { // Only one upper target is included, so glue the other one in with respect to the base.
+                if (left_inc) {
+                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].right, old_data: lower[i].left });
+                } else {
+                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].left, old_data: lower[i].right });
+                }
+            }
+            lower_included[i] = true;
+            upper_included[lower[i].left.target] = true;
+            upper_included[lower[i].right.target] = true;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+
+    // Glue in new_data with respect to old_data
+    static multiUnify_glueBoth({ lower, upper, cocone, new_data, old_data }) {
+
+        // Get the pushout of the old data with the new data
+        let leg_1 = cocone[old_data.target].compose(old_data.monotone);
+        let leg_2 = new_data.monotone;
+        let pushout = leg_1.unify({ second: leg_2, right: true });
+
+        // Compose this pushout with existing cocone data
+        for (let k = 0; k < upper.length; k++) {
+            if (cocone[k] == null) continue;
+            cocone[k] = pushout.first.compose(cocone[k]);
+        }
+
+        // Add new cocone
+        cocone[new_data.target] = pushout.second;
+    }
+
+    static multiUnify_glueLower({ i, lower_included, upper_included, lower, upper, cocone }) {
+        let base = lower[i];
+        for (let j = 0; j < base.left.monotone.length; j++) {
+            let left_element = cocone[base.left.target][base.left.monotone[j]];
+            let right_element = cocone[base.right.target][base.right.monotone[j]];
+            if (left_element == right_element) continue;
+            let collapse = Monotone.getCollapseMonotone(cocone[base.left.target].target_size, left_element, right_element);
+            for (let k = 0; k < upper.length; k++) {
+                if (cocone[k] == null) continue;
+                cocone[k] = collapse.compose(cocone[k]);
+            }
+            _assert(cocone[base.left.target][base.left.monotone[j]] == cocone[base.right.target][base.right.monotone[j]]);
+        }
+    }
+
+    // Buid a collapsing monotone that identifies the elements first and last
+    static getCollapseMonotone(target_size, a, b) {
+        if (a == b) return Monotone.getIdentity(target_size);
+        let first = Math.min(a, b);
+        let last = Math.max(a, b);
+        let arr = [];
+        for (let i = 0; i < first; i++) {
+            arr.push(i);
+        }
+        for (let i = first; i <= last; i++) {
+            arr.push(first);
+        }
+        for (let i = last + 1; i < target_size; i++) {
+            arr.push(i - last + first);
+        }
+        return new Monotone(target_size - last + first, arr);
     }
 }
