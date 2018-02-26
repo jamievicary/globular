@@ -229,6 +229,10 @@ class LimitComponent {
         this.data = args.data;
         this.first = args.first;
         this.last = args.last;
+        _assert(isNatural(this.first));
+        _assert(isNatural(this.last));
+        _assert(this.first <= this.last);
+        _assert(this.first >= 0 && this.last >= 0);
         this.sublimits = args.sublimits;
         _validate(this);
     }
@@ -441,12 +445,16 @@ class Limit extends Array {
         _propertylist(range, ['first', 'last']);
         let component_targets = this.getComponentTargets();
         let components = [];
+        let offset = null;
         for (let i = 0; i < this.length; i++) {
             if (component_targets[i] < range.first) continue;
             if (component_targets[i] >= range.last) continue;
             let component = this[i].copy();
-            component.first -= range.first;
-            component.last -= range.first;
+            if (offset == null) offset = component.first - (component_targets[i] - range.first);
+            component.first -= offset;
+            component.last -= offset;
+            _assert(component.first >= 0 && component.last >= 0);
+            _validate(component);
             components.push(component);
         }
         return forward ? new ForwardLimit(this.n, components) : new BackwardLimit(this.n, components);

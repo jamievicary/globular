@@ -806,6 +806,7 @@ function SVG_prepare(diagram, subdiagram) {
             let structure = 'vertex';
             let type = s.getActionType(i);
             let colour = type.getColour(diagram.n);
+            let homotopy = (diagram.n - type.n) > 0;
             //let type = s.getSlice({height: i, regular: false}).getLastPoint();
             let x = 0;
             let y = level + 0.5;

@@ -123,11 +123,6 @@ class Diagram {
             if (sub_content(this.data[max_height - 1], goal.data[goal_size - 1], match.slice(1))) {
                 matches.push(match);
             }
-            /*
-            if (this.sub_data(goal.data[goal_size - 1], match, max_height - 1)) {
-                matches.push(match);
-            }
-            */
         }
         return matches;
     }
@@ -145,14 +140,6 @@ class Diagram {
     }
 
     rewrite(data) {
-        // Handle the pointlike case
-        /*
-        if (this.n == 0) {
-            this.data = data;
-            return this;
-        }
-        */
-        // Handle the inductive case
         return data.backward_limit.rewrite(data.forward_limit.rewrite(this));
     }
     // Make a copy of a diagram
@@ -215,6 +202,7 @@ class Diagram {
         }
         return this.getSlice({ height: height, regular: false }).getActionType(t);
     }
+    
     // Find the colour of the first cell that appears in the diagram
     getLastColour() {
         return gProject.getColour(this.getActionType(0));
@@ -251,17 +239,11 @@ class Diagram {
         }
         else if (in_target) {
             // We're in the target, and we were previously in the interior
-            sub.boundary = {
-                type: 't',
-                depth: 1
-            };
+            sub.boundary = { type: 't',  depth: 1 };
         }
         else if (in_source) {
             // We're in the source, and we were previously in the interior
-            sub.boundary = {
-                type: 's',
-                depth: 1
-            };
+            sub.boundary = { type: 's',  depth: 1 };
         }
         else {
             // Not in the source or the target, previously in the interior
@@ -282,25 +264,16 @@ class Diagram {
     // Get the bounding box surrounding a diagram component
     getLocationBoundingBox(location) {
         _assert(this.n == location.length);
-        if (!globular_is_array(location))
-            location = [location];
-        else
-            location = location.slice();
-        if (this.n == 0)
-            return {
-                min: [],
-                max: []
-            };
-        if (location.length == 0)
-            debugger;
+        if (!globular_is_array(location)) location = [location];
+        else location = location.slice();
+        if (this.n == 0) return { min: [], max: [] };
+        if (location.length == 0) debugger;
         var box = this.getSliceBoundingBox(location);
-        if (box == null)
-            return null;
+        if (box == null) return null;
         var extra = (location.length > this.n ? location.slice(1) : location);
         box.min = box.min.concat(extra);
         box.max = box.max.concat(extra);
-        if (extra.length == location.length)
-            box.max[box.max.length - location.length]++;
+        if (extra.length == location.length) box.max[box.max.length - location.length]++;
         return box;
     }
     // Pad the diagram content to remain consistent with a higher source attachment
@@ -686,9 +659,10 @@ class Diagram {
                 left_index: 0,
                 right_index: 1,
                 left_limit: L1,
-                right_limit: L2
+                right_limit: L2,
+                bias: right == 1 // true means right, false means left, null means none
             }];
-            let contract_data = Diagram.multiUnify({ lower, upper });
+            let contract_data = Diagram.multiUnify({ lower, upper, right: right == 1 });
 
             // Build the limit to the contracted diagram
             let first = location[0].height;
@@ -817,7 +791,7 @@ class Diagram {
         }
 
         for (let i = 0; i < lower.length; i++) {
-            _propertylist(lower[i], ['left_index', 'left_limit', 'right_index', 'right_limit', 'diagram']);
+            _propertylist(lower[i], ['left_index', 'left_limit', 'right_index', 'right_limit', 'diagram'], ['bias']);
             _assert(lower[i].diagram instanceof Diagram && lower[i].left_limit instanceof BackwardLimit && lower[i].right_limit instanceof ForwardLimit);
             _assert(isNatural(lower[i].left_index) && isNatural(lower[i].right_index));
             _assert(lower[i].left_index < upper.length && lower[i].right_index < upper.length);
@@ -877,44 +851,6 @@ class Diagram {
             // Return the final data
             let target = new Diagram(0, { type });
             return { limits, target };
-
-            /*
-
-            // For each lower point, then appending the unique top type, it must fit one of these patterns:
-            //  - 
-
-            // All framings if present must be consistent
-            let framing = null;
-            for (let i = 0; i < lower.length; i++) {
-                let ll = lower[i].left_limit;
-                let rl = lower[i].right_limit;
-                if (framing == null) framing = (ll.framing == null ? rl.framing : ll.framing);
-                if (framing != null && ll.framing != null && framing != ll.framing) throw "no unification, base case has inconsistent framings";
-                if (framing != null && rl.framing != null && framing != rl.framing) throw "no unification, base case has inconsistent framings";
-            }
-
-            // Entire family of 0-diagrams must be 2-valued
-            let types = { type1: null, type2: null };
-            for (let i = 0; i < upper.length; i++) Diagram.updateTypes(types, upper[i].type);
-            for (let i = 0; i < lower.length; i++) Diagram.updateTypes(types, lower[i].diagram.type);
-
-            // Choose the type of the target
-            let new_type = types.type2 == null ? types.type1 : types.type2;
-            _assert(new_type != null);
-
-            // Build the final data
-            let limits = [];
-            for (let i = 0; i < upper.length; i++) {
-                let u = upper[i];
-                if (u.type == new_type) limits.push(new ForwardLimit(0, []));
-                else {
-                    _assert(framing != null);
-                    limits.push(new ForwardLimit(0, [new LimitComponent(0, { type: new_type })], framing));
-                }
-            }
-            let target = new Diagram(0, { type: new_type });
-            return { limits, target };
-            */
         }
 
         // Get the unification of the singular monotones
@@ -928,7 +864,8 @@ class Diagram {
             let left = { target: lower[i].left_index, monotone: m_left };
             let m_right = lower[i].right_limit.getMonotone(lower[i].diagram, upper[lower[i].right_index]);
             let right = { target: lower[i].right_index, monotone: m_right };
-            m_lower.push({ left, right });
+            let bias = lower[i].bias;
+            m_lower.push({ left, right, bias });
         }
         let m_unif = Monotone.multiUnify({ lower: m_lower, upper: m_upper });
 
@@ -1040,6 +977,7 @@ class Diagram {
             let l = lower[i];
             let left_index = l.left_index;
             let right_index = l.right_index;
+            
             let left_limit = l.left_limit.preimage(upper_ranges[left_index]);
             let right_limit = l.right_limit.preimage(upper_ranges[right_index]);
             let left_monotone = l.left_limit.getMonotone(l.diagram.data.length, upper[l.left_index].data.length);
@@ -1095,6 +1033,7 @@ class Diagram {
                 break;
             }
         }
+
         _assert(nonempty_upper != null);
 
         // Recursively unify

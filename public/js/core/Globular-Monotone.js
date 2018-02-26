@@ -372,7 +372,7 @@ class Monotone extends Array {
 
         let lower_included = [];
         for (let i = 0; i < lower.length; i++) {
-            _propertylist(lower[i], ['left', 'right']);
+            _propertylist(lower[i], ['left', 'right'], ['bias']);
             _propertylist(lower[i].left, ['target', 'monotone']);
             _propertylist(lower[i].right, ['target', 'monotone']);
             _assert(lower[i].left.monotone instanceof Monotone && lower[i].right.monotone instanceof Monotone);
@@ -419,9 +419,15 @@ class Monotone extends Array {
                 Monotone.multiUnify_glueLower({ i, lower_included, upper_included, lower, upper, cocone });
             } else { // Only one upper target is included, so glue the other one in with respect to the base.
                 if (left_inc) {
-                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].right, old_data: lower[i].left });
+                    //let bias_new = (lower[i].bias == null ? null : (lower[i].bias ? true : false)); // can be simplified
+                    let bias_new = lower[i].bias == null ? true : lower[i].bias; // bias is helpful as it lets us temporarily resolve local conflicts
+                    //if (bias_new != null) debugger;
+                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].right, old_data: lower[i].left, bias_new });
                 } else {
-                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].left, old_data: lower[i].right });
+                    //let bias_new = (lower[i].bias == null ? null : (lower[i].bias ? false : true)); // can be simplified
+                    let bias_new = lower[i].bias == null ? true : !lower[i].bias;
+                    //if (bias_new != null) debugger;
+                    Monotone.multiUnify_glueBoth({ lower, upper, cocone, new_data: lower[i].left, old_data: lower[i].right, bias_new });
                 }
             }
             lower_included[i] = true;
@@ -435,12 +441,12 @@ class Monotone extends Array {
 
 
     // Glue in new_data with respect to old_data
-    static multiUnify_glueBoth({ lower, upper, cocone, new_data, old_data }) {
+    static multiUnify_glueBoth({ lower, upper, cocone, new_data, old_data, bias_new }) {
 
         // Get the pushout of the old data with the new data
         let leg_1 = cocone[old_data.target].compose(old_data.monotone);
         let leg_2 = new_data.monotone;
-        let pushout = leg_1.unify({ second: leg_2, right: true });
+        let pushout = leg_1.unify({ second: leg_2, right: bias_new });
 
         // Compose this pushout with existing cocone data
         for (let k = 0; k < upper.length; k++) {
