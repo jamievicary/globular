@@ -124,7 +124,8 @@ class Diagram {
                 matches.push(match);
             }
         }
-        return matches;
+
+        return matches
     }
 
     // Check if the given subdiagram, at the given position, contains the given point
@@ -202,15 +203,154 @@ class Diagram {
         }
         return this.getSlice({ height: height, regular: false }).getActionType(t);
     }
-    
+
     // Find the colour of the first cell that appears in the diagram
     getLastColour() {
+        
         return gProject.getColour(this.getActionType(0));
         //return gProject.getColour(this.getLastPoint());
     }
+
+    // Get apparent wire depths for displaying homotopies
+    getWireDepths(up, across) {
+        let r1 = this.getSlice({ height: up, regular: true });
+        let s = this.getSlice({ height: up, regular: false });
+        //let limit_target = s.getSlice({ height: across, regular: false });
+        let source_depths = Diagram.getLimitWireDepths(this.data[up].forward_limit, r1, s, across);
+        let r2 = this.getSlice({ height: up + 1, regular: true });
+        let target_depths = Diagram.getLimitWireDepths(this.data[up].backward_limit, r2, s, across);
+        return { source_depths, target_depths };
+    }
+
+    static getLimitWireDepths(limit, source, target, singular_index) {
+        let m = limit.getMonotone(source.data.length, target.data.length);
+        let p = m.preimage(singular_index);
+        let sublimit_target = target.getSlice({ height: singular_index, regular: false });
+        let depths = [];
+        for (let i = p.first; i < p.last; i++) {
+            let n = source.data[i].getFirstSingularNeighbourhood();
+            _assert(n != null);
+            let sublimit = limit.subLimit(i);
+            let sublimit_source = source.getSlice({ height: i, regular: false });
+            let sublimit_mono = sublimit.getMonotone(sublimit_source.data.length, sublimit_target.data.length);
+            depths.push(sublimit_mono[n]);
+        }
+        return depths;
+    }
+
+    // Normalizes the diagram with respect to the given incoming limits
+    normalize(limits) {
+        for (let i = 0; i < limits.length; i++) {
+            let limit = limits[i];
+            _assert(limit instanceof ForwardLimit || limit instanceof BackwardLimit);
+            _assert(limit.n == this.n);
+        }
+
+        // Starting point is that all limits have themselves as the factorization
+        for (let i = 0; i < limits.length; i++) {
+            limit[i].factorization = limit[i].copy()
+        }
+
+        // Base case: 0-diagrams always normalize to themselves.
+        if (this.n == 0) return { diagram: this.copy(), embedding: new ForwardLimit(0, []) };
+
+        // Recursive case
+        let recursive = [];
+        let new_data = [];
+        let new_sublimits = [];
+        for (let i = 0; i < this.data.length; i++) {
+
+            // Obtain this singular slice
+            let slice = this.getSlice({ regular: false, height: i });
+
+            // List all the incoming limits
+            let level_limits = [];
+            let level_sublimits = [];
+            let target_component_indices = [];
+            for (let i = 0; i < limits.length; i++) {
+                let limit = limits[i];
+                let index = limit.getTargetComponentIndex(i);
+                target_component_indices.push(index);
+                let sublimits = index == null ? [] : limit[index].sublimits;
+                level_limits = level_limits.concat(sublimits);
+                level_sublimits.push(sublimits);
+            }
+            level_limits.push(this.data[i].forward_limit);
+            level_limits.push(this.data[i].backward_limit);
+
+            // Normalize this singular slice recursively
+            let r = slice.normalize(level_limits);
+
+            // Store the embedding data to build the final embedding limit
+            new_sublimits.push(r.embedding);
+
+            // Store the new data for the normalized diagram at this level
+            let new_content = new Content(this.data[i].forward_limit.factorization, this.data[i].backward_limit.factorization);
+            new_data.push(new_content);
+
+            // Update the factorizations of the limits which have been passed in
+            for (let j = 0; j < limits.length; j++) {
+                let index = target_component_indices[j];
+                if (index == null) continue; // this limit might not hit this singular level
+                let limit = limits[j];
+                let sublimits = limit.factorization[index].sublimits;
+
+                for (let k = 0; k < sublimits.length; k++) {
+                    sublimits[k] = limit[index].sublimits[k].factorization;
+                    delete limit[index].sublimits[k].factorization; // don't need to store this any more
+                }
+
+                // if it's a forward limit, update the data about its target
+                if (limit instanceof ForwardLimit) {
+                    limit[index].data = [new_content.copy()];
+                }
+            }
+        }
+
+        // Build new diagram and its embedding
+        let diagram = new Diagram(this.n, { data: new_data });
+        let embedding = new ForwardLimit(this.n, new_components);
+
+        // We might still have top-level bubbles, so adjust for this
+        for (let i = 0; i < diagram.data.length; i++) {
+            let content = diagram.data[i];
+            if (content.forward_limit.length > 0 || content.backward_limit.length > 0) continue;
+
+            // This level is a vacuum bubble. Let's check if it's in the image of an incoming limit.
+            let in_image = false;
+            for (let j = 0; j < limits.length; j++) {
+                let index = limits[j].getTargetComponentIndex[i];
+                if (index == null) continue;
+                in_image = true;
+                break;
+            }
+            if (in_image) continue;
+
+            // We've found a vacuum bubble not in the image of any incoming limit, so remove it.
+            diagram.data.splice(i, 1);
+            embedding.removeSourceLevel(i); // not yet implemented
+            for (let j = 0; j < limits.length; j++) {
+                limits[j].factorization.removeTargetLevel(i); // not yet implemented
+            }
+            i--;
+        }
+
+        return { diagram, embedding };
+    }
+
+    // Typecheck this diagram
+    typecheck() {
+        for (let i=0; i<this.data.length; i++) {
+            if (!this.data[i].forward_limit.typecheck()) return false;
+            if (!this.data[i].backward_limit.typecheck()) return false;
+        }
+        return true;
+    }
+
     render(div, highlight) {
         globular_render(div, this, highlight);
     }
+
     prepare() {
         return;
         /*
@@ -239,11 +379,11 @@ class Diagram {
         }
         else if (in_target) {
             // We're in the target, and we were previously in the interior
-            sub.boundary = { type: 't',  depth: 1 };
+            sub.boundary = { type: 't', depth: 1 };
         }
         else if (in_source) {
             // We're in the source, and we were previously in the interior
-            sub.boundary = { type: 's',  depth: 1 };
+            sub.boundary = { type: 's', depth: 1 };
         }
         else {
             // Not in the source or the target, previously in the interior
@@ -814,7 +954,60 @@ class Diagram {
             if (top_types.length > 1) throw "no unification, multiple top types in base case";
             let type = top_types[0];
 
+            // Find framings for cocone maps
+            let upper_framings = [];
+            // Count how many upper framings we need to determine
+            let framings_to_determine = 0;
+            for (let i = 0; i < upper.length; i++) {
+                if (upper[i].type != type) framings_to_determine++;
+            }
+            while (framings_to_determine > 0) {
+                let start_determined = framings_to_determine;
+                for (let i = 0; i < lower.length; i++) {
+                    let l = lower[i];
+                    let ll = l.left_limit;
+                    let rl = l.right_limit;
+                    let llf = ll.framing;
+                    let rlf = rl.framing;
+                    let li = l.left_index;
+                    let ri = l.right_index;
+                    if (llf != null && rlf != null && llf != rlf) throw "no unification, base case has inconsistent framings";
+                    if (upper[li].type != type && upper[ri].type != type) {
+                        if (upper_framings[li] != null && upper_framings[ri] != null) {
+                            if (upper_framings[li] != upper_framings[ri]) throw "no unification, base case has inconsistent framings";
+                            continue;
+                        }
+                        else if (upper_framings[li] != null) {
+                            upper_framings[ri] = upper_framings[li];
+                        } else if (upper_framings[ri] != null) {
+                            upper_framings[li] = upper_framings[ri];
+                        }
+                        continue; // Handle later when we have more information
+                    }
+                    if (upper[li].type != type) {
+                        _assert(upper[ri].type == type);
+                        _assert(rlf != null);
+                        if (upper_framings[li] == null) {
+                            upper_framings[li] = rlf;
+                            framings_to_determine--;
+                        }
+                        else if (upper_framings[l.left_index] != rlf) throw "no unification, base case has no colimit";
+                    }
+                    if (upper[l.right_index].type != type) {
+                        _assert(upper[l.left_index].type == type);
+                        _assert(llf != null);
+                        if (upper_framings[l.right_index] == null) {
+                            upper_framings[l.right_index] = llf;
+                            framings_to_determine--;
+                        }
+                        else if (upper_framings[l.right_index] != llf) throw "no unification, base case has no colimit";
+                    }
+                }
+                if (framings_to_determine == start_determined) throw "no unification, base case cannot complete";
+            }
+
             // We must be approaching the top type with a consistent framing
+            /*
             let framing = null;
             for (let i = 0; i < lower.length; i++) {
                 let l = lower[i];
@@ -828,20 +1021,21 @@ class Diagram {
                     if (framing == null) framing = l.right_limit.framing;
                     if (framing != l.right_limit.framing) throw "no unification, base case has inconsistent framings";
                 }
-            }
+            }*/
 
             // Build the cocone maps
             let limits = [];
             for (let i = 0; i < upper.length; i++) {
                 if (upper[i].type == type) limits.push(new ForwardLimit(0, []));
                 else {
+                    let framing = upper_framings[i];
                     _assert(framing != null);
                     limits.push(new ForwardLimit(0, [new LimitComponent(0, { type })], framing));
                 }
             }
 
             // Check the cocone property
-            for (let i=0; i<lower.length; i++) {
+            for (let i = 0; i < lower.length; i++) {
                 let left_forward = lower[i].left_limit.getForwardLimit(lower[i].diagram, upper[lower[i].left_index]);
                 let left_path = limits[lower[i].left_index].compose(left_forward);
                 let right_path = limits[lower[i].right_index].compose(lower[i].right_limit);
@@ -977,7 +1171,7 @@ class Diagram {
             let l = lower[i];
             let left_index = l.left_index;
             let right_index = l.right_index;
-            
+
             let left_limit = l.left_limit.preimage(upper_ranges[left_index]);
             let right_limit = l.right_limit.preimage(upper_ranges[right_index]);
             let left_monotone = l.left_limit.getMonotone(l.diagram.data.length, upper[l.left_index].data.length);

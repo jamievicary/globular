@@ -86,12 +86,13 @@ function globular_render_1d(container, diagram, subdiagram) {
         //let colour = diagram.getSlice({ height: i, regular: true }).getLastColour();
         //let colour = gProject.getColour(diagram.getActionType(i));
         //let colour = gProject.getColour(diagram.getSlice({height:0, regular:true}).getActionType(0));
-        let point = diagram.getSlice({height:0, regular:true}).getActionType(0);
+        let point = diagram.getSlice({ height: 0, regular: true }).getActionType(0);
         let colour = point.getColour(diagram.n - 1);
-        d.g.appendChild(SVG_create_path({ string: path_string, stroke: colour, element_type: 'edge', element_index: i }));
+        let edge = { start_x, finish_x, y: 0, id: point.id, level: i };
+        d.g.appendChild(SVG_create_path({ string: path_string, stroke: colour, element_type: 'edge', element_index: i, element_obj: edge }));
         let slice = diagram.getSlice({ height: i, regular: true });
         //let point = slice.getLastPoint();
-        data.edges.push({ start_x, finish_x, y: 0, id: point.id, level: i });
+        data.edges.push(edge);
     }
 
     // Draw last line segment
@@ -101,13 +102,15 @@ function globular_render_1d(container, diagram, subdiagram) {
     //var lastPoint = diagram.getTargetBoundary().getLastPoint();
     let type = diagram.getTargetBoundary().getActionType(0);
     let colour = type.getColour(diagram.n - 1);
+    let edge = { start_x, finish_x, y: 0, id: type.id, level: diagram.data.length };
     d.g.appendChild(SVG_create_path({
         string: SVG_move_to({ x: start_x, y: 0 }) + SVG_line_to({ x: finish_x, y: 0 }),
         stroke: colour, //gProject.getColour(lastPoint),
         element_type: 'edge',
-        element_index: diagram.data.length
+        element_index: diagram.data.length,
+        element_obj: edge
     }));
-    data.edges.push({ start_x, finish_x, y: 0, id: type.id, level: diagram.data.length });
+    data.edges.push(edge);
 
     // Draw vertices
     var dimension = diagram.n;
@@ -119,6 +122,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         var x = i + 0.5;
         var y = 0;
+        let vertex = { x: x, y: y, radius: circle_radius, id: type.id, level: i };
         circle.setAttributeNS(null, "cx", x);
         circle.setAttributeNS(null, "cy", y);
         circle.setAttributeNS(null, "r", circle_radius);
@@ -127,7 +131,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         circle.setAttributeNS(null, 'element_type', 'vertex');
         circle.setAttributeNS(null, 'element_index', i);
         d.g.appendChild(circle);
-        data.vertices.push({ x: x, y: y, radius: circle_radius, id: type.id, level: i });
+        data.vertices.push(vertex);
     }
 
     // Draw highlight
@@ -260,7 +264,7 @@ function globular_render_2d(container, diagram, subdiagram) {
         else sublevel = data.edges_at_level[level].indexOf(i);
         var slice1 = diagram.getSlice({ height: level, regular: true });
         var slice2 = slice1.getSlice({ height: sublevel + 1, regular: true });
-        let colour = slice2.getActionType(0).getColour(diagram.n - 2)                                                                                                                                                                                              ;
+        let colour = slice2.getActionType(0).getColour(diagram.n - 2);
 
         path.setAttributeNS(null, "stroke-width", 0.01);
         path.setAttributeNS(null, "stroke", "none");
@@ -292,16 +296,14 @@ function globular_render_2d(container, diagram, subdiagram) {
         } else {
             // We start at a vertex
             var vertex = edge.start_vertex;
-            /*
-            if (vertex.type.is_basic_interchanger()) {
+            if (vertex.homotopy) {
                 path_s = SVG_move_to({ x: edge.x, y: edge.start_height + 0.5 });
             } else {
-                */
                 path_s += SVG_move_to({ x: vertex.x, y: vertex.y });
                 //path_s += SVG_line_to(edge.x, edge.start_height + 0.5);
                 path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y, c2x: edge.x, c2y: vertex.y + 0.4, x: edge.x, y: edge.start_height + 0.5 });
                 drawn_something = true;
-            //}
+            }
         }
 
         // Do the main straight bit of the edge
@@ -318,10 +320,10 @@ function globular_render_2d(container, diagram, subdiagram) {
             drawn_something = true;
         } else {
             var vertex = edge.finish_vertex;
-            //if (!vertex.type.is_basic_interchanger()) {
+            if (!vertex.homotopy) {
                 path_s += SVG_bezier_to({ c1x: edge.x, c1y: vertex.y - 0.4, c2x: edge.x, c2y: vertex.y, x: vertex.x, y: vertex.y });
                 drawn_something = true;
-            //}
+            }
         }
 
         // Add the path to the SVG object
@@ -344,73 +346,18 @@ function globular_render_2d(container, diagram, subdiagram) {
         vertex.dimension = diagram.n;
         var circle_opacity = 1;
 
-        /*
-        if (vertex.type.is_basic_interchanger()) {
-            circle_opacity = 0;
+        _assert(vertex.homotopy != undefined);
+        if (vertex.homotopy) {
+            SVG_draw_crossing(diagram, data, vertex, d.g, defs);
+        } else {
+            vertex.fill = vertex.colour; //gProject.getColour(vertex.type, vertex.dimension);
+            vertex.radius = circle_radius;
+            vertex.element_type = 'vertex';
+            vertex.element_index = i;
+            vertex.fill_opacity = circle_opacity;
+            d.g.appendChild(SVG_create_circle(vertex));
+        }
 
-            // Draw the interchanger. First, decide which strand goes on top
-            var e1_bot, e2_bot, e1_top, e2_top;
-            var p = (vertex.type == 'Int' ? 1 : 0);
-            var q = 1 - p;
-            e1_bot = vertex.source_edges[p];
-            e2_bot = vertex.source_edges[q];
-            e1_top = vertex.target_edges[q];
-            e2_top = vertex.target_edges[p];
-            var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
-            var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
-
-            var lower_colour = gProject.getColour({ id: e1_bot.type, dimension: diagram.n - 1 });
-            var upper_colour = gProject.getColour({ id: e2_bot.type, dimension: diagram.n - 1 });
-
-            // Prepare the upper path
-            var top_str = SVG_move_to({ x: e2_bot.x, y: i - epsilon })
-                + SVG_bezier_to({ c1x: e2_bot.x, c1y: i + 0.5, c2x: e2_top.x, c2y: i + 0.5, x: e2_top.x, y: i + 1 + epsilon });
-
-            // Draw lower path, possibly using an obscuring mask
-            var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
-            //var mask_id = "mask" + i;
-            var mask_id = "mark" + (mask_index++);
-            if (obscure) {
-                // Add the obscuring mask, which is a fattened version of the upper line
-                var mask = $('<mask>', {
-                    id: mask_id
-                });
-                var transparent_str = SVG_move_to({ x: left, y: i })
-                    + SVG_line_to({ x: left, y: i + 1 })
-                    + SVG_line_to({ x: right, y: i + 1 })
-                    + SVG_line_to({ x: right, y: i })
-                    + SVG_line_to({ x: left, y: i });
-                mask.append(SVG_create_path({ string: transparent_str, fill: "white", element_type: 'mask_transparent' }));
-                mask.append(SVG_create_path({ string: top_str, stroke_width: line_width * 2, stroke: "black", element_type: 'mask_top' }));
-                //g.appendChild(mask[0]);
-                defs.append(mask);
-
-            }
-            // Draw the lower path
-            var bot_str = SVG_move_to({ x: e1_bot.x, y: i - epsilon })
-                + SVG_bezier_to({ c1x: e1_bot.x, c1y: i + 0.5, c2x: e1_top.x, c2y: i + 0.5, x: e1_top.x, y: i + 1 + epsilon });
-            d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 1, string: bot_str, stroke: lower_colour, stroke_width: line_width, mask: (obscure ? "url(#" + mask_id + ")" : null), element_type: 'interchanger_edge' }));
-
-            // Draw upper path
-            d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 0, string: top_str, stroke: upper_colour, stroke_width: line_width, element_type: 'interchanger_edge', }));
-
-            // Attach little circles where the path joins its neighbours
-            if (i != 0) { // Draw little circles at the bottom                
-                d.g.appendChild(SVG_create_circle({ x: e2_bot.x, y: i, fill: upper_colour, class_name: 'dummy' }));
-                d.g.appendChild(SVG_create_circle({ x: e1_bot.x, y: i, fill: lower_colour, class_name: 'dummy' }));
-            }
-            if (i != data.vertices.length - 1) { // Draw little circles at the top
-                d.g.appendChild(SVG_create_circle({ x: e2_top.x, y: i + 1, fill: upper_colour, class_name: 'dummy' }));
-                d.g.appendChild(SVG_create_circle({ x: e1_top.x, y: i + 1, fill: lower_colour, class_name: 'dummy' }));
-            }
-        }*/
-
-        vertex.fill = vertex.colour; //gProject.getColour(vertex.type, vertex.dimension);
-        vertex.radius = circle_radius;
-        vertex.element_type = 'vertex';
-        vertex.element_index = i;
-        vertex.fill_opacity = circle_opacity;
-        d.g.appendChild(SVG_create_circle(vertex));
     }
 
     // Add SVG object to container. We have to do it in this weird way because
@@ -422,6 +369,199 @@ function globular_render_2d(container, diagram, subdiagram) {
     data.dimension = 2;
     return data;
 }
+
+function SVG_draw_crossing(diagram, data, vertex, svg, defs) {
+
+    let wires = diagram.getWireDepths(vertex.level, vertex.singular_height);
+
+    // Sort the wire segments by depth
+    let segments = [];
+    let s = wires.source_depths;
+    let t = wires.target_depths;
+    for (let i = 0; i < s.length; i++) {
+        segments.push({ source: true, index: i, depth: s[i], edge: vertex.source_edges[i] });
+    }
+    for (let i = 0; i < t.length; i++) {
+        segments.push({ source: false, index: i, depth: t[i], edge: vertex.target_edges[i] });
+    }
+    segments.sort((a, b) => a.depth - b.depth );
+
+    // Group them by common depth
+    let groups = [];
+    let group = [];
+    let left = Number.MAX_VALUE;
+    let right = -Number.MAX_VALUE;
+    for (let i = 0; i < segments.length; i++) {
+        let segment = segments[i];
+        left = Math.min(left, segment.edge.x);
+        right = Math.max(right, segment.edge.x);
+        if (group.length == 0 || group[0].depth == segment.depth) {
+            group.push(segment);
+        } else {
+            groups.push(group);
+            group = [segment];
+        }
+    }
+    groups.push(group);
+
+    // Draw the groups nearest-first
+    if (data.mask_index == undefined) data.mask_index = 0;
+    var transparent_str = SVG_move_to({ x: left - 2.5, y: vertex.y - 0.5 }) + SVG_line_to({ x: left - 2.5, y: vertex.y + 0.5 })+ SVG_line_to({ x: right + 2.5, y: vertex.y + 0.5 })+ SVG_line_to({ x: right + 2.5, y: vertex.y - 0.5 })+ SVG_line_to({ x: left - 2.5, y: vertex.y - 0.5 });
+    let mask_id = null;
+    let mask_paths = [];
+    for (let i = 0; i < groups.length; i++) {
+
+
+        let group = groups[i];
+
+        /* Decide the common tangent vector for elements of this group.
+        If any element is vertical, use a vertical tangent.
+        If all elements are on left or right, use a vertical tangent.
+        Otherwise, find the mean incidence angle.
+        */
+        let theta = null;
+        let theta_sum = 0;
+        let unique_sign = 0;
+        for (let i=0; i<group.length; i++) {
+            let s = group[i];
+            if (s.edge.x == vertex.x) {
+                theta = 0;
+                break;
+            }
+            let dx = s.edge.x - vertex.x;
+            let sign = dx == 0 ? 0 : dx < 0 ? -1 : +1;
+            if (unique_sign != null) {
+                if (unique_sign == 0 && sign != 0) unique_sign = sign;
+                if (unique_sign != 0 && sign != 0 && unique_sign != sign) unique_sign = null;                
+            }
+            theta_sum += (s.source ? -1 : +1) * Math.atan(dx / 0.5);
+        }
+        if (theta == null) {
+            if (unique_sign != null) {
+                theta = 0;
+            } else {
+                theta = theta_sum / group.length;
+            }
+        }
+        //g.appendChild(mask[0]);
+
+        let c2l = 0.5;
+        let factor = 0.35;
+        let c2x_target = vertex.x + c2l * Math.sin(theta);
+        let c2x_source = vertex.x - c2l * Math.sin(theta);
+        let c2y_target = vertex.y + c2l * factor * Math.cos(theta);
+        let c2y_source = vertex.y - c2l * factor * Math.cos(theta);
+        let c1l = 0.4;
+        let mask_mult = 2.5;
+
+
+        let mask_url = mask_id ? "url(#" + mask_id + ")" : null;
+
+        for (let j = 0; j < group.length; j++) {
+            let segment = group[j];
+            // Draw this segment
+
+
+            let edge = segment.edge;
+            let start_y = segment.source ? edge.finish_height - 0.5 : edge.start_height + 0.5;
+            var segment_str = SVG_move_to({ x: edge.x, y: start_y })
+                + SVG_bezier_to({ c1x: edge.x, c1y: start_y + (segment.source ? c1l : -c1l),
+                    //c2x: edge.x, c2y: vertex.y,
+                    c2x: segment.source ? c2x_source : c2x_target, c2y: segment.source ? c2y_source : c2y_target,
+                    x: vertex.x, y: vertex.y });
+
+            // Draw the segment and patching circles
+            svg.appendChild(SVG_create_path({ string: segment_str, element_index: null, element_index_2: null, stroke: edge.colour, stroke_width: line_width, element_type: 'homotopy_edge' , mask: mask_url}));
+            svg.appendChild(SVG_create_circle({x: vertex.x, y: vertex.y, fill: edge.colour, radius: line_width / 2, class_name: 'dummy'}));
+
+            // Add appropriate paths to the mask to obscure later segments for a 3d effect
+            mask_paths.push($(SVG_create_path({ string: segment_str, stroke_width: line_width * mask_mult, stroke: 'black', element_type: 'mask_top' })));
+            mask_paths.push($(SVG_create_circle({x: vertex.x, y: vertex.y, fill: edge.colour, radius: line_width * mask_mult / 2, class_name: 'dummy'})));
+        }
+
+        // On the last pass we don't need to make the mask
+        if (i == groups.length - 1) break;
+
+        mask_id = 'mask' + (data.mask_index++);
+        let mask_obj = $('<mask>', { id: mask_id, maskUnits: 'userSpaceOnUse' });
+        mask_obj.append(SVG_create_path({ string: transparent_str, fill: 'white', element_type: 'mask_transparent' }));
+        for (let i=0; i<mask_paths.length; i++) {
+            mask_obj.append(mask_paths[i].clone());
+        }
+        defs.append(mask_obj);
+    }
+
+    // Attech the transparent circle over the homotopy to accept the mouse hover
+    vertex.fill = vertex.colour; //gProject.getColour(vertex.type, vertex.dimension);
+    vertex.radius = line_width;
+    vertex.element_type = 'vertex';
+    vertex.element_index = vertex.index;
+    vertex.fill_opacity = 0;
+    svg.appendChild(SVG_create_circle(vertex));
+    
+
+    return;
+
+
+/*
+    // Draw the interchanger. First, decide which strand goes on top
+    var e1_bot, e2_bot, e1_top, e2_top;
+    var p = (vertex.type == 'Int' ? 1 : 0);
+    var q = 1 - p;
+    e1_bot = vertex.source_edges[p];
+    e2_bot = vertex.source_edges[q];
+    e1_top = vertex.target_edges[q];
+    e2_top = vertex.target_edges[p];
+    var left = Math.min(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) - 1;
+    var right = Math.max(e1_bot.x, e2_bot.x, e1_top.x, e2_top.x) + 1;
+
+    var lower_colour = gProject.getColour({ id: e1_bot.type, dimension: diagram.n - 1 });
+    var upper_colour = gProject.getColour({ id: e2_bot.type, dimension: diagram.n - 1 });
+
+    // Prepare the upper path
+    var top_str = SVG_move_to({ x: e2_bot.x, y: i - epsilon })
+        + SVG_bezier_to({ c1x: e2_bot.x, c1y: i + 0.5, c2x: e2_top.x, c2y: i + 0.5, x: e2_top.x, y: i + 1 + epsilon });
+
+    // Draw lower path, possibly using an obscuring mask
+    var obscure = vertex.type.tail('Int', 'IntI0'); // obscure only for basic interchangers
+    //var mask_id = "mask" + i;
+    var mask_id = "mark" + (mask_index++);
+    if (obscure) {
+        // Add the obscuring mask, which is a fattened version of the upper line
+        var mask = $('<mask>', {
+            id: mask_id
+        });
+        var transparent_str = SVG_move_to({ x: left, y: i })
+            + SVG_line_to({ x: left, y: i + 1 })
+            + SVG_line_to({ x: right, y: i + 1 })
+            + SVG_line_to({ x: right, y: i })
+            + SVG_line_to({ x: left, y: i });
+        mask.append(SVG_create_path({ string: transparent_str, fill: "white", element_type: 'mask_transparent' }));
+        mask.append(SVG_create_path({ string: top_str, stroke_width: line_width * 2, stroke: "black", element_type: 'mask_top' }));
+        //g.appendChild(mask[0]);
+        defs.append(mask);
+
+    }
+    // Draw the lower path
+    var bot_str = SVG_move_to({ x: e1_bot.x, y: i - epsilon })
+        + SVG_bezier_to({ c1x: e1_bot.x, c1y: i + 0.5, c2x: e1_top.x, c2y: i + 0.5, x: e1_top.x, y: i + 1 + epsilon });
+    d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 1, string: bot_str, stroke: lower_colour, stroke_width: line_width, mask: (obscure ? "url(#" + mask_id + ")" : null), element_type: 'interchanger_edge' }));
+
+    // Draw upper path
+    d.g.appendChild(SVG_create_path({ element_index: i, element_index_2: 0, string: top_str, stroke: upper_colour, stroke_width: line_width, element_type: 'interchanger_edge', }));
+
+    // Attach little circles where the path joins its neighbours
+    if (i != 0) { // Draw little circles at the bottom                
+        d.g.appendChild(SVG_create_circle({ x: e2_bot.x, y: i, fill: upper_colour, class_name: 'dummy' }));
+        d.g.appendChild(SVG_create_circle({ x: e1_bot.x, y: i, fill: lower_colour, class_name: 'dummy' }));
+    }
+    if (i != data.vertices.length - 1) { // Draw little circles at the top
+        d.g.appendChild(SVG_create_circle({ x: e2_top.x, y: i + 1, fill: upper_colour, class_name: 'dummy' }));
+        d.g.appendChild(SVG_create_circle({ x: e1_top.x, y: i + 1, fill: lower_colour, class_name: 'dummy' }));
+    }
+*/
+}
+
 
 function SVG_create_path(data) {
     if (data.string.length == 0) return;
@@ -437,6 +577,7 @@ function SVG_create_path(data) {
     path.setAttributeNS(null, "fill", data.fill);
     path.setAttributeNS(null, "stroke-opacity", data.stroke_opacity);
     path.setAttributeNS(null, "fill-opacity", data.fill_opacity);
+    if (data.element_obj != undefined) path.setAttributeNS(null, 'element_obj', data.element_obj);
     if (data.element_index != undefined) path.setAttributeNS(null, 'element_index', data.element_index);
     if (data.element_index_2 != undefined) path.setAttributeNS(null, 'element_index_2', data.element_index_2);
     if (data.element_type != undefined) path.setAttributeNS(null, 'element_type', data.element_type);
@@ -813,7 +954,8 @@ function SVG_prepare(diagram, subdiagram) {
             let forward_insert = forward_monotone.preimage(i);
             let backward_insert = backward_monotone.preimage(i);
             let singular_height = i;
-            let vertex = { structure, type, colour, level, x, y, forward_insert, backward_insert, singular_height };
+            let index = vertices.length;
+            let vertex = { structure, type, colour, level, x, y, forward_insert, backward_insert, singular_height, homotopy, index };
             //current_singular_level.push(vertex);
             vertices.push(vertex);
             new_vertices.push(vertex);
@@ -908,25 +1050,25 @@ function SVG_prepare(diagram, subdiagram) {
         do {
             problem = false;
             */
-            for (let i = 0; i < regular_levels.length; i++) {
-                let level = regular_levels[i];
-                for (let j = 0; j < level.length - 1; j++) {
-                    if (level[j + 1].x < level[j].x + 1) {
-                        problem = true;
-                        level[j + 1].x = level[j].x + 1;
-                    }
+        for (let i = 0; i < regular_levels.length; i++) {
+            let level = regular_levels[i];
+            for (let j = 0; j < level.length - 1; j++) {
+                if (level[j + 1].x < level[j].x + 1) {
+                    problem = true;
+                    level[j + 1].x = level[j].x + 1;
                 }
             }
-            for (let i = 0; i < singular_levels.length; i++) {
-                let level = singular_levels[i];
-                for (let j = 0; j < level.length - 1; j++) {
-                    
-                    if (level[j + 1].x < level[j].x + 1) {
-                        problem = true;
-                        level[j + 1].x = level[j].x + 1;
-                    }
+        }
+        for (let i = 0; i < singular_levels.length; i++) {
+            let level = singular_levels[i];
+            for (let j = 0; j < level.length - 1; j++) {
+
+                if (level[j + 1].x < level[j].x + 1) {
+                    problem = true;
+                    level[j + 1].x = level[j].x + 1;
                 }
             }
+        }
 
         //} while (problem);
 
@@ -961,8 +1103,8 @@ function SVG_prepare(diagram, subdiagram) {
                 shift_target = mean > target_mean ? mean - target_mean : 0;
                 shift_vertex = mean > vertex.x ? mean - vertex.x : 0;
             }
-            for (let i=0; i<vertex.source_edges.length; i++) vertex.source_edges[i].x += shift_source;
-            for (let i=0; i<vertex.target_edges.length; i++) vertex.target_edges[i].x += shift_target;
+            for (let i = 0; i < vertex.source_edges.length; i++) vertex.source_edges[i].x += shift_source;
+            for (let i = 0; i < vertex.target_edges.length; i++) vertex.target_edges[i].x += shift_target;
             vertex.x += shift_vertex;
             if (shift_source > 0 || shift_target > 0 || shift_vertex > 0) problem = true;
             /*

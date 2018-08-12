@@ -375,7 +375,7 @@ class Monotone extends Array {
             _propertylist(lower[i], ['left', 'right'], ['bias']);
             _propertylist(lower[i].left, ['target', 'monotone']);
             _propertylist(lower[i].right, ['target', 'monotone']);
-            _assert(lower[i].left.monotone instanceof Monotone && lower[i].right.monotone instanceof Monotone);
+            //_assert(lower[i].left.monotone instanceof Monotone && lower[i].right.monotone instanceof Monotone);
             let lt = lower[i].left.target;
             _assert(lower[i].left.monotone.length == lower[i].right.monotone.length);
             _assert(lower[i].left.target < upper.length && lower[i].right.target < upper.length);

@@ -199,6 +199,28 @@ class Content {
         }
     }
 
+    getSingularNeighbourhoods() {
+        let forward = this.forward_limit.analyzeSingularNeighbourhoods();
+        let backward = this.backward_limit.analyzeSingularNeighbourhoods();
+        let total = [];
+        let length = Math.max(forward.length, backward.length);
+        for (let i = 0; i < length; i++) {
+            total[i] = (forward[i] || backward[i]);
+        }
+        return total;
+    }
+
+    getFirstSingularNeighbourhood() {
+        let forward = this.forward_limit.analyzeSingularNeighbourhoods();
+        let backward = this.backward_limit.analyzeSingularNeighbourhoods();
+        let total = [];
+        let length = Math.max(forward.length, backward.length);
+        for (let i = 0; i < length; i++) {
+            if (forward[i] || backward[i]) return i;
+        }
+        return null;
+    }
+
     static copyData(data) {
         _assert(data instanceof Array);
         if ((typeof data) === 'string') return data;
@@ -349,6 +371,16 @@ class LimitComponent {
             this.sublimits[i].deepPad(slice_position);
         }
     }
+
+    typecheck(subdata, target_slice) {
+        _assert(this.sublimits.length == subdata.length);
+        _assert(this.n == target_slice.n + 1);
+        for (let i = 0; i < target_slice.data.length; i++) {
+            // Find the preimage of this height
+            let sublimit = this.sublimits[i];
+            let preimage = sublimit.getTargetHeightPreimage(i);
+        }
+    }
 }
 
 class Limit extends Array {
@@ -440,7 +472,42 @@ class Limit extends Array {
         }
         return component_targets;
     }
-    // Get a sublimit with respect to the indicated range in the source diagram. Mutates the limit.
+    getTargetComponentIndex(target) {
+        let offset = 0;
+        for (let i = 0; i < this.length; i++) {
+            let component_target = this[i].first - offset;
+            if (component_target == target) return i;
+            offset += this[i].last - this[i].first - 1;
+        }
+        return null;
+    }
+    getTargetHeightPreimage(target) {
+        let offset = 0;
+        let component_target = null;
+        for (let i = 0; i < this.length; i++) {
+            component_target = this[i].first - offset;
+            if (component_target > target) {
+                // Trivial neighbourhood
+                let h = this[i].first - component_target + target;
+                return { first: h, last: h + 1 };
+            }
+            if (component_target == target) return { first: this[i].first, last: this[i].last };
+            offset += this[i].last - this[i].first - 1;
+        }
+        return { first: target + offset, last: target + offset + 1 };
+    }
+    /*
+    getSublimitsToTarget(target) {
+        let offset = 0;
+        for (let i = 0; i < this.length; i++) {
+            let component_target = this[i].first - offset;
+            if (component_target == target) return this[i].sublimits;
+            offset += this[i].last - this[i].first - 1;
+        }
+        return [];
+    }
+    */
+    // Get a sublimit with respect to the indicated range in the target diagram.
     preimage(range, forward) {
         _propertylist(range, ['first', 'last']);
         let component_targets = this.getComponentTargets();
@@ -575,6 +642,44 @@ class Limit extends Array {
         }
         if (forward) return new ForwardLimit(this.n, new_components, null);
         else return new BackwardLimit(this.n, new_components, null);
+    }
+
+    // Remove a particular level from the source of the limit, assumed to be acted on by a unique component
+    removeSourceLevel(height) {
+        _assert(isNatural(height));
+        for (let i = 0; i < this.length; i++) {
+            let component = this[i];
+            if (component.first != height || component.last != height + 1) continue;
+            // We've found the component
+            this.splice(i, 1);
+            for (let j = i; j < this.length; j++) {
+                this[j].first--;
+                this[j].last--;
+            }
+            return;
+        }
+        _assert(false); // We didn't match this to any component
+    }
+
+    // Remove an element of the target diagram not in the image of this limit
+    removeTargetLevel(height) {
+        let component_targets = this.getComponentTargets();
+        for (let i = 0; i < component_targets.length; i++) {
+            if (component_targets[i] == height) {
+                this.splice(i, 1);
+                return;
+            }
+        }
+        _assert(false); // We didn't find the correct component to remove
+    }
+
+    // Typecheck this limit
+    typecheck() {
+        let component_targets = this.getComponentTargets();
+        for (let i = 0; i < this.length; i++) {
+            if (!this[i].typecheck()) return false;
+        }
+        return true;
     }
 
 }
