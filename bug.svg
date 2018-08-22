@@ -1,0 +1,15 @@
+<svg width="600" height="800" viewBox="-0.5 -0.5 2 2"
+    xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" 
+    xmlns:ev="http://www.w3.org/2001/xml-events" >
+    <defs>
+        <mask id="mark0" maskUnits="userSpaceOnUse">
+            <path d="M 0 0 L 0 1 L 1 1 L 1 0 L 0 0" fill="white" fill-opacity="0.5"></path>
+        </mask>
+    </defs>
+    <g>
+        <path d="M 0 0 L 0 1 L 1 1 L 1 0 L 0 0" stroke="#ff0000" stroke-width="0.05" fill="none"></path>
+        <path d="M 0.4 1 L 0.5 0.5 " stroke-width="0.1" stroke="#000000" mask="url(#mark0)"></path>
+        <path d="M 0.0 0.5 L 1.5 0.5 " stroke-width="0.1" stroke="#00ff00"></path>
+    </g>
+</svg>

@@ -86,7 +86,7 @@ function globular_render_1d(container, diagram, subdiagram) {
         //let colour = diagram.getSlice({ height: i, regular: true }).getLastColour();
         //let colour = gProject.getColour(diagram.getActionType(i));
         //let colour = gProject.getColour(diagram.getSlice({height:0, regular:true}).getActionType(0));
-        let point = diagram.getSlice({ height: 0, regular: true }).getActionType(0);
+        let point = diagram.getSlice({ height: i, regular: true }).getActionType(0); // ERROR WAS HERE
         let colour = point.getColour(diagram.n - 1);
         let edge = { start_x, finish_x, y: 0, id: point.id, level: i };
         d.g.appendChild(SVG_create_path({ string: path_string, stroke: colour, element_type: 'edge', element_index: i, element_obj: edge }));
